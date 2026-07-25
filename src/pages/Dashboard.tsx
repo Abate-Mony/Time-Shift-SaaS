@@ -2,6 +2,7 @@ import { Briefcase, Users, Clock, CheckCircle2, AlertCircle, ArrowRight, MapPin,
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 import { StatCard, Card, Avatar, StatusBadge, Button, Badge } from '../components/ui'
 import { jobs, workers, activities, weeklyHours, monthlyStats } from '../data/mockData'
+import { useNavigate } from 'react-router'
 
 const todayJobs = jobs.filter(j => j.date === '2025-07-25')
 const workingNow = workers.filter(w => w.status === 'working')
@@ -37,7 +38,9 @@ const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?:
   )
 }
 
-export function Dashboard({ onNavigate }: { onNavigate: (id: string) => void }) {
+export function Dashboard() {
+  const navigate=useNavigate()
+  const onNavigate=(path:string)=>navigate(path)
   return (
     <div className="p-6 animate-fade-in">
       {/* Header */}
@@ -49,7 +52,7 @@ export function Dashboard({ onNavigate }: { onNavigate: (id: string) => void }) 
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={() => onNavigate('reports')}>View Reports</Button>
-          <Button size="sm" onClick={() => onNavigate('create-job')}>+ New Job</Button>
+          {/* <Button size="sm" onClick={() => onNavigate('create-job')}>+ New Job</Button> */}
         </div>
       </div>
 

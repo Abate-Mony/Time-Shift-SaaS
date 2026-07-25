@@ -2,8 +2,9 @@ import { useState } from 'react'
 import { ChevronLeft, MapPin, Users, Clock, Calendar, Paperclip, ChevronDown, X, Check } from 'lucide-react'
 import { Button, Input, Textarea, Select, Avatar } from '../components/ui'
 import { workers } from '../data/mockData'
+import { useNavigate } from 'react-router'
 
-export function CreateJob({ onNavigate }: { onNavigate: (id: string) => void }) {
+export function CreateJob() {
   const [form, setForm] = useState({
     name: '',
     description: '',
@@ -18,7 +19,8 @@ export function CreateJob({ onNavigate }: { onNavigate: (id: string) => void }) 
   const [selectedWorkers, setSelectedWorkers] = useState<string[]>([])
   const [workerOpen, setWorkerOpen] = useState(false)
   const [saved, setSaved] = useState(false)
-
+  const navigate = useNavigate()
+  const onNavigate = (path: string) => navigate(path)
   const toggleWorker = (id: string) => {
     setSelectedWorkers(prev => prev.includes(id) ? prev.filter(w => w !== id) : [...prev, id])
   }

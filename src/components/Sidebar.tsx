@@ -4,6 +4,7 @@ import {
   LogOut, Zap, CreditCard, MessageSquare
 } from 'lucide-react'
 import { Avatar } from './ui'
+import { useNavigate } from 'react-router'
 
 const navItems = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -11,7 +12,7 @@ const navItems = [
   { id: 'workers', label: 'Workers', icon: Users },
   { id: 'calendar', label: 'Calendar', icon: Calendar },
   { id: 'locations', label: 'Locations', icon: MapPin },
-  { id: 'messages', label: 'Messages', icon: MessageSquare, badge: 2 },
+  // { id: 'messages', label: 'Messages', icon: MessageSquare, badge: 2 },
 ]
 
 const secondaryItems = [
@@ -29,13 +30,15 @@ const bottomItems = [
 
 interface SidebarProps {
   active: string
-  onNavigate: (id: string) => void
+
   collapsed?: boolean
 }
 
-export function Sidebar({ active, onNavigate, collapsed }: SidebarProps) {
+export function Sidebar({ active, collapsed }: SidebarProps) {
+  const navigate = useNavigate()
+  const onNavigate = (path: string) => navigate(path)
   return (
-    <aside className={`${collapsed ? 'w-16' : 'w-[240px]'} h-screen bg-[#0F172A] flex flex-col fixed left-0 top-0 z-30 transition-all duration-200`}>
+    <aside className={`${collapsed ? 'w-16' : 'w-[240px]'} h-screen bg-[#0F172A] border flex flex-col fixed left-0 top-0 z-30 transition-all duration-200`}>
       {/* Logo */}
       <div className="h-[60px] flex items-center px-5 border-b border-white/[0.06] shrink-0">
         {collapsed ? (

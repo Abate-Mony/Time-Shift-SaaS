@@ -1,4 +1,4 @@
-import { Search, Bell, Plus, PanelLeft } from 'lucide-react'
+import { Search, Bell, Plus, PanelLeft, Menu } from 'lucide-react'
 import { Button } from './ui'
 
 interface TopBarProps {
@@ -29,6 +29,7 @@ export function TopBar({ onNewJob, onToggleSidebar, onNavigate }: TopBarProps) {
       </div>
 
       <div className="flex items-center gap-2 ml-auto">
+  
         <button
           onClick={() => onNavigate('notifications')}
           className="relative w-9 h-9 rounded-lg flex items-center justify-center text-slate-500 hover:bg-slate-100 transition-colors"
@@ -41,7 +42,9 @@ export function TopBar({ onNewJob, onToggleSidebar, onNavigate }: TopBarProps) {
           <Plus size={14} />
           New Job
         </Button>
+
       </div>
+
     </header>
   )
 }

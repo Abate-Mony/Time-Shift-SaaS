@@ -2,8 +2,9 @@ import { useState } from 'react'
 import { Search, Plus, Mail, Phone, Clock, Briefcase, Star, ChevronRight, X } from 'lucide-react'
 import { Avatar, StatusBadge, Button, Card } from '../components/ui'
 import { workers, jobs } from '../data/mockData'
+import { useNavigate } from 'react-router'
 
-export function Workers({ onNavigate: _onNavigate }: { onNavigate: (id: string) => void }) {
+export function Workers() {
   const [search, setSearch] = useState('')
   const [selected, setSelected] = useState<string | null>(null)
 
@@ -14,7 +15,8 @@ export function Workers({ onNavigate: _onNavigate }: { onNavigate: (id: string) 
 
   const selectedWorker = workers.find(w => w.id === selected)
   const workerJobs = selectedWorker ? jobs.filter(j => j.workers.includes(selectedWorker.id)) : []
-
+  const navigate = useNavigate()
+  const onNavigate = (path: string) => navigate(path)
   return (
     <div className="p-6 animate-fade-in">
       <div className="flex items-start justify-between mb-6">

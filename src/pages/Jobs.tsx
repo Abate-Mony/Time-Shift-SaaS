@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Search, Filter, Plus, MapPin, Clock, Users, MoreHorizontal, Eye, Edit, Trash2, Copy } from 'lucide-react'
 import { Button, StatusBadge, PriorityBadge, Avatar, TabBar, EmptyState } from '../components/ui'
 import { jobs, workers } from '../data/mockData'
+import { useNavigate } from 'react-router'
 
 const tabs = [
   { id: 'all', label: 'All Jobs', count: jobs.length },
@@ -11,7 +12,7 @@ const tabs = [
   { id: 'draft', label: 'Draft', count: jobs.filter(j => j.status === 'draft').length },
 ]
 
-export function Jobs({ onNavigate }: { onNavigate: (id: string) => void }) {
+export function Jobs() {
   const [activeTab, setActiveTab] = useState('all')
   const [search, setSearch] = useState('')
   const [openMenu, setOpenMenu] = useState<string | null>(null)
@@ -21,7 +22,8 @@ export function Jobs({ onNavigate }: { onNavigate: (id: string) => void }) {
     const matchSearch = j.name.toLowerCase().includes(search.toLowerCase()) || j.location.toLowerCase().includes(search.toLowerCase())
     return matchTab && matchSearch
   })
-
+  const navigate = useNavigate()
+  const onNavigate = (path: string) => navigate(path)
   return (
     <div className="p-6 animate-fade-in">
       {/* Header */}
