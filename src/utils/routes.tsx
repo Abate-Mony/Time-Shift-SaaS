@@ -1,6 +1,7 @@
 import { createBrowserRouter, Navigate } from "react-router";
 import { Calendar, CreateJob, Dashboard, Jobs, Locations, Reports, Settings, Workers } from "../pages"
 import DashboardLayout from "../layouts/dashboardlayout";
+import AuthLayout from "@/layouts/AuthLayout";
 
 export const router = createBrowserRouter([
     {
@@ -16,7 +17,7 @@ export const router = createBrowserRouter([
                 element: <Navigate to="/" replace />,
             },
             {
-                path: "createjob",
+                path: "create-job",
                 element: <CreateJob />,
             },
             {
@@ -56,5 +57,8 @@ export const router = createBrowserRouter([
                 element: <Settings />
             }
         ],
-    },
+    }, {
+        path: "auth",
+        element: <AuthLayout />
+    }
 ]);

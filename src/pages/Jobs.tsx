@@ -32,7 +32,7 @@ export function Jobs() {
           <h1 className="text-xl font-semibold text-slate-900 tracking-tight">Jobs</h1>
           <p className="text-sm text-slate-500 mt-0.5">Manage and monitor all work assignments</p>
         </div>
-        <Button onClick={() => onNavigate('create-job')}>
+        <Button onClick={() => onNavigate('/create-job')}>
           <Plus size={14} /> New Job
         </Button>
       </div>
