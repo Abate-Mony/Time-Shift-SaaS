@@ -1,9 +1,25 @@
+import { Briefcase, ChevronRight, Clock, Mail, Phone, Plus, Search, Star, X } from 'lucide-react'
 import { useState } from 'react'
-import { Search, Plus, Mail, Phone, Clock, Briefcase, Star, ChevronRight, X } from 'lucide-react'
-import { Avatar, StatusBadge, Button, Card } from '../components/ui'
-import { workers, jobs } from '../data/mockData'
-import { useNavigate } from 'react-router'
+import { Avatar, Button, Card, StatusBadge } from '../components/ui'
+import { jobs, workers } from '../data/mockData'
+import { useQuery, type QueryClient } from '@tanstack/react-query'
+import type { LoaderFunctionArgs } from 'react-router'
+import customFetch from '@/utils/customFetch'
 
+const workersQuery = {
+  queryKey: ['stats'],
+  queryFn: async () => {
+    const { data } = await customFetch.get<any>('/users/users');
+    return data;
+  }
+}
+export const loader = (queryClient: QueryClient) => async ({ request }: LoaderFunctionArgs) => {
+  const params = Object.fromEntries([
+    ...new URL(request.url).searchParams.entries(),
+  ]);
+  await queryClient.ensureQueryData(workersQuery)
+  
+}
 export function Workers() {
   const [search, setSearch] = useState('')
   const [selected, setSelected] = useState<string | null>(null)
@@ -13,10 +29,9 @@ export function Workers() {
     w.role.toLowerCase().includes(search.toLowerCase())
   )
 
-  const selectedWorker = workers.find(w => w.id === selected)
+  const { users } = useQuery(workersQuery).data as any
+  const selectedWorker = users.find(w => w._id === selected)
   const workerJobs = selectedWorker ? jobs.filter(j => j.workers.includes(selectedWorker.id)) : []
-  const navigate = useNavigate()
-  const onNavigate = (path: string) => navigate(path)
   return (
     <div className="p-6 animate-fade-in">
       <div className="flex items-start justify-between mb-6">
@@ -24,7 +39,7 @@ export function Workers() {
           <h1 className="text-xl font-semibold text-slate-900 tracking-tight">Workers</h1>
           <p className="text-sm text-slate-500 mt-0.5">{workers.length} team members across all locations</p>
         </div>
-        <Button size="sm"><Plus size={14} /> Add Worker</Button>
+        <Button size="sm"><Plus size={14} /> Add Worker {selected}</Button>
       </div>
 
       <div className="flex gap-5">
@@ -42,29 +57,29 @@ export function Workers() {
           </div>
 
           <div className="grid grid-cols-1 gap-3">
-            {filtered.map((worker, i) => (
+            {users.map((worker, i) => (
               <Card
-                key={worker.id}
-                onClick={() => setSelected(selected === worker.id ? null : worker.id)}
+                key={worker._id}
+                onClick={() => setSelected(selected === worker._id ? null : worker._id)}
                 className={`p-4 transition-all ${selected === worker.id ? 'border-blue-300 ring-1 ring-blue-200' : ''}`}
               >
                 <div className="flex items-center gap-4">
-                  <Avatar initials={worker.avatar} size="lg" index={i} />
+                  <Avatar initials={worker?.fullname.slice(0,2)} size="lg" index={i} />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
-                      <p className="text-sm font-semibold text-slate-900">{worker.name}</p>
-                      <StatusBadge status={worker.status} />
+                      <p className="text-sm font-semibold text-slate-900">{worker?.fullname}</p>
+                      <StatusBadge status={"active"} />
                     </div>
-                    <p className="text-xs text-slate-500">{worker.role} · {worker.location}</p>
+                    <p className="text-xs text-slate-500">{worker?.role} · {worker?.location}</p>
                     <div className="flex items-center gap-3 mt-2">
                       <span className="flex items-center gap-1 text-xs text-slate-500">
-                        <Clock size={11} />{worker.hoursThisWeek}h this week
+                        <Clock size={11} />{worker?.hoursThisWeek}h this week
                       </span>
                       <span className="flex items-center gap-1 text-xs text-slate-500">
-                        <Briefcase size={11} />{worker.jobsCompleted} jobs done
+                        <Briefcase size={11} />{worker?.jobsCompleted} jobs done
                       </span>
                       <span className="flex items-center gap-1 text-xs text-amber-600">
-                        <Star size={11} fill="currentColor" />{worker.rating}
+                        <Star size={11} fill="currentColor" />{worker?.rating}
                       </span>
                     </div>
                   </div>
@@ -75,7 +90,7 @@ export function Workers() {
                     <button className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors">
                       <Phone size={14} />
                     </button>
-                    <ChevronRight size={14} className={`text-slate-300 transition-transform ${selected === worker.id ? 'rotate-90' : ''}`} />
+                    <ChevronRight size={14} className={`text-slate-300 transition-transform ${selected === worker._id ? 'rotate-90' : ''}`} />
                   </div>
                 </div>
               </Card>
@@ -88,14 +103,14 @@ export function Workers() {
           <div className="w-80 shrink-0 animate-slide-in">
             <Card className="p-5 sticky top-[76px]">
               <div className="flex items-start justify-between mb-4">
-                <Avatar initials={selectedWorker.avatar} size="xl" index={workers.findIndex(w => w.id === selectedWorker.id)} />
+                <Avatar initials={selectedWorker.avatar} size="xl" index={users.findIndex(w => w._id === selectedWorker._id)} />
                 <button onClick={() => setSelected(null)} className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-100 transition-colors">
                   <X size={14} />
                 </button>
               </div>
 
-              <h2 className="text-base font-semibold text-slate-900">{selectedWorker.name}</h2>
-              <p className="text-sm text-slate-500 mt-0.5">{selectedWorker.role}</p>
+              <h2 className="text-base font-semibold text-slate-900">{selectedWorker.fullname}</h2>
+              <p className="text-sm text-slate-500 mt-0.5">{selectedWorker.role ?? "role"}</p>
               <div className="mt-2"><StatusBadge status={selectedWorker.status} /></div>
 
               <div className="mt-4 flex flex-col gap-2.5">

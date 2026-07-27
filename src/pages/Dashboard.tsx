@@ -2,7 +2,7 @@ import { Briefcase, Users, Clock, CheckCircle2, AlertCircle, ArrowRight, MapPin,
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 import { StatCard, Card, Avatar, StatusBadge, Button, Badge } from '../components/ui'
 import { jobs, workers, activities, weeklyHours, monthlyStats } from '../data/mockData'
-import { useNavigate } from 'react-router'
+import { useNavigate, useOutletContext } from 'react-router'
 
 const todayJobs = jobs.filter(j => j.date === '2025-07-25')
 const workingNow = workers.filter(w => w.status === 'working')
@@ -39,15 +39,18 @@ const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?:
 }
 
 export function Dashboard() {
-  const navigate=useNavigate()
-  const onNavigate=(path:string)=>navigate(path)
+  const navigate = useNavigate()
+  const onNavigate = (path: string) => navigate(path)
+  const { user } = useOutletContext() as {
+    user: any
+  } || {}
   return (
     <div className="p-6 animate-fade-in">
       {/* Header */}
       <div className="flex items-start justify-between mb-7">
         <div>
           <p className="text-xs font-medium text-slate-400 uppercase tracking-widest mb-1">Friday, 25 July 2025</p>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Good morning, Owen</h1>
+          <h1 className="text-2xl font-medium text-slate-900 tracking-tight">Good morning, <span className='font-black uppercase'>{user?.fullname}</span></h1>
           <p className="text-slate-500 text-sm mt-0.5">Here's what's happening with your workforce today.</p>
         </div>
         <div className="flex gap-2">

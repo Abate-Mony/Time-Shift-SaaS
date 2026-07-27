@@ -2,8 +2,10 @@ import { useState } from 'react'
 import { Sidebar } from '../components/Sidebar'
 import { TopBar } from '../components/TopBar'
 import { WorkerApp } from '../pages/WorkerApp'
-import { Outlet } from 'react-router'
+import { Outlet, redirect, useNavigation, type LoaderFunctionArgs } from 'react-router'
 import { useMediaQuery } from "react-responsive";
+import customFetch from '@/utils/customFetch'
+import { useQuery, type QueryClient } from '@tanstack/react-query'
 type Page =
     | 'dashboard'
     | 'jobs'
@@ -21,7 +23,25 @@ type Page =
     | 'help'
     | 'worker-app'
 
+export const loader = (queryClient: QueryClient) => async ({ request: _request }: LoaderFunctionArgs) => {
+    try {
+        return await queryClient.ensureQueryData(userQuery)
+    } catch (error) {
+        // toast.error("fail to login you in try again later")
+        return redirect(`/auth`)
+    }
+}
+const userQuery = {
+    queryKey: ["user"],
+    queryFn: async () => {
+        const { data } = await customFetch.get("/users/current-user");
+        return data
+
+    }
+}
 export default function DashboardLayout() {
+    const navigation = useNavigation()
+    const isPageLoading = navigation.state === "loading"
     const [page, setPage] = useState<Page>('dashboard')
     const [sidebarCollapsed, setSidebarCollapsed] = useState(true)
 
@@ -34,6 +54,7 @@ export default function DashboardLayout() {
     const isDesktop = useMediaQuery({
         query: "(min-width: 1024px)",
     });
+    const { user } = useQuery(userQuery)?.data as unknown as any || { user: null }
     return (
         <div className="flex h-screen  overflow-hidden bg-[#F8FAFC]">
             <Sidebar active={page} collapsed={sidebarCollapsed} />
@@ -73,7 +94,7 @@ export default function DashboardLayout() {
                         />
                         <main className={`flex-1 overflow-y-auto ${isFullBleed ? '' : ''}`}>
                             {
-                                <Outlet />
+                                <Outlet context={{ user }} />
                             }
                             {/* {page === 'help' && <HelpPage />}     */}
                         </main>

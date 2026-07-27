@@ -1,12 +1,14 @@
 import { createBrowserRouter, Navigate } from "react-router";
-import { Calendar, CreateJob, Dashboard, Jobs, Locations, Reports, Settings, Workers } from "../pages"
+import { Calendar, CreateJob, Dashboard, dashboardLoader, Jobs, Locations, loginAction, Reports, Settings, Workers, workersLoader } from "../pages"
 import DashboardLayout from "../layouts/dashboardlayout";
 import AuthLayout from "@/layouts/AuthLayout";
+import { queryClient } from "@/lib/queryClient";
 
 export const router = createBrowserRouter([
     {
         path: "/",
         element: <DashboardLayout />,
+        loader: dashboardLoader(queryClient),
         children: [
             {
                 index: true,
@@ -27,6 +29,7 @@ export const router = createBrowserRouter([
             {
                 path: "workers",
                 element: <Workers />,
+                loader: workersLoader(queryClient)
             },
             {
                 path: "workers",
@@ -59,6 +62,7 @@ export const router = createBrowserRouter([
         ],
     }, {
         path: "auth",
-        element: <AuthLayout />
+        element: <AuthLayout />,
+        action: loginAction
     }
 ]);

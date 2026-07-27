@@ -4,7 +4,9 @@ import {
   LogOut, Zap, CreditCard, MessageSquare
 } from 'lucide-react'
 import { Avatar } from './ui'
-import { useNavigate } from 'react-router'
+import { Link, useNavigate } from 'react-router'
+import CustomNavLink from './ui/link'
+import { cn } from '@/lib/utils'
 
 const navItems = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -75,26 +77,70 @@ export function Sidebar({ active, collapsed }: SidebarProps) {
       <nav className="flex-1 overflow-y-auto py-3 px-3 flex flex-col gap-0.5">
         {!collapsed && <p className="text-[10px] font-semibold text-white/25 uppercase tracking-widest px-2 mb-1 mt-1">Main</p>}
         {navItems.map(item => (
-          <NavItem key={item.id} item={item} active={active} onNavigate={onNavigate} collapsed={collapsed} />
+          <CustomNavLink
+            to={item.id}
+            show
+            selectedClassName=''
+            animateClassName="inset-0 size-full bg-gray-500/15"
+            className={`w-full  text-white/50 hover:text-white/75 hover:bg-white/3 flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm transition-colors relative group`}
+
+          >
+            <item.icon size={16} className={cn('text-blue-400 group-[.slide-active]:text-current')} />
+            {!collapsed && <span className="flex-1 text-left font-medium">{item.label}</span>}
+            {!collapsed && item.badge !== undefined && (
+              <span className="bg-blue-500 text-white text-[10px] font-bold w-4 h-4 rounded-sm flex items-center justify-center">{item.badge}</span>
+            )}
+            {collapsed && item.badge !== undefined && (
+              <span className="absolute top-1 right-1 w-2 h-2 bg-blue-500 rounded-full" />
+            )}
+          </CustomNavLink>
         ))}
 
         {!collapsed && <p className="text-[10px] font-semibold text-white/25 uppercase tracking-widest px-2 mb-1 mt-4">Reporting</p>}
         {collapsed && <div className="my-2 border-t border-white/[0.06]" />}
         {secondaryItems.map(item => (
-          <NavItem key={item.id} item={item} active={active} onNavigate={onNavigate} collapsed={collapsed} />
+          <CustomNavLink
+            to={item.id}
+            show
+            selectedClassName=''
+            animateClassName="inset-0 size-full bg-gray-500/15"
+            className={`w-full  text-white/50 hover:text-white/75 hover:bg-white/3 flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm transition-colors relative group`}
+
+          >
+            <item.icon size={16} className={cn('text-blue-400 group-[.slide-active]:text-current')} />
+            {!collapsed && <span className="flex-1 text-left font-medium">{item.label}</span>}
+
+
+          </CustomNavLink>
         ))}
       </nav>
 
       {/* Bottom nav */}
-      <div className="border-t border-white/[0.06] px-3 py-3 flex flex-col gap-0.5">
+      <div className="border-t border-white/6 px-3 py-3 flex flex-col gap-0.5">
         {bottomItems.map(item => (
-          <NavItem key={item.id} item={item} active={active} onNavigate={onNavigate} collapsed={collapsed} />
+          <CustomNavLink
+            to={item.id}
+            show
+            selectedClassName=''
+            animateClassName="inset-0 size-full bg-gray-500/15"
+            className={`w-full  text-white/50 hover:text-white/75 hover:bg-white/3 flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm transition-colors relative group`}
+
+          >
+            <item.icon size={16} className={cn('text-blue-400 group-[.slide-active]:text-current')} />
+            {!collapsed && <span className="flex-1 text-left font-medium">{item.label}</span>}
+            {!collapsed && item.badge !== undefined && (
+              <span className="bg-blue-500 text-white text-[10px] font-bold w-4 h-4 rounded-sm flex items-center justify-center">{item.badge}</span>
+            )}
+            {collapsed && item.badge !== undefined && (
+              <span className="absolute top-1 right-1 w-2 h-2 bg-blue-500 rounded-full" />
+            )}
+          </CustomNavLink>
         ))}
       </div>
 
       {/* User */}
-      <div className="border-t border-white/[0.06] p-3">
-        <button className="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-white/[0.05] transition-colors group">
+      <div className="border-t border-white/6 p-3">
+        <button className="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-white/5 transition-colors group">
           <Avatar initials="OW" size="sm" index={0} />
           {!collapsed && (
             <>
@@ -102,7 +148,9 @@ export function Sidebar({ active, collapsed }: SidebarProps) {
                 <p className="text-xs font-medium text-white/80 truncate">Owen Wright</p>
                 <p className="text-[10px] text-white/35">Owner</p>
               </div>
-              <LogOut size={13} className="text-white/25 group-hover:text-white/50 transition-colors shrink-0" />
+              <Link  to={"/auth"}>
+
+                <LogOut size={13} className="text-white/25 group-hover:text-white/50 transition-colors shrink-0" /></Link>
             </>
           )}
         </button>
@@ -115,11 +163,16 @@ function NavItem({ item, active, onNavigate, collapsed }: { item: { id: string; 
   const isActive = active === item.id
   const Icon = item.icon
   return (
-    <button
-      onClick={() => onNavigate(item.id)}
+    <CustomNavLink
+      to={item.id}
+      // onClick={() => onNavigate(item.id)}
       title={collapsed ? item.label : undefined}
-      className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm transition-colors relative group
-        ${isActive ? 'bg-white/[0.08] text-white' : 'text-white/50 hover:bg-white/[0.04] hover:text-white/75'}`}
+      show
+      selectedClassName=''
+      animateClassName="inset-0 size-full bg-white"
+      // className='bg-white shadow-sm shadow-primary-color/20 py-2 text-black hover:bg-primary-color/20 group'
+      className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm transition-colors relative group`}
+
     >
       <Icon size={16} className={isActive ? 'text-blue-400' : 'text-current'} />
       {!collapsed && <span className="flex-1 text-left font-medium">{item.label}</span>}
@@ -129,6 +182,6 @@ function NavItem({ item, active, onNavigate, collapsed }: { item: { id: string; 
       {collapsed && item.badge !== undefined && (
         <span className="absolute top-1 right-1 w-2 h-2 bg-blue-500 rounded-full" />
       )}
-    </button>
+    </CustomNavLink>
   )
 }
