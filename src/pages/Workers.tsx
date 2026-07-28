@@ -9,6 +9,7 @@ import SearchComponent from '@/components/Search'
 import { cn } from '@/lib/utils'
 import { sleep } from '@/utils/sleep'
 import { Button } from '@/components/ui/button'
+import type { User } from '@/utils/types'
 
 const workersQuery = (params: Params) => {
 
@@ -53,7 +54,7 @@ export const loader = (queryClient: QueryClient) => async ({ request }: LoaderFu
 export function Workers() {
   const navigation = useNavigation();
 
-const isSearching = navigation.state === "loading";
+  const isSearching = navigation.state === "loading";
   const { searchValues } = useLoaderData() as any
   const [search, setSearch] = useState('')
   const [selected, setSelected] = useState<string | null>(null)
@@ -63,7 +64,9 @@ const isSearching = navigation.state === "loading";
     w.role.toLowerCase().includes(search.toLowerCase())
   )
 
-  const { users,nHits } = useQuery(workersQuery(searchValues)).data as any
+  const { users, nHits } = useQuery(workersQuery(searchValues)).data as {
+    users: User[], nHits: number
+  }
   const selectedWorker = users.find(w => w._id === selected)
   const workerJobs = selectedWorker ? jobs.filter(j => j.workers.includes(selectedWorker.id)) : []
   return (
@@ -80,20 +83,20 @@ const isSearching = navigation.state === "loading";
         {/* List */}
         <div className="flex-1 min-w-0">
           {/* Search */}
-        
+
           <SearchComponent />
           <div className={cn("grid grid-cols-1 gap-3",
 
-              isSearching&&"opacity-60"
+            isSearching && "opacity-60"
           )}>
             {users.map((worker, i) => (
               <Card
                 key={worker._id}
                 onClick={() => setSelected(selected === worker._id ? null : worker._id)}
-                className={`p-4 transition-all ${selected === worker.id ? 'border-blue-300 ring-1 ring-blue-200' : ''}`}
+                className={`p-4 transition-all ${selected === worker._id ? 'border-blue-300 ring-1 ring-blue-200' : ''}`}
               >
                 <div className={cn("flex items-center gap-4",
-                
+
                 )}>
                   <Avatar initials={worker?.fullname.slice(0, 2)} size="lg" index={i} />
                   <div className="flex-1 min-w-0">
@@ -101,16 +104,16 @@ const isSearching = navigation.state === "loading";
                       <p className="text-sm font-semibold text-slate-900">{worker?.fullname}</p>
                       <StatusBadge status={"active"} />
                     </div>
-                    <p className="text-xs text-slate-500">{worker?.role} · {worker?.location}</p>
+                    <p className="text-xs text-slate-500">{worker?.role} · {"location"}</p>
                     <div className="flex items-center gap-3 mt-2">
                       <span className="flex items-center gap-1 text-xs text-slate-500">
-                        <Clock size={11} />{worker?.hoursThisWeek}h this week
+                        <Clock size={11} />{worker?.isActive}h this week
                       </span>
                       <span className="flex items-center gap-1 text-xs text-slate-500">
-                        <Briefcase size={11} />{worker?.jobsCompleted} jobs done
+                        <Briefcase size={11} />{worker?.isVerified} jobs done
                       </span>
                       <span className="flex items-center gap-1 text-xs text-amber-600">
-                        <Star size={11} fill="currentColor" />{worker?.rating}
+                        <Star size={11} fill="currentColor" />{worker?.lastLogin}
                       </span>
                     </div>
                   </div>
@@ -134,7 +137,7 @@ const isSearching = navigation.state === "loading";
           <div className="w-80 shrink-0 animate-slide-in">
             <Card className="p-5 sticky top-[76px]">
               <div className="flex items-start justify-between mb-4">
-                <Avatar initials={selectedWorker.avatar} size="xl" index={users.findIndex(w => w._id === selectedWorker._id)} />
+                {/* <Avatar initials={selectedWorker.avatar} size="xl" index={users.findIndex(w => w._id === selectedWorker._id)} /> */}
                 <button onClick={() => setSelected(null)} className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-100 transition-colors">
                   <X size={14} />
                 </button>
@@ -142,7 +145,7 @@ const isSearching = navigation.state === "loading";
 
               <h2 className="text-base font-semibold text-slate-900">{selectedWorker.fullname}</h2>
               <p className="text-sm text-slate-500 mt-0.5">{selectedWorker.role ?? "role"}</p>
-              <div className="mt-2"><StatusBadge status={selectedWorker.status} /></div>
+              <div className="mt-2"><StatusBadge status={"status"} /></div>
 
               <div className="mt-4 flex flex-col gap-2.5">
                 <div className="flex items-center gap-2.5 text-sm text-slate-600">
@@ -151,21 +154,21 @@ const isSearching = navigation.state === "loading";
                 </div>
                 <div className="flex items-center gap-2.5 text-sm text-slate-600">
                   <Phone size={13} className="text-slate-400 shrink-0" />
-                  {selectedWorker.phone}
+                  {"phone number"}
                 </div>
               </div>
 
               <div className="mt-5 pt-4 border-t border-[#F1F5F9] grid grid-cols-3 gap-3 text-center">
                 <div>
-                  <p className="text-lg font-bold text-slate-900">{selectedWorker.hoursThisWeek}</p>
+                  <p className="text-lg font-bold text-slate-900">{"hours work"}</p>
                   <p className="text-[10px] text-slate-400 mt-0.5">hrs/week</p>
                 </div>
                 <div>
-                  <p className="text-lg font-bold text-slate-900">{selectedWorker.jobsCompleted}</p>
+                  <p className="text-lg font-bold text-slate-900">{"selectedWorker.jobsCompleted"}</p>
                   <p className="text-[10px] text-slate-400 mt-0.5">jobs done</p>
                 </div>
                 <div>
-                  <p className="text-lg font-bold text-amber-600">{selectedWorker.rating}</p>
+                  <p className="text-lg font-bold text-amber-600">{"selectedWorker.rating"}</p>
                   <p className="text-[10px] text-slate-400 mt-0.5">rating</p>
                 </div>
               </div>

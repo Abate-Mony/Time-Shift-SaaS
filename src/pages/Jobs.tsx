@@ -55,7 +55,7 @@ export function Jobs() {
   const [openMenu, setOpenMenu] = useState<string | null>(null)
   const { searchValues } = useLoaderData() as any
   const navigate = useNavigate()
-  const onNavigate = path => navigate(path)
+  const onNavigate = (path:string) => navigate(path)
   const { jobs, totalPages, currentPage } = useQuery(jobsQuery(searchValues)).data as any
   const tabs = [
     { id: 'all', label: 'All Jobs', count: jobs.length },
@@ -126,7 +126,7 @@ export function Jobs() {
             icon={<Users size={20} />}
             title="No jobs found"
             description="Try adjusting your search or filters to find what you're looking for."
-            action={<Button size="sm" onClick={() => onNavigate('create-job')}>Create Job</Button>}
+            action={<Button size="sm" onClick={() => onNavigate('/create-job')}>Create Job</Button>}
           />
         ) : (
           jobs.map(job => {

@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { ChevronLeft, MapPin, Users, Clock, Calendar, Paperclip, ChevronDown, X, Check } from 'lucide-react'
 import { Avatar, Input } from '../components/ui'
-import { workers } from '../data/mockData'
 import { Form, redirect, useLoaderData, useNavigate, type ActionFunctionArgs, type Params } from 'react-router'
 import { Button } from '@/components/ui/button'
 import { useQuery } from '@tanstack/react-query'
@@ -10,89 +9,131 @@ import { isAxiosError } from 'axios'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectGroup, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { SelectItem } from '@radix-ui/react-select'
+import type { CreateJobForm, User } from '@/utils/types'
+import SearchLocation from '@/components/locationSearchComponent'
+import toast from 'react-hot-toast'
+import { createJobSchema } from '@/utils/schemas'
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { cn } from '@/lib/utils'
 
-
+// Small reusable error renderer so we don't repeat the same JSX everywhere
+const FieldError = ({ message }: { message?: string }) => {
+  if (!message) return null
+  return <p className="text-sm text-red-500 mt-1">{message}</p>
+}
 
 const workersQuery = (params: Params) => {
+  const { search, sort, page, status, date } = params
 
-  const { search,
-    sort, page,
-    status, date } = params;
-  return (
-    {
-
-
-      queryKey: [
-        'workers',
-        {
-          search: search ?? '',
-          status: status ?? 'all',
-          sort: sort ?? 'asc',
-          page: page ?? 1,
-          date: date ?? ''
-        }
-      ],
-      queryFn: async () => {
-        // await sleep(3000)
-        const { data } = await customFetch.get<any>('/users/users', {
-          params
-        });
-        return data;
+  return {
+    queryKey: [
+      'workers',
+      {
+        search: search ?? '',
+        status: status ?? 'all',
+        sort: sort ?? 'asc',
+        page: page ?? 1,
+        date: date ?? ''
       }
+    ],
+    queryFn: async () => {
+      const { data } = await customFetch.get<any>('/users/users', { params })
+      return data
     }
-  )
-}
-export const action = async ({ request }: ActionFunctionArgs) => {
-  const formData = await request.formData();
-  const data = Object.fromEntries(formData);
-
-  const from = data.from as string | null;
-  console.log(data)
-  try {
-    await customFetch.post("/jobs", data);
-
-    if (from) {
-      return redirect(from);
-    }
-
-    return redirect("/dashboard");
-  } catch (err) {
-    if (isAxiosError(err)) {
-      return err.response?.data?.msg ?? err.response?.data ?? null;
-    }
-
-    return err instanceof Error ? err.message : "Something went wrong";
   }
-};
+}
+
+export const action = async ({ request }: ActionFunctionArgs) => {
+  const formData = await request.formData()
+  const data = Object.fromEntries(formData)
+  // alert("enter here")
+  console.log("this is data: ", data)
+  try {
+    await customFetch.post("/jobs", data)
+
+    toast.success('Job created successfully!')
+
+    return redirect("/jobs")
+  } catch (err) {
+    let errorM
+
+    if (isAxiosError(err)) {
+      errorM = err.response?.data?.msg ?? err.response?.data ?? null
+    }
+
+    errorM = errorM ?? (err instanceof Error ? err.message : "Something went wrong")
+
+    toast.error(errorM, { position: 'bottom-center' })
+
+    return errorM
+  }
+}
 
 export function CreateJob() {
-  const [form, setForm] = useState({
-    name: '',
-    description: '',
-    company: '',
-    location: '',
-    date: '',
-    startTime: '',
-    endTime: '',
-    priority: 'medium',
-    notes: '',
-  })
   const [selectedWorkers, setSelectedWorkers] = useState<string[]>([])
   const [workerOpen, setWorkerOpen] = useState(false)
   const [saved, setSaved] = useState(false)
   const navigate = useNavigate()
   const onNavigate = (path: string) => navigate(path)
-  const toggleWorker = (id: string) => {
-    setSelectedWorkers(prev => prev.includes(id) ? prev.filter(w => w !== id) : [...prev, id])
-  }
-  console.log("selected workers : ", selectedWorkers)
-  const handleSave = (_publish: boolean) => {
-    setSaved(true)
-    setTimeout(() => onNavigate('jobs'), 800)
-  }
+
   const { searchValues } = useLoaderData() as any
 
-  const { users } = useQuery(workersQuery(searchValues)).data as any
+  const { users } = useQuery(workersQuery(searchValues)).data as {
+    users: User[]
+  }
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: {
+      errors,
+      isSubmitting,
+    },
+  } = useForm<CreateJobForm>({
+    resolver: zodResolver(createJobSchema),
+    defaultValues: {
+      title: "",
+      description: "",
+      company: "",
+      priority: "medium",
+      date: "",
+      startTime: "",
+      endTime: "",
+      workers: [],
+      additional_notes: "",
+      // siteName: "",
+      // address: "",
+      // city: "",
+      // postcode: "",
+      // country: "",
+      // latitude: 0,
+      // longitude: 0,
+    },
+    mode: "onSubmit",
+    reValidateMode: "onChange",
+  })
+
+  const startTime = watch("startTime")
+  const endTime = watch("endTime")
+  const priority = watch("priority")
+
+  const toggleWorker = (id: string) => {
+    const next = selectedWorkers.includes(id)
+      ? selectedWorkers.filter(w => w !== id)
+      : [...selectedWorkers, id]
+
+    setSelectedWorkers(next)
+    setValue("workers", next, { shouldValidate: true })
+  }
+  console.log(errors)
+  // Runs only when validation passes; React Router's <Form> then submits
+  // to the `action` above as normal.
+  const onValid = () => {
+    // Nothing extra to do here — RHF has already confirmed the data is valid.
+  }
 
   if (saved) {
     return (
@@ -121,7 +162,14 @@ export function CreateJob() {
         </div>
       </div>
 
-      <Form className="flex flex-col gap-5" method='post' >
+      <Form
+        onSubmit={async (e) => {
+          await handleSubmit(onValid)();
+          e.preventDefault();
+        }}
+        className="flex flex-col gap-5"
+        method="post"
+      >
         {/* Basic Info */}
         <div className="bg-white rounded-xl border border-[#E2E8F0] p-6">
           <h2 className="text-sm font-semibold text-slate-800 mb-4 flex items-center gap-2">
@@ -129,43 +177,60 @@ export function CreateJob() {
             Job Details
           </h2>
           <div className="grid grid-cols-1 gap-4">
-            <Input
-              label="Job Name"
-              placeholder="e.g. Canary Wharf Security — Night Shift"
-              name='title'
-            />
-            <input type="hidden" value={form.description} name='description' />
-            <Textarea
-              name='description'
-              placeholder="Brief description of the work required..."
-            />
-            <div className="grid grid-cols-2 gap-4">
+            <div>
               <Input
-                name='company'
-                label="Compananyy / Client"
-                placeholder="e.g. SecureGuard Ltd"
-                value={form.company}
-                onChange={e => setForm(f => ({ ...f, company: e.target.value }))}
+                label="Job Name"
+                placeholder="e.g. Canary Wharf Security — Night Shift"
+                {...register("title")}
+                className={cn(errors.title && "border-red-500!")}
               />
-              <Select  defaultValue='yes' defaultOpen >
-                <SelectTrigger className="w-45">
-                  <SelectValue placeholder="medium" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    {[
-                      { value: 'low', label: 'Low Priority' },
-                      { value: 'medium', label: 'Medium Priority' },
-                      { value: 'high', label: 'High Priority' },
-                    ].map((item) => (
-                      <SelectItem key={item.value} value={item.value}>
-                        {item.label}
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-             
+              <FieldError message={errors.title?.message} />
+            </div>
+
+            <div>
+              <Textarea
+                {...register("description")}
+                placeholder="Brief description of the work required..."
+                className={cn(errors.description && "border-red-500!")}
+              />
+              <FieldError message={errors.description?.message} />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Input
+                  label="Company / Client"
+                  placeholder="e.g. SecureGuard Ltd"
+                  {...register("company")}
+                  className={cn(errors.company && "border-red-500!")}
+                />
+                <FieldError message={errors.company?.message} />
+              </div>
+
+              <div>
+                <Select
+                  value={priority}
+                  onValueChange={(val) => setValue("priority", val as CreateJobForm["priority"], { shouldValidate: true })}
+                >
+                  <SelectTrigger className={cn("w-45", errors.priority && "border-red-500!")}>
+                    <SelectValue placeholder="Priority" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      {[
+                        { value: 'low', label: 'Low Priority' },
+                        { value: 'medium', label: 'Medium Priority' },
+                        { value: 'high', label: 'High Priority' },
+                      ].map((item) => (
+                        <SelectItem key={item.value} value={item.value}>
+                          {item.label}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+                <FieldError message={errors.priority?.message} />
+              </div>
             </div>
           </div>
         </div>
@@ -176,13 +241,32 @@ export function CreateJob() {
             <span className="w-5 h-5 rounded-full bg-[#1E3A5F] text-white flex items-center justify-center text-[10px] font-bold">2</span>
             Location
           </h2>
-          <Input
-            label="Site Address"
-            placeholder="e.g. Canary Wharf, London E14"
-            icon={<MapPin size={14} />}
-            value={form.location}
-            onChange={e => setForm(f => ({ ...f, location: e.target.value }))}
+          <SearchLocation
+            onSelect={(location) => {
+              // setValue("siteName", location.siteName, { shouldValidate: true })
+              // setValue("address", location.address, { shouldValidate: true })
+              // setValue("city", location.city, { shouldValidate: true })
+              // setValue("postcode", location.postcode, { shouldValidate: true })
+              // setValue("country", location.country, { shouldValidate: true })
+              // setValue("latitude", location.lat, { shouldValidate: true })
+              // setValue("longitude", location.lng, { shouldValidate: true })
+            }}
           />
+          {/* <FieldError message={errors.address?.message} />
+          <FieldError message={errors.siteName?.message} />
+          <FieldError message={errors.city?.message} />
+          <FieldError message={errors.postcode?.message} />
+          <FieldError message={errors.country?.message} /> */}
+
+          {/* Hidden fields so RHF-registered values actually submit with the form */}
+          {/* <input type="hidden" {...register("siteName")} />
+          <input type="hidden" {...register("address")} />
+          <input type="hidden" {...register("city")} />
+          <input type="hidden" {...register("postcode")} />
+          <input type="hidden" {...register("country")} />
+          <input type="hidden" {...register("latitude")} />
+          <input type="hidden" {...register("longitude")} /> */}
+
           {/* Map placeholder */}
           <div className="mt-3 h-36 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center overflow-hidden">
             <div className="text-center">
@@ -199,36 +283,47 @@ export function CreateJob() {
             Date & Time
           </h2>
           <div className="grid grid-cols-3 gap-4">
-            <Input
-              label="Date"
-              type="date"
-              icon={<Calendar size={14} />}
-              value={form.date}
-              onChange={e => setForm(f => ({ ...f, date: e.target.value }))}
-            />
-            <Input
-              label="Start Time"
-              type="time"
-              icon={<Clock size={14} />}
-              value={form.startTime}
-              onChange={e => setForm(f => ({ ...f, startTime: e.target.value }))}
-            />
-            <Input
-              label="End Time"
-              type="time"
-              icon={<Clock size={14} />}
-              value={form.endTime}
-              onChange={e => setForm(f => ({ ...f, endTime: e.target.value }))}
-            />
+            <div>
+              <Input
+                label="Date"
+                type="date"
+                icon={<Calendar size={14} />}
+                {...register("date")}
+                className={cn(errors.date && "border-red-500!")}
+              />
+              <FieldError message={errors.date?.message} />
+            </div>
+
+            <div>
+              <Input
+                label="Start Time"
+                type="time"
+                icon={<Clock size={14} />}
+                {...register("startTime")}
+                className={cn(errors.startTime && "border-red-500!")}
+              />
+              <FieldError message={errors.startTime?.message} />
+            </div>
+
+            <div>
+              <Input
+                label="End Time"
+                type="time"
+                icon={<Clock size={14} />}
+                {...register("endTime")}
+                className={cn(errors.endTime && "border-red-500!")}
+              />
+              <FieldError message={errors.endTime?.message} />
+            </div>
           </div>
-          {form.startTime && form.endTime && (
+          {startTime && endTime && (
             <div className="mt-3 bg-blue-50 border border-blue-100 rounded-lg px-4 py-2.5 flex items-center gap-2">
               <Clock size={14} className="text-blue-500" />
               <p className="text-sm text-blue-700">
                 <span className="font-semibold">
                   {(() => {
-                    const [sh, sm] = form.startTime.split(':').map(Number)
-                    const [eh, em] = form.endTime.split(':').map(Number)
+                    const [sh, sm] = startTime.split(':').map(Number)
+                    const [eh, em] = endTime.split(':').map(Number)
                     const mins = (eh * 60 + em) - (sh * 60 + sm)
                     const h = Math.floor(Math.abs(mins) / 60)
                     const m = Math.abs(mins) % 60
@@ -247,7 +342,8 @@ export function CreateJob() {
             Assign Workers
           </h2>
 
-          <button type='button'
+          <button
+            type="button"
             onClick={() => setWorkerOpen(!workerOpen)}
             className="w-full flex items-center justify-between h-9 px-3 border border-[#E2E8F0] rounded-lg text-sm text-slate-600 hover:bg-slate-50 transition-colors"
           >
@@ -258,12 +354,19 @@ export function CreateJob() {
             <ChevronDown size={14} className={`text-slate-400 transition-transform ${workerOpen ? 'rotate-180' : ''}`} />
           </button>
 
+          {/* One hidden input per selected worker id, so FormData serializes an array correctly */}
+          {selectedWorkers.map(id => (
+            <input key={id} type="hidden" name="workers" value={id} />
+          ))}
+          <FieldError message={errors.workers?.message as string | undefined} />
+
           {workerOpen && (
             <div className="mt-2 border border-[#E2E8F0] rounded-xl overflow-hidden animate-fade-in">
               {users.map((w, i) => {
                 const selected = selectedWorkers.includes(w._id)
                 return (
                   <button
+                    type="button"
                     key={w._id}
                     onClick={() => toggleWorker(w._id)}
                     className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 transition-colors border-b border-[#F1F5F9] last:border-0 ${selected ? 'bg-blue-50/40' : ''}`}
@@ -271,7 +374,7 @@ export function CreateJob() {
                     <Avatar initials={w.fullname.slice(0, 2)} size="sm" index={i} />
                     <div className="flex-1 text-left">
                       <p className="text-sm font-medium text-slate-800">{w.fullname}</p>
-                      <p className="text-xs text-slate-400">{w.role} · {w.status === 'available' ? 'Available' : w.status === 'working' ? 'Currently working' : 'Off duty'}</p>
+                      <p className="text-xs text-slate-400">{w.role}</p>
                     </div>
                     <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${selected ? 'bg-[#1E3A5F] border-[#1E3A5F]' : 'border-slate-300'}`}>
                       {selected && <Check size={11} className="text-white" />}
@@ -285,13 +388,12 @@ export function CreateJob() {
           {selectedWorkers.length > 0 && (
             <div className="flex flex-wrap gap-2 mt-3">
               {selectedWorkers.map(id => {
-                const w = workers.find(w => w._id === id)
+                const w = users.find(w => w._id === id)
                 if (!w) return null
                 return (
                   <div key={id} className="flex items-center gap-1.5 bg-blue-50 border border-blue-200 rounded-full pl-1.5 pr-2 py-0.5">
-                    <Avatar initials={w.avatar} size="sm" index={workers.indexOf(w)} />
-                    <span className="text-xs font-medium text-blue-700">{w.name.split(' ')[0]}</span>
-                    <button onClick={() => toggleWorker(id)} className="text-blue-400 hover:text-blue-600">
+                    <span className="text-xs font-medium text-blue-700">{w.fullname.split(' ')[0]}</span>
+                    <button type="button" onClick={() => toggleWorker(id)} className="text-blue-400 hover:text-blue-600">
                       <X size={11} />
                     </button>
                   </div>
@@ -308,11 +410,14 @@ export function CreateJob() {
             Notes & Attachments
           </h2>
           <Textarea
-            name='additional_notes'
+            {...register("additional_notes")}
             placeholder="Access instructions, equipment needed, special requirements..."
             rows={4}
+            className={cn(errors.additional_notes && "border-red-500!")}
           />
-          <button className="mt-3 flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700 border border-dashed border-slate-300 rounded-lg w-full py-3 px-4 hover:bg-slate-50 transition-colors">
+          <FieldError message={errors.additional_notes?.message} />
+
+          <button type="button" className="mt-3 flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700 border border-dashed border-slate-300 rounded-lg w-full py-3 px-4 hover:bg-slate-50 transition-colors">
             <Paperclip size={14} />
             Attach files, documents or images
           </button>
@@ -320,14 +425,17 @@ export function CreateJob() {
 
         {/* Actions */}
         <div className="flex items-center gap-3 justify-end pt-2 pb-6">
-          <Button variant="outline" onClick={() => onNavigate('jobs')}>Cancel</Button>
-          <Button variant="secondary" onClick={() => handleSave(false)}>Save as Draft</Button>
-          <Button
-            //  onClick={() => handleSave(true)}
-            type='submit'
-          >Publish Job</Button>
+          <Button type="button" variant="outline" onClick={() => onNavigate('jobs')}>
+            Cancel
+          </Button>
+          <Button type="submit" name="status-" value="draft" variant="secondary" disabled={isSubmitting}>
+            Save as Draft
+          </Button>
+          <Button type="submit" name="status-" value="published" disabled={isSubmitting}>
+            Publish Job
+          </Button>
         </div>
       </Form>
-    </div >
+    </div>
   )
 }
