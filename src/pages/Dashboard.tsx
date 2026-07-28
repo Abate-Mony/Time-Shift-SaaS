@@ -1,8 +1,9 @@
 import { Briefcase, Users, Clock, CheckCircle2, AlertCircle, ArrowRight, MapPin, Timer } from 'lucide-react'
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
-import { StatCard, Card, Avatar, StatusBadge, Button, Badge } from '../components/ui'
+import { StatCard, Card, Avatar, StatusBadge, Badge } from '../components/ui'
 import { jobs, workers, activities, weeklyHours, monthlyStats } from '../data/mockData'
 import { useNavigate, useOutletContext } from 'react-router'
+import { Button } from '@/components/ui/button'
 
 const todayJobs = jobs.filter(j => j.date === '2025-07-25')
 const workingNow = workers.filter(w => w.status === 'working')

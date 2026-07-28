@@ -1,5 +1,7 @@
 export {loader as dashboardLoader} from "@/layouts/dashboardlayout"
 export {action as loginAction } from "@/components/login-form"
+export {action as createjobAction } from "./CreateJob"
+export {loader as jobsLoader} from "./Jobs"
 export {loader as workersLoader} from "./Workers"
 export { Dashboard } from './Dashboard'
 export { Jobs } from './Jobs'

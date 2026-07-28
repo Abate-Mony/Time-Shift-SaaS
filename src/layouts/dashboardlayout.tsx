@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Sidebar } from '../components/Sidebar'
 import { TopBar } from '../components/TopBar'
 import { WorkerApp } from '../pages/WorkerApp'
-import { Outlet, redirect, useNavigation, type LoaderFunctionArgs } from 'react-router'
+import { Outlet, redirect, useLocation, useNavigation, type LoaderFunctionArgs } from 'react-router'
 import { useMediaQuery } from "react-responsive";
 import customFetch from '@/utils/customFetch'
 import { useQuery, type QueryClient } from '@tanstack/react-query'
@@ -41,7 +41,12 @@ const userQuery = {
 }
 export default function DashboardLayout() {
     const navigation = useNavigation()
-    const isPageLoading = navigation.state === "loading"
+    const location = useLocation();
+
+    const isRouteChange =
+        navigation.state === "loading" &&
+        navigation.location &&
+        navigation.location.pathname !== location.pathname;
     const [page, setPage] = useState<Page>('dashboard')
     const [sidebarCollapsed, setSidebarCollapsed] = useState(true)
 
@@ -96,7 +101,11 @@ export default function DashboardLayout() {
                             {
                                 <Outlet context={{ user }} />
                             }
-                            {/* {page === 'help' && <HelpPage />}     */}
+                            {isRouteChange &&
+                                <div className='loader'>
+
+                                </div>
+                            }
                         </main>
                     </>
                 )}

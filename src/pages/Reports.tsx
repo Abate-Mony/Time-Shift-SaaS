@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { Download, TrendingUp, Users, Clock, Briefcase, FileText } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, LineChart, Line, PieChart, Pie, Cell } from 'recharts'
-import { Card, StatCard, Button, TabBar, Avatar } from '../components/ui'
+import { Card, StatCard,TabBar, Avatar } from '../components/ui'
 import { workers, monthlyStats, weeklyHours } from '../data/mockData'
+import { Button } from '@/components/ui/button'
 
 const tabs = [
   { id: 'overview', label: 'Overview' },

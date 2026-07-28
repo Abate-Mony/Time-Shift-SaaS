@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { MapPin, Plus, Search, ChevronRight } from 'lucide-react'
-import { Card, Button, Badge } from '../components/ui'
+import { Card, Badge } from '../components/ui'
+import { Button } from '@/components/ui/button'
 
 const locations = [
   { id: 'l1', name: 'Canary Wharf', address: 'Canary Wharf, London E14', jobs: 2, active: true },

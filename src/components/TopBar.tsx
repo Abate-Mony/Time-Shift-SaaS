@@ -1,5 +1,5 @@
+import { Button } from '@base-ui/react/button'
 import { Search, Bell, Plus, PanelLeft, Menu } from 'lucide-react'
-import { Button } from './ui'
 
 interface TopBarProps {
   onNewJob: () => void
@@ -38,7 +38,7 @@ export function TopBar({ onNewJob, onToggleSidebar, onNavigate }: TopBarProps) {
           <span className="absolute top-2 right-2 w-2 h-2 bg-blue-500 rounded-full border-2 border-white" />
         </button>
 
-        <Button onClick={onNewJob} size="sm">
+        <Button onClick={onNewJob} >
           <Plus size={14} />
           New Job
         </Button>

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Globe, Check } from 'lucide-react'
-import { Button, Input, TabBar, Avatar, Divider } from '../components/ui'
+import { Input, TabBar, Avatar, Divider } from '../components/ui'
+import { Button } from '@/components/ui/button';
 
 const tabs = [
   { id: 'profile', label: 'Profile' },

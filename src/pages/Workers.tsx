@@ -1,26 +1,60 @@
 import { Briefcase, ChevronRight, Clock, Mail, Phone, Plus, Search, Star, X } from 'lucide-react'
 import { useState } from 'react'
-import { Avatar, Button, Card, StatusBadge } from '../components/ui'
+import { Avatar, Card, StatusBadge } from '../components/ui'
 import { jobs, workers } from '../data/mockData'
 import { useQuery, type QueryClient } from '@tanstack/react-query'
-import type { LoaderFunctionArgs } from 'react-router'
+import { useLoaderData, useNavigation, type LoaderFunctionArgs, type Params } from 'react-router'
 import customFetch from '@/utils/customFetch'
+import SearchComponent from '@/components/Search'
+import { cn } from '@/lib/utils'
+import { sleep } from '@/utils/sleep'
+import { Button } from '@/components/ui/button'
 
-const workersQuery = {
-  queryKey: ['stats'],
-  queryFn: async () => {
-    const { data } = await customFetch.get<any>('/users/users');
-    return data;
-  }
+const workersQuery = (params: Params) => {
+
+  const { search,
+    sort, page,
+    status, date } = params;
+  return (
+    {
+
+
+      queryKey: [
+        'workers',
+        {
+          search: search ?? '',
+          status: status ?? 'all',
+          sort: sort ?? 'asc',
+          page: page ?? 1,
+          date: date ?? ''
+        }
+      ],
+      queryFn: async () => {
+        await sleep(3000)
+        const { data } = await customFetch.get<any>('/users/users', {
+          params
+        });
+        return data;
+      }
+    }
+  )
 }
 export const loader = (queryClient: QueryClient) => async ({ request }: LoaderFunctionArgs) => {
+
   const params = Object.fromEntries([
     ...new URL(request.url).searchParams.entries(),
   ]);
-  await queryClient.ensureQueryData(workersQuery)
-  
+  await queryClient.ensureQueryData(workersQuery(params))
+  return ({
+    searchValues: { ...params }
+  })
+
 }
 export function Workers() {
+  const navigation = useNavigation();
+
+const isSearching = navigation.state === "loading";
+  const { searchValues } = useLoaderData() as any
   const [search, setSearch] = useState('')
   const [selected, setSelected] = useState<string | null>(null)
 
@@ -29,7 +63,7 @@ export function Workers() {
     w.role.toLowerCase().includes(search.toLowerCase())
   )
 
-  const { users } = useQuery(workersQuery).data as any
+  const { users,nHits } = useQuery(workersQuery(searchValues)).data as any
   const selectedWorker = users.find(w => w._id === selected)
   const workerJobs = selectedWorker ? jobs.filter(j => j.workers.includes(selectedWorker.id)) : []
   return (
@@ -37,7 +71,7 @@ export function Workers() {
       <div className="flex items-start justify-between mb-6">
         <div>
           <h1 className="text-xl font-semibold text-slate-900 tracking-tight">Workers</h1>
-          <p className="text-sm text-slate-500 mt-0.5">{workers.length} team members across all locations</p>
+          <p className="text-sm text-slate-500 mt-0.5">{nHits} team members across all locations</p>
         </div>
         <Button size="sm"><Plus size={14} /> Add Worker {selected}</Button>
       </div>
@@ -46,25 +80,22 @@ export function Workers() {
         {/* List */}
         <div className="flex-1 min-w-0">
           {/* Search */}
-          <div className="relative mb-4">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder="Search workers..."
-              className="w-full h-9 pl-9 pr-3 border border-[#E2E8F0] rounded-lg text-sm text-slate-700 bg-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all"
-            />
-          </div>
+        
+          <SearchComponent />
+          <div className={cn("grid grid-cols-1 gap-3",
 
-          <div className="grid grid-cols-1 gap-3">
+              isSearching&&"opacity-60"
+          )}>
             {users.map((worker, i) => (
               <Card
                 key={worker._id}
                 onClick={() => setSelected(selected === worker._id ? null : worker._id)}
                 className={`p-4 transition-all ${selected === worker.id ? 'border-blue-300 ring-1 ring-blue-200' : ''}`}
               >
-                <div className="flex items-center gap-4">
-                  <Avatar initials={worker?.fullname.slice(0,2)} size="lg" index={i} />
+                <div className={cn("flex items-center gap-4",
+                
+                )}>
+                  <Avatar initials={worker?.fullname.slice(0, 2)} size="lg" index={i} />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
                       <p className="text-sm font-semibold text-slate-900">{worker?.fullname}</p>

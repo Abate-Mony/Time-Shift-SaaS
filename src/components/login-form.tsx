@@ -60,7 +60,7 @@ export function LoginForm({
   const [err, setErr] = useState<any>()
   const login = useGoogleLogin({
     flow: "auth-code", // Recommended for backend authentication
-    onSuccess: async (codeResponse) => {
+    onSuccess: async (codeResponse) => {  
       try {
         const reponse = await customFetch.post("/auth/login/google", {
           code: codeResponse.code

@@ -1,29 +1,71 @@
+import { Clock, Copy, Edit, Eye, Filter, MapPin, MoreHorizontal, Plus, Search, Trash2, Users } from 'lucide-react'
 import { useState } from 'react'
-import { Search, Filter, Plus, MapPin, Clock, Users, MoreHorizontal, Eye, Edit, Trash2, Copy } from 'lucide-react'
-import { Button, StatusBadge, PriorityBadge, Avatar, TabBar, EmptyState } from '../components/ui'
-import { jobs, workers } from '../data/mockData'
-import { useNavigate } from 'react-router'
+import { useLoaderData, useNavigate, type LoaderFunctionArgs, type Params } from 'react-router'
+import { Avatar, EmptyState, PriorityBadge, StatusBadge } from '../components/ui'
+import { workers } from '../data/mockData'
+import { Button } from '@/components/ui/button'
+import FilterButton from '@/components/ui/FilterButton'
+import SearchComponent from '@/components/Search'
+import customFetch from '@/utils/customFetch'
+import { useQuery, type QueryClient } from '@tanstack/react-query'
 
-const tabs = [
-  { id: 'all', label: 'All Jobs', count: jobs.length },
-  { id: 'in-progress', label: 'In Progress', count: jobs.filter(j => j.status === 'in-progress').length },
-  { id: 'assigned', label: 'Assigned', count: jobs.filter(j => j.status === 'assigned').length },
-  { id: 'completed', label: 'Completed', count: jobs.filter(j => j.status === 'completed').length },
-  { id: 'draft', label: 'Draft', count: jobs.filter(j => j.status === 'draft').length },
-]
 
+const jobsQuery = (params: Params) => {
+
+  const { search,
+    sort, page,
+    status, date } = params;
+  return (
+    {
+
+
+      queryKey: [
+        'jobs',
+        {
+          search: search ?? '',
+          status: status ?? 'all',
+          sort: sort ?? 'asc',
+          page: page ?? 1,
+          date: date ?? ''
+        }
+      ],
+      queryFn: async () => {
+        const { data } = await customFetch.get<any>('/jobs', {
+          params
+        });
+        return data;
+      }
+    }
+  )
+}
+export const loader = (queryClient: QueryClient) => async ({ request }: LoaderFunctionArgs) => {
+
+  const params = Object.fromEntries([
+    ...new URL(request.url).searchParams.entries(),
+  ]);
+  await queryClient.ensureQueryData(jobsQuery(params))
+  return ({
+    searchValues: { ...params }
+  })
+
+}
 export function Jobs() {
   const [activeTab, setActiveTab] = useState('all')
   const [search, setSearch] = useState('')
   const [openMenu, setOpenMenu] = useState<string | null>(null)
-
-  const filtered = jobs.filter(j => {
-    const matchTab = activeTab === 'all' || j.status === activeTab
-    const matchSearch = j.name.toLowerCase().includes(search.toLowerCase()) || j.location.toLowerCase().includes(search.toLowerCase())
-    return matchTab && matchSearch
-  })
+  const { searchValues } = useLoaderData() as any
   const navigate = useNavigate()
-  const onNavigate = (path: string) => navigate(path)
+  const onNavigate = path => navigate(path)
+  const { jobs, totalPages, currentPage } = useQuery(jobsQuery(searchValues)).data as any
+  const tabs = [
+    { id: 'all', label: 'All Jobs', count: jobs.length },
+    { id: 'in-progress', label: 'In Progress', count: jobs.filter(j => j.status === 'in-progress').length },
+    { id: 'assigned', label: 'Assigned', count: jobs.filter(j => j.status === 'assigned').length },
+    { id: 'completed', label: 'Completed', count: jobs.filter(j => j.status === 'completed').length },
+    { id: 'draft', label: 'Draft', count: jobs.filter(j => j.status === 'draft').length },
+  ]
+
+
   return (
     <div className="p-6 animate-fade-in">
       {/* Header */}
@@ -38,19 +80,26 @@ export function Jobs() {
       </div>
 
       {/* Tabs */}
-      <TabBar tabs={tabs} active={activeTab} onChange={setActiveTab} />
+      {/* <TabBar tabs={tabs} active={activeTab} onChange={setActiveTab} /> */}
 
+      <div className="flex items-center gap-1 border-b border-[#E2E8F0]">
+        {tabs.map(tab => (
+          <FilterButton
+            name='status'
+            value={tab.id}
+            key={tab.id}
+          // className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors `}
+          >
+            {tab.label}
+            {tab.count !== undefined && (
+              <span className={`px-1.5 py-0.5 rounded-full text-xs ${"2" === tab.id ? 'bg-[#1E3A5F]/10 text-[#1E3A5F]' : 'bg-slate-100 text-slate-500'}`}>{tab.count}</span>
+            )}
+          </FilterButton>
+        ))}
+      </div>
       {/* Filters row */}
       <div className="flex items-center gap-3 mt-4 mb-5">
-        <div className="relative flex-1 max-w-sm">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-          <input
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="Search jobs..."
-            className="w-full h-9 pl-9 pr-3 border border-[#E2E8F0] rounded-lg text-sm text-slate-700 bg-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all"
-          />
-        </div>
+        <SearchComponent />
         <button className="flex items-center gap-2 h-9 px-3 border border-[#E2E8F0] rounded-lg text-sm text-slate-600 bg-white hover:bg-slate-50 transition-colors">
           <Filter size={13} /> Filter
         </button>
@@ -72,7 +121,7 @@ export function Jobs() {
         </div>
 
         {/* Rows */}
-        {filtered.length === 0 ? (
+        {jobs.length === 0 ? (
           <EmptyState
             icon={<Users size={20} />}
             title="No jobs found"
@@ -80,16 +129,16 @@ export function Jobs() {
             action={<Button size="sm" onClick={() => onNavigate('create-job')}>Create Job</Button>}
           />
         ) : (
-          filtered.map(job => {
+          jobs.map(job => {
             const assignedWorkers = workers.filter(w => job.workers.includes(w.id))
             return (
               <div
-                key={job.id}
+                key={job._id}
                 className="grid grid-cols-[2fr_1.2fr_1fr_0.8fr_0.7fr_0.7fr_40px] gap-4 px-5 py-4 border-b border-[#F1F5F9] hover:bg-slate-50/50 transition-colors items-center group relative"
               >
                 {/* Job name */}
                 <div>
-                  <p className="text-sm font-medium text-slate-900 truncate">{job.name}</p>
+                  <p className="text-sm font-medium text-slate-900 truncate">{job.title}</p>
                   <p className="text-xs text-slate-400 mt-0.5">{job.company}</p>
                 </div>
 
@@ -170,10 +219,17 @@ export function Jobs() {
 
       {/* Pagination */}
       <div className="flex items-center justify-between mt-4 text-xs text-slate-500">
-        <p>Showing {filtered.length} of {jobs.length} jobs</p>
+        <p>Showing {jobs.length} of {jobs.length} jobs</p>
         <div className="flex items-center gap-1">
-          {[1, 2, 3].map(p => (
-            <button key={p} className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${p === 1 ? 'bg-[#1E3A5F] text-white' : 'hover:bg-slate-100 text-slate-600'}`}>{p}</button>
+          {Array.from({ length: totalPages }).map((_, index) => (
+            <FilterButton
+          animateClassName="bg-black/75 size-full text-white !rounded-xs shadow-sm"
+              label="page"
+              value={index.toString()}
+              key={index}
+              className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors !group-[active-slide]:text-white `} name={'page'}            >
+              {index + 1}
+            </FilterButton >
           ))}
         </div>
       </div>

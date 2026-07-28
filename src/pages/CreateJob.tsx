@@ -1,8 +1,69 @@
 import { useState } from 'react'
 import { ChevronLeft, MapPin, Users, Clock, Calendar, Paperclip, ChevronDown, X, Check } from 'lucide-react'
-import { Button, Input, Textarea, Select, Avatar } from '../components/ui'
+import { Avatar, Input } from '../components/ui'
 import { workers } from '../data/mockData'
-import { useNavigate } from 'react-router'
+import { Form, redirect, useLoaderData, useNavigate, type ActionFunctionArgs, type Params } from 'react-router'
+import { Button } from '@/components/ui/button'
+import { useQuery } from '@tanstack/react-query'
+import customFetch from '@/utils/customFetch'
+import { isAxiosError } from 'axios'
+import { Textarea } from '@/components/ui/textarea'
+import { Select, SelectContent, SelectGroup, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { SelectItem } from '@radix-ui/react-select'
+
+
+
+const workersQuery = (params: Params) => {
+
+  const { search,
+    sort, page,
+    status, date } = params;
+  return (
+    {
+
+
+      queryKey: [
+        'workers',
+        {
+          search: search ?? '',
+          status: status ?? 'all',
+          sort: sort ?? 'asc',
+          page: page ?? 1,
+          date: date ?? ''
+        }
+      ],
+      queryFn: async () => {
+        // await sleep(3000)
+        const { data } = await customFetch.get<any>('/users/users', {
+          params
+        });
+        return data;
+      }
+    }
+  )
+}
+export const action = async ({ request }: ActionFunctionArgs) => {
+  const formData = await request.formData();
+  const data = Object.fromEntries(formData);
+
+  const from = data.from as string | null;
+  console.log(data)
+  try {
+    await customFetch.post("/jobs", data);
+
+    if (from) {
+      return redirect(from);
+    }
+
+    return redirect("/dashboard");
+  } catch (err) {
+    if (isAxiosError(err)) {
+      return err.response?.data?.msg ?? err.response?.data ?? null;
+    }
+
+    return err instanceof Error ? err.message : "Something went wrong";
+  }
+};
 
 export function CreateJob() {
   const [form, setForm] = useState({
@@ -24,11 +85,14 @@ export function CreateJob() {
   const toggleWorker = (id: string) => {
     setSelectedWorkers(prev => prev.includes(id) ? prev.filter(w => w !== id) : [...prev, id])
   }
-
+  console.log("selected workers : ", selectedWorkers)
   const handleSave = (_publish: boolean) => {
     setSaved(true)
     setTimeout(() => onNavigate('jobs'), 800)
   }
+  const { searchValues } = useLoaderData() as any
+
+  const { users } = useQuery(workersQuery(searchValues)).data as any
 
   if (saved) {
     return (
@@ -57,7 +121,7 @@ export function CreateJob() {
         </div>
       </div>
 
-      <div className="flex flex-col gap-5">
+      <Form className="flex flex-col gap-5" method='post' >
         {/* Basic Info */}
         <div className="bg-white rounded-xl border border-[#E2E8F0] p-6">
           <h2 className="text-sm font-semibold text-slate-800 mb-4 flex items-center gap-2">
@@ -68,32 +132,40 @@ export function CreateJob() {
             <Input
               label="Job Name"
               placeholder="e.g. Canary Wharf Security — Night Shift"
-              value={form.name}
-              onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+              name='title'
             />
+            <input type="hidden" value={form.description} name='description' />
             <Textarea
-              label="Description"
+              name='description'
               placeholder="Brief description of the work required..."
-              value={form.description}
-              onChange={v => setForm(f => ({ ...f, description: v }))}
             />
             <div className="grid grid-cols-2 gap-4">
               <Input
-                label="Company / Client"
+                name='company'
+                label="Compananyy / Client"
                 placeholder="e.g. SecureGuard Ltd"
                 value={form.company}
                 onChange={e => setForm(f => ({ ...f, company: e.target.value }))}
               />
-              <Select
-                label="Priority"
-                value={form.priority}
-                onChange={v => setForm(f => ({ ...f, priority: v }))}
-                options={[
-                  { value: 'low', label: 'Low Priority' },
-                  { value: 'medium', label: 'Medium Priority' },
-                  { value: 'high', label: 'High Priority' },
-                ]}
-              />
+              <Select  defaultValue='yes' defaultOpen >
+                <SelectTrigger className="w-45">
+                  <SelectValue placeholder="medium" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    {[
+                      { value: 'low', label: 'Low Priority' },
+                      { value: 'medium', label: 'Medium Priority' },
+                      { value: 'high', label: 'High Priority' },
+                    ].map((item) => (
+                      <SelectItem key={item.value} value={item.value}>
+                        {item.label}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+             
             </div>
           </div>
         </div>
@@ -175,7 +247,7 @@ export function CreateJob() {
             Assign Workers
           </h2>
 
-          <button
+          <button type='button'
             onClick={() => setWorkerOpen(!workerOpen)}
             className="w-full flex items-center justify-between h-9 px-3 border border-[#E2E8F0] rounded-lg text-sm text-slate-600 hover:bg-slate-50 transition-colors"
           >
@@ -188,17 +260,17 @@ export function CreateJob() {
 
           {workerOpen && (
             <div className="mt-2 border border-[#E2E8F0] rounded-xl overflow-hidden animate-fade-in">
-              {workers.map((w, i) => {
-                const selected = selectedWorkers.includes(w.id)
+              {users.map((w, i) => {
+                const selected = selectedWorkers.includes(w._id)
                 return (
                   <button
-                    key={w.id}
-                    onClick={() => toggleWorker(w.id)}
+                    key={w._id}
+                    onClick={() => toggleWorker(w._id)}
                     className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 transition-colors border-b border-[#F1F5F9] last:border-0 ${selected ? 'bg-blue-50/40' : ''}`}
                   >
-                    <Avatar initials={w.avatar} size="sm" index={i} />
+                    <Avatar initials={w.fullname.slice(0, 2)} size="sm" index={i} />
                     <div className="flex-1 text-left">
-                      <p className="text-sm font-medium text-slate-800">{w.name}</p>
+                      <p className="text-sm font-medium text-slate-800">{w.fullname}</p>
                       <p className="text-xs text-slate-400">{w.role} · {w.status === 'available' ? 'Available' : w.status === 'working' ? 'Currently working' : 'Off duty'}</p>
                     </div>
                     <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${selected ? 'bg-[#1E3A5F] border-[#1E3A5F]' : 'border-slate-300'}`}>
@@ -213,7 +285,7 @@ export function CreateJob() {
           {selectedWorkers.length > 0 && (
             <div className="flex flex-wrap gap-2 mt-3">
               {selectedWorkers.map(id => {
-                const w = workers.find(w => w.id === id)
+                const w = workers.find(w => w._id === id)
                 if (!w) return null
                 return (
                   <div key={id} className="flex items-center gap-1.5 bg-blue-50 border border-blue-200 rounded-full pl-1.5 pr-2 py-0.5">
@@ -236,10 +308,8 @@ export function CreateJob() {
             Notes & Attachments
           </h2>
           <Textarea
-            label="Additional Notes"
+            name='additional_notes'
             placeholder="Access instructions, equipment needed, special requirements..."
-            value={form.notes}
-            onChange={v => setForm(f => ({ ...f, notes: v }))}
             rows={4}
           />
           <button className="mt-3 flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700 border border-dashed border-slate-300 rounded-lg w-full py-3 px-4 hover:bg-slate-50 transition-colors">
@@ -252,9 +322,12 @@ export function CreateJob() {
         <div className="flex items-center gap-3 justify-end pt-2 pb-6">
           <Button variant="outline" onClick={() => onNavigate('jobs')}>Cancel</Button>
           <Button variant="secondary" onClick={() => handleSave(false)}>Save as Draft</Button>
-          <Button onClick={() => handleSave(true)}>Publish Job</Button>
+          <Button
+            //  onClick={() => handleSave(true)}
+            type='submit'
+          >Publish Job</Button>
         </div>
-      </div>
-    </div>
+      </Form>
+    </div >
   )
 }

@@ -1,6 +1,6 @@
 import { Bell, CheckCircle2, AlertCircle, Info, Check } from 'lucide-react'
-import { Button } from '../components/ui'
 import { notifications } from '../data/mockData'
+import { Button } from '@/components/ui/button';
 
 const iconMap: Record<string, { icon: React.FC<{ size?: number; className?: string }>; bg: string; color: string }> = {
   success: { icon: CheckCircle2, bg: 'bg-emerald-50', color: 'text-emerald-600' },
