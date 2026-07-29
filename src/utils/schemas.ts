@@ -1,5 +1,7 @@
 import { z } from "zod"
 export const createJobSchema = z.object({
+    _id: z
+        .string().optional(),
     title: z
         .string()
         .min(3, "Job title is required"),
@@ -17,6 +19,14 @@ export const createJobSchema = z.object({
         "medium",
         "high",
     ]),
+    status: z.enum([
+        "draft",
+        "published",
+        "assigned",
+        "in-progress",
+        "completed",
+        "cancelled",
+    ]).optional(),
 
     date: z
         .string()
@@ -35,6 +45,9 @@ export const createJobSchema = z.object({
         .min(1, "Please select at least one worker"),
 
     additional_notes: z
+        .string()
+        .optional(),
+    location: z
         .string()
         .optional(),
 

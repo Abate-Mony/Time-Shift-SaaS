@@ -8,6 +8,7 @@ import FilterButton from '@/components/ui/FilterButton'
 import SearchComponent from '@/components/Search'
 import customFetch from '@/utils/customFetch'
 import { useQuery, type QueryClient } from '@tanstack/react-query'
+import type { CreateJobForm } from '@/utils/types'
 
 
 const jobsQuery = (params: Params) => {
@@ -50,19 +51,23 @@ export const loader = (queryClient: QueryClient) => async ({ request }: LoaderFu
 
 }
 export function Jobs() {
-  const [activeTab, setActiveTab] = useState('all')
-  const [search, setSearch] = useState('')
   const [openMenu, setOpenMenu] = useState<string | null>(null)
-  const { searchValues } = useLoaderData() as any
+  const { searchValues } = useLoaderData() as {
+    searchValues: Params
+  }
   const navigate = useNavigate()
-  const onNavigate = (path:string) => navigate(path)
-  const { jobs, totalPages, currentPage } = useQuery(jobsQuery(searchValues)).data as any
+  const onNavigate = (path: string) => navigate(path)
+  const { jobs, totalPages, currentPage } = useQuery(jobsQuery(searchValues)).data as {
+    jobs: CreateJobForm[],
+    totalPages: number,
+    currentPage: number
+  }
   const tabs = [
     { id: 'all', label: 'All Jobs', count: jobs.length },
-    { id: 'in-progress', label: 'In Progress', count: jobs.filter(j => j.status === 'in-progress').length },
-    { id: 'assigned', label: 'Assigned', count: jobs.filter(j => j.status === 'assigned').length },
-    { id: 'completed', label: 'Completed', count: jobs.filter(j => j.status === 'completed').length },
-    { id: 'draft', label: 'Draft', count: jobs.filter(j => j.status === 'draft').length },
+    { id: 'in-progress', label: 'In Progress', count:jobs.filter(job=>job.priority=="high").length},
+    { id: 'assigned', label: 'Assigned', },
+    { id: 'completed', label: 'Completed', },
+    { id: 'draft', label: 'Draft', },
   ]
 
 
@@ -79,21 +84,22 @@ export function Jobs() {
         </Button>
       </div>
 
-      {/* Tabs */}
-      {/* <TabBar tabs={tabs} active={activeTab} onChange={setActiveTab} /> */}
 
-      <div className="flex items-center gap-1 border-b border-[#E2E8F0]">
+
+      <div className="flex items-center gap-1 gap-x-0 border-b border-[#E2E8F0]">
         {tabs.map(tab => (
           <FilterButton
+            className='hover:bg-black/5 mx-0 rounded-none'
             name='status'
             value={tab.id}
             key={tab.id}
-          // className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors `}
           >
             {tab.label}
-            {tab.count !== undefined && (
-              <span className={`px-1.5 py-0.5 rounded-full text-xs ${"2" === tab.id ? 'bg-[#1E3A5F]/10 text-[#1E3A5F]' : 'bg-slate-100 text-slate-500'}`}>{tab.count}</span>
-            )}
+            <span className='ml-0.5
+             rounded-full bg-black/5 p-2 text-xs size-2.5 flex items-center justify-center'> 
+              {tab?.count ?? 0}
+            </span>
+
           </FilterButton>
         ))}
       </div>
@@ -145,7 +151,7 @@ export function Jobs() {
                 {/* Location */}
                 <div className="flex items-center gap-1.5">
                   <MapPin size={12} className="text-slate-400 shrink-0" />
-                  <p className="text-xs text-slate-600 truncate">{job.location.split(',')[0]}</p>
+                  <p className="text-xs text-slate-600 truncate">{job?.location?.split(',')[0]}</p>
                 </div>
 
                 {/* Date & time */}
@@ -178,20 +184,20 @@ export function Jobs() {
                 </div>
 
                 {/* Status */}
-                <StatusBadge status={job.status} />
+                <StatusBadge status={job?.status ?? "draft"} />
 
                 {/* Priority */}
-                <PriorityBadge priority={job.priority} />
+                <PriorityBadge priority={job.priority ??"Draft"} />
 
                 {/* Actions */}
                 <div className="relative">
                   <button
-                    onClick={() => setOpenMenu(openMenu === job.id ? null : job.id)}
+                    onClick={() => setOpenMenu(openMenu === job._id ? null : job._id ?? null)}
                     className="w-7 h-7 rounded-md flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors opacity-0 group-hover:opacity-100"
                   >
                     <MoreHorizontal size={14} />
                   </button>
-                  {openMenu === job.id && (
+                  {openMenu === job._id && (
                     <div className="absolute right-0 top-8 bg-white border border-[#E2E8F0] rounded-xl shadow-xl z-10 py-1.5 w-44 animate-fade-in">
                       {[
                         { icon: Eye, label: 'View Details' },
@@ -223,7 +229,7 @@ export function Jobs() {
         <div className="flex items-center gap-1">
           {Array.from({ length: totalPages }).map((_, index) => (
             <FilterButton
-          animateClassName="bg-black/75 size-full text-white !rounded-xs shadow-sm"
+              animateClassName="bg-black/75 size-full text-white !rounded-xs shadow-sm"
               label="page"
               value={index.toString()}
               key={index}

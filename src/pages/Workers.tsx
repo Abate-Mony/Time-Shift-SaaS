@@ -68,7 +68,7 @@ export function Workers() {
     users: User[], nHits: number
   }
   const selectedWorker = users.find(w => w._id === selected)
-  const workerJobs = selectedWorker ? jobs.filter(j => j.workers.includes(selectedWorker.id)) : []
+  const workerJobs = selectedWorker ? jobs.filter(j => j.workers.includes(selectedWorker._id)) : []
   return (
     <div className="p-6 animate-fade-in">
       <div className="flex items-start justify-between mb-6">
@@ -135,9 +135,9 @@ export function Workers() {
         {/* Worker detail panel */}
         {selectedWorker && (
           <div className="w-80 shrink-0 animate-slide-in">
-            <Card className="p-5 sticky top-[76px]">
+            <Card className="p-5 sticky top-19">
               <div className="flex items-start justify-between mb-4">
-                {/* <Avatar initials={selectedWorker.avatar} size="xl" index={users.findIndex(w => w._id === selectedWorker._id)} /> */}
+                <Avatar initials={selectedWorker._id} size="xl" index={users.findIndex(w => w._id === selectedWorker._id)} />
                 <button onClick={() => setSelected(null)} className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-100 transition-colors">
                   <X size={14} />
                 </button>

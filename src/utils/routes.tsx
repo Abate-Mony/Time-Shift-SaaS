@@ -9,10 +9,14 @@ export const router = createBrowserRouter([
         path: "/",
         element: <DashboardLayout />,
         loader: dashboardLoader(queryClient),
+        errorElement: <div>oops something went wrong</div>
+        ,
         children: [
             {
                 index: true,
                 element: <Dashboard />,
+                errorElement: <div>oops something went wrong</div>
+
             },
             {
                 path: "dashboard",

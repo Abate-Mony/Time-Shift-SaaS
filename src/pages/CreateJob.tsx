@@ -243,13 +243,7 @@ export function CreateJob() {
           </h2>
           <SearchLocation
             onSelect={(location) => {
-              // setValue("siteName", location.siteName, { shouldValidate: true })
-              // setValue("address", location.address, { shouldValidate: true })
-              // setValue("city", location.city, { shouldValidate: true })
-              // setValue("postcode", location.postcode, { shouldValidate: true })
-              // setValue("country", location.country, { shouldValidate: true })
-              // setValue("latitude", location.lat, { shouldValidate: true })
-              // setValue("longitude", location.lng, { shouldValidate: true })
+
             }}
           />
           {/* <FieldError message={errors.address?.message} />

@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { useGoogleLogin } from "@react-oauth/google";
-import { Form, redirect, useActionData, useLoaderData, useNavigate, type ActionFunctionArgs, type LoaderFunctionArgs } from "react-router"
+import { Form, redirect, useActionData, useLoaderData, useNavigate, useNavigation, type ActionFunctionArgs, type LoaderFunctionArgs } from "react-router"
 import customFetch from "@/utils/customFetch"
 import { isAxiosError } from "axios"
 import { AnimateError } from "./ui/AnimatedError"
@@ -28,8 +28,10 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   const formData = await request.formData();
   const data = Object.fromEntries(formData);
 
-  const from = data.from as string | null;
-  console.log(data)
+  const url = new URL(request.url);
+  const from = url.searchParams.get("from");
+
+  // console.log(data)
   try {
     await customFetch.post("/auth/login", data);
 
@@ -56,16 +58,17 @@ export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
+      const navigation = useNavigation()
+const isloading=navigation.state=="loading" || navigation.state== "submitting"
   const navigate = useNavigate()
   const [err, setErr] = useState<any>()
   const login = useGoogleLogin({
     flow: "auth-code", // Recommended for backend authentication
-    onSuccess: async (codeResponse) => {  
+    onSuccess: async (codeResponse) => {
       try {
         const reponse = await customFetch.post("/auth/login/google", {
           code: codeResponse.code
         });
-        console.log(reponse)
         navigate("/")
       } catch (err) {
         if (isAxiosError(err)) {
@@ -148,7 +151,7 @@ export function LoginForm({
                 errorMessage={errorMsg}
               />
               <Field>
-                <Button type="submit">Login</Button>
+                <Button type="submit">{isloading?"wait ...":"Login"}</Button>
                 <FieldDescription className="text-center">
                   Don&apos;t have an account? <a href="#">Sign up</a>
                 </FieldDescription>

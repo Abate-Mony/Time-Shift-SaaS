@@ -6,6 +6,7 @@ import { Outlet, redirect, useLocation, useNavigation, type LoaderFunctionArgs }
 import { useMediaQuery } from "react-responsive";
 import customFetch from '@/utils/customFetch'
 import { useQuery, type QueryClient } from '@tanstack/react-query'
+import toast from 'react-hot-toast'
 type Page =
     | 'dashboard'
     | 'jobs'

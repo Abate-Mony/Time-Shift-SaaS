@@ -1,9 +1,9 @@
-import { Briefcase, Users, Clock, CheckCircle2, AlertCircle, ArrowRight, MapPin, Timer } from 'lucide-react'
-import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
-import { StatCard, Card, Avatar, StatusBadge, Badge } from '../components/ui'
-import { jobs, workers, activities, weeklyHours, monthlyStats } from '../data/mockData'
-import { useNavigate, useOutletContext } from 'react-router'
 import { Button } from '@/components/ui/button'
+import { AlertCircle, ArrowRight, Briefcase, CheckCircle2, Clock, MapPin, Timer, Users } from 'lucide-react'
+import { useNavigate, useOutletContext } from 'react-router'
+import { Area, AreaChart, Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { Avatar, Badge, Card, StatCard, StatusBadge } from '../components/ui'
+import { activities, jobs, monthlyStats, weeklyHours, workers } from '../data/mockData'
 
 const todayJobs = jobs.filter(j => j.date === '2025-07-25')
 const workingNow = workers.filter(w => w.status === 'working')
@@ -45,6 +45,7 @@ export function Dashboard() {
   const { user } = useOutletContext() as {
     user: any
   } || {}
+ 
   return (
     <div className="p-6 animate-fade-in">
       {/* Header */}
