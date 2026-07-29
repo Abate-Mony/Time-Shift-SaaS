@@ -3,19 +3,21 @@ import { Calendar, CreateJob, createjobAction, Dashboard, dashboardLoader, Jobs,
 import DashboardLayout from "../layouts/dashboardlayout";
 import AuthLayout from "@/layouts/AuthLayout";
 import { queryClient } from "@/lib/queryClient";
+import ErrorElement from "@/components/ErrorElement";
+import NotFound from "@/pages/404Page";
 
 export const router = createBrowserRouter([
     {
         path: "/",
         element: <DashboardLayout />,
         loader: dashboardLoader(queryClient),
-        errorElement: <div>oops something went wrong</div>
+        errorElement: <ErrorElement />
+
         ,
         children: [
             {
                 index: true,
                 element: <Dashboard />,
-                errorElement: <div>oops something went wrong</div>
 
             },
             {
@@ -63,11 +65,18 @@ export const router = createBrowserRouter([
             {
                 path: "billing",
                 element: <Settings />
+            }, {
+                path: "*",
+                element: <NotFound />
             }
         ],
     }, {
         path: "auth",
         element: <AuthLayout />,
         action: loginAction
+    },
+     {
+        path: "*",
+        element: <NotFound />
     }
 ]);

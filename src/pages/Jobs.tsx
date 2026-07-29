@@ -9,6 +9,8 @@ import SearchComponent from '@/components/Search'
 import customFetch from '@/utils/customFetch'
 import { useQuery, type QueryClient } from '@tanstack/react-query'
 import type { CreateJobForm } from '@/utils/types'
+import DataTable from '@/components/JobsTable'
+import { jobsColumns } from '@/utils/columns'
 
 
 const jobsQuery = (params: Params) => {
@@ -117,10 +119,15 @@ export function Jobs() {
         </select>
       </div>
 
-      {/* Table */}
-      <div className="bg-white rounded-xl border border-[#E2E8F0] overflow-hidden">
+<DataTable
+    columns={jobsColumns}
+    data={jobs}
+/>
+
+      Table
+      <div className="bg-white hidden rounded-xl border border-[#E2E8F0] overflow-hidden">
         {/* Table header */}
-        <div className="grid grid-cols-[2fr_1.2fr_1fr_0.8fr_0.7fr_0.7fr_40px] gap-4 px-5 py-3 border-b border-[#E2E8F0] bg-slate-50/60">
+        <div className="grid grid-cols-[2fr_1.2fr_1fr_0.8fr_0.7fr_0.7fr_40px] gap-4 px-5 py-3 border-b bg-black border-[#E2E8F0]-  bg-slate-50/60">
           {['Job', 'Location', 'Date & Time', 'Workers', 'Status', 'Priority', ''].map((h, i) => (
             <p key={i} className="text-xs font-semibold text-slate-500 uppercase tracking-wide">{h}</p>
           ))}

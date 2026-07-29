@@ -166,7 +166,7 @@ export function Settings() {
               </div>
               <div className="flex gap-3">
                 <Button variant="outline" size="sm">Change Plan</Button>
-                <Button variant="danger" size="sm">Cancel Subscription</Button>
+                <Button variant="secondary" size="sm">Cancel Subscription</Button>
               </div>
             </div>
 

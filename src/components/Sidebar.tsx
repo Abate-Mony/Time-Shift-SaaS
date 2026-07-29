@@ -7,6 +7,7 @@ import { Avatar } from './ui'
 import { Link, useNavigate } from 'react-router'
 import CustomNavLink from './ui/link'
 import { cn } from '@/lib/utils'
+import { logoutUser } from '@/utils/logout'
 
 const navItems = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -148,9 +149,10 @@ export function Sidebar({ active, collapsed }: SidebarProps) {
                 <p className="text-xs font-medium text-white/80 truncate">Owen Wright</p>
                 <p className="text-[10px] text-white/35">Owner</p>
               </div>
-              <Link  to={"/auth"}>
 
-                <LogOut size={13} className="text-white/25 group-hover:text-white/50 transition-colors shrink-0" /></Link>
+                <LogOut size={13} className="text-white/25 group-hover:text-white/50 transition-colors shrink-0" 
+                onClick={()=>logoutUser()}
+                />
             </>
           )}
         </button>
