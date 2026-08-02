@@ -16,6 +16,7 @@ import { createJobSchema } from '@/utils/schemas'
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { cn } from '@/lib/utils'
+import { queryClient } from '@/lib/queryClient'
 
 // Small reusable error renderer so we don't repeat the same JSX everywhere
 const FieldError = ({ message }: { message?: string }) => {
@@ -44,16 +45,15 @@ const workersQuery = (params: Params) => {
   }
 }
 
-export const action = async ({ request }: ActionFunctionArgs) => {
+export const action = async ({ request}: ActionFunctionArgs) => {
   const formData = await request.formData()
   const data = Object.fromEntries(formData)
   // alert("enter here")
-  console.log("this is data: ", data)
   try {
     await customFetch.post("/jobs", data)
 
     toast.success('Job created successfully!')
-
+   
     return redirect("/jobs")
   } catch (err) {
     let errorM
@@ -71,7 +71,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 }
 
 export function CreateJob() {
-  const [selectedWorkers, setSelectedWorkers] = useState<string[]>([])
+  const [selectedWorkers, setSelectedWorkers] = useState<CreateJobForm["workers"]>([])
   const [workerOpen, setWorkerOpen] = useState(false)
   const [saved, setSaved] = useState(false)
   const navigate = useNavigate()
@@ -121,14 +121,27 @@ export function CreateJob() {
   const priority = watch("priority")
 
   const toggleWorker = (id: string) => {
-    const next = selectedWorkers.includes(id)
-      ? selectedWorkers.filter(w => w !== id)
-      : [...selectedWorkers, id]
+    const exists = selectedWorkers.some((w) => w.email === id);
 
-    setSelectedWorkers(next)
-    setValue("workers", next, { shouldValidate: true })
-  }
-  console.log(errors)
+    const next = exists
+      ? selectedWorkers.filter((w) => w.email !== id)
+      : (() => {
+        const worker = users.find((w) => w.email === id);
+        return worker
+          ? [...selectedWorkers, {
+            fullname: worker.fullname,
+            email: worker.email,
+            phone: "",
+            user: ""
+
+          }]
+          : selectedWorkers;
+      })();
+
+    setSelectedWorkers(next);
+    setValue("workers", next, { shouldValidate: true });
+    console.log("values", next, exists, id)
+  };
   // Runs only when validation passes; React Router's <Form> then submits
   // to the `action` above as normal.
   const onValid = () => {
@@ -246,20 +259,6 @@ export function CreateJob() {
 
             }}
           />
-          {/* <FieldError message={errors.address?.message} />
-          <FieldError message={errors.siteName?.message} />
-          <FieldError message={errors.city?.message} />
-          <FieldError message={errors.postcode?.message} />
-          <FieldError message={errors.country?.message} /> */}
-
-          {/* Hidden fields so RHF-registered values actually submit with the form */}
-          {/* <input type="hidden" {...register("siteName")} />
-          <input type="hidden" {...register("address")} />
-          <input type="hidden" {...register("city")} />
-          <input type="hidden" {...register("postcode")} />
-          <input type="hidden" {...register("country")} />
-          <input type="hidden" {...register("latitude")} />
-          <input type="hidden" {...register("longitude")} /> */}
 
           {/* Map placeholder */}
           <div className="mt-3 h-36 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center overflow-hidden">
@@ -349,20 +348,20 @@ export function CreateJob() {
           </button>
 
           {/* One hidden input per selected worker id, so FormData serializes an array correctly */}
-          {selectedWorkers.map(id => (
-            <input key={id} type="hidden" name="workers" value={id} />
+          {selectedWorkers.map((id) => (
+            <input key={id.email} type="hidden" name="workers" value={JSON.stringify(selectedWorkers)} />
           ))}
           <FieldError message={errors.workers?.message as string | undefined} />
 
           {workerOpen && (
             <div className="mt-2 border border-[#E2E8F0] rounded-xl overflow-hidden animate-fade-in">
               {users.map((w, i) => {
-                const selected = selectedWorkers.includes(w._id)
+                const selected = selectedWorkers.find(sw => sw.email == w.email)
                 return (
                   <button
                     type="button"
                     key={w._id}
-                    onClick={() => toggleWorker(w._id)}
+                    onClick={() => toggleWorker(w.email)}
                     className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 transition-colors border-b border-[#F1F5F9] last:border-0 ${selected ? 'bg-blue-50/40' : ''}`}
                   >
                     <Avatar initials={w.fullname.slice(0, 2)} size="sm" index={i} />
@@ -382,12 +381,12 @@ export function CreateJob() {
           {selectedWorkers.length > 0 && (
             <div className="flex flex-wrap gap-2 mt-3">
               {selectedWorkers.map(id => {
-                const w = users.find(w => w._id === id)
+                const w = users.find(w => w.email === id.email)
                 if (!w) return null
                 return (
-                  <div key={id} className="flex items-center gap-1.5 bg-blue-50 border border-blue-200 rounded-full pl-1.5 pr-2 py-0.5">
+                  <div key={id.email} className="flex items-center gap-1.5 bg-blue-50 border border-blue-200 rounded-full pl-1.5 pr-2 py-0.5">
                     <span className="text-xs font-medium text-blue-700">{w.fullname.split(' ')[0]}</span>
-                    <button type="button" onClick={() => toggleWorker(id)} className="text-blue-400 hover:text-blue-600">
+                    <button type="button" onClick={() => toggleWorker(id.email)} className="text-blue-400 hover:text-blue-600">
                       <X size={11} />
                     </button>
                   </div>

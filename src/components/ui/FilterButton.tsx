@@ -17,23 +17,31 @@ type FilterButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 
 const FilterButton = ({
     className,
-    children,selectedClassName,animateClassName,show=true,layoutId="this-is-id",
+    children, selectedClassName, animateClassName, show = true, layoutId = "this-is-id", onClick,
     ...props
 }: FilterButtonProps) => {
     const { handleFilterChange } = useFilter()
     const [querySearch] = useSearchParams()
     const { value } = props
     const isSelected = value == querySearch.get(props.name)
- 
+
     return (
         <Button
-            onClick={() => handleFilterChange({ key: props.name, value })}
+            onClick={(e) => {
+                if (onClick) {
+                    onClick(e);
+                }
+
+                handleFilterChange({ key: props.name, value })
+            }}
             className={cn(` relative bg-transparent text-black hover:bg-transparent group
       `,
                 className,
                 isSelected && "active-slide"
             )}
         >
+            {children}
+
             <AnimatePresence>
                 {isSelected && show && (
                     <motion.span
@@ -54,8 +62,6 @@ const FilterButton = ({
                     ></motion.span>
                 )}
             </AnimatePresence>
-            {children}
-            {isSelected}
         </Button>
     )
 }

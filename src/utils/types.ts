@@ -13,5 +13,9 @@ export type User = {
   lastLogin?: string | null;
   createdAt: string;
   updatedAt: string;
+  phone?: string;
+  gender?:"Male" | "Female" | "Other" | "Prefer not to say"
+  password?: string;
+  confirmPassword?: string;
 };
 export type CreateJobForm = z.infer<typeof createJobSchema>;

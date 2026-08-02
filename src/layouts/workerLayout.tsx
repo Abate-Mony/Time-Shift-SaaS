@@ -1,0 +1,149 @@
+import { useState, useEffect, useRef } from 'react'
+import {
+  Home, Briefcase, CalendarDays, User, MapPin, Clock, Play, Square,
+  CheckCircle2, Camera, FileText, ChevronLeft, ChevronRight,
+  Bell, Star, TrendingUp, ArrowUpRight, Navigation, Phone, AlertCircle,
+  Coffee, RotateCcw, Download, X, Check, Timer, Zap
+} from 'lucide-react'
+import { Avatar, StatusBadge } from '../components/ui'
+import { jobs, workers } from '../data/mockData'
+import { Link, Outlet } from 'react-router'
+import customFetch from '@/utils/customFetch'
+import { useQuery } from '@tanstack/react-query'
+import CustomNavLink from '@/components/ui/link'
+import { cn } from '@/lib/utils'
+import ScrollToTop from '@/utils/scroll-to-top'
+import BottomNav from '@/components/ui/BottomNav'
+
+// ─── Types ──────────────────────────────────────────────────────────────────
+type WorkerTab = '/' | 'jobs' | 'clock' | 'schedule' | 'profile'
+type JobsTab = 'pending' | 'active' | 'completed'
+type ClockState = 'idle' | 'working' | 'break' | 'done'
+
+// ─── Data ───────────────────────────────────────────────────────────────────
+const worker = workers[0]
+const myJobs = jobs.filter(j => j.workers.includes(worker.id))
+const activeJob = myJobs.find(j => j.status === 'in-progress')
+const pendingJobs = myJobs.filter(j => j.status === 'assigned')
+const completedJobs = myJobs.filter(j => j.status === 'completed')
+
+const weekDays = [
+  { day: 'M', date: 21, hasShift: false },
+  { day: 'T', date: 22, hasShift: true, hours: 8 },
+  { day: 'W', date: 23, hasShift: true, hours: 12 },
+  { day: 'T', date: 24, hasShift: true, hours: 8 },
+  { day: 'F', date: 25, hasShift: true, hours: 8 },
+  { day: 'S', date: 26, hasShift: false },
+  { day: 'S', date: 27, hasShift: true, hours: 12 },
+]
+
+const completedHistory = [
+  { date: '24 Jul', job: 'Excel Centre — Event Staffing', hours: 12, pay: 216, rated: true },
+  { date: '23 Jul', job: 'Waterloo — Crowd Management', hours: 8, pay: 144, rated: false },
+  { date: '22 Jul', job: 'Heathrow T5 — Security', hours: 8, pay: 144, rated: true },
+  { date: '21 Jul', job: 'Canary Wharf — Day Patrol', hours: 8, pay: 144, rated: true },
+]
+
+// ─── Utilities ──────────────────────────────────────────────────────────────
+function fmtTime(s: number) {
+  const h = Math.floor(s / 3600)
+  const m = Math.floor((s % 3600) / 60)
+  const sec = s % 60
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`
+}
+
+function fmtHours(s: number) {
+  const h = Math.floor(s / 3600)
+  const m = Math.floor((s % 3600) / 60)
+  if (h === 0) return `${m}m`
+  return m > 0 ? `${h}h ${m}m` : `${h}h`
+}
+
+// ─── Sub-components ──────────────────────────────────────────────────────────
+
+// ─── Bottom Nav ────────────────────────────────────────────────────────────────
+// function BottomNav() {
+//   const tabs: { id: WorkerTab; label: string; Icon: React.FC<{ size?: number; className?: string }> }[] = [
+//     { id: '/', label: 'Home', Icon: Home, },
+//     { id: 'jobs', label: 'Jobs', Icon: Briefcase },
+//     { id: 'clock', label: 'Clock', Icon: Timer },
+//     { id: 'schedule', label: 'Schedule', Icon: CalendarDays },
+//     { id: 'profile', label: 'Profile', Icon: User },
+//   ]
+
+//   return (
+//     <div className="bg-white border-t max-w-md px-2  rounded-t-lg w-full fixed bottom-0 border-[#E2E8F0]   pb-3 grid grid-cols-5 shrink-0">
+//       {tabs.map(t => (
+//         <CustomNavLink
+//           end={t.label == "Home"}
+//           animateClassName="size-full h-px bottom-0 bg-black/40 ho rounded-full"
+
+//           to={t.id === "/" ? "/worker" : `/worker/${t.id}`}
+//           key={t.id}
+//           className={({ isActive }) => cn("flex flex-col items-center rounded-t-full h-auto gap-1 py-1.5 px-2 transition-all duration-500 bg-white"
+
+//             ,
+//             isActive && "-translate-y-4 inset-shadow-sm",
+//             t.id == "clock" ? "pointer-events-none":"pointer-events-auto"
+
+//       )
+//           }
+//         >
+//       <div className={`relative size-9 rounded-xl flex items-center justify-center transition-all
+
+//           group-[.slide-active]:bg-[#1E3A5F] hover:bg-slate-100
+//             `}
+
+//       >
+//         <t.Icon size={17} className={'group-[.slide-active]:text-white text-slate-400'} />
+//         {/* {  (
+//               <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-amber-500 rounded-full text-[8px] font-bold text-white flex items-center justify-center">
+//                 {pendingJobs.length}
+//               </span>
+//             )} */}
+//       </div >
+//       <span className={`text-[10px] font-semibold group-[.slide-active]:text-[#1E3A5F]'text-slate-400`}>
+//         {t.label}
+//       </span>
+//     </CustomNavLink>
+//   ))
+// }
+//     </div >
+//   )
+// }
+
+const userQuery = {
+  queryKey: ["user"],
+  queryFn: async () => {
+    const { data } = await customFetch.get("/users/current-user");
+    return data
+
+  }
+}
+// ─── Root ──────────────────────────────────────────────────────────────────────
+export function WorkerAppLayout() {
+
+  const [tab, setTab] = useState<WorkerTab>('/')
+
+  const { user } = useQuery(userQuery)?.data as unknown as any || { user: null }
+
+  return (
+    <div className="border-black   bg-[#F8FAFC]">
+            <ScrollToTop/>
+
+      <div className="  max-w-md mx-auto ">
+
+
+        {/* Content area */}
+        <div className="px-2 pb-44 ">
+          <Outlet
+            context={{ user }}
+          />
+        </div>
+
+        {/* Bottom nav */}
+        <BottomNav />
+      </div>
+    </div>
+  )
+}

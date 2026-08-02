@@ -14,6 +14,11 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Avatar } from "@/components/ui";
+import customFetch from "./customFetch";
+import { queryClient } from "@/lib/queryClient";
+import toast from "react-hot-toast";
+import { AnimatedTooltip } from "@/components/ui/animated-tooltip";
 
 export const jobsColumns: ColumnDef<CreateJobForm>[] = [
     {
@@ -44,7 +49,7 @@ export const jobsColumns: ColumnDef<CreateJobForm>[] = [
 
             return (
                 <div className="min-w-[180px] ">
-                    <p className="font-medium text-slate-900 truncate ">{title}</p>
+                    <p className="font-medium text-slate-900 truncate line-clamp-2 max-w-sm">{title}</p>
                     <p className="text-xs text-slate-500">{company}</p>
                 </div>
             );
@@ -104,7 +109,7 @@ export const jobsColumns: ColumnDef<CreateJobForm>[] = [
         enableSorting: false,
         cell: ({ row }) => {
             const workers = row.original.workers;
-
+            console.log(row.original.workers)
             if (!workers.length) {
                 return (
                     <span className="text-xs font-medium text-red-500">
@@ -115,26 +120,34 @@ export const jobsColumns: ColumnDef<CreateJobForm>[] = [
 
             return (
                 <div className="flex items-center">
-                    {/* <div className="flex -space-x-2">
-            {workers.slice(0, 3).map((worker, index) => (
-              <div
-                key={worker}
-                className="rounded-full ring-2 ring-white"
-              >
-                <Avatar
-                  initials={worker}
-                  size="sm"
-                  index={index}
-                />
-              </div>
-            ))}
+                    <div className="flex -space-x-2">
+                        <AnimatedTooltip
+                            items={workers.map((w,idx )=> ({
+                                id:idx,
+                                designation:w.email,
+                                image:"",
+                                name:w.fullname
+                        }))}
+                        />
+                        {/* {workers.slice(0, 3).map((worker, index) => (
+                            // <div
+                            //     key={worker?.fullname}
+                            //     className="rounded-full ring-2 ring-white"
+                            // >
+                            //     <Avatar
+                            //         initials={worker?.fullname?.slice(0, 2)}
+                            //         size="sm"
+                            //         index={index}
+                            //     />
+                            // </div>
+                        ))} */}
 
-            {workers.length > 3 && (
-              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-200 text-[10px] font-semibold text-slate-600 ring-2 ring-white">
-                +{workers.length - 3}
-              </div>
-            )}
-          </div> */}
+                        {workers.length > 3 && (
+                            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-200 text-[10px] font-semibold text-slate-600 ring-2 ring-white">
+                                +{workers.length - 3}
+                            </div>
+                        )}
+                    </div>
                 </div>
             );
         },
@@ -145,7 +158,7 @@ export const jobsColumns: ColumnDef<CreateJobForm>[] = [
         header: "Status",
         cell: ({ getValue }) => (
             <span className="rounded-full bg-blue-100 px-2.5 py-1 text-xs font-medium capitalize text-blue-700">
-                {String(getValue())}
+                {String(getValue()) ?? "assigned"}
             </span>
         ),
     },
@@ -169,7 +182,7 @@ export const jobsColumns: ColumnDef<CreateJobForm>[] = [
                         "bg-slate-100 text-slate-700"
                         }`}
                 >
-                    {priority}
+                    {priority || "low"}
                 </span>
             );
         },
@@ -181,7 +194,15 @@ export const jobsColumns: ColumnDef<CreateJobForm>[] = [
         enableSorting: false,
         cell: ({ row }) => {
             const job = row.original;
-
+            const deleteJob = async () => {
+                try {
+                    await customFetch.delete(`/jobs/${job._id}`)
+                    queryClient.invalidateQueries({ queryKey: ["jobs"] })
+                    toast.success("job deleted successfully")
+                } catch (e) {
+                    toast.error("fail to delete job , try again later ")
+                }
+            }
             return (
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -195,13 +216,13 @@ export const jobsColumns: ColumnDef<CreateJobForm>[] = [
 
                     <DropdownMenuContent align="end">
                         <DropdownMenuItem asChild>
-                            <Link to={`/dashboard/jobs/${job._id}`}>
+                            <Link to={`/jobs/${job._id}`}>
                                 View Details
                             </Link>
                         </DropdownMenuItem>
 
                         <DropdownMenuItem asChild>
-                            <Link to={`/dashboard/jobs/${job._id}/edit`}>
+                            <Link to={`/jobs/${job._id}/edit`}>
                                 Edit Job
                             </Link>
                         </DropdownMenuItem>
@@ -212,7 +233,9 @@ export const jobsColumns: ColumnDef<CreateJobForm>[] = [
 
                         <DropdownMenuSeparator />
 
-                        <DropdownMenuItem className="text-red-600">
+                        <DropdownMenuItem className="text-red-600"
+                            onClick={deleteJob}
+                        >
                             Delete Job
                         </DropdownMenuItem>
                     </DropdownMenuContent>

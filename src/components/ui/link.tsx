@@ -1,21 +1,24 @@
-import { NavLink,type NavLinkProps,type NavLinkRenderProps } from "react-router";
+import { NavLink, type NavLinkProps, type NavLinkRenderProps } from "react-router";
 import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
-export interface IFilterProps extends NavLinkProps {
+export interface IFilterProps extends Omit<NavLinkProps, "className"> {
+    className?: CustomClassName;
     selectedClassName?: string;
     show?: boolean;
     animateClassName?: string;
-    replace?: boolean;
-    end?: boolean;
     layoutId?: string;
 }
+type CustomClassName =
+    | string
+    | ((props: NavLinkRenderProps) => string);
+
 
 const CustomNavLink = ({
     className,
     children,
     selectedClassName,
-    show=false,
+    show = false,
     animateClassName,
     layoutId,
     ...props
@@ -23,12 +26,14 @@ const CustomNavLink = ({
     return (
         <NavLink
             {...props}
-            className={({ isActive }) =>
+            className={(navProps) =>
                 cn(
-                    "flex-none block relative w-full h-8",
-                    className,
-                    isActive && "slide-active",
-                    isActive && selectedClassName
+                    "flex-none block relative w-full h-8 group",
+                    typeof className === "function"
+                        ? className(navProps)
+                        : className,
+                    navProps.isActive && "slide-active",
+                    navProps.isActive && selectedClassName
                 )
             }
         >
@@ -51,7 +56,7 @@ const CustomNavLink = ({
                                 }}
                                 layoutId={layoutId || "hoverBackground"}
                                 className={cn(
-                                    "absolute left-0 right-0 bottom-0 h-[1px] w-full bg-secondary-color rounded-lg",
+                                    "absolute left-0 right-0 bottom-0 h-px w-full bg-secondary-color rounded-lg",
                                     animateClassName
                                 )}
                             ></motion.span>

@@ -6,6 +6,7 @@ import { Outlet, redirect, useLocation, useNavigation, type LoaderFunctionArgs }
 import { useMediaQuery } from "react-responsive";
 import customFetch from '@/utils/customFetch'
 import { useQuery, type QueryClient } from '@tanstack/react-query'
+import ScrollToTop from '@/utils/scroll-to-top'
 type Page =
     | 'dashboard'
     | 'jobs'
@@ -62,7 +63,8 @@ export default function DashboardLayout() {
     const { user } = useQuery(userQuery)?.data as unknown as any || { user: null }
     return (
         <div className="flex h-screen  overflow-hidden bg-[#F8FAFC]">
-            <Sidebar active={page} collapsed={sidebarCollapsed} />
+            <ScrollToTop/>
+            <Sidebar active={page} collapsed={sidebarCollapsed} onToggleSidebar={() => setSidebarCollapsed(c => !c)} />
 
             <div
                 className="flex-1 flex flex-col min-w-0 transition-all duration-200"

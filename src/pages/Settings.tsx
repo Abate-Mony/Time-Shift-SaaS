@@ -39,7 +39,7 @@ export function Settings() {
   }
 
   return (
-    <div className="p-6 max-w-2xl animate-fade-in">
+    <div className="p-6 max-w-5xl mx-auto animate-fade-in">
       <div className="mb-6">
         <h1 className="text-xl font-semibold text-slate-900 tracking-tight">Settings</h1>
         <p className="text-sm text-slate-500 mt-0.5">Manage your account preferences</p>

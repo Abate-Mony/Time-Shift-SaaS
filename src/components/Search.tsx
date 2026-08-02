@@ -15,7 +15,7 @@ interface iSearch
 
 // }
 function SearchComponent({
-    containerClassName,
+    containerClassName, placeholder,
     ...props
 }: iSearch) {
     const { handleFilterChange } = useFilter()
@@ -43,10 +43,12 @@ function SearchComponent({
                     //   value={search}
                     defaultValue={searchVal || ""}
                     onChange={debouncedHandleChange}
-                    placeholder='Search...'
-                  
+                    placeholder={
+                        placeholder ?? 'Search...'
+                    }
+
                     className="w-full h-9 pl-9 pr-3 border border-[#E2E8F0] rounded-lg text-sm text-slate-700 bg-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all"
-                 {...props} />
+                    {...props} />
             </div>
         </div>
         // <div className={

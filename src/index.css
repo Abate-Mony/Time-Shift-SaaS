@@ -297,6 +297,12 @@ body {
   animation: after6 2s infinite;
 }
 
+input,
+select,
+textarea {
+  font-size: 16px;
+}
+
 @keyframes before8 {
   0% {
     width: 0.5em;

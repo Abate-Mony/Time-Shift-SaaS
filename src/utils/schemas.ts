@@ -1,4 +1,10 @@
 import { z } from "zod"
+const workerSchema = z.object({
+    user: z.string().min(1, "User is required"),
+    fullname: z.string().min(1, "Full name is required"),
+    email: z.string().email("Invalid email address"),
+    phone: z.string().min(1, "Phone number is required"),
+});
 export const createJobSchema = z.object({
     _id: z
         .string().optional(),
@@ -23,9 +29,12 @@ export const createJobSchema = z.object({
         "draft",
         "published",
         "assigned",
+        "accepted",
         "in-progress",
         "completed",
         "cancelled",
+        "declined",
+        "pending"
     ]).optional(),
 
     date: z
@@ -41,7 +50,7 @@ export const createJobSchema = z.object({
         .min(1, "End time is required"),
 
     workers: z
-        .array(z.string())
+        .array(workerSchema)
         .min(1, "Please select at least one worker"),
 
     additional_notes: z

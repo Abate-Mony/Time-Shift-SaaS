@@ -8,14 +8,22 @@ const customFetch = axios.create({
   withCredentials: true,
 });
 
+const protectedRoutes = [
+  "/users/current-user",
+  "/auth/refresh",
+];
+
 customFetch.interceptors.response.use(
   (response) => response,
   async (error) => {
-    if (error.response?.status === 401) {
-      await logoutUser();
+    const url = error.config?.url;
 
-      // Stop execution because we're leaving the page.
-      return new Promise(() => { });
+    if (
+      error.response?.status === 401 &&
+      protectedRoutes.includes(url)
+    ) {
+      await logoutUser();
+      return;
     }
 
     return Promise.reject(error);
