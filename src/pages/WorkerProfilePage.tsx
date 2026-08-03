@@ -44,15 +44,11 @@ const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?:
     return (
         <div className="bg-white border border-[#E2E8F0] rounded-xl px-3 py-2.5 shadow-lg">
             <p className="text-[10px] text-slate-400 mb-0.5">{label}</p>
-            <p className="text-sm font-bold text-slate-900">{payload[0].value}h</p>
+            <p className="text-sm font-bold text-slate-900">{payload[0].value}</p>
         </div>
     )
 }
-
-interface WorkerProfileProps {
-    workerId: string
-    onNavigate: (page: string, id?: string) => void
-}
+    
 export function WorkerProfile() {
     const navigate = useNavigate()
     const onNavigate = (path: string) => navigate(path)
@@ -84,7 +80,7 @@ export function WorkerProfile() {
             </button>
 
             {/* ── Hero banner ──────────────────────────────────────────────────── */}
-            <div className="bg-white rounded-2xl border border-[#E2E8F0] overflow-hidden shadow-sm mb-5">
+            <div className=" rounded-2xl border border-[#E2E8F0] overflow-hidden  !bg-white shadow-sm mb-5">
 
                 {/* Cover */}
                 <div className="h-32 bg-gradient-to-br from-[#1E3A5F] via-[#2D5A8E] to-[#1a4b7a] relative overflow-hidden">
@@ -98,8 +94,8 @@ export function WorkerProfile() {
                 </div>
 
                 {/* Profile row */}
-                <div className="px-6 pb-6">
-                    <div className="flex items-end justify-between -mt-10 mb-5">
+                <div className="px-6 pb-6 relative z-10">
+                    <div className="flex items-end justify-between -mt-7 mb-5">
                         <div className="ring-4 ring-white rounded-full shadow-lg">
                             <Avatar initials={worker.avatar} size="xl" index={workerIndex} />
                         </div>

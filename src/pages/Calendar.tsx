@@ -1,7 +1,22 @@
+// @ts-nocheck
+
+
 import { useState } from 'react'
 import { ChevronLeft, ChevronRight, Clock, MapPin } from 'lucide-react'
 import { StatusBadge, Avatar } from '../components/ui'
 import { jobs, workers } from '../data/mockData'
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer"
+import { Button } from '@/components/ui/button'
+import { useMediaQuery } from 'react-responsive'
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
@@ -21,6 +36,83 @@ const jobColors: Record<string, string> = {
   'pending': 'bg-amber-500',
   'draft': 'bg-slate-400',
 }
+
+
+
+const DisplayCalendar = ({
+  selectedDay, selectedJobs, month, job
+}: any) => {
+  return (
+    <>
+      <div className="bg-white rounded-xl border border-[#E2E8F0] p-5">
+        <h3 className="text-sm font-semibold text-slate-900 mb-1">
+          {selectedDay ? `${selectedDay} ${MONTHS[month]}` : 'Select a day'}
+        </h3>
+        <p className="text-xs text-slate-400 mb-4">{selectedJobs.length} job{selectedJobs.length !== 1 ? 's' : ''} scheduled</p>
+
+        {selectedJobs.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-xs text-slate-400">No jobs on this day</p>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {selectedJobs.map((job) => {
+              const assignedWorkers = workers.filter(w => job.workers.includes(w.id))
+              return (
+                <div key={job.id} className="border border-[#E2E8F0] rounded-xl p-3.5">
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <p className="text-xs font-semibold text-slate-800 leading-snug">{job.name}</p>
+                    <StatusBadge status={job.status} />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                      <Clock size={11} className="shrink-0" />
+                      {job.startTime} – {job.endTime}
+                    </div>
+                    <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                      <MapPin size={11} className="shrink-0" />
+                      <span className="truncate">{job.location.split(',')[0]}</span>
+                    </div>
+                  </div>
+                  {assignedWorkers.length > 0 && (
+                    <div className="flex items-center gap-1 mt-3">
+                      {assignedWorkers.slice(0, 4).map((w, i) => (
+                        <Avatar key={w.id} initials={w.avatar} size="sm" index={i} />
+                      ))}
+                      {assignedWorkers.length > 4 && (
+                        <span className="text-[10px] text-slate-400 ml-1">+{assignedWorkers.length - 4}</span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Legend */}
+      <div className="bg-white rounded-xl border border-[#E2E8F0] p-4 mt-3">
+        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Legend</p>
+        <div className="flex flex-col gap-2">
+          {[
+            { label: 'In Progress', color: 'bg-blue-500' },
+            { label: 'Assigned', color: 'bg-[#1E3A5F]' },
+            { label: 'Completed', color: 'bg-emerald-500' },
+            { label: 'Pending', color: 'bg-amber-500' },
+            { label: 'Draft', color: 'bg-slate-400' },
+          ].map(l => (
+            <div key={l.label} className="flex items-center gap-2">
+              <span className={`w-3 h-2 rounded-sm ${l.color}`} />
+              <span className="text-xs text-slate-600">{l.label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </>
+  )
+}
+
 
 export function Calendar() {
   const [year, setYear] = useState(2025)
@@ -42,15 +134,17 @@ export function Calendar() {
     ? `${year}-${String(month + 1).padStart(2, '0')}-${String(selectedDay).padStart(2, '0')}`
     : null
   const selectedJobs = selectedDateStr ? jobs.filter(j => j.date === selectedDateStr) : []
+  const [open, setOpen] = useState(false)
+  const isDesktop = useMediaQuery({ minWidth: 768 })
 
   return (
-    <div className="p-6 animate-fade-in">
+    <div className="px-2 sm:px-4 lg:p-6 animate-fade-in">
       <div className="flex items-start justify-between mb-6">
         <div>
           <h1 className="text-xl font-semibold text-slate-900 tracking-tight">Calendar</h1>
           <p className="text-sm text-slate-500 mt-0.5">Visual overview of all scheduled jobs</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 ">
           {['Month', 'Week', 'Day'].map(v => (
             <button key={v} className={`h-8 px-3.5 rounded-lg text-xs font-medium transition-colors ${v === 'Month' ? 'bg-[#1E3A5F] text-white' : 'text-slate-500 hover:bg-slate-100'}`}>{v}</button>
           ))}
@@ -91,7 +185,12 @@ export function Calendar() {
               return (
                 <div
                   key={day}
-                  onClick={() => setSelectedDay(day)}
+                  onClick={() => {
+                    setSelectedDay(day)
+                    if (isDesktop) return
+                    setOpen(true)
+
+                  }}
                   className={`h-28 border-b border-r border-[#F8FAFC] p-2 cursor-pointer transition-colors hover:bg-slate-50/60 ${isSelected ? 'bg-blue-50/40' : ''}`}
                 >
                   <div className="flex justify-end mb-1">
@@ -117,72 +216,39 @@ export function Calendar() {
         </div>
 
         {/* Day detail panel */}
-        <div className="w-72 shrink-0">
-          <div className="bg-white rounded-xl border border-[#E2E8F0] p-5">
-            <h3 className="text-sm font-semibold text-slate-900 mb-1">
-              {selectedDay ? `${selectedDay} ${MONTHS[month]}` : 'Select a day'}
-            </h3>
-            <p className="text-xs text-slate-400 mb-4">{selectedJobs.length} job{selectedJobs.length !== 1 ? 's' : ''} scheduled</p>
+        <div className="hidden lg:block w-72 shrink-0">
+      //todo
+          <Drawer open={open} onOpenChange={setOpen}>
+            <DrawerTrigger asChild className='hidden'>
+              <Button variant="outline">Edit Profile</Button>
+            </DrawerTrigger>
+            <DrawerContent className=''>
+              <DrawerHeader className="text-left">
+                <DrawerTitle>Create Worker</DrawerTitle>
+                <DrawerDescription>
+                  {/* Make changes to your profile here. Click save when you're done. */}
+                </DrawerDescription>
+              </DrawerHeader>
+              <DisplayCalendar
+                job={jobs}
+                month={month}
+                selectedDay={selectedDay}
+                selectedJobs={selectedJobs}
+              />
+              <DrawerFooter className="pt-2">
+                <DrawerClose asChild>
+                  <Button variant="outline">Cancel</Button>
+                </DrawerClose>
+              </DrawerFooter>
+            </DrawerContent>
+          </Drawer>
 
-            {selectedJobs.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-xs text-slate-400">No jobs on this day</p>
-              </div>
-            ) : (
-              <div className="flex flex-col gap-3">
-                {selectedJobs.map(job => {
-                  const assignedWorkers = workers.filter(w => job.workers.includes(w.id))
-                  return (
-                    <div key={job.id} className="border border-[#E2E8F0] rounded-xl p-3.5">
-                      <div className="flex items-start justify-between gap-2 mb-2">
-                        <p className="text-xs font-semibold text-slate-800 leading-snug">{job.name}</p>
-                        <StatusBadge status={job.status} />
-                      </div>
-                      <div className="flex flex-col gap-1.5">
-                        <div className="flex items-center gap-1.5 text-xs text-slate-500">
-                          <Clock size={11} className="shrink-0" />
-                          {job.startTime} – {job.endTime}
-                        </div>
-                        <div className="flex items-center gap-1.5 text-xs text-slate-500">
-                          <MapPin size={11} className="shrink-0" />
-                          <span className="truncate">{job.location.split(',')[0]}</span>
-                        </div>
-                      </div>
-                      {assignedWorkers.length > 0 && (
-                        <div className="flex items-center gap-1 mt-3">
-                          {assignedWorkers.slice(0, 4).map((w, i) => (
-                            <Avatar key={w.id} initials={w.avatar} size="sm" index={i} />
-                          ))}
-                          {assignedWorkers.length > 4 && (
-                            <span className="text-[10px] text-slate-400 ml-1">+{assignedWorkers.length - 4}</span>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-          </div>
-
-          {/* Legend */}
-          <div className="bg-white rounded-xl border border-[#E2E8F0] p-4 mt-3">
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Legend</p>
-            <div className="flex flex-col gap-2">
-              {[
-                { label: 'In Progress', color: 'bg-blue-500' },
-                { label: 'Assigned', color: 'bg-[#1E3A5F]' },
-                { label: 'Completed', color: 'bg-emerald-500' },
-                { label: 'Pending', color: 'bg-amber-500' },
-                { label: 'Draft', color: 'bg-slate-400' },
-              ].map(l => (
-                <div key={l.label} className="flex items-center gap-2">
-                  <span className={`w-3 h-2 rounded-sm ${l.color}`} />
-                  <span className="text-xs text-slate-600">{l.label}</span>
-                </div>
-              ))}
-            </div>
-          </div>
+          <DisplayCalendar
+            job={jobs}
+            month={month}
+            selectedDay={selectedDay}
+            selectedJobs={selectedJobs}
+          />
         </div>
       </div>
     </div>
