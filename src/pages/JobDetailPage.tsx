@@ -1,16 +1,31 @@
-import { useState } from 'react'
-import {
-    ChevronLeft, MapPin, Clock, Calendar, Briefcase, Users, AlertCircle,
-    Edit, Trash2, Copy, CheckCircle2, Play,
-    Download, FileText, Camera, Navigation, MoreHorizontal, Timer, Flag
-} from 'lucide-react'
-import { Avatar, StatusBadge, PriorityBadge, Card, Divider } from '../components/ui'
-import { jobs, workers } from '../data/mockData'
-import { useQuery } from '@tanstack/react-query'
-import { singleJob } from './EditJobPage'
-import { useNavigate, useParams } from 'react-router'
-import dayjs from 'dayjs'
 import customFetch from '@/utils/customFetch'
+import { useQuery } from '@tanstack/react-query'
+import dayjs from 'dayjs'
+import {
+    AlertCircle,
+    Briefcase,
+    Calendar,
+    Camera,
+    CheckCircle2,
+    ChevronLeft,
+    Clock,
+    Copy,
+    Download,
+    Edit,
+    FileText,
+    Flag,
+    MapPin,
+    MoreHorizontal,
+    Navigation,
+    Play,
+    Timer,
+    Trash2,
+    Users
+} from 'lucide-react'
+import { useState } from 'react'
+import { Link, useNavigate, useParams } from 'react-router'
+import { Avatar, Card, Divider, PriorityBadge, StatusBadge } from '../components/ui'
+import { singleJob } from './EditJobPage'
 
 // ── Timeline events per job ──────────────────────────────────────────────────
 const timelineEvents = [
@@ -243,13 +258,15 @@ export function JobDetail() {
 
                             <div className="divide-y divide-[#F8FAFC]">
                                 {assignedWorkers.map((w, i) => {
-                                    const log = workerTimeLogs[1] ?? { clockIn: '—', clockOut: '—', break: '—', billable: '—' }
+                                    // const log = w.checkedInAt
+                                    //  ?? { clockIn: '—', clockOut: '—', break: '—', billable: '—' }
+                                    const {  checkedOutAt, checkedInAt } = w
                                     console.log("worker : ", w)
                                     return (
                                         <div
                                             key={w.email}
                                             className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-4 px-5 py-3.5 items-center hover:bg-slate-50/50 transition-colors cursor-pointer"
-                                            onClick={() => onNavigate(`/user/${w.worker._id}/worker-profile`)}
+                                            onClick={() => onNavigate(`/user/${w.job}/worker-profile`)}
                                         >
                                             <div className="flex items-center gap-2.5">
                                                 <Avatar initials={w.fullname?.[0]} size="sm" index={i} />
@@ -260,13 +277,13 @@ export function JobDetail() {
                                             </div>
                                             <p className="text-xs font-semibold text-slate-700 mono">{dayjs(w?.checkedInAt!).format("HH:mm")}</p>
                                             <div>
-                                                {log.clockOut
-                                                    ? <p className="text-xs font-semibold text-slate-700 ">{log.clockOut}</p>
+                                                {checkedInAt
+                                                    ? <p className="text-xs font-semibold text-slate-700 ">{dayjs(checkedOutAt).format("HH:mm")}</p>
                                                     : <span className="flex items-center gap-1 text-xs text-blue-600 font-semibold"><span className="w-1.5 h-1.5 bg-blue-500 rounded-full pulse-dot" />Live</span>
                                                 }
                                             </div>
                                             <p className="text-xs text-slate-500 mono">{"log.break"}</p>
-                                            <p className="text-xs font-semibold text-emerald-700 mono">{"log.billable"}</p>
+                                            <p className="text-xs font-semibold text-emerald-700 mono">{w.payRate || "£14/ph"}</p>
                                         </div>
                                     )
                                 })}
@@ -297,19 +314,19 @@ export function JobDetail() {
                                 )
                             }
                             {
-                                data?.activity?.map((entry:typeof activityLog[number], i) => (
+                                data?.activity?.map((entry: typeof activityLog[number], i:number) => (
                                     <div key={i} className="flex items-start gap-3.5 pb-5 last:pb-0">
                                         <div className={`w-3.5 h-3.5 rounded-full shrink-0 mt-0.5 ${"e.color"} ring-2 ring-white z-10 flex items-center justify-center`}>
                                             {/* <e.icon size={7} className="text-white" strokeWidth={3} /> */}
                                         </div>
                                         <div className="flex-1 min-w-0 pt-px">
                                             <p className="text-sm text-slate-700 leading-snug">{describeActivity(entry)}</p>
-                                            <p className="text-[10px] text-slate-400 mt-0.5 font-medium">{"e.time"}</p>
+                                            <p className="text-[10px] text-slate-400 mt-0.5 font-medium">{dayjs(entry.createdAt).format("DD/MM h:mm A")}</p>
                                         </div>
                                     </div>
                                 ))}
                             {timelineEvents.map((e, i) => (
-                                <div key={i} className="flex items-start gap-3.5 pb-5 last:pb-0 hidden">
+                                <div key={i} className="flex items-start gap-3.5 pb-5 last:pb-0 ">
                                     <div className={`w-3.5 h-3.5 rounded-full shrink-0 mt-0.5 ${e.color} ring-2 ring-white z-10 flex items-center justify-center`}>
                                         <e.icon size={7} className="text-white" strokeWidth={3} />
                                     </div>
@@ -371,9 +388,11 @@ export function JobDetail() {
                                 <h3 className="text-sm font-semibold text-slate-900">Assigned Workers</h3>
                                 <p className="text-xs text-slate-400 mt-0.5">{assignedWorkers.length} assigned</p>
                             </div>
-                            <button className="h-7 px-2.5 rounded-lg bg-[#1E3A5F]/10 text-[#1E3A5F] text-xs font-semibold hover:bg-[#1E3A5F]/20 transition-colors flex items-center gap-1">
-                                <Plus size={11} /> Add
-                            </button>
+                            <Link to={`/jobs/${id}/edit?edit=assigned-workers#assigned-worker`}>
+                                <button className="h-7 px-2.5 rounded-lg bg-[#1E3A5F]/10 text-[#1E3A5F] text-xs font-semibold hover:bg-[#1E3A5F]/20 transition-colors flex items-center gap-1">
+                                    <Plus size={11} /> Add
+                                </button>
+                            </Link>
                         </div>
 
                         {assignedWorkers.length === 0 ? (
@@ -392,13 +411,13 @@ export function JobDetail() {
                                         className="flex items-center gap-3 px-5 py-3.5 hover:bg-slate-50/60 transition-colors cursor-pointer group"
                                         onClick={() => onNavigate('worker-profile')}
                                     >
-                                        <Avatar initials={"w.avatar"} size="sm" index={i} />
+                                        <Avatar initials={w.fullname?.slice(0, 2)} size="sm" index={i} />
                                         <div className="flex-1 min-w-0">
                                             <p className="text-sm font-medium text-slate-800 group-hover:text-blue-700 transition-colors">{w.fullname}</p>
                                             <p className="text-[10px] text-slate-400">{"w.role"}</p>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <StatusBadge status={"w.status"} />
+                                            <StatusBadge status={w.status} />
                                             <ChevronLeft size={12} className="text-slate-300 rotate-180" />
                                         </div>
                                     </div>
@@ -434,7 +453,10 @@ export function JobDetail() {
                     <Card className="p-5">
                         <div className="flex items-center justify-between mb-3">
                             <h3 className="text-sm font-semibold text-slate-900">Attachments</h3>
-                            <button className="text-xs text-blue-600 font-semibold hover:text-blue-800 transition-colors">+ Add</button>
+                            <Link to={`/jobs/${id}/edit?edit=attachments`} className="flex items-center gap-1.5">
+                                <button className="text-xs text-blue-600 font-semibold hover:text-blue-800 transition-colors"
+                                >+ Add</button>
+                            </Link>
                         </div>
                         <div className="flex flex-col gap-2">
                             {[

@@ -46,7 +46,7 @@ export function Sidebar({ active, collapsed, onToggleSidebar }: SidebarProps) {
           onClick={onToggleSidebar}
         />
       }
-      <aside className={`${collapsed ? 'lg:w-16 w-0 overflow-hidden' : 'w-[240px]'} z-10 h-screen bg-[#0F172A] border flex flex-col fixed left-0 top-0 z-30 transition-all duration-200`}>
+      <aside className={`${collapsed ? 'lg:w-16 w-0 overflow-hidden' : 'w-[240px]'} z-30 h-screen bg-[#0F172A] border flex flex-col fixed left-0 top-0 overflow-y-auto transition-all duration-200`}>
         {/* Logo */}
         <div className="h-[60px] flex items-center px-5 border-b border-white/[0.06] shrink-0">
           {collapsed ? (
@@ -122,7 +122,7 @@ export function Sidebar({ active, collapsed, onToggleSidebar }: SidebarProps) {
         </nav>
 
         {/* Bottom nav */}
-        <div className="border-t border-white/6 px-3 py-3 flex flex-col gap-0.5">
+        <div className="border-t border-white/6 px-3 py-3 flex- flex-col gap-0.5 ">
           {bottomItems.map(item => (
             <CustomNavLink
               to={item.id}
@@ -143,9 +143,9 @@ export function Sidebar({ active, collapsed, onToggleSidebar }: SidebarProps) {
             </CustomNavLink>
           ))}
         </div>
-
         {/* User */}
-        <div className="border-t border-white/6 p-3">
+        
+        <div className="border-t border-white/6 p-3 flex-none">
           <button className="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-white/5 transition-colors group">
             <Avatar initials="OW" size="sm" index={0} />
             {!collapsed && (

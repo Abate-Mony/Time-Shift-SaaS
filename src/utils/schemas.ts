@@ -1,10 +1,77 @@
 import { z } from "zod"
-const workerSchema = z.object({
+
+export const workerSchema = z.object({
     user: z.string().min(1, "User is required"),
-    fullname: z.string().min(1, "Full name is required"),
-    email: z.string().email("Invalid email address"),
-    phone: z.string().min(1, "Phone number is required"),
+
+    fullname: z
+        .string()
+        .min(1, "Full name is required"),
+
+    email: z
+        .string()
+        .email("Invalid email address"),
+
+    phone: z
+        .string()
+        .default(""),
+
+    job: z
+        .string()
+        .min(1, "Job is required"),
+
+    createdBy: z
+        .string()
+        .min(1, "Created by is required"),
+
+    status: z.enum([
+        "pending",
+        "accepted",
+        "declined",
+        "in-progress",
+        "completed",
+        "cancelled",
+    ]).default("pending"),
+
+    acceptedAt: z.date().optional(),
+
+    declinedAt: z.date().optional(),
+
+    checkedInAt: z.date().optional(),
+
+    checkedOutAt: z.date().optional(),
+
+    completedAt: z.date().optional(),
+
+    cancellationReason: z
+        .string()
+        .default(""),
+
+    workerNotes: z
+        .string()
+        .default(""),
+
+    managerNotes: z
+        .string()
+        .default(""),
+
+    hoursWorked: z
+        .number()
+        .default(0),
+
+    overtimeHours: z
+        .number()
+        .default(0),
+
+    payRate: z
+        .number()
+        .default(0),
+
+    totalPay: z
+        .number()
+        .default(0),
 });
+
+export type Worker = z.infer<typeof workerSchema>;
 export const createJobSchema = z.object({
     _id: z
         .string().optional(),
@@ -19,6 +86,9 @@ export const createJobSchema = z.object({
     company: z
         .string()
         .min(2, "Company is required"),
+    createdBy: z
+        .string()
+        .optional(),
 
     priority: z.enum([
         "low",

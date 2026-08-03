@@ -5,7 +5,7 @@ import customFetch from "@/utils/customFetch"
 import type { CreateJobForm } from "@/utils/types"
 import { useQuery } from "@tanstack/react-query"
 import { AlertCircle, Briefcase, CalendarDays, ChevronLeft, Clock, MapPin, Navigation, Play, Timer } from "lucide-react"
-import { useParams, type LoaderFunctionArgs } from "react-router"
+import { Link, useParams, type LoaderFunctionArgs } from "react-router"
 import dayjs from "dayjs"
 const singleWorkerJob = (id: string | undefined) => {
     return ({
@@ -33,7 +33,7 @@ export default function JobDetailScreen() {
         { icon: Clock, label: 'Shift Time', value: `${job?.startTime} – ${job?.endTime}` },
         { icon: Timer, label: 'Duration', value: `${12} hours` },
         { icon: MapPin, label: 'Location', value: job?.location },
-        { icon: CalendarDays, label: 'Date', value: dayjs(job?.date).format("dddd, MMMM D, YYYY")},
+        { icon: CalendarDays, label: 'Date', value: dayjs(job?.date).format("dddd, MMMM D, YYYY") },
         { icon: Briefcase, label: 'Client', value: job?.company },
     ]
 
@@ -100,19 +100,22 @@ export default function JobDetailScreen() {
             )}
 
             {/* Navigate CTA */}
-            <button className="w-full h-11 rounded-xl bg-slate-100 text-slate-700 text-sm font-semibold hover:bg-slate-200 transition-colors flex items-center justify-center gap-2">
-                <Navigation size={15} className="text-slate-500" />
-                Get Directions
-            </button>
+            <a href={"https://www.google.com/maps/@51.4521168,-2.1430272,12z?entry=ttu&g_ep=EgoyMDI2MDcyOS4wIKXMDSoASAFQAw%3D%3D"} target="_blank">
+                <button className="w-full h-11 rounded-xl bg-slate-100 text-slate-700 text-sm font-semibold hover:bg-slate-200 transition-colors flex items-center justify-center gap-2">
+                    <Navigation size={15} className="text-slate-500" />
+                    Get Directions
+                </button>
+            </a>
 
             {/* Primary CTA */}
-            {(job?.status === 'in-progress' || job?.status === 'assigned') && (
-                <button
-                    className="w-full h-14 rounded-2xl bg-[#1E3A5F] text-white text-base font-bold hover:bg-[#162D4A] active:scale-[0.98] transition-all flex items-center justify-center gap-3 shadow-lg shadow-[#1E3A5F]/25 mt-1"
-                >
-                    <Play size={18} fill="currentColor" />
-                    {job.status === 'in-progress' ? 'Continue Working' : 'Start Work'}
-                </button>
+            {(job?.status === 'in-progress') && (
+                <Link to={`/worker/clock/${job._id}`}>
+                    <button
+                        className="w-full h-14 rounded-2xl bg-[#1E3A5F] text-white text-base font-bold hover:bg-[#162D4A] active:scale-[0.98] transition-all flex items-center justify-center gap-3 shadow-lg shadow-[#1E3A5F]/25 mt-1"
+                    >
+                        <Play size={18} fill="currentColor" />
+                        {job.status === 'in-progress' ? 'Continue Working -->' : 'Start Work'}
+                    </button></Link>
             )}
         </div>
     )

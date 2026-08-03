@@ -71,7 +71,7 @@ export function Dashboard() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-6">
         <StatCard label="Today's Jobs" value={todayJobs.length} sub={`${todayJobs.filter(j => j.status === 'in-progress').length} in progress`} icon={<Briefcase size={16} />} trend="↑ 2 from yesterday" trendUp />
         <StatCard label="Workers Active" value={workingNow.length} sub="of 6 total" icon={<Users size={16} />} />
         <StatCard label="Hours This Week" value="440" sub="of 480 target" icon={<Clock size={16} />} trend="92% utilisation" trendUp />

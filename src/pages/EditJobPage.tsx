@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { ChevronLeft, MapPin, Users, Clock, Calendar, Paperclip, ChevronDown, X, Check } from 'lucide-react'
 import { Avatar, Input } from '../components/ui'
-import { Form, redirect, useLoaderData, useNavigate, useParams, type ActionFunctionArgs, type LoaderFunctionArgs, type Params } from 'react-router'
+import { Form, redirect, useLoaderData, useNavigate, useParams, useSearchParams, type ActionFunctionArgs, type LoaderFunctionArgs, type Params } from 'react-router'
 import { Button } from '@/components/ui/button'
 import { QueryClient, useQuery } from '@tanstack/react-query'
 import customFetch from '@/utils/customFetch'
@@ -18,6 +18,14 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { cn } from '@/lib/utils'
 import dayjs from "dayjs"
 import { queryClient } from '@/lib/queryClient'
+import {
+    Field,
+    FieldContent,
+    FieldDescription,
+    FieldLabel,
+} from "@/components/ui/field"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+
 // Small reusable error renderer so we don't repeat the same JSX everywhere
 const FieldError = ({ message }: { message?: string }) => {
     if (!message) return null
@@ -95,8 +103,11 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
 }
 
 export function EditJob() {
-
-    const [workerOpen, setWorkerOpen] = useState(false)
+    const [searchParams] = useSearchParams()
+    const editMode = searchParams.get("edit") == "assigned-workers"
+    // alert("editMode : " )
+    console.log("this is edit mode : ", searchParams.get("edit"))
+    const [workerOpen, setWorkerOpen] = useState(editMode)
     const [saved, setSaved] = useState(false)
     const navigate = useNavigate()
     const onNavigate = (path: string) => navigate(path)
@@ -126,7 +137,7 @@ export function EditJob() {
             isSubmitting,
         },
     } = useForm<CreateJobForm>({
-        resolver: zodResolver(createJobSchema),
+        resolver: zodResolver(createJobSchema as any),
         defaultValues: {
             ...job,
             date: dayjs(job?.date).format("YYYY-MM-DD")
@@ -141,7 +152,7 @@ export function EditJob() {
     const toggleWorker = (id: string) => {
         const exists = selectedWorkers.some((w) => w.email === id);
 
-        const next = exists
+        const next: CreateJobForm["workers"] = exists
             ? selectedWorkers.filter((w) => w.email !== id)
             : (() => {
                 const worker = users.find((w) => w.email === id);
@@ -149,9 +160,18 @@ export function EditJob() {
                     ? [...selectedWorkers, {
                         fullname: worker.fullname,
                         email: worker.email,
-                        phone: "",
-                        user: ""
-
+                        phone: worker.phone ?? "",
+                        user: worker._id,
+                        job: job?.title ?? "",
+                        createdBy: job?.createdBy ?? "",
+                        status: "pending",
+                        cancellationReason: "",
+                        workerNotes: "",
+                        managerNotes: "",
+                        hoursWorked: 0,
+                        overtimeHours: 0,
+                        payRate: 0,
+                        totalPay: 0,
                     }]
                     : selectedWorkers;
             })();
@@ -181,15 +201,15 @@ export function EditJob() {
     }
 
     return (
-        <div className="p-6 max-w-3xl mx-auto animate-fade-in">
+        <div className=" px-2 pt-2.5 lg:p-6 max-w-3xl mx-auto animate-fade-in">
             {/* Header */}
             <div className="flex items-center gap-3 mb-7">
                 <button onClick={() => onNavigate('jobs')} className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:bg-slate-100 transition-colors">
                     <ChevronLeft size={16} />
                 </button>
                 <div>
-                    <h1 className="text-xl font-semibold text-slate-900 tracking-tight">Create New Job</h1>
-                    <p className="text-sm text-slate-500 mt-0.5">Fill in the details to assign work to your team</p>
+                    <h1 className="text-xl font-semibold text-slate-900 tracking-tight">Edit Job</h1>
+                    <p className="text-sm text-slate-500 mt-0.5">Fill in the details to edit the job</p>
                 </div>
             </div>
 
@@ -227,7 +247,7 @@ export function EditJob() {
                             <FieldError message={errors.description?.message} />
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid sm:grid-cols-2 gap-4">
                             <div>
                                 <Input
                                     label="Company / Client"
@@ -239,28 +259,32 @@ export function EditJob() {
                             </div>
 
                             <div>
-                                <Select
-                                    value={priority}
-                                    onValueChange={(val) => setValue("priority", val as CreateJobForm["priority"], { shouldValidate: true })}
-                                >
-                                    <SelectTrigger className={cn("w-45", errors.priority && "border-red-500!")}>
-                                        <SelectValue placeholder="Priority" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectGroup>
-                                            {[
-                                                { value: 'low', label: 'Low Priority' },
-                                                { value: 'medium', label: 'Medium Priority' },
-                                                { value: 'high', label: 'High Priority' },
-                                            ].map((item) => (
-                                                <SelectItem key={item.value} value={item.value}>
+                                <h2 className="text-sm font-semibold text-slate-800 mb-4 flex items-center gap-2">
+                                    Priority
+                                </h2>
+                                <RadioGroup defaultValue={job?.priority || "low"} className="w-fit pl-3 flex  flex-wrap" name='priority'>
+                                    {[
+                                        { value: 'low', label: 'Low Priority', className: "text-slate-800" },
+                                        { value: 'medium', label: 'Medium Priority', className: "text-amber-500" },
+                                        { value: 'high', label: 'High Priority', className: "text-red-500" },
+                                    ].map((item) => (
+                                        <Field orientation="horizontal">
+                                            <RadioGroupItem value={item.value} id={item.value} />
+                                            <FieldContent>
+                                                <FieldLabel htmlFor={item.value} className={
+                                                    cn("font-medium flex flex-col justify-start items-start", item.className)
+                                                }>
                                                     {item.label}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectGroup>
-                                    </SelectContent>
-                                </Select>
-                                <FieldError message={errors.priority?.message} />
+                                                    {/* <FieldDescription>
+                                                        Standard spacing for most use cases.
+                                                    </FieldDescription> */}
+                                                </FieldLabel>
+                                            </FieldContent>
+                                        </Field>
+                                    ))}
+                                </RadioGroup>
+
+                                {/* <FieldError message={errors.priority?.message} /> */}
                             </div>
                         </div>
                     </div>
@@ -293,14 +317,16 @@ export function EditJob() {
                         <span className="w-5 h-5 rounded-full bg-[#1E3A5F] text-white flex items-center justify-center text-[10px] font-bold">3</span>
                         Date & Time
                     </h2>
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className="grid sm:grid-cols-3 gap-4">
                         <div>
                             <Input
                                 label="Date"
                                 type="date"
                                 icon={<Calendar size={14} />}
                                 {...register("date")}
-                                className={cn(errors.date && "border-red-500!")}
+                                className={cn(errors.date && "border-red-500!",
+                                    "max-w-fit w-full"
+                                )}
                             />
                             <FieldError message={errors.date?.message} />
                         </div>
@@ -311,7 +337,10 @@ export function EditJob() {
                                 type="time"
                                 icon={<Clock size={14} />}
                                 {...register("startTime")}
-                                className={cn(errors.startTime && "border-red-500!")}
+                                className={cn(errors.startTime && "border-red-500!",
+                                    "max-w-fit w-full"
+
+                                )}
                             />
                             <FieldError message={errors.startTime?.message} />
                         </div>
@@ -322,7 +351,9 @@ export function EditJob() {
                                 type="time"
                                 icon={<Clock size={14} />}
                                 {...register("endTime")}
-                                className={cn(errors.endTime && "border-red-500!")}
+                                className={cn(errors.endTime && "border-red-500!",
+                                    "max-w-fit w-full"
+                                )}
                             />
                             <FieldError message={errors.endTime?.message} />
                         </div>
@@ -347,7 +378,7 @@ export function EditJob() {
                 </div>
 
                 {/* Workers */}
-                <div className="bg-white rounded-xl border border-[#E2E8F0] p-6">
+                <div className="bg-white rounded-xl border border-[#E2E8F0] p-6" id="assigned-worker">
                     <h2 className="text-sm font-semibold text-slate-800 mb-4 flex items-center gap-2">
                         <span className="w-5 h-5 rounded-full bg-[#1E3A5F] text-white flex items-center justify-center text-[10px] font-bold">4</span>
                         Assign Workers

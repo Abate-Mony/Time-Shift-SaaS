@@ -9,8 +9,8 @@ export default function HomeScreen() {
     const worker = workers[0]
     const myJobs = jobs.filter(j => j.workers.includes(worker.id))
     const activeJob = myJobs.find(j => j.status === 'in-progress')
-    const pendingJobs = myJobs.filter(j => j.status === 'assigned')
-    const completedJobs = myJobs.filter(j => j.status === 'completed')
+    // const pendingJobs = myJobs.filter(j => j.status === 'assigned')
+    // const completedJobs = myJobs.filter(j => j.status === 'completed')
 
     const weekDays = [
         { day: 'M', date: 21, hasShift: false },
@@ -89,7 +89,7 @@ export default function HomeScreen() {
             )}
 
             {/* Pending — action needed */}
-            {pendingJobs.length > 0 && (
+            {/* {pendingJobs.length > 0 && (
                 <div>
                     <div className="flex items-center justify-between mb-3">
                         <h2 className="text-sm font-bold text-slate-800">Action Required</h2>
@@ -108,10 +108,10 @@ export default function HomeScreen() {
                         ))}
                     </div>
                 </div>
-            )}
+            )} */}
 
             {/* Today's schedule */}
-            <div>
+            {/* <div>
                 <div className="flex items-center justify-between mb-3">
                     <h2 className="text-sm font-bold text-slate-800">Today's Shift</h2>
                     <button  className="text-xs text-blue-600 font-semibold flex items-center gap-1 hover:text-blue-800 transition-colors">
@@ -133,7 +133,7 @@ export default function HomeScreen() {
                         <p className="text-xs text-slate-400">Check the Jobs tab for upcoming assignments</p>
                     </div>
                 )}
-            </div>
+            </div> */}
 
             {/* This week */}
             <div>

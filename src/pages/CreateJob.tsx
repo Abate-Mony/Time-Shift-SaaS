@@ -92,7 +92,7 @@ export function CreateJob() {
       errors,
       isSubmitting,
     },
-  } = useForm<CreateJobForm>({
+  } = useForm({
     resolver: zodResolver(createJobSchema),
     defaultValues: {
       title: "",

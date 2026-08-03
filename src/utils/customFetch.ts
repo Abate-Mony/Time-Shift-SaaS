@@ -24,7 +24,7 @@ customFetch.interceptors.response.use(
     ) {
       await logoutUser();
       return;
-    }
+    }''
 
     return Promise.reject(error);
   }

@@ -1,4 +1,3 @@
-import JobCard from "@/components/JobCard"
 import { jobs } from "@/data/mockData"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 
@@ -60,10 +59,10 @@ export default function ScheduleScreen() {
           <div className="bg-white rounded-2xl border border-[#E2E8F0] p-10 text-center shadow-sm">
             <p className="text-sm font-semibold text-slate-600">No upcoming shifts scheduled</p>
           </div>
-        ) : (
-          upcoming.map(job => (
-            <JobCard key={job.id} job={job} />
-          ))
+        ) : (<div>fix that letter </div>
+          // upcoming.map(job => (
+          //   <JobCard key={job.id} job={job} />
+          // ))
         )}
       </div>
     </div>
