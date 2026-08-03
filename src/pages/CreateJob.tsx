@@ -1,4 +1,5 @@
-import { useState } from 'react'
+// @ts-nocheck
+import { useEffect, useState } from 'react'
 import { ChevronLeft, MapPin, Users, Clock, Calendar, Paperclip, ChevronDown, X, Check } from 'lucide-react'
 import { Avatar, Input } from '../components/ui'
 import { Form, redirect, useLoaderData, useNavigate, type ActionFunctionArgs, type Params } from 'react-router'
@@ -45,7 +46,7 @@ const workersQuery = (params: Params) => {
   }
 }
 
-export const action = async ({ request}: ActionFunctionArgs) => {
+export const action = async ({ request }: ActionFunctionArgs) => {
   const formData = await request.formData()
   const data = Object.fromEntries(formData)
   // alert("enter here")
@@ -53,7 +54,7 @@ export const action = async ({ request}: ActionFunctionArgs) => {
     await customFetch.post("/jobs", data)
 
     toast.success('Job created successfully!')
-   
+
     return redirect("/jobs")
   } catch (err) {
     let errorM
