@@ -108,14 +108,14 @@ export default function DataTable<TData, TValue>({
                 </DropdownMenu>
             </div>
             <Table
-                className='scrollto  '
+                className='scrollto  border rounded-lg overflow-hidden'
                 style={{
                     borderCollapse: 'separate',
                     borderSpacing: '0 0'
                 }}
             >
                 <TableHeader
-                    className='px-5 py-3    text-white! bg-black/15 rounded-full w-full  h-14 '
+                    className='px-5 py-3    text-white! bg-transparent  rounded-full w-full  h-14 '
                 >
                     {table.getHeaderGroups().map((headerGroup) => (
                         <TableRow key={headerGroup.id} className='border'>
@@ -143,7 +143,7 @@ export default function DataTable<TData, TValue>({
                                 {row.getVisibleCells().map((cell) => (
                                     <TableCell
                                         key={cell.id}
-                                        className="border-b  border-slate-200 py-3"
+                                        className="border-t px-5  border-slate-200 py-3"
                                     >
                                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                                     </TableCell>

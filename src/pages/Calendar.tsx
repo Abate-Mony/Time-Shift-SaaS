@@ -1,10 +1,7 @@
-// @ts-nocheck
+// @ts-nocheck--
 
 
-import { useState } from 'react'
-import { ChevronLeft, ChevronRight, Clock, MapPin } from 'lucide-react'
-import { StatusBadge, Avatar } from '../components/ui'
-import { jobs, workers } from '../data/mockData'
+import { Button } from '@/components/ui/button'
 import {
   Drawer,
   DrawerClose,
@@ -15,8 +12,39 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer"
-import { Button } from '@/components/ui/button'
+import { useFilter } from '@/hooks/CustomLinkFilterHook'
+import { queryClient } from '@/lib/queryClient'
+import customFetch from '@/utils/customFetch'
+import type { CreateJobForm } from '@/utils/types'
+import { useQuery } from '@tanstack/react-query'
+import dayjs from 'dayjs'
+import { ChevronLeft, ChevronRight, Clock, MapPin } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { useMediaQuery } from 'react-responsive'
+import { useLoaderData, type LoaderFunctionArgs } from 'react-router'
+import { Avatar, StatusBadge } from '../components/ui'
+const calendarQuery = (params: Record<string, string>) => {
+  const start = params.start || dayjs().startOf('month').format('YYYY-MM-DD')
+  const end = params.end || dayjs(start).endOf('month').format('YYYY-MM-DD')
+
+  const queryParams = { ...params, start, end }
+
+  return {
+    queryKey: ['calendar', { start, end, status: params.status ?? 'all' }],
+    queryFn: async () => {
+      const { data } = await customFetch.get<{
+        jobs: CreateJobForm[]
+      }>('/calendar', { params: queryParams })
+      return data
+    },
+  }
+}
+
+export const loader = async ({ request }: LoaderFunctionArgs) => {
+  const params = Object.fromEntries([...new URL(request.url).searchParams.entries()])
+  await queryClient.ensureQueryData(calendarQuery(params))
+  return { searchValues: params }
+}
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
@@ -40,8 +68,16 @@ const jobColors: Record<string, string> = {
 
 
 const DisplayCalendar = ({
-  selectedDay, selectedJobs, month, job
-}: any) => {
+  selectedDay, selectedJobs, month
+}: {
+  // job: CreateJobForm,
+  selectedDay: any,
+  selectedJobs: CreateJobForm[],
+  month: any
+
+}) => {
+console.log("selected jobs",selectedJobs.map(w=>w))
+
   return (
     <>
       <div className="bg-white rounded-xl border border-[#E2E8F0] p-5">
@@ -50,19 +86,19 @@ const DisplayCalendar = ({
         </h3>
         <p className="text-xs text-slate-400 mb-4">{selectedJobs.length} job{selectedJobs.length !== 1 ? 's' : ''} scheduled</p>
 
-        {selectedJobs.length === 0 ? (
+        {selectedJobs?.length === 0 ? (
           <div className="text-center py-8">
             <p className="text-xs text-slate-400">No jobs on this day</p>
           </div>
         ) : (
           <div className="flex flex-col gap-3">
-            {selectedJobs.map((job) => {
-              const assignedWorkers = workers.filter(w => job.workers.includes(w.id))
+            {selectedJobs?.map((job) => {
+              const assignedWorkers = job?.workers?.map(w => w)
               return (
-                <div key={job.id} className="border border-[#E2E8F0] rounded-xl p-3.5">
+                <div key={job._id} className="border border-[#E2E8F0] rounded-xl p-3.5">
                   <div className="flex items-start justify-between gap-2 mb-2">
-                    <p className="text-xs font-semibold text-slate-800 leading-snug">{job.name}</p>
-                    <StatusBadge status={job.status} />
+                    <p className="text-xs font-semibold text-slate-800 leading-snug">{job?.title}</p>
+                    <StatusBadge status={job?.status || ""} />
                   </div>
                   <div className="flex flex-col gap-1.5">
                     <div className="flex items-center gap-1.5 text-xs text-slate-500">
@@ -71,15 +107,15 @@ const DisplayCalendar = ({
                     </div>
                     <div className="flex items-center gap-1.5 text-xs text-slate-500">
                       <MapPin size={11} className="shrink-0" />
-                      <span className="truncate">{job.location.split(',')[0]}</span>
+                      <span className="truncate">{job?.location?.split(',')[0]}</span>
                     </div>
                   </div>
-                  {assignedWorkers.length > 0 && (
+                  {assignedWorkers?.length > 0 && (
                     <div className="flex items-center gap-1 mt-3">
                       {assignedWorkers.slice(0, 4).map((w, i) => (
-                        <Avatar key={w.id} initials={w.avatar} size="sm" index={i} />
+                        <Avatar key={w.fullname} initials={w?.fullname?.[0]} size="sm" index={i} />
                       ))}
-                      {assignedWorkers.length > 4 && (
+                      {assignedWorkers?.length > 4 && (
                         <span className="text-[10px] text-slate-400 ml-1">+{assignedWorkers.length - 4}</span>
                       )}
                     </div>
@@ -115,9 +151,26 @@ const DisplayCalendar = ({
 
 
 export function Calendar() {
-  const [year, setYear] = useState(2025)
-  const [month, setMonth] = useState(6) // July
-  const [selectedDay, setSelectedDay] = useState<number | null>(25)
+  const { searchValues } = useLoaderData() as any
+  const { searchQuery, handleFiltersChange } = useFilter()
+
+  const { data } = useQuery(calendarQuery(searchValues))
+  const jobs = data?.jobs ?? []
+  const isStartMonthFromQuery = searchQuery.get("start")
+  const start_month = dayjs(isStartMonthFromQuery || new Date()).month()
+  const [year, setYear] = useState(dayjs().year())
+  const [month, setMonth] = useState(start_month)
+  const start = dayjs().year(year).month(month).startOf('month').format('YYYY-MM-DD')
+  const end = dayjs().year(year).month(month).endOf('month').format('YYYY-MM-DD')
+  const [selectedDay, setSelectedDay] = useState<number | null>(dayjs().date())
+
+  const getJobsForDay = (day: number) => {
+    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+    return jobs.filter((j: any) => dayjs(j.date).format('YYYY-MM-DD') === dateStr)
+  }
+  useEffect(() => {
+    handleFiltersChange({ start, end })
+  }, [year, month])
 
   const days = getDaysInMonth(year, month)
   const firstDay = getFirstDayOfMonth(year, month)
@@ -125,15 +178,16 @@ export function Calendar() {
   const prev = () => { if (month === 0) { setYear(y => y - 1); setMonth(11) } else setMonth(m => m - 1) }
   const next = () => { if (month === 11) { setYear(y => y + 1); setMonth(0) } else setMonth(m => m + 1) }
 
-  const getJobsForDay = (day: number) => {
-    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-    return jobs.filter(j => j.date === dateStr)
-  }
+  // const getJobsForDay = (day: number) => {
+  //   const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+  //   return jobs.filter(j => j.date === dateStr)
+  // }
 
   const selectedDateStr = selectedDay
     ? `${year}-${String(month + 1).padStart(2, '0')}-${String(selectedDay).padStart(2, '0')}`
     : null
-  const selectedJobs = selectedDateStr ? jobs.filter(j => j.date === selectedDateStr) : []
+    console.log("slected job string : ",selectedDateStr,jobs.map(j=>j.date))
+  const selectedJobs = selectedDateStr ? jobs.filter(j => dayjs(j.date).format("YYYY/MM/DD") === dayjs(selectedDateStr).format("YYYY/MM/DD")) : []
   const [open, setOpen] = useState(false)
   const isDesktop = useMediaQuery({ minWidth: 768 })
 
@@ -201,8 +255,8 @@ export function Calendar() {
                   </div>
                   <div className="flex flex-col gap-0.5">
                     {dayJobs.slice(0, 2).map(job => (
-                      <div key={job.id} className={`${jobColors[job.status] ?? 'bg-slate-400'} rounded px-1.5 py-0.5`}>
-                        <p className="text-[10px] text-white font-medium truncate">{job.name.split('—')[0].trim()}</p>
+                      <div key={job._id} className={`${jobColors[job.status || "orange"] ?? 'bg-slate-400'} rounded px-1.5 py-0.5`}>
+                        <p className="text-[10px] text-white font-medium truncate">{job.title.split('—')[0].trim()}</p>
                       </div>
                     ))}
                     {dayJobs.length > 2 && (
@@ -230,7 +284,7 @@ export function Calendar() {
                 </DrawerDescription>
               </DrawerHeader>
               <DisplayCalendar
-                job={jobs}
+                // job={jobs}
                 month={month}
                 selectedDay={selectedDay}
                 selectedJobs={selectedJobs}
@@ -244,7 +298,7 @@ export function Calendar() {
           </Drawer>
 
           <DisplayCalendar
-            job={jobs}
+            // job={jobs}
             month={month}
             selectedDay={selectedDay}
             selectedJobs={selectedJobs}

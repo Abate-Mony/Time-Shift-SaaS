@@ -186,6 +186,21 @@ export function EditJob() {
         // Nothing extra to do here — RHF has already confirmed the data is valid.
     }
 
+    const jobDuration = (startTime: string, endTime: string) => {
+        const [sh, sm] = startTime.split(':').map(Number)
+        const [eh, em] = endTime.split(':').map(Number)
+        let mins = (eh * 60 + em) - (sh * 60 + sm)
+
+        // Overnight shift: end time rolls into the next day
+        if (mins <= 0) {
+            mins += 24 * 60
+        }
+
+        const h = Math.floor(mins / 60)
+        const m = mins % 60
+        return `${h}h${m > 0 ? ` ${m}m` : ''}`
+
+    }
     if (saved) {
         return (
             <div className="flex-1 flex items-center justify-center min-h-screen">
@@ -363,14 +378,9 @@ export function EditJob() {
                             <Clock size={14} className="text-blue-500" />
                             <p className="text-sm text-blue-700">
                                 <span className="font-semibold">
-                                    {(() => {
-                                        const [sh, sm] = startTime.split(':').map(Number)
-                                        const [eh, em] = endTime.split(':').map(Number)
-                                        const mins = (eh * 60 + em) - (sh * 60 + sm)
-                                        const h = Math.floor(Math.abs(mins) / 60)
-                                        const m = Math.abs(mins) % 60
-                                        return `${h}h ${m > 0 ? m + 'm' : ''}`
-                                    })()}
+                                    {
+                                        jobDuration(startTime, endTime)
+                                    }
                                 </span> shift duration
                             </p>
                         </div>

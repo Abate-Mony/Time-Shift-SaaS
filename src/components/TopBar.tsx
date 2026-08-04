@@ -1,5 +1,6 @@
-import { Button } from '@base-ui/react/button'
 import { Search, Bell, Plus, PanelLeft, Menu } from 'lucide-react'
+import { Button } from './ui/button'
+import { Link } from 'react-router'
 
 interface TopBarProps {
   onNewJob: () => void
@@ -29,7 +30,7 @@ export function TopBar({ onNewJob, onToggleSidebar, onNavigate }: TopBarProps) {
       </div>
 
       <div className="flex items-center gap-2 ml-auto">
-  
+
         <button
           onClick={() => onNavigate('notifications')}
           className="relative w-9 h-9 rounded-lg flex items-center justify-center text-slate-500 hover:bg-slate-100 transition-colors"
@@ -37,11 +38,12 @@ export function TopBar({ onNewJob, onToggleSidebar, onNavigate }: TopBarProps) {
           <Bell size={16} />
           <span className="absolute top-2 right-2 w-2 h-2 bg-blue-500 rounded-full border-2 border-white" />
         </button>
-
-        <Button onClick={onNewJob} >
-          <Plus size={14} />
-          New Job
-        </Button>
+        <Link to={"/create-job"}>
+          <Button variant={"outline"} size={"lg"}>
+            <Plus size={10} />
+            New Job
+          </Button>
+        </Link>
 
       </div>
 

@@ -36,9 +36,8 @@ function StatusPill({ value }: { value: string }) {
   const key = value?.toLowerCase() ?? ""
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold capitalize ${
-        STATUS_STYLES[key] ?? "bg-slate-100 text-slate-600"
-      }`}
+      className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold capitalize ${STATUS_STYLES[key] ?? "bg-slate-100 text-slate-600"
+        }`}
     >
       {value || "draft"}
     </span>
@@ -49,9 +48,8 @@ function PriorityPill({ value }: { value: string }) {
   const key = value?.toLowerCase() ?? ""
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold capitalize ${
-        PRIORITY_STYLES[key] ?? "bg-slate-100 text-slate-700"
-      }`}
+      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold capitalize ${PRIORITY_STYLES[key] ?? "bg-slate-100 text-slate-700"
+        }`}
     >
       {key === "urgent" && <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />}
       {value || "low"}
@@ -60,16 +58,16 @@ function PriorityPill({ value }: { value: string }) {
 }
 
 export const jobsColumns: ColumnDef<CreateJobForm>[] = [
-  {
-    id: "index",
-    header: "#",
-    enableSorting: false,
-    cell: ({ row }) => (
-      <span className="text-sm font-medium text-slate-400 tabular-nums">
-        {row.index < 9 ? `0${row.index + 1}` : row.index + 1}
-      </span>
-    ),
-  },
+  // {
+  //   id: "index",
+  //   header: "#",
+  //   enableSorting: false,
+  //   cell: ({ row }) => (
+  //     <span className="text-sm font-medium text-slate-400 tabular-nums">
+  //       {row.index < 9 ? `0${row.index + 1}` : row.index + 1}
+  //     </span>
+  //   ),
+  // },
 
   {
     accessorKey: "title",
@@ -86,8 +84,8 @@ export const jobsColumns: ColumnDef<CreateJobForm>[] = [
     cell: ({ row }) => {
       const { title, company } = row.original
       return (
-        <div className="min-w-[180px]">
-          <p className="font-semibold text-slate-900 line-clamp-1 max-w-sm">{title}</p>
+        <div className="min-w-45">
+          <p className="font-medium text-slate-900 line-clamp-1 max-w-sm">{title}</p>
           <p className="text-xs text-slate-500 mt-0.5">{company}</p>
         </div>
       )
@@ -100,7 +98,7 @@ export const jobsColumns: ColumnDef<CreateJobForm>[] = [
     cell: ({ row }) => {
       const location = row.original.location
       return (
-        <div className="flex items-center gap-1.5 min-w-[150px] text-slate-600">
+        <div className="flex items-center gap-1.5 min-w-37.5 text-slate-600">
           <MapPin className="h-3.5 w-3.5 text-slate-400 shrink-0" />
           <span className="text-sm truncate">{location?.split(",")[0]}</span>
         </div>
@@ -121,16 +119,24 @@ export const jobsColumns: ColumnDef<CreateJobForm>[] = [
       </Button>
     ),
     cell: ({ row }) => {
-      const { date, startTime, endTime } = row.original
+      const { date, startTime, endTime, hours } = row.original
+
+      const hour = Math.floor(hours || 0) < 1 ? 0 : Math.floor(hours || 0)
+      const min = Math.floor(((hours || 0) - hour) * 60)
       return (
-        <div className="min-w-[130px]">
-          <p className="text-sm font-semibold text-slate-800">
-            {format(new Date(date), "dd MMM")}
+        <div className="min-w-32.5">
+          <p className="text-sm font-medium text-slate-800">
+            {format(new Date(date), "dd MMMM")}
           </p>
           <div className="flex items-center gap-1 text-xs text-slate-500 mt-0.5">
             <Clock className="h-3 w-3" />
             {startTime} – {endTime}
           </div>
+          <p className="text-[0.6rem]  tracking-wide text-blue-700/60 italic">
+            <span className="font-semibold">
+              {hour}h-{min}m shift
+            </span>
+          </p>
         </div>
       )
     },

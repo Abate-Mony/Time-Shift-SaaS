@@ -62,16 +62,18 @@ export default function DashboardLayout() {
     });
     const { user } = useQuery(userQuery)?.data as unknown as any || { user: null }
     return (
-        <div className="flex h-screen  overflow-hidden bg-[#F8FAFC]">
-            <ScrollToTop/>
-            <Sidebar active={page} collapsed={sidebarCollapsed} onToggleSidebar={() => setSidebarCollapsed(c => !c)} />
+        <>
+            <ScrollToTop />
+            <div className="flex h-screen  overflow-hidden bg-[#F8FAFC]">
 
-            <div
-                className="flex-1 flex flex-col min-w-0 transition-all duration-200"
-                style={{ marginLeft: isDesktop ? sidebarWidth : 0 }}
-            >
-                {/* Mode switcher pill */}
-                <div className="fixed top-3 right-3 z-40">
+                <Sidebar active={page} collapsed={sidebarCollapsed} onToggleSidebar={() => setSidebarCollapsed(c => !c)} />
+
+                <div
+                    className="flex-1 flex flex-col min-w-0 transition-all duration-200"
+                    style={{ marginLeft: isDesktop ? sidebarWidth : 0 }}
+                >
+                    {/* Mode switcher pill */}
+                    {/* <div className="fixed top-3 right-3 z-40">
                     <div className="flex items-center gap-1 bg-white border border-[#E2E8F0] rounded-xl p-1 shadow-sm">
                         <button
                             onClick={() => setPage('dashboard')}
@@ -86,33 +88,34 @@ export default function DashboardLayout() {
                             Worker
                         </button>
                     </div>
+                </div> */}
+
+                    {page === 'worker-app' ? (
+                        <div className="flex-1 overflow-y-auto">
+                            <WorkerApp />
+                        </div>
+                    ) : (
+                        <>
+                            <TopBar
+                                onNewJob={() => navigate('create-job')}
+                                onToggleSidebar={() => setSidebarCollapsed(c => !c)}
+                                onNavigate={navigate}
+                            />
+                            <main className={`flex-1 overflow-y-auto  ${isFullBleed ? '' : ''}`}>
+                                {
+                                    <Outlet context={{ user }} />
+                                }
+                                {isRouteChange &&
+                                    <div className='loader'>
+
+                                    </div>
+                                }
+                            </main>
+                        </>
+                    )}
                 </div>
-
-                {page === 'worker-app' ? (
-                    <div className="flex-1 overflow-y-auto">
-                        <WorkerApp />
-                    </div>
-                ) : (
-                    <>
-                        <TopBar
-                            onNewJob={() => navigate('create-job')}
-                            onToggleSidebar={() => setSidebarCollapsed(c => !c)}
-                            onNavigate={navigate}
-                        />
-                        <main className={`flex-1 overflow-y-auto ${isFullBleed ? '' : ''}`}>
-                            {
-                                <Outlet context={{ user }} />
-                            }
-                            {isRouteChange &&
-                                <div className='loader'>
-
-                                </div>
-                            }
-                        </main>
-                    </>
-                )}
             </div>
-        </div>
+        </>
     )
 }
 

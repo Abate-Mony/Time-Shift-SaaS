@@ -1,23 +1,27 @@
-// @ts-nocheck
-import { useEffect, useState } from 'react'
-import { ChevronLeft, MapPin, Users, Clock, Calendar, Paperclip, ChevronDown, X, Check } from 'lucide-react'
-import { Avatar, Input } from '../components/ui'
-import { Form, redirect, useLoaderData, useNavigate, type ActionFunctionArgs, type Params } from 'react-router'
-import { Button } from '@/components/ui/button'
-import { useQuery } from '@tanstack/react-query'
-import customFetch from '@/utils/customFetch'
-import { isAxiosError } from 'axios'
-import { Textarea } from '@/components/ui/textarea'
-import { Select, SelectContent, SelectGroup, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { SelectItem } from '@radix-ui/react-select'
-import type { CreateJobForm, User } from '@/utils/types'
+// @ts-nocheck-
 import SearchLocation from '@/components/locationSearchComponent'
-import toast from 'react-hot-toast'
-import { createJobSchema } from '@/utils/schemas'
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
+import { RecurringJobSection, defaultRecurring } from '@/components/RecurringJobSection'
+import { Button } from '@/components/ui/button'
+import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
-import { queryClient } from '@/lib/queryClient'
+import customFetch from '@/utils/customFetch'
+import { createJobSchema } from '@/utils/schemas'
+import type { CreateJobForm, User } from '@/utils/types'
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useQuery } from '@tanstack/react-query'
+import { isAxiosError } from 'axios'
+import { Calendar, Check, ChevronDown, ChevronLeft, Clock, MapPin, Paperclip, Users, X } from 'lucide-react'
+import { useState } from 'react'
+import { useForm } from "react-hook-form"
+import toast from 'react-hot-toast'
+import { Form, redirect, useLoaderData, useNavigate, type ActionFunctionArgs, type Params } from 'react-router'
+import { Avatar, Input } from '../components/ui'
+// import { RecurringJobSection, RecurEditModal, defaultRecurring } from '../components/RecurringJobSection'
+import type { RecurringState } from '@/components/RecurringJobSection'
+import { mapRecurringStateToPayload } from '@/utils/mapRecurringStateToPayload'
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Field, FieldContent, FieldLabel } from '@/components/ui/field'
+
 
 // Small reusable error renderer so we don't repeat the same JSX everywhere
 const FieldError = ({ message }: { message?: string }) => {
@@ -27,7 +31,7 @@ const FieldError = ({ message }: { message?: string }) => {
 
 const workersQuery = (params: Params) => {
   const { search, sort, page, status, date } = params
-// comment
+  // comment
   return {
     queryKey: [
       'workers',
@@ -48,25 +52,34 @@ const workersQuery = (params: Params) => {
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   const formData = await request.formData()
-  const data = Object.fromEntries(formData)
-  // alert("enter here")
+  const raw = Object.fromEntries(formData) as Record<string, string>
+
+  const payload: Record<string, unknown> = { ...raw }
+
+  // Recurring fields arrive as strings from FormData — convert back to real types
+  payload.isRecurring = raw.isRecurring === 'true'
+  if (raw.interval) payload.interval = Number(raw.interval)
+  if (raw.daysOfWeek) {
+    try {
+      payload.daysOfWeek = JSON.parse(raw.daysOfWeek)
+    } catch {
+      delete payload.daysOfWeek
+    }
+  }
+  if (!raw.endDate) delete payload.endDate
+  if (!raw.frequency) delete payload.frequency
+
   try {
-    await customFetch.post("/jobs", data)
-
+    await customFetch.post("/jobs", payload)
     toast.success('Job created successfully!')
-
     return redirect("/jobs")
   } catch (err) {
     let errorM
-
     if (isAxiosError(err)) {
       errorM = err.response?.data?.msg ?? err.response?.data ?? null
     }
-
     errorM = errorM ?? (err instanceof Error ? err.message : "Something went wrong")
-
     toast.error(errorM, { position: 'bottom-center' })
-
     return errorM
   }
 }
@@ -77,7 +90,12 @@ export function CreateJob() {
   const [saved, setSaved] = useState(false)
   const navigate = useNavigate()
   const onNavigate = (path: string) => navigate(path)
-
+  const isEdit = false
+  const [recurring, setRecurring] = useState<RecurringState>(() =>
+    isEdit
+      ? { ...defaultRecurring(), enabled: false, pattern: 'weekly', weekdays: ['Mon', 'Wed', 'Fri'], endType: 'never' }
+      : defaultRecurring()
+  )
   const { searchValues } = useLoaderData() as any
 
   const { users } = useQuery(workersQuery(searchValues)).data as {
@@ -120,7 +138,8 @@ export function CreateJob() {
   const startTime = watch("startTime")
   const endTime = watch("endTime")
   const priority = watch("priority")
-
+  const date = watch("date") // used both for job date and the recurring summary
+  const recurringPayload = mapRecurringStateToPayload(recurring)
   const toggleWorker = (id: string) => {
     const exists = selectedWorkers.some((w) => w.email === id);
 
@@ -149,22 +168,9 @@ export function CreateJob() {
     // Nothing extra to do here — RHF has already confirmed the data is valid.
   }
 
-  if (saved) {
-    return (
-      <div className="flex-1 flex items-center justify-center min-h-screen">
-        <div className="text-center animate-fade-in">
-          <div className="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4">
-            <Check size={24} className="text-emerald-600" />
-          </div>
-          <h2 className="text-lg font-semibold text-slate-900">Job Created</h2>
-          <p className="text-sm text-slate-500 mt-1">Redirecting to Jobs...</p>
-        </div>
-      </div>
-    )
-  }
 
   return (
-    <div className="p-6 max-w-3xl mx-auto animate-fade-in">
+    <div className="p-6 max-w-3xl mx-auto animate-fade-in ">
       {/* Header */}
       <div className="flex items-center gap-3 mb-7">
         <button onClick={() => onNavigate('jobs')} className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:bg-slate-100 transition-colors">
@@ -222,27 +228,28 @@ export function CreateJob() {
               </div>
 
               <div>
-                <Select
-                  value={priority}
-                  onValueChange={(val) => setValue("priority", val as CreateJobForm["priority"], { shouldValidate: true })}
-                >
-                  <SelectTrigger className={cn("w-45", errors.priority && "border-red-500!")}>
-                    <SelectValue placeholder="Priority" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      {[
-                        { value: 'low', label: 'Low Priority' },
-                        { value: 'medium', label: 'Medium Priority' },
-                        { value: 'high', label: 'High Priority' },
-                      ].map((item) => (
-                        <SelectItem key={item.value} value={item.value}>
+                <h2 className="text-sm font-semibold text-slate-800 mb-4 flex items-center gap-2">
+                  Priority
+                </h2>
+                <RadioGroup defaultValue={"low"} className="w-fit pl-3 flex  flex-wrap" name='priority'>
+                  {[
+                    { value: 'low', label: 'Low Priority', className: "text-slate-800" },
+                    { value: 'medium', label: 'Medium Priority', className: "text-amber-500" },
+                    { value: 'high', label: 'High Priority', className: "text-red-500" },
+                  ].map((item) => (
+                    <Field orientation="horizontal">
+                      <RadioGroupItem value={item.value} id={item.value} />
+                      <FieldContent>
+                        <FieldLabel htmlFor={item.value} className={
+                          cn("font-medium flex flex-col justify-start items-start", item.className)
+                        }>
                           {item.label}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
+                
+                        </FieldLabel>
+                      </FieldContent>
+                    </Field>
+                  ))}
+                </RadioGroup>
                 <FieldError message={errors.priority?.message} />
               </div>
             </div>
@@ -328,6 +335,28 @@ export function CreateJob() {
             </div>
           )}
         </div>
+        {/* RecuuringJob */}
+        <RecurringJobSection
+          value={recurring}
+          onChange={setRecurring}
+          startDate={date}
+          sectionIndex={4}
+        />
+        {/* Hidden inputs carrying the recurring config into FormData */}
+        <input type="hidden" name="isRecurring" value={String(recurringPayload.isRecurring)} />
+        {recurringPayload.frequency && (
+          <input type="hidden" name="frequency" value={recurringPayload.frequency} />
+        )}
+        {recurringPayload.interval !== undefined && (
+          <input type="hidden" name="interval" value={String(recurringPayload.interval)} />
+        )}
+        {recurringPayload.daysOfWeek && (
+          <input type="hidden" name="daysOfWeek" value={JSON.stringify(recurringPayload.daysOfWeek)} />
+        )}
+        {recurringPayload.endDate && (
+          <input type="hidden" name="endDate" value={recurringPayload.endDate} />
+        )}
+
 
         {/* Workers */}
         <div className="bg-white rounded-xl border border-[#E2E8F0] p-6">
@@ -349,9 +378,9 @@ export function CreateJob() {
           </button>
 
           {/* One hidden input per selected worker id, so FormData serializes an array correctly */}
-          {selectedWorkers.map((id) => (
-            <input key={id.email} type="hidden" name="workers" value={JSON.stringify(selectedWorkers)} />
-          ))}
+          {selectedWorkers.length && (
+            <input type="hidden" name="workers" value={JSON.stringify(selectedWorkers)} />
+          )}
           <FieldError message={errors.workers?.message as string | undefined} />
 
           {workerOpen && (

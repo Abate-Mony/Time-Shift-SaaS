@@ -135,7 +135,7 @@ export function Jobs() {
       <div className="flex items-center justify-between mt-4 text-xs text-slate-500">
         <p>Showing {jobs.length} of {jobs.length} jobs</p>
         <div className="flex items-center gap-1">
-          {Array.from({ length: totalPages }).map((_, index) => (
+          {/* {Array.from({ length: totalPages }).map((_, index) => (
             <FilterButton
               animateClassName="bg-black/75 size-full text-white !rounded-xs shadow-sm"
               label="page"
@@ -144,7 +144,7 @@ export function Jobs() {
               className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors !group-[active-slide]:text-white `} name={'page'}            >
               {index + 1}
             </FilterButton >
-          ))}
+          ))} */}
         </div>
       </div>
     </div>

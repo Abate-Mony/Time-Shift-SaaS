@@ -7,7 +7,7 @@ export { Dashboard } from './Dashboard'
 export { Jobs } from './Jobs'
 export { CreateJob } from './CreateJob'
 export { Workers } from './Workers'
-export { Calendar } from './Calendar'
+export { Calendar, loader as calendarLoader } from './Calendar'
 export { Reports } from './Reports'
 export { Notifications } from './Notifications'
 export { Settings } from './Settings'
@@ -20,5 +20,5 @@ export { loader as singleWorkerJobLoader } from './worker/JobDetailspage'
 export { JobDetail } from "./JobDetailPage"
 export { WorkerProfile } from "./WorkerProfilePage"
 export { JoinUsLayout } from "../layouts/create-acount-layout"
-export {PreviewJoinUsUser} from "./PreviewJionUs"
-export {action as signupAction} from "../components/signup-form"
+export { PreviewJoinUsUser } from "./PreviewJionUs"
+export { action as signupAction } from "../components/signup-form"

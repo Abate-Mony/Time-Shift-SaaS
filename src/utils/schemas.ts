@@ -129,6 +129,7 @@ export const createJobSchema = z.object({
     location: z
         .string()
         .optional(),
+    hours: z.number().optional()
 
     // siteName: z
     //     .string()

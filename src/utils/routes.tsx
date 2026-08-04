@@ -13,7 +13,7 @@ import HomeScreen from "@/pages/worker/WorkerDashboard";
 import ProfileScreen from "@/pages/worker/WorkerProfilepage";
 import { createBrowserRouter, Navigate } from "react-router";
 import DashboardLayout from "../layouts/dashboardlayout";
-import { Calendar, CreateJob, createjobAction, Dashboard, dashboardLoader, EditJob, editJobAction, JobDetail, Jobs, jobsLoader, Locations, loginAction, Reports, Settings, signupAction, singleJobLoader, singleWorkerJobLoader, workerLoader, WorkerProfile, Workers, workersLoader } from "../pages";
+import { Calendar, calendarLoader, CreateJob, createjobAction, Dashboard, dashboardLoader, EditJob, editJobAction, JobDetail, Jobs, jobsLoader, Locations, loginAction, Reports, Settings, signupAction, singleJobLoader, singleWorkerJobLoader, workerLoader, WorkerProfile, Workers, workersLoader } from "../pages";
 import RootLayout from "@/layouts/RootLayout";
 
 export const router = createBrowserRouter([
@@ -74,6 +74,9 @@ export const router = createBrowserRouter([
                     {
                         path: "calendar",
                         element: <Calendar />,
+                        loader: calendarLoader,
+                        errorElement: <ErrorElement />,
+
                     },
                     {
                         path: "calendar",
@@ -175,6 +178,13 @@ export const router = createBrowserRouter([
             {
                 path: "*",
                 element: <NotFound />
+            },
+            {
+                path: "debug-recurring",
+                lazy: async () => {
+                    const { default: Component } = await import("@/pages/DebugRecurring");
+                    return { Component };
+                },
             }
         ]
     }
