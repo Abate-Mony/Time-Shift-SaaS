@@ -1,4 +1,4 @@
-// @ts-nocheck-
+// @ts-nocheck
 import SearchLocation from '@/components/locationSearchComponent'
 import { RecurringJobSection, defaultRecurring } from '@/components/RecurringJobSection'
 import { Button } from '@/components/ui/button'
@@ -10,7 +10,7 @@ import type { CreateJobForm, User } from '@/utils/types'
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useQuery } from '@tanstack/react-query'
 import { isAxiosError } from 'axios'
-import { Calendar, Check, ChevronDown, ChevronLeft, Clock, MapPin, Paperclip, Users, X } from 'lucide-react'
+import { Calendar, Check, ChevronDown, ChevronLeft, Clock, MapPin, Paperclip, Receipt, Users, X } from 'lucide-react'
 import { useState } from 'react'
 import { useForm } from "react-hook-form"
 import toast from 'react-hot-toast'
@@ -22,6 +22,7 @@ import { mapRecurringStateToPayload } from '@/utils/mapRecurringStateToPayload'
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Field, FieldContent, FieldLabel } from '@/components/ui/field'
 import dayjs from 'dayjs'
+import { formatCurrency } from '@/utils/format'
 
 
 // Small reusable error renderer so we don't repeat the same JSX everywhere
@@ -57,6 +58,11 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
   const payload: Record<string, unknown> = { ...raw }
 
+  // Invoice fields are handled separately below — don't send them as job fields
+  delete payload.generateInvoice
+  delete payload.invoiceDueDate
+  delete payload.invoiceLineItems
+
   // Recurring fields arrive as strings from FormData — convert back to real types
   payload.isRecurring = raw.isRecurring === 'true'
   if (raw.interval) payload.interval = Number(raw.interval)
@@ -71,8 +77,28 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   if (!raw.frequency) delete payload.frequency
 
   try {
-    await customFetch.post("/jobs", payload)
+    const { data } = await customFetch.post("/jobs", payload)
     toast.success('Job created successfully!')
+
+    if (raw.generateInvoice === 'true' && raw.invoiceLineItems) {
+      try {
+        const lineItems = JSON.parse(raw.invoiceLineItems)
+        const jobId = data?.job?._id ?? data?._id
+        await customFetch.post("/invoices", {
+          job: jobId,
+          client: raw.company,
+          issueDate: dayjs().format("YYYY-MM-DD"),
+          dueDate: raw.invoiceDueDate,
+          lineItems,
+          status: "draft",
+        })
+        toast.success('Draft invoice created')
+      } catch {
+        // Job was created successfully either way — surface the invoice failure separately
+        toast.error('Job created, but the invoice could not be generated. You can create it from the job page.')
+      }
+    }
+
     return redirect("/jobs")
   } catch (err) {
     let errorM
@@ -89,6 +115,9 @@ export function CreateJob() {
   const [selectedWorkers, setSelectedWorkers] = useState<CreateJobForm["workers"]>([])
   const [workerOpen, setWorkerOpen] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [generateInvoice, setGenerateInvoice] = useState(false)
+  const [invoiceDueDate, setInvoiceDueDate] = useState(() => dayjs().add(14, 'day').format('YYYY-MM-DD'))
+  const [invoiceRates, setInvoiceRates] = useState<Record<string, number>>({})
   const navigate = useNavigate()
   const onNavigate = (path: string) => navigate(path)
   const isEdit = false
@@ -141,6 +170,22 @@ export function CreateJob() {
   const priority = watch("priority")
   const date = watch("date") // used both for job date and the recurring summary
   const recurringPayload = mapRecurringStateToPayload(recurring)
+
+  const shiftHours = (() => {
+    if (!startTime || !endTime) return 0
+    const [sh, sm] = startTime.split(':').map(Number)
+    const [eh, em] = endTime.split(':').map(Number)
+    let mins = (eh * 60 + em) - (sh * 60 + sm)
+    if (mins <= 0) mins += 24 * 60
+    return mins / 60
+  })()
+
+  const invoiceLineItems = selectedWorkers.map(w => ({
+    description: w.fullname,
+    hours: shiftHours,
+    rate: invoiceRates[w.email] ?? 0,
+  }))
+  const invoiceSubtotal = invoiceLineItems.reduce((sum, li) => sum + li.hours * li.rate, 0)
   const toggleWorker = (id: string) => {
     const exists = selectedWorkers.some((w) => w.email === id);
 
@@ -428,10 +473,86 @@ export function CreateJob() {
           )}
         </div>
 
+        {/* Invoice */}
+        <div className="bg-white rounded-xl border border-[#E2E8F0] p-6">
+          <label className="flex items-center gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={generateInvoice}
+              onChange={e => setGenerateInvoice(e.target.checked)}
+              className="w-4 h-4 rounded border-[#E2E8F0] accent-[#1E3A5F]"
+            />
+            <span className="w-5 h-5 rounded-full bg-[#1E3A5F] text-white flex items-center justify-center text-[10px] font-bold shrink-0">5</span>
+            <span className="flex-1">
+              <span className="text-sm font-semibold text-slate-800 flex items-center gap-1.5">
+                <Receipt size={14} className="text-slate-400" /> Generate an invoice for this job
+              </span>
+              <span className="block text-xs text-slate-400 mt-0.5">Creates a draft invoice using the client and workers above — send it once the job's done</span>
+            </span>
+          </label>
+
+          {generateInvoice && (
+            <div className="mt-4 pt-4 border-t border-[#F1F5F9] flex flex-col gap-4 animate-fade-in">
+              <div className="max-w-xs">
+                <Input
+                  label="Invoice Due Date"
+                  type="date"
+                  value={invoiceDueDate}
+                  onChange={e => setInvoiceDueDate(e.target.value)}
+                />
+              </div>
+
+              {selectedWorkers.length === 0 ? (
+                <p className="text-xs text-amber-600">Select workers above to bill for their hours.</p>
+              ) : (
+                <div className="border border-[#E2E8F0] rounded-xl overflow-hidden">
+                  <div className="grid grid-cols-[2fr_1fr_1fr_1fr] gap-3 px-4 py-2.5 bg-slate-50 text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                    <span>Worker</span>
+                    <span className="text-right">Hours</span>
+                    <span className="text-right">Rate</span>
+                    <span className="text-right">Amount</span>
+                  </div>
+                  {selectedWorkers.map(w => {
+                    const rate = invoiceRates[w.email] ?? 0
+                    return (
+                      <div key={w.email} className="grid grid-cols-[2fr_1fr_1fr_1fr] gap-3 px-4 py-2.5 border-t border-[#F1F5F9] items-center">
+                        <span className="text-sm text-slate-700 truncate">{w.fullname}</span>
+                        <span className="text-sm text-right text-slate-600">{shiftHours}h</span>
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={rate || ''}
+                          onChange={e => setInvoiceRates(prev => ({ ...prev, [w.email]: Number(e.target.value) }))}
+                          placeholder="0.00"
+                          className="h-8 px-2 border border-[#E2E8F0] rounded-lg text-sm text-right focus:outline-none focus:ring-2 focus:ring-[#3B82F6]/30 focus:border-[#3B82F6] transition-all"
+                        />
+                        <span className="text-sm text-right font-medium text-slate-900">{formatCurrency(shiftHours * rate)}</span>
+                      </div>
+                    )
+                  })}
+                  <div className="flex justify-end px-4 py-3 border-t border-[#F1F5F9] bg-slate-50/50">
+                    <span className="text-sm font-bold text-slate-900">Total: {formatCurrency(invoiceSubtotal)}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Hidden inputs carrying the invoice config into FormData */}
+        <input type="hidden" name="generateInvoice" value={String(generateInvoice)} />
+        {generateInvoice && (
+          <>
+            <input type="hidden" name="invoiceDueDate" value={invoiceDueDate} />
+            <input type="hidden" name="invoiceLineItems" value={JSON.stringify(invoiceLineItems)} />
+          </>
+        )}
+
         {/* Notes & Attachments */}
         <div className="bg-white rounded-xl border border-[#E2E8F0] p-6">
           <h2 className="text-sm font-semibold text-slate-800 mb-4 flex items-center gap-2">
-            <span className="w-5 h-5 rounded-full bg-[#1E3A5F] text-white flex items-center justify-center text-[10px] font-bold">5</span>
+            <span className="w-5 h-5 rounded-full bg-[#1E3A5F] text-white flex items-center justify-center text-[10px] font-bold">6</span>
             Notes & Attachments
           </h2>
           <Textarea
