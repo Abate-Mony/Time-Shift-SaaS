@@ -1,30 +1,27 @@
-import { useState } from 'react'
-import { ChevronLeft, MapPin, Users, Clock, Calendar, Paperclip, ChevronDown, X, Check } from 'lucide-react'
-import { Avatar, Input } from '../components/ui'
-import { Form, redirect, useLoaderData, useNavigate, useParams, useSearchParams, type ActionFunctionArgs, type LoaderFunctionArgs, type Params } from 'react-router'
-import { Button } from '@/components/ui/button'
-import { QueryClient, useQuery } from '@tanstack/react-query'
-import customFetch from '@/utils/customFetch'
-import { isAxiosError } from 'axios'
-import { Textarea } from '@/components/ui/textarea'
-import { Select, SelectContent, SelectGroup, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { SelectItem } from '@radix-ui/react-select'
-import type { CreateJobForm, User } from '@/utils/types'
 import SearchLocation from '@/components/locationSearchComponent'
-import toast from 'react-hot-toast'
-import { createJobSchema } from '@/utils/schemas'
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { cn } from '@/lib/utils'
-import dayjs from "dayjs"
-import { queryClient } from '@/lib/queryClient'
+import { Button } from '@/components/ui/button'
 import {
     Field,
     FieldContent,
-    FieldDescription,
-    FieldLabel,
+    FieldLabel
 } from "@/components/ui/field"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Textarea } from '@/components/ui/textarea'
+import { queryClient } from '@/lib/queryClient'
+import { cn } from '@/lib/utils'
+import customFetch from '@/utils/customFetch'
+import { createJobSchema } from '@/utils/schemas'
+import type { CreateJobForm, User } from '@/utils/types'
+import { zodResolver } from "@hookform/resolvers/zod"
+import { QueryClient, useQuery } from '@tanstack/react-query'
+import { isAxiosError } from 'axios'
+import dayjs from "dayjs"
+import { Calendar, Check, ChevronDown, ChevronLeft, Clock, MapPin, Paperclip, Users, X } from 'lucide-react'
+import { useState } from 'react'
+import { useForm } from "react-hook-form"
+import toast from 'react-hot-toast'
+import { Form, redirect, useLoaderData, useNavigate, useParams, useSearchParams, type ActionFunctionArgs, type LoaderFunctionArgs, type Params } from 'react-router'
+import { Avatar, Input } from '../components/ui'
 
 // Small reusable error renderer so we don't repeat the same JSX everywhere
 const FieldError = ({ message }: { message?: string }) => {

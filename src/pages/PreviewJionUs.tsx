@@ -104,12 +104,13 @@ export function PreviewJoinUsUser ()  {
                     <TableBody>
                         {Object.entries(user).map(([key, value]) => {
                             if (key.toLocaleLowerCase().includes("password")) return
+                            const display = typeof value === "object" && value !== null ? JSON.stringify(value) : String(value ?? "")
                             return (
 
                                 <TableRow key={key}>
                                     <TableCell className="font-bold">{key.replace(/([A-Z])/g, ' $1')}</TableCell>
                                     <TableCell className="text-right text-gray-500">
-                                        <Badge className="px-2.5 h-auto !bg-opacity-10">{value}</Badge>
+                                        <Badge className="px-2.5 h-auto !bg-opacity-10">{display}</Badge>
                                     </TableCell>
                                 </TableRow>
                             )

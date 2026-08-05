@@ -13,8 +13,9 @@ import {
 import { logoutUser } from "@/utils/logout";
 import type { User } from "@/utils/types";
 import { Bell, BluetoothIcon, CheckCircle2, ChevronRight, Clock, Download, LogOut, MapPin, Phone, Star, Zap } from "lucide-react";
-import { useOutletContext } from "react-router";
+import { useNavigate, useOutletContext } from "react-router";
 export default function ProfileScreen() {
+  const navigate = useNavigate()
   const user = useOutletContext<{
     user: User
   }>()?.user
@@ -28,7 +29,11 @@ export default function ProfileScreen() {
             <div className="ring-4 ring-white rounded-full">
               <Avatar initials={user?.fullname?.slice(0, 3)} size="xl" index={0} />
             </div>
-            <button className="h-8 px-3.5 rounded-lg border border-[#E2E8F0] text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors">
+            <button
+              type="button"
+              onClick={() => navigate('/worker/profile/edit')}
+              className="h-8 px-3.5 rounded-lg border border-[#E2E8F0] text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
+            >
               Edit Profile
             </button>
           </div>
@@ -96,12 +101,13 @@ export default function ProfileScreen() {
       {/* Settings list */}
       <div className="bg-white rounded-2xl border border-[#E2E8F0] shadow-sm overflow-hidden">
         {[
-          { label: 'Download Timesheet', icon: Download, sub: 'July 2025' },
-          { label: 'Notification Preferences', icon: Bell, sub: 'Job alerts, reminders' },
-          { label: 'Contact Manager', icon: Phone, sub: 'Get in touch' },
+          { label: 'Download Timesheet', icon: Download, sub: 'July 2025', to: undefined },
+          { label: 'Notification Preferences', icon: Bell, sub: 'Job alerts, reminders', to: '/worker/profile/notifications' },
+          { label: 'Contact Manager', icon: Phone, sub: 'Get in touch', to: undefined },
         ].map((item, i, arr) => (
           <button
             key={item.label}
+            onClick={() => item.to && navigate(item.to)}
             className={`w-full flex items-center gap-3.5 px-5 py-4 hover:bg-slate-50 transition-colors text-left border-b border-[#F8FAFC]}`}
           >
             <div className="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center shrink-0">

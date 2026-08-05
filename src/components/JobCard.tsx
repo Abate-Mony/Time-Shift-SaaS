@@ -1,6 +1,7 @@
 import { changeWorkerJobStaus } from "@/utils/api-request-functions"
 import type { CreateJobForm } from "@/utils/types"
-import { AlertCircle, Check, Clock, Dot, MapPin, Timer, X } from "lucide-react"
+import { AlertCircle, Check, Clock, Dot, Loader2, MapPin, Timer, X } from "lucide-react"
+import { useState } from "react"
 import { useNavigate } from "react-router"
 import { StatusBadge } from "./ui"
 
@@ -21,13 +22,25 @@ export default function JobCard({
     const accent = statusColor["in-progress"] ?? 'bg-slate-400'
     const navigate = useNavigate()
 
+    const [loadingAction, setLoadingAction] = useState<'accept' | 'reject' | 'start' | null>(null)
 
-  
-    const onAccept = () => changeWorkerJobStaus(job._id!, "accepted")
+    const onAccept = async () => {
+        setLoadingAction('accept')
+        await changeWorkerJobStaus(job._id!, "accepted")
+        setLoadingAction(null)
+    }
 
-    const onReject = () => changeWorkerJobStaus(job._id!, "declined")
-    const startWorking = () => changeWorkerJobStaus(job._id!, "in-progress")
-    
+    const onReject = async () => {
+        setLoadingAction('reject')
+        await changeWorkerJobStaus(job._id!, "declined")
+        setLoadingAction(null)
+    }
+    const startWorking = async () => {
+        setLoadingAction('start')
+        await changeWorkerJobStaus(job._id!, "in-progress")
+        setLoadingAction(null)
+    }
+
     return (
         <div onClick={() => navigate(`/worker/job/${job._id}`)}
             className="bg-white rounded-2xl border border-[#E2E8F0] overflow-hidden shadow-sm hover:shadow-md hover:border-slate-300 transition-all cursor-pointer"
@@ -76,16 +89,17 @@ export default function JobCard({
                     <div className="mt-4 grid grid-cols-2 gap-2.5" onClick={e => e.stopPropagation()}>
                         <button
                             onClick={onReject}
-                            className="h-11 rounded-xl bg-slate-50 border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-colors flex items-center justify-center gap-1.5"
+                            disabled={loadingAction !== null}
+                            className="h-11 rounded-xl bg-slate-50 border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-colors flex items-center justify-center gap-1.5 disabled:opacity-60 disabled:cursor-not-allowed"
                         >
-                            <X size={14} /> Decline
+                            {loadingAction === 'reject' ? <Loader2 size={14} className="animate-spin" /> : <X size={14} />} Decline
                         </button>
                         <button
                             onClick={onAccept}
-
-                            className="h-11 rounded-xl bg-emerald-500 text-white text-sm font-bold hover:bg-emerald-600 active:scale-[0.97] transition-all flex items-center justify-center gap-1.5 shadow-sm shadow-emerald-500/30"
+                            disabled={loadingAction !== null}
+                            className="h-11 rounded-xl bg-emerald-500 text-white text-sm font-bold hover:bg-emerald-600 active:scale-[0.97] transition-all flex items-center justify-center gap-1.5 shadow-sm shadow-emerald-500/30 disabled:opacity-60 disabled:cursor-not-allowed"
                         >
-                            <Check size={14} /> Accept
+                            {loadingAction === 'accept' ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />} Accept
                         </button>
                     </div>
                 )}
@@ -100,21 +114,21 @@ export default function JobCard({
                         }}
                         className="mt-4 w-full h-11 rounded-xl bg-[#1E3A5F] text-center  text-white text-sm font-bold hover:bg-[#162D4A] active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-sm shadow-[#1E3A5F]/25"
                     >
-                        <Dot className="text-green-400 animate-ping" size={50}  /> Job Live 
+                        <Dot className="text-green-400 animate-ping" size={50} /> Job Live
                     </button>
                 )}
                 {job.status === 'accepted' && (
                     <button
-
+                        disabled={loadingAction !== null}
                         onClick={e => {
                             e.stopPropagation();
                             e.preventDefault()
                             // navigate(`/worker/clock/${job._id}`)
                             startWorking()
                         }}
-                        className="mt-4 w-full h-11 rounded-xl bg-[#1b7b3d] text-white text-sm font-bold hover:bg-[#13a166] active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-sm shadow-[#1E3A5F]/25"
+                        className="mt-4 w-full h-11 rounded-xl bg-[#1b7b3d] text-white text-sm font-bold hover:bg-[#13a166] active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-sm shadow-[#1E3A5F]/25 disabled:opacity-60 disabled:cursor-not-allowed"
                     >
-                        <Timer size={14} /> Start Working Job
+                        {loadingAction === 'start' ? <Loader2 size={14} className="animate-spin" /> : <Timer size={14} />} Start Working Job
                     </button>
                 )}
             </div>

@@ -155,3 +155,77 @@ export const createJobSchema = z.object({
 
     // longitude: z.number(),
 });
+
+export const editProfileSchema = z.object({
+    fullname: z
+        .string()
+        .min(1, "Full name is required"),
+
+    email: z
+        .string()
+        .email("Invalid email address"),
+
+    phone: z
+        .string()
+        .optional(),
+
+    gender: z.union([
+        z.enum(["Male", "Female", "Other", "Prefer not to say"]),
+        z.literal(""),
+    ]).optional().transform(v => v === "" ? undefined : v),
+});
+
+export const invoiceLineItemSchema = z.object({
+    description: z
+        .string()
+        .min(1, "Description is required"),
+
+    hours: z
+        .number()
+        .min(0, "Hours can't be negative"),
+
+    rate: z
+        .number()
+        .min(0, "Rate can't be negative"),
+});
+
+export const invoiceSchema = z.object({
+    _id: z
+        .string()
+        .optional(),
+
+    invoiceNumber: z
+        .string()
+        .optional(),
+
+    job: z
+        .string()
+        .min(1, "Job is required"),
+
+    client: z
+        .string()
+        .min(1, "Client is required"),
+
+    issueDate: z
+        .string()
+        .min(1, "Issue date is required"),
+
+    dueDate: z
+        .string()
+        .min(1, "Due date is required"),
+
+    lineItems: z
+        .array(invoiceLineItemSchema)
+        .min(1, "Add at least one line item"),
+
+    notes: z
+        .string()
+        .optional(),
+
+    status: z.enum([
+        "draft",
+        "sent",
+        "paid",
+        "overdue",
+    ]).optional(),
+});

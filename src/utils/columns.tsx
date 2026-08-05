@@ -3,7 +3,7 @@ import { format } from "date-fns"
 import { ArrowUpDown, Clock, MapPin, MoreHorizontal, Users } from "lucide-react"
 import { Link } from "react-router"
 
-import type { CreateJobForm } from "./types"
+import type { CreateJobForm, Invoice } from "./types"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -17,6 +17,7 @@ import customFetch from "./customFetch"
 import { queryClient } from "@/lib/queryClient"
 import toast from "react-hot-toast"
 import { AnimatedTooltip } from "@/components/ui/animated-tooltip"
+import { formatCurrency } from "./format"
 
 const STATUS_STYLES: Record<string, string> = {
   draft: "bg-slate-100 text-slate-600",
@@ -237,5 +238,109 @@ export const jobsColumns: ColumnDef<CreateJobForm>[] = [
         </DropdownMenu>
       )
     },
+  },
+]
+
+const INVOICE_STATUS_STYLES: Record<string, string> = {
+  draft: "bg-slate-100 text-slate-600",
+  sent: "bg-blue-100 text-blue-700",
+  paid: "bg-emerald-100 text-emerald-700",
+  overdue: "bg-red-100 text-red-600",
+}
+
+function InvoiceStatusPill({ value }: { value: string }) {
+  const key = value?.toLowerCase() ?? ""
+  return (
+    <span
+      className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold capitalize ${INVOICE_STATUS_STYLES[key] ?? "bg-slate-100 text-slate-600"
+        }`}
+    >
+      {value || "draft"}
+    </span>
+  )
+}
+
+export const invoiceColumns: ColumnDef<Invoice>[] = [
+  {
+    accessorKey: "invoiceNumber",
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        className="px-0 hover:bg-transparent font-semibold text-slate-600"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      >
+        Invoice
+        <ArrowUpDown className="ml-2 h-3.5 w-3.5 text-slate-400" />
+      </Button>
+    ),
+    cell: ({ row }) => (
+      <Link to={`/invoices/${row.original._id}`} className="font-medium text-slate-900 hover:underline">
+        {row.original.invoiceNumber}
+      </Link>
+    ),
+  },
+
+  {
+    accessorKey: "client",
+    header: "Client",
+    cell: ({ row }) => <span className="text-sm text-slate-700">{row.original.client}</span>,
+  },
+
+  {
+    accessorKey: "issueDate",
+    header: "Issue Date",
+    cell: ({ row }) => (
+      <span className="text-sm text-slate-600">{format(new Date(row.original.issueDate), "dd MMMM yyyy")}</span>
+    ),
+  },
+
+  {
+    accessorKey: "dueDate",
+    header: "Due Date",
+    cell: ({ row }) => (
+      <span className="text-sm text-slate-600">{format(new Date(row.original.dueDate), "dd MMMM yyyy")}</span>
+    ),
+  },
+
+  {
+    accessorKey: "total",
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        className="px-0 hover:bg-transparent font-semibold text-slate-600"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      >
+        Total
+        <ArrowUpDown className="ml-2 h-3.5 w-3.5 text-slate-400" />
+      </Button>
+    ),
+    cell: ({ row }) => <span className="text-sm font-semibold text-slate-900">{formatCurrency(row.original.total)}</span>,
+  },
+
+  {
+    accessorKey: "status",
+    header: "Status",
+    cell: ({ getValue }) => <InvoiceStatusPill value={getValue() as string} />,
+  },
+
+  {
+    id: "actions",
+    header: "",
+    enableSorting: false,
+    cell: ({ row }) => (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="icon" className="rounded-full hover:bg-slate-100">
+            <MoreHorizontal className="h-4 w-4 text-slate-500" />
+          </Button>
+        </DropdownMenuTrigger>
+
+        <DropdownMenuContent align="end" className="w-40">
+          <DropdownMenuItem asChild>
+            <Link to={`/invoices/${row.original._id}`}>View Invoice</Link>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    ),
   },
 ]

@@ -21,6 +21,7 @@ import type { RecurringState } from '@/components/RecurringJobSection'
 import { mapRecurringStateToPayload } from '@/utils/mapRecurringStateToPayload'
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Field, FieldContent, FieldLabel } from '@/components/ui/field'
+import dayjs from 'dayjs'
 
 
 // Small reusable error renderer so we don't repeat the same JSX everywhere
@@ -287,6 +288,7 @@ export function CreateJob() {
             <div>
               <Input
                 label="Date"
+                min={dayjs().format("YYYY-MM-DD")}
                 type="date"
                 icon={<Calendar size={14} />}
                 {...register("date")}

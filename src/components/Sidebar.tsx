@@ -1,7 +1,7 @@
 import {
   LayoutDashboard, Briefcase, Users, MapPin, Calendar, BarChart3,
   FileText, Bell, Settings, ChevronDown, Building2, HelpCircle,
-  LogOut, Zap, CreditCard, MessageSquare
+  LogOut, Zap, CreditCard, MessageSquare, Receipt
 } from 'lucide-react'
 import { Avatar } from './ui'
 import { Link, useNavigate } from 'react-router'
@@ -20,6 +20,7 @@ const navItems = [
 
 const secondaryItems = [
   { id: 'reports', label: 'Reports', icon: BarChart3 },
+  { id: 'invoices', label: 'Invoices', icon: Receipt },
   { id: 'timesheets', label: 'Timesheets', icon: FileText },
   { id: 'analytics', label: 'Analytics', icon: Zap },
   { id: 'billing', label: 'Billing', icon: CreditCard },

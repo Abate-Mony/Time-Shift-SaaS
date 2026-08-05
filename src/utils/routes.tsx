@@ -10,10 +10,12 @@ import JobDetailScreen from "@/pages/worker/JobDetailspage";
 import JobsScreen from "@/pages/worker/JobScreen";
 import ScheduleScreen from "@/pages/worker/ScheduleScreen";
 import HomeScreen from "@/pages/worker/WorkerDashboard";
+import NotificationPreferencesScreen from "@/pages/worker/NotificationPreferences";
+import EditProfileScreen from "@/pages/worker/EditProfile";
 import ProfileScreen from "@/pages/worker/WorkerProfilepage";
 import { createBrowserRouter, Navigate } from "react-router";
 import DashboardLayout from "../layouts/dashboardlayout";
-import { Calendar, calendarLoader, CreateJob, createjobAction, Dashboard, dashboardLoader, EditJob, editJobAction, JobDetail, Jobs, jobsLoader, Locations, loginAction, Reports, Settings, signupAction, singleJobLoader, singleWorkerJobLoader, workerLoader, WorkerProfile, Workers, workersLoader } from "../pages";
+import { Calendar, calendarLoader, CreateJob, createjobAction, Dashboard, dashboardLoader, EditJob, editJobAction, InvoiceDetail, invoiceDetailLoader, InvoiceForm, invoiceFormLoader, Invoices, invoicesLoader, JobDetail, Jobs, jobsLoader, Locations, loginAction, Reports, Settings, signupAction, singleJobLoader, singleWorkerJobLoader, workerLoader, WorkerProfile, Workers, workersLoader } from "../pages";
 import RootLayout from "@/layouts/RootLayout";
 
 export const router = createBrowserRouter([
@@ -69,6 +71,21 @@ export const router = createBrowserRouter([
                         loader: singleJobLoader(queryClient),
 
 
+                    },
+                    {   
+                        path: "invoices",
+                        element: <Invoices />,
+                        loader: invoicesLoader(queryClient),
+                    },
+                    {
+                        path: "invoices/new",
+                        element: <InvoiceForm />,
+                        loader: invoiceFormLoader(queryClient),
+                    },
+                    {
+                        path: "invoices/:id",
+                        element: <InvoiceDetail />,
+                        loader: invoiceDetailLoader(queryClient),
                     },
 
                     {
@@ -152,6 +169,14 @@ export const router = createBrowserRouter([
                         element: <ProfileScreen />
                     },
                     {
+                        path: "profile/notifications",
+                        element: <NotificationPreferencesScreen />
+                    },
+                    {
+                        path: "profile/edit",
+                        element: <EditProfileScreen />
+                    },
+                    {
                         path: "schedule",
                         element: <ScheduleScreen />
                     },
@@ -179,13 +204,7 @@ export const router = createBrowserRouter([
                 path: "*",
                 element: <NotFound />
             },
-            {
-                path: "debug-recurring",
-                lazy: async () => {
-                    const { default: Component } = await import("@/pages/DebugRecurring");
-                    return { Component };
-                },
-            }
+      
         ]
     }
 

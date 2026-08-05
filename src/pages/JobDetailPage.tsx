@@ -18,6 +18,7 @@ import {
     MoreHorizontal,
     Navigation,
     Play,
+    Receipt,
     Timer,
     Trash2,
     Users
@@ -356,10 +357,18 @@ export function JobDetail() {
                                 </button>
                             )}
                             {job?.status === 'completed' && (
-                                <div className="w-full h-11 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center gap-2">
-                                    <CheckCircle2 size={14} className="text-emerald-600" />
-                                    <span className="text-sm font-semibold text-emerald-700">Job Approved</span>
-                                </div>
+                                <>
+                                    <div className="w-full h-11 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center gap-2">
+                                        <CheckCircle2 size={14} className="text-emerald-600" />
+                                        <span className="text-sm font-semibold text-emerald-700">Job Approved</span>
+                                    </div>
+                                    <button
+                                        onClick={() => onNavigate(`/invoices/new?jobId=${id}`)}
+                                        className="w-full h-10 rounded-xl bg-[#1E3A5F] text-white text-sm font-semibold hover:bg-[#162D4A] transition-colors flex items-center justify-center gap-2 shadow-sm shadow-[#1E3A5F]/20"
+                                    >
+                                        <Receipt size={13} /> Generate Invoice
+                                    </button>
+                                </>
                             )}
                             {(job?.status === 'assigned' || job?.status === 'accepted' || job.status === 'draft') && (
                                 <button className="w-full h-11 rounded-xl bg-[#1E3A5F] text-white text-sm font-bold hover:bg-[#162D4A] transition-colors flex items-center justify-center gap-2 shadow-sm shadow-[#1E3A5F]/20">

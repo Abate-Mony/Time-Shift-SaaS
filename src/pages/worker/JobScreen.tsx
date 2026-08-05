@@ -1,11 +1,12 @@
 import JobCard from "@/components/JobCard"
 import SearchComponent from "@/components/Search"
 import FilterButton from "@/components/ui/FilterButton"
+import { useFilter } from "@/hooks/CustomLinkFilterHook"
 import { cn } from "@/lib/utils"
 import customFetch from "@/utils/customFetch"
 import type { CreateJobForm } from "@/utils/types"
 import { useQuery, type QueryClient } from "@tanstack/react-query"
-import { Briefcase, Check, Clock, Star } from "lucide-react"
+import { Briefcase, Check, ChevronLeft, ChevronRight, Clock, Star } from "lucide-react"
 import { useState } from "react"
 import { useLoaderData, useSearchParams, type LoaderFunctionArgs, type Params } from "react-router"
 const jobsQuery = (params: Params) => {
@@ -54,13 +55,16 @@ export default function JobsScreen() {
     const { searchValues } = useLoaderData() as {
         searchValues: Params
     }
+    const { handleFilterChange } = useFilter()
 
-    const { totalPages, currentPage, jobs } = useQuery(jobsQuery(searchValues)).data as {
+    const { jobs, page, limit, total, totalPages } = useQuery(jobsQuery(searchValues)).data as {
         jobs: CreateJobForm[],
-        totalPages: number,
-        currentPage: number
+        page: number,
+        limit: number,
+        total: number,
+        totalPages: number
     }
-
+console.log({page, limit, total, totalPages } )
     const completedHistory = [
         { date: '24 Jul', job: 'Excel Centre — Event Staffing', hours: 12, pay: 216, rated: true },
         { date: '23 Jul', job: 'Waterloo — Crowd Management', hours: 8, pay: 144, rated: false },
@@ -162,6 +166,35 @@ export default function JobsScreen() {
                     </div>
                 }
             </div>
+
+            {totalPages > 1 && (
+                <div className="flex items-center justify-between gap-3 pt-1">
+                    <p className="text-xs text-slate-400">
+                        Showing {Math.min((page - 1) * limit + 1, total)}–{Math.min(page * limit, total)} of {total}
+                    </p>
+                    <div className="flex items-center gap-2">
+                        <button
+                            type="button"
+                            disabled={page <= 1}
+                            onClick={() => handleFilterChange({ key: 'page', value: String(page - 1) })}
+                            className="flex items-center gap-1 h-8 px-2.5 rounded-lg text-xs font-semibold text-slate-600 bg-white border border-[#E2E8F0] hover:bg-slate-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                        >
+                            <ChevronLeft size={14} /> Prev
+                        </button>
+                        <span className="text-xs text-slate-500 font-medium tabular-nums">
+                            {page} / {totalPages}
+                        </span>
+                        <button
+                            type="button"
+                            disabled={page >= totalPages}
+                            onClick={() => handleFilterChange({ key: 'page', value: String(page + 1) })}
+                            className="flex items-center gap-1 h-8 px-2.5 rounded-lg text-xs font-semibold text-slate-600 bg-white border border-[#E2E8F0] hover:bg-slate-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                        >
+                            Next <ChevronRight size={14} />
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }
