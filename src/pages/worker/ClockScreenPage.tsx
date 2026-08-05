@@ -72,7 +72,7 @@ export default function ClockScreen() {
     Math.max((elapsedSeconds / totalSeconds) * 100, 0),
     100
   );
-  const [clockState, setClockState] = useState<ClockState>('idle')
+  const [clockState, setClockState] = useState<ClockState>('in-progress')
   const [elapsed, setElapsed] = useState(seconds)
   const [breakTime, setBreakTime] = useState(0)
   const [breaks, setBreaks] = useState(0)
