@@ -17,7 +17,7 @@ type FilterButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 
 const FilterButton = ({
     className,
-    children, selectedClassName, animateClassName, show = true, layoutId = "this-is-id", onClick,
+    children, selectedClassName, animateClassName, show =false, layoutId = "this-is-id", onClick,
     ...props
 }: FilterButtonProps) => {
     const { handleFilterChange } = useFilter()
@@ -34,13 +34,15 @@ const FilterButton = ({
 
                 handleFilterChange({ key: props.name, value })
             }}
-            className={cn(` relative bg-transparent text-black hover:bg-transparent group
+            className={cn(` relative cursor-pointer bg-transparent text-black hover:bg-transparent!- focus:bg-transparent- group
       `,
                 className,
                 isSelected && "active-slide"
             )}
         >
-            {children}
+        <span className="relative z-10">
+                {children}
+        </span>
 
             <AnimatePresence>
                 {isSelected && show && (
@@ -56,7 +58,7 @@ const FilterButton = ({
                         }}
                         layoutId={layoutId || "hoverBackground"}
                         className={cn(
-                            "absolute left-0 right-0 bottom-0 h-px rounded-full w-full bg-black ",
+                            "absolute left-0 right-0 bottom-0 z-9 h-px rounded-full w-full bg-black ",
                             animateClassName
                         )}
                     ></motion.span>

@@ -94,6 +94,11 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  --grey-color: #687080;
+  --scroll-to-width: 0.5rem;
+  --scroll-to-height: 0.5rem;
+  --light-color: #d1d8e0;
+
 }
 
 * {
@@ -116,6 +121,41 @@ body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+
+.scrollto {
+  --display: flex;
+  /* padding-bottom: 20px; */
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scroll-snap-align: inline mandatory;
+}
+
+.scrollto::-webkit-scrollbar {
+  width: var(--scroll-to-width);
+  height: var(--scroll-to-height);
+}
+
+.scrollto::-webkit-scrollbar-thumb {
+  --border-color: var(--light-color);
+  background-color: var(--border-color);
+  border: 2px solid var(--border-color);
+  /* border-radius: 20px; */
+  border-radius: 9999px;
+}
+
+.scrollto:hover::-webkit-scrollbar-thumb {
+  background-color: var(--grey-color);
+}
+
+.scrollto::-webkit-scrollbar-thumb:hover {
+  background-color: var(--grey-color);
+}
+
+.scrollto>.snap {
+  overscroll-behavior-inline: contain;
+  scroll-snap-align: center;
 }
 
 /* Scrollbar */
@@ -147,6 +187,16 @@ body {
 :focus-visible {
   outline: 2px solid var(--ring);
   outline-offset: 2px;
+}
+body {
+  @apply  text-foreground;
+  font-family: var(--primary-font);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.8;
+  color: var(--dark-color);
+  background-color: var(--color-light);
+  /* overflow-x: hidden; */
 }
 
 .mono {
@@ -256,11 +306,11 @@ body {
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border outline-ring/50 ;
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background  text-foreground;
   }
 
   html {

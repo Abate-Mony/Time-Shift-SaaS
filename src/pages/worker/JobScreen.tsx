@@ -1,6 +1,7 @@
 import JobCard from "@/components/JobCard"
 import SearchComponent from "@/components/Search"
 import FilterButton from "@/components/ui/FilterButton"
+import { Scrollable } from "@/components/ui/scrollable"
 import { useFilter } from "@/hooks/CustomLinkFilterHook"
 import { cn } from "@/lib/utils"
 import customFetch from "@/utils/customFetch"
@@ -64,14 +65,20 @@ export default function JobsScreen() {
         total: number,
         totalPages: number
     }
-console.log({page, limit, total, totalPages } )
     const completedHistory = [
         { date: '24 Jul', job: 'Excel Centre — Event Staffing', hours: 12, pay: 216, rated: true },
         { date: '23 Jul', job: 'Waterloo — Crowd Management', hours: 8, pay: 144, rated: false },
         { date: '22 Jul', job: 'Heathrow T5 — Security', hours: 8, pay: 144, rated: true },
         { date: '21 Jul', job: 'Canary Wharf — Day Patrol', hours: 8, pay: 144, rated: true },
     ]
-
+    const tabs: { id: CreateJobForm["status"] | "all"; label: string; count: number }[] = [
+        { id: 'all', label: 'All', count: jobs.length },
+        { id: 'accepted', label: 'Accepted', count: jobs.filter(job => job.status == "accepted").length },
+        { id: 'completed', label: 'Completed', count: jobs.filter(job => job.status == "completed").length },
+        { id: 'in-progress', label: 'inprogress', count: jobs.filter(job => job.status == "cancelled").length },
+        { id: 'cancelled', label: 'Cancelled', count: jobs.filter(job => job.status == "in-progress").length },
+        { id: 'declined', label: 'Decline', count: jobs.filter(job => job.status == "declined").length },
+    ]
     return (
         <div className="flex flex-col gap-4 pb-4">
             <div>
@@ -82,16 +89,12 @@ console.log({page, limit, total, totalPages } )
 
             {/* Tab pills */}
             {/* "draft" | "published" | "assigned" | "in-progress" | "completed" | "cancelled"  */}
-            <div className="flex gap-2 bg-slate-100 p-1 rounded-xl overflow-x-auto">
-                {([
-                    { id: 'all', label: 'All', count: jobs.length },
-                    { id: 'draft', label: 'Draft', count: jobs.filter(job => job.status == "draft").length },
-                    // { id: 'assigned', label: 'assigned', count: jobs.filter(job => job.status == "assigned").length },
-                    { id: 'completed', label: 'Completed', count: jobs.filter(job => job.status == "completed").length },
-                    { id: 'in-progress', label: 'inprogress', count: jobs.filter(job => job.status == "cancelled").length },
-                    { id: 'cancelled', label: 'Cancelled', count: jobs.filter(job => job.status == "in-progress").length },
-                ] as { id: CreateJobForm["status"]; label: string; count: number }[]).map((t, idx) => (
+                <h2 className="text-sm font-medium text-slate-900">Filter Status</h2>
+
+            <Scrollable>
+                {tabs.map((t, idx) => (
                     <FilterButton
+                    layoutId="worker-job-screen-job-status"
                         onClick={() => setTab(t.id)}
                         animateClassName={cn(
                             t.id === 'assigned' ? 'bg-amber-100 ' : 'bg-blue-100 '
@@ -99,25 +102,28 @@ console.log({page, limit, total, totalPages } )
                         )
                         }
                         // animateClassName={`h-full ${tab === t.id ? (t.id === 'pending' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700') : 'bg-slate-00 text-slate-500'}`}
-                        className={`flex-1 flex items-center   justify-center gap-1.5 h-8 rounded-lg text-xs font-semibold transition-all
+                        className={`w-full max-w-fit flex items-center flex-none   justify-center gap-1.5 h-8 rounded-lg text-xs font-semibold transition-all
                          bg-white group-[.active-slide]:text-slate-900 shadow-s text-slate-500 hover:text-slate-700`}
                         name='status'
                         value={t.id}
                         key={t.id}
+                        show
                     >
-                        {t.label}
-                        {t.count > 0 && (
-                            <span className={`w-4 h-4 rounded-full text-[10px] font-bold flex items-center justify-center
+                        <div className="flex items-center justify-center gap-x-1.5">
+                            {t.label}
+                            {t.count > 0 && (
+                                <span className={`w-4 h-4 rounded-full text-[10px] font-bold flex items-center justify-center
                             ${tab === t.id ? (t.id === 'assigned' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700') : 'bg-slate-00 text-slate-500'}`}>
-                                {t.count}
-                            </span>
-                        )}
+                                    {t.count}
+                                </span>
+                            )}
 
+                        </div>
                     </FilterButton>
 
 
                 ))}
-            </div>
+            </Scrollable>
 
             {/* Job list */}
             <div className="flex flex-col gap-3">
@@ -157,7 +163,7 @@ console.log({page, limit, total, totalPages } )
                     </div>
                 ))}
                 {
-                    jobs.length ? jobs.map(job => <JobCard job={job} key={job._id} />) : <div className="bg-white rounded-2xl border border-[#E2E8F0] p-10 text-center shadow-sm">
+                    jobs?.length ? jobs.map(job => <JobCard job={job} key={job._id} />) : <div className="bg-white rounded-2xl border border-[#E2E8F0] p-10 text-center shadow-sm">
                         <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center mx-auto mb-3">
                             <Briefcase size={20} className="text-blue-400" />
                         </div>

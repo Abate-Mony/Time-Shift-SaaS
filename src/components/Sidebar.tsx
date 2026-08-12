@@ -1,13 +1,28 @@
+import { cn } from '@/lib/utils'
+import { getInitials } from '@/utils/getInitials'
+import { logoutUser } from '@/utils/logout'
+import type { User } from '@/utils/types'
 import {
-  LayoutDashboard, Briefcase, Users, MapPin, Calendar, BarChart3,
-  FileText, Bell, Settings, ChevronDown, Building2, HelpCircle,
-  LogOut, Zap, CreditCard, MessageSquare, Receipt
+  BarChart3,
+  Bell,
+  Briefcase,
+  Building2,
+  Calendar,
+  ChevronDown,
+  CreditCard,
+  FileText,
+  HelpCircle,
+  LayoutDashboard,
+  LogOut,
+  MapPin,
+  Receipt,
+  Settings,
+  Users,
+  Zap
 } from 'lucide-react'
 import { Avatar } from './ui'
-import { Link, useNavigate } from 'react-router'
 import CustomNavLink from './ui/link'
-import { cn } from '@/lib/utils'
-import { logoutUser } from '@/utils/logout'
+import type { iUser } from '@/layouts/dashboardlayout'
 
 const navItems = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -36,10 +51,14 @@ interface SidebarProps {
   active: string
 
   collapsed?: boolean,
-  onToggleSidebar?: () => void
+  onToggleSidebar?: () => void,
+  user: iUser
 }
 
-export function Sidebar({ active, collapsed, onToggleSidebar }: SidebarProps) {
+export function Sidebar({ active, collapsed, onToggleSidebar, user }: SidebarProps) {
+
+  const fullname = user?.fullname
+  const role = user?.role
   return (
     <>
       {
@@ -49,7 +68,7 @@ export function Sidebar({ active, collapsed, onToggleSidebar }: SidebarProps) {
       }
       <aside className={`${collapsed ? 'lg:w-16 w-0 overflow-hidden' : 'w-[240px]'} z-30 h-screen bg-[#0F172A] border flex flex-col fixed left-0 top-0 overflow-y-auto transition-all duration-200`}>
         {/* Logo */}
-        <div className="h-[60px] flex items-center px-5 border-b border-white/[0.06] shrink-0">
+        <div className="h-[60px] flex items-center px-5 border-b border-white/[0.06] shrink-0 hidden">
           {collapsed ? (
             <div className="w-7 h-7 rounded-lg bg-blue-500 flex items-center justify-center">
               <span className="text-white font-bold text-xs">W</span>
@@ -59,7 +78,7 @@ export function Sidebar({ active, collapsed, onToggleSidebar }: SidebarProps) {
               <div className="w-7 h-7 rounded-lg bg-blue-500 flex items-center justify-center shrink-0">
                 <span className="text-white font-bold text-xs">W</span>
               </div>
-              <span className="text-white font-semibold text-base tracking-tight">work<span className="text-blue-400">.wrk</span></span>
+              <span className="text-white font-semibold text-base tracking-tight">{user.company.name}<span className="text-blue-400 hidden">.wrk</span></span>
             </div>
           )}
         </div>
@@ -72,7 +91,7 @@ export function Sidebar({ active, collapsed, onToggleSidebar }: SidebarProps) {
                 <Building2 size={12} className="text-blue-400" />
               </div>
               <div className="flex-1 min-w-0 text-left">
-                <p className="text-xs font-medium text-white/90 truncate">SecureGuard Ltd</p>
+                <p className="text-xs font-medium text-white/90 truncate">{user.company.name}</p>
                 <p className="text-[10px] text-white/40">Enterprise</p>
               </div>
               <ChevronDown size={12} className="text-white/30 group-hover:text-white/50 transition-colors" />
@@ -86,13 +105,16 @@ export function Sidebar({ active, collapsed, onToggleSidebar }: SidebarProps) {
           {navItems.map(item => (
             <CustomNavLink
               to={item.id}
+              layoutId='side-bar-items'
+
               show
               selectedClassName=''
               animateClassName="inset-0 size-full bg-gray-500/15"
-              className={`w-full  text-white/50 hover:text-white/75 hover:bg-white/3 flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm transition-colors relative group`}
+              className={`w-full  text-white/50 hover:text-white/75 px-2.5 hover:bg-white/3  justify-center  h-auto items-center gap-2.5  py-2 rounded-lg text-sm transition-colors relative group`}
 
             >
-              <item.icon size={16} className={cn('text-blue-400 group-[.slide-active]:text-current')} />
+          <div className='w-full flex items-center  space-x-1.5 h-full justify-between '>
+                <item.icon size={16} className={cn('text-blue-400 group-[.slide-active]:text-current')} />
               {!collapsed && <span className="flex-1 text-left font-medium">{item.label}</span>}
               {!collapsed && item.badge !== undefined && (
                 <span className="bg-blue-500 text-white text-[10px] font-bold w-4 h-4 rounded-sm flex items-center justify-center">{item.badge}</span>
@@ -100,6 +122,7 @@ export function Sidebar({ active, collapsed, onToggleSidebar }: SidebarProps) {
               {collapsed && item.badge !== undefined && (
                 <span className="absolute top-1 right-1 w-2 h-2 bg-blue-500 rounded-full" />
               )}
+          </div>
             </CustomNavLink>
           ))}
 
@@ -107,15 +130,21 @@ export function Sidebar({ active, collapsed, onToggleSidebar }: SidebarProps) {
           {collapsed && <div className="my-2 border-t border-white/[0.06]" />}
           {secondaryItems.map(item => (
             <CustomNavLink
+              layoutId='side-bar-items'
+
               to={item.id}
               show
               selectedClassName=''
-              animateClassName="inset-0 size-full bg-gray-500/15"
-              className={`w-full  text-white/50 hover:text-white/75 hover:bg-white/3 flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm transition-colors relative group`}
+              animateClassName="inset-0 size-full bg-gray-500/15 shadow-sm"
+              className={`w-full  text-white/50 hover:text-white/75  justify-between
+                h-auto hover:bg-white/3 flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm transition-colors relative group`}
 
             >
+              <div className='flex items-center  space-x-1.5'>
+
               <item.icon size={16} className={cn('text-blue-400 group-[.slide-active]:text-current')} />
               {!collapsed && <span className="flex-1 text-left font-medium">{item.label}</span>}
+              </div>
 
 
             </CustomNavLink>
@@ -125,15 +154,17 @@ export function Sidebar({ active, collapsed, onToggleSidebar }: SidebarProps) {
         {/* Bottom nav */}
         <div className="border-t border-white/6 px-3 py-3 flex- flex-col gap-0.5 ">
           {bottomItems.map(item => (
-            <CustomNavLink
+               <CustomNavLink
               to={item.id}
               show
+              layoutId='side-bar-items'
               selectedClassName=''
               animateClassName="inset-0 size-full bg-gray-500/15"
-              className={`w-full  text-white/50 hover:text-white/75 hover:bg-white/3 flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm transition-colors relative group`}
+              className={`w-full  text-white/50 hover:text-white/75 px-2.5 hover:bg-white/3  justify-center  h-auto items-center gap-2.5  py-2 rounded-lg text-sm transition-colors relative group`}
 
             >
-              <item.icon size={16} className={cn('text-blue-400 group-[.slide-active]:text-current')} />
+          <div className='w-full flex items-center  space-x-1.5 h-full justify-between '>
+                <item.icon size={16} className={cn('text-blue-400 group-[.slide-active]:text-current')} />
               {!collapsed && <span className="flex-1 text-left font-medium">{item.label}</span>}
               {!collapsed && item.badge !== undefined && (
                 <span className="bg-blue-500 text-white text-[10px] font-bold w-4 h-4 rounded-sm flex items-center justify-center">{item.badge}</span>
@@ -141,19 +172,20 @@ export function Sidebar({ active, collapsed, onToggleSidebar }: SidebarProps) {
               {collapsed && item.badge !== undefined && (
                 <span className="absolute top-1 right-1 w-2 h-2 bg-blue-500 rounded-full" />
               )}
+          </div>
             </CustomNavLink>
           ))}
         </div>
         {/* User */}
-        
+
         <div className="border-t border-white/6 p-3 flex-none">
           <button className="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-white/5 transition-colors group">
-            <Avatar initials="OW" size="sm" index={0} />
+            <Avatar initials={getInitials(fullname)} size="sm" index={0} />
             {!collapsed && (
               <>
                 <div className="flex-1 min-w-0 text-left">
-                  <p className="text-xs font-medium text-white/80 truncate">Owen Wright</p>
-                  <p className="text-[10px] text-white/35">Owner</p>
+                  <p className="text-xs font-medium text-white/80 truncate">{fullname}</p>
+                  <p className="text-[10px] text-white/35">{role}</p>
                 </div>
 
                 <LogOut size={13} className="text-white/25 group-hover:text-white/50 transition-colors shrink-0"
@@ -167,29 +199,3 @@ export function Sidebar({ active, collapsed, onToggleSidebar }: SidebarProps) {
   )
 }
 
-function NavItem({ item, active, onNavigate, collapsed }: { item: { id: string; label: string; icon: React.FC<{ size?: number; className?: string }>; badge?: number }; active: string; onNavigate: (id: string) => void; collapsed?: boolean }) {
-  const isActive = active === item.id
-  const Icon = item.icon
-  return (
-    <CustomNavLink
-      to={item.id}
-      // onClick={() => onNavigate(item.id)}
-      title={collapsed ? item.label : undefined}
-      show
-      selectedClassName=''
-      animateClassName="inset-0 size-full bg-white"
-      // className='bg-white shadow-sm shadow-primary-color/20 py-2 text-black hover:bg-primary-color/20 group'
-      className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm transition-colors relative group`}
-
-    >
-      <Icon size={16} className={isActive ? 'text-blue-400' : 'text-current'} />
-      {!collapsed && <span className="flex-1 text-left font-medium">{item.label}</span>}
-      {!collapsed && item.badge !== undefined && (
-        <span className="bg-blue-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">{item.badge}</span>
-      )}
-      {collapsed && item.badge !== undefined && (
-        <span className="absolute top-1 right-1 w-2 h-2 bg-blue-500 rounded-full" />
-      )}
-    </CustomNavLink>
-  )
-}

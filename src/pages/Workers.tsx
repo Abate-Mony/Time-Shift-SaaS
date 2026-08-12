@@ -290,7 +290,10 @@ export default function CreateWorkerForm({
     </form>
   );
 }
-
+interface iUser extends User{
+    hoursThisWeek: number,
+      jobsCompleted: number
+}
 export function Workers() {
 
   const navigation = useNavigation();
@@ -302,8 +305,9 @@ export function Workers() {
 
 
   const { users, nHits } = useQuery(workersQuery(searchValues)).data as {
-    users: User[], nHits: number
+    users: iUser[], nHits: number
   }
+  console.log("users : ", users)
   const selectedWorker = users.find(w => w._id === selected)
   const workerJobs = selectedWorker ? jobs.filter(j => j.workers.includes(selectedWorker._id)) : []
   const [open, setOpen] = useState(false)
@@ -454,14 +458,14 @@ export function Workers() {
 
                 <div className="mt-5 pt-4 border-t border-[#F1F5F9] grid grid-cols-3 gap-3 text-center">
                   <div>
-                    <p className="text-lg font-bold text-slate-900">{"hours work"}</p>
+                    <p className="text-lg font-bold text-slate-900">{selectedWorker.hoursThisWeek}</p>
                     <p className="text-[10px] text-slate-400 mt-0.5">hrs/week</p>
                   </div>
                   <div>
-                    <p className="text-lg font-bold text-slate-900">{"selectedWorker.jobsCompleted"}</p>
+                    <p className="text-lg font-bold text-slate-900">{selectedWorker.jobsCompleted}</p>
                     <p className="text-[10px] text-slate-400 mt-0.5">jobs done</p>
                   </div>
-                  <div>
+                  <div className='hidden'>
                     <p className="text-lg font-bold text-amber-600">{"selectedWorker.rating"}</p>
                     <p className="text-[10px] text-slate-400 mt-0.5">rating</p>
                   </div>

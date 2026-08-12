@@ -5,8 +5,17 @@ import { WorkerApp } from '../pages/WorkerApp'
 import { Outlet, redirect, useLocation, useNavigation, type LoaderFunctionArgs } from 'react-router'
 import { useMediaQuery } from "react-responsive";
 import customFetch from '@/utils/customFetch'
-import { useQuery, type QueryClient } from '@tanstack/react-query'
+import { useQuery, type InfiniteQueryObserverBaseResult, type QueryClient } from '@tanstack/react-query'
 import ScrollToTop from '@/utils/scroll-to-top'
+import type { User } from '@/utils/types'
+export interface iUser extends User {
+    company: {
+        plan: string,
+        maxWorkers: number,
+        // _id: new ObjectId("6a7b7786200c0f868437aadd"),
+        name: string
+    },
+}
 type Page =
     | 'dashboard'
     | 'jobs'
@@ -35,7 +44,7 @@ export const loader = (queryClient: QueryClient) => async ({ request: _request }
 const userQuery = {
     queryKey: ["user"],
     queryFn: async () => {
-        const { data } = await customFetch.get("/users/current-user");
+        const { data } = await customFetch.get<{ user: iUser }>("/users/current-user");
         return data
 
     }
@@ -60,13 +69,14 @@ export default function DashboardLayout() {
     const isDesktop = useMediaQuery({
         query: "(min-width: 1024px)",
     });
-    const { user } = useQuery(userQuery)?.data as unknown as any || { user: null }
+    const { data } = useQuery(userQuery)
+    const user = data?.user  as iUser
     return (
         <>
             <ScrollToTop />
             <div className="flex h-screen  overflow-hidden bg-[#F8FAFC]">
 
-                <Sidebar active={page} collapsed={sidebarCollapsed} onToggleSidebar={() => setSidebarCollapsed(c => !c)} />
+                <Sidebar active={page} collapsed={sidebarCollapsed} onToggleSidebar={() => setSidebarCollapsed(c => !c)} user={user} />
 
                 <div
                     className="flex-1 flex flex-col min-w-0 transition-all duration-200"

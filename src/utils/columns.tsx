@@ -133,7 +133,7 @@ export const jobsColumns: ColumnDef<CreateJobForm>[] = [
             <Clock className="h-3 w-3" />
             {startTime} – {endTime}
           </div>
-          <p className="text-[0.6rem]  tracking-wide text-blue-700/60 italic">
+          <p className="text-[0.6rem] hidden tracking-wide text-blue-700/60 italic">
             <span className="font-semibold">
               {hour}h-{min}m shift
             </span>
@@ -158,16 +158,18 @@ export const jobsColumns: ColumnDef<CreateJobForm>[] = [
           </span>
         )
       }
+      console.log("workers : ",workers.slice(0,5))
 
       return (
         <div className="flex items-center">
           <div className="flex -space-x-2">
+            {/* {JSON.stringify(workers)} */}
             <AnimatedTooltip
-              items={workers.slice(0, 3).map((w, idx) => ({
+              items={workers?.slice(0, 3)?.map((w, idx) => ({
                 id: idx,
                 designation: w.email,
                 image: "",
-                name: w.fullname,
+                name: w.fullname || "debug later",
               }))}
             />
             {workers.length > 3 && (

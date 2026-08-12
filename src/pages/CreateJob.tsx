@@ -16,7 +16,6 @@ import { useForm } from "react-hook-form"
 import toast from 'react-hot-toast'
 import { Form, redirect, useLoaderData, useNavigate, type ActionFunctionArgs, type Params } from 'react-router'
 import { Avatar, Input } from '../components/ui'
-// import { RecurringJobSection, RecurEditModal, defaultRecurring } from '../components/RecurringJobSection'
 import type { RecurringState } from '@/components/RecurringJobSection'
 import { mapRecurringStateToPayload } from '@/utils/mapRecurringStateToPayload'
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
@@ -146,7 +145,7 @@ export function CreateJob() {
     defaultValues: {
       title: "",
       description: "",
-      company: "",
+      client: "",
       priority: "medium",
       date: "",
       startTime: "",
@@ -267,10 +266,10 @@ export function CreateJob() {
                 <Input
                   label="Company / Client"
                   placeholder="e.g. SecureGuard Ltd"
-                  {...register("company")}
-                  className={cn(errors.company && "border-red-500!")}
+                  {...register("client")}
+                  className={cn(errors.client && "border-red-500!")}
                 />
-                <FieldError message={errors.company?.message} />
+                <FieldError message={errors.client?.message} />
               </div>
 
               <div>

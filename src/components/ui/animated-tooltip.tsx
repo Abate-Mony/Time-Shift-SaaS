@@ -90,7 +90,7 @@ export const AnimatedTooltip = ({
           </AnimatePresence>
           <div className="rounded-full ring-2 ring-white">
 
-            <Avatar initials={item.name.slice(0, 2)} />
+            <Avatar initials={item?.name.slice(0, 2)} />
           </div>
           {/* <img
             onMouseMove={handleMouseMove}

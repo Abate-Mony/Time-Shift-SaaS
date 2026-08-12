@@ -23,6 +23,12 @@ import {
     Trash2,
     Users
 } from 'lucide-react'
+import {
+    Pencil, Send, XCircle,
+    UserMinus, XOctagon,
+    LogIn, LogOut, Coffee, CoffeeIcon,
+    Ban, Bot, StickyNote, CircleCheck,
+} from "lucide-react"
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { Avatar, Card, Divider, PriorityBadge, StatusBadge } from '../components/ui'
@@ -44,40 +50,78 @@ const workerTimeLogs: Record<string, { clockIn: string; clockOut: string | null;
     w2: { clockIn: '08:02', clockOut: '20:08', break: '30m', billable: '11h 30m' },
     w3: { clockIn: '08:00', clockOut: '20:05', break: '45m', billable: '11h 15m' },
 }
-export const ACTIVITY_TYPES = [
-    "job_created",
-    "job_updated",
-    "job_published",
-    "job_cancelled",
-    "workers_assigned",       // batch event — one entry even if multiple workers assigned at once
-    "assignment_accepted",
-    "assignment_declined",
-    "assignment_checked_in",
-    "assignment_checked_out",
-    "assignment_completed",
-    "assignment_cancelled",
-    "assignment_in_progress",
-    "note_added",
-] as const;
-const activityLog = [{ "_id": "6a6f1fc1153487a6a6e0cc55", "job": "6a6f15615746445f28c4fcfc", "workers": [{ "_id": "6a6ed4d18dc34eebbf1a4188", "fullname": "manager" }], "type": "workers_assigned", "actor": { "_id": "6a6ec368b301e127831156a1", "fullname": "Emmanuel Ako Bate" }, "createdAt": "2026-08-02T10:45:21.315Z", "updatedAt": "2026-08-02T10:45:21.315Z", "__v": 0 }]
-function describeActivity(entry: typeof activityLog[number]): string {
-    switch (entry.type) {
-        case "job_created":
-            return `Job created by ${entry.actor?.fullname ?? "Unknown"}`;
-        case "workers_assigned":
-            return "Workers assigned by " + (entry.actor?.fullname ?? "Unknown");
-        case "assignment_accepted":
-            return `${entry.actor?.fullname ?? "A worker"} accepted`;
-        case "assignment_checked_in":
-            return `${entry.actor?.fullname ?? "A worker"} clocked in`;
-        case "assignment_checked_out":
-            return `${entry.actor?.fullname ?? "A worker"} clocked out`;
-        case "assignment_declined":
-            return `${entry.actor?.fullname ?? "A worker"} declined`;
-        // ...etc
-        default:
-            return entry.type;
-    }
+
+import type { LucideIcon } from "lucide-react"
+import type { ActivityType } from '@/utils/types'
+import { cn } from '@/lib/utils'
+
+export const recordFormatUI: Record<ActivityType, { icon: LucideIcon; className: string; label: string }> = {
+    // ── Job lifecycle ──────────────────────────────────────────────
+    job_created: { icon: FileText, className: "bg-slate-400", label: "created this job" },
+    job_updated: { icon: Pencil, className: "bg-amber-500", label: "updated this job" },
+    job_published: { icon: Send, className: "bg-[#1E3A5F]", label: "published this job" },
+    job_cancelled: { icon: XCircle, className: "bg-red-500", label: "cancelled this job" },
+    job_deleted: { icon: Trash2, className: "bg-red-600", label: "deleted this job" },
+    job_completed: { icon: CircleCheck, className: "bg-emerald-600", label: "job completed" },
+
+    // ── Staffing ───────────────────────────────────────────────────
+    workers_assigned: { icon: Users, className: "bg-violet-500", label: "assigned workers" },
+    worker_unassigned: { icon: UserMinus, className: "bg-orange-500", label: "removed a worker" },
+
+    // ── Worker responses ───────────────────────────────────────────
+    assignment_accepted: { icon: CheckCircle2, className: "bg-emerald-500", label: "accepted" },
+    assignment_declined: { icon: XOctagon, className: "bg-red-400", label: "declined" },
+
+    // ── Shift progress ─────────────────────────────────────────────
+    assignment_in_progress: { icon: Play, className: "bg-blue-500", label: "started work" },
+    assignment_checked_in: { icon: LogIn, className: "bg-blue-500", label: "clocked in" },
+    assignment_break_started: { icon: Coffee, className: "bg-amber-400", label: "started a break" },
+    assignment_break_ended: { icon: Play, className: "bg-amber-500", label: "ended their break" },
+    assignment_checked_out: { icon: LogOut, className: "bg-emerald-500", label: "clocked out" },
+    assignment_completed: { icon: CheckCircle2, className: "bg-emerald-600", label: "completed the shift" },
+    assignment_cancelled: { icon: Ban, className: "bg-slate-500", label: "assignment cancelled" },
+    assignment_auto_completed: { icon: Bot, className: "bg-slate-400", label: "auto-completed by system" },
+
+    // ── Misc ───────────────────────────────────────────────────────
+    note_added: { icon: StickyNote, className: "bg-sky-500", label: "added a note" },
+}
+
+const activityLog = [{
+    "_id": "6a6f1fc1153487a6a6e0cc55", "job": "6a6f15615746445f28c4fcfc", "workers": [{ "_id": "6a6ed4d18dc34eebbf1a4188", "fullname": "manager" }],
+    "actor": { "_id": "6a6ec368b301e127831156a1", "fullname": "Emmanuel Ako Bate" }, "createdAt": "2026-08-02T10:45:21.315Z", "updatedAt": "2026-08-02T10:45:21.315Z", "__v": 0
+}]
+function describeActivity(entry: typeof activityLog[number] & {
+    type: ActivityType
+}): React.ReactNode {
+    const ui = recordFormatUI[entry.type]
+
+    // Per-assignment events describe the worker; job-level events describe the actor
+    const subject =
+        // entry.workers?.fullname ??
+        entry.actor?.fullname ??
+        "System"
+
+    return (
+        <div className='relative  ml-2 -mb-px'>
+                <span className="absolute h-full w-px bg-slate-200 left-1.5 top-0"></span>
+            <span className='flex items-center space-x-1.5  py-4 '>
+                <span className={cn("size-4 relative z-10 rounded-full flex items-center justify-center shadow-sm", ui.className)}>
+                    <ui.icon className={cn(
+                        "rounded-full ",
+
+                    )}
+                        size={10}
+                    ></ui.icon>
+
+                </span>
+                
+                <span className="font-semibold text-slate-900">{subject} </span>{" "}
+                <span className="text-slate-600">{ui?.label ?? entry.type}</span>
+            </span>
+            <p className="pl-5 text-[10px] text-slate-400 mt-0.5 font-medium">{dayjs(entry.createdAt).format("DD/MM h:mm A")}</p>
+
+        </div>
+    )
 }
 export function JobDetail() {
     const id = useParams().id
@@ -140,7 +184,7 @@ export function JobDetail() {
                                 <PriorityBadge priority={job.priority} />
                             </div>
                             <h1 className="text-xl font-bold text-white leading-snug mb-1">{job.title}</h1>
-                            <p className="text-sm text-white/60">{job.company}</p>
+                            <p className="text-sm text-white/60">{job.client}</p>
                         </div>
 
                         {/* Hero actions */}
@@ -204,7 +248,7 @@ export function JobDetail() {
                                 { icon: Clock, label: 'Start Time', value: job.startTime },
                                 { icon: Clock, label: 'Finish Time', value: job.endTime },
                                 { icon: Timer, label: 'Shift Duration', value: `${10} hours per worker` },
-                                { icon: Briefcase, label: 'Client / Company', value: job.company },
+                                { icon: Briefcase, label: 'Client / Company', value: job.client },
                                 { icon: Flag, label: 'Priority', value: <PriorityBadge priority={job.priority} /> },
                             ].map((row, i) => (
                                 <div key={i} className="flex items-center gap-4 px-5 py-3.5">
@@ -261,7 +305,7 @@ export function JobDetail() {
                                 {assignedWorkers.map((w, i) => {
                                     // const log = w.checkedInAt
                                     //  ?? { clockIn: '—', clockOut: '—', break: '—', billable: '—' }
-                                    const {  checkedOutAt, checkedInAt } = w
+                                    const { checkedOutAt, checkedInAt } = w
                                     console.log("worker : ", w)
                                     return (
                                         <div
@@ -302,7 +346,7 @@ export function JobDetail() {
                     <Card className="p-5">
                         <h3 className="text-sm font-semibold text-slate-900 mb-5">Activity Timeline</h3>
                         <div className="flex flex-col gap-0 relative">
-                            <div className="absolute left-[7px] top-4 bottom-4 w-px bg-slate-100" />
+                            {/* <div className="absolute left-[7px] top-4 bottom-4 w-px bg-slate-100" /> */}
                             {
                                 data?.activity?.length === 0 && (
                                     <div className="px-5 py-8 text-center">
@@ -315,19 +359,16 @@ export function JobDetail() {
                                 )
                             }
                             {
-                                data?.activity?.map((entry: typeof activityLog[number], i:number) => (
-                                    <div key={i} className="flex items-start gap-3.5 pb-5 last:pb-0">
-                                        <div className={`w-3.5 h-3.5 rounded-full shrink-0 mt-0.5 ${"e.color"} ring-2 ring-white z-10 flex items-center justify-center`}>
-                                            {/* <e.icon size={7} className="text-white" strokeWidth={3} /> */}
-                                        </div>
+                                data?.activity?.map((entry: typeof activityLog[number], i: number) => (
+                                    <div key={i} className="">
+                              
                                         <div className="flex-1 min-w-0 pt-px">
                                             <p className="text-sm text-slate-700 leading-snug">{describeActivity(entry)}</p>
-                                            <p className="text-[10px] text-slate-400 mt-0.5 font-medium">{dayjs(entry.createdAt).format("DD/MM h:mm A")}</p>
                                         </div>
                                     </div>
                                 ))}
                             {timelineEvents.map((e, i) => (
-                                <div key={i} className="flex items-start gap-3.5 pb-5 last:pb-0 ">
+                                <div key={i} className="flex items-start gap-3.5 pb-5 last:pb-0 hidden">
                                     <div className={`w-3.5 h-3.5 rounded-full shrink-0 mt-0.5 ${e.color} ring-2 ring-white z-10 flex items-center justify-center`}>
                                         <e.icon size={7} className="text-white" strokeWidth={3} />
                                     </div>

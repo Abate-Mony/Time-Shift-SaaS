@@ -1,63 +1,50 @@
-import { useState, useEffect, useRef } from 'react'
-import {
-  Home, Briefcase, CalendarDays, User, MapPin, Clock, Play, Square,
-  CheckCircle2, Camera, FileText, ChevronLeft, ChevronRight,
-  Bell, Star, TrendingUp, ArrowUpRight, Navigation, Phone, AlertCircle,
-  Coffee, RotateCcw, Download, X, Check, Timer, Zap
-} from 'lucide-react'
-import { Avatar, StatusBadge } from '../components/ui'
-import { jobs, workers } from '../data/mockData'
-import { Link, Outlet } from 'react-router'
-import customFetch from '@/utils/customFetch'
-import { useQuery } from '@tanstack/react-query'
-import CustomNavLink from '@/components/ui/link'
-import { cn } from '@/lib/utils'
-import ScrollToTop from '@/utils/scroll-to-top'
 import BottomNav from '@/components/ui/BottomNav'
+import customFetch from '@/utils/customFetch'
+import ScrollToTop from '@/utils/scroll-to-top'
+import { useQuery } from '@tanstack/react-query'
+import { Outlet, useLocation, useNavigation } from 'react-router'
 
-// ─── Types ──────────────────────────────────────────────────────────────────
-type WorkerTab = '/' | 'jobs' | 'clock' | 'schedule' | 'profile'
-type JobsTab = 'pending' | 'active' | 'completed'
-type ClockState = 'idle' | 'working' | 'break' | 'done'
+// // ─── Types ──────────────────────────────────────────────────────────────────
+// type WorkerTab = '/' | 'jobs' | 'clock' | 'schedule' | 'profile'
+// type JobsTab = 'pending' | 'active' | 'completed'
+// type ClockState = 'idle' | 'working' | 'break' | 'done'
 
 // ─── Data ───────────────────────────────────────────────────────────────────
-const worker = workers[0]
-const myJobs = jobs.filter(j => j.workers.includes(worker.id))
-const activeJob = myJobs.find(j => j.status === 'in-progress')
-const pendingJobs = myJobs.filter(j => j.status === 'assigned')
-const completedJobs = myJobs.filter(j => j.status === 'completed')
+// const worker = workers[0]
+// const myJobs = jobs.filter(j => j.workers.includes(worker.id))
 
-const weekDays = [
-  { day: 'M', date: 21, hasShift: false },
-  { day: 'T', date: 22, hasShift: true, hours: 8 },
-  { day: 'W', date: 23, hasShift: true, hours: 12 },
-  { day: 'T', date: 24, hasShift: true, hours: 8 },
-  { day: 'F', date: 25, hasShift: true, hours: 8 },
-  { day: 'S', date: 26, hasShift: false },
-  { day: 'S', date: 27, hasShift: true, hours: 12 },
-]
 
-const completedHistory = [
-  { date: '24 Jul', job: 'Excel Centre — Event Staffing', hours: 12, pay: 216, rated: true },
-  { date: '23 Jul', job: 'Waterloo — Crowd Management', hours: 8, pay: 144, rated: false },
-  { date: '22 Jul', job: 'Heathrow T5 — Security', hours: 8, pay: 144, rated: true },
-  { date: '21 Jul', job: 'Canary Wharf — Day Patrol', hours: 8, pay: 144, rated: true },
-]
+// const weekDays = [
+//   { day: 'M', date: 21, hasShift: false },
+//   { day: 'T', date: 22, hasShift: true, hours: 8 },
+//   { day: 'W', date: 23, hasShift: true, hours: 12 },
+//   { day: 'T', date: 24, hasShift: true, hours: 8 },
+//   { day: 'F', date: 25, hasShift: true, hours: 8 },
+//   { day: 'S', date: 26, hasShift: false },
+//   { day: 'S', date: 27, hasShift: true, hours: 12 },
+// ]
+
+// const completedHistory = [
+//   { date: '24 Jul', job: 'Excel Centre — Event Staffing', hours: 12, pay: 216, rated: true },
+//   { date: '23 Jul', job: 'Waterloo — Crowd Management', hours: 8, pay: 144, rated: false },
+//   { date: '22 Jul', job: 'Heathrow T5 — Security', hours: 8, pay: 144, rated: true },
+//   { date: '21 Jul', job: 'Canary Wharf — Day Patrol', hours: 8, pay: 144, rated: true },
+// ]
 
 // ─── Utilities ──────────────────────────────────────────────────────────────
-function fmtTime(s: number) {
-  const h = Math.floor(s / 3600)
-  const m = Math.floor((s % 3600) / 60)
-  const sec = s % 60
-  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`
-}
+// function fmtTime(s: number) {
+//   const h = Math.floor(s / 3600)
+//   const m = Math.floor((s % 3600) / 60)
+//   const sec = s % 60
+//   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`
+// }
 
-function fmtHours(s: number) {
-  const h = Math.floor(s / 3600)
-  const m = Math.floor((s % 3600) / 60)
-  if (h === 0) return `${m}m`
-  return m > 0 ? `${h}h ${m}m` : `${h}h`
-}
+// function fmtHours(s: number) {
+//   const h = Math.floor(s / 3600)
+//   const m = Math.floor((s % 3600) / 60)
+//   if (h === 0) return `${m}m`
+//   return m > 0 ? `${h}h ${m}m` : `${h}h`
+// }
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
@@ -123,13 +110,19 @@ const userQuery = {
 // ─── Root ──────────────────────────────────────────────────────────────────────
 export function WorkerAppLayout() {
 
-  const [tab, setTab] = useState<WorkerTab>('/')
+  const navigation = useNavigation()
+  const location = useLocation();
+
+  const isRouteChange =
+    navigation.state === "loading" &&
+    navigation.location &&
+    navigation.location.pathname !== location.pathname;
 
   const { user } = useQuery(userQuery)?.data as unknown as any || { user: null }
 
   return (
     <div className="border-black   bg-[#F8FAFC]">
-            <ScrollToTop/>
+      <ScrollToTop />
 
       <div className="  max-w-md mx-auto ">
 
@@ -140,7 +133,11 @@ export function WorkerAppLayout() {
             context={{ user }}
           />
         </div>
+        {isRouteChange &&
+          <div className='loader'>
 
+          </div>
+        }
         {/* Bottom nav */}
         <BottomNav />
       </div>

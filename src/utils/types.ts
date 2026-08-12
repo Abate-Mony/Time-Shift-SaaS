@@ -25,7 +25,7 @@ export type User = {
   createdAt: string;
   updatedAt: string;
   phone?: string;
-  gender?:"Male" | "Female" | "Other" | "Prefer not to say"
+  gender?: "Male" | "Female" | "Other" | "Prefer not to say"
   password?: string;
   confirmPassword?: string;
   notificationPreferences?: NotificationPreferences;
@@ -60,3 +60,25 @@ export type Invoice = InvoiceForm & {
   createdAt: string;
   updatedAt: string;
 };
+export const ACTIVITY_TYPES = [
+  "job_created",
+  "job_updated",
+  "job_published",
+  "job_cancelled",
+  "workers_assigned",       // batch event — one entry even if multiple workers assigned at once
+  "assignment_accepted",
+  "assignment_declined",
+  "assignment_checked_in",
+  "assignment_checked_out",
+  "assignment_completed",
+  "assignment_cancelled",
+  "assignment_in_progress",
+  "note_added",
+  "job_deleted",
+  "job_completed",
+  "worker_unassigned",
+  "assignment_break_started",
+  "assignment_break_ended",
+  "assignment_auto_completed"
+] as const;
+export type ActivityType = (typeof ACTIVITY_TYPES)[number];

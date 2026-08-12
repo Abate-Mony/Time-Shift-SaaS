@@ -31,7 +31,6 @@ export type Payment = {
 }
 
 
-
 import {
     Table,
     TableBody,
@@ -40,15 +39,23 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
+import { User } from 'lucide-react';
+import { EmptyState } from './empty-state.js';
+import { Link } from 'react-router';
+import { AnimatePresence, motion } from 'framer-motion';
 
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[]
     data: TData[]
+    getRowId: (row: TData) => string;
 }
+
+const MotionTableRow = motion.create(TableRow)
 
 export default function DataTable<TData, TValue>({
     columns,
     data,
+    getRowId
 }: DataTableProps<TData, TValue>) {
     const [sorting, setSorting] = React.useState<SortingState>([])
     const [rowSelection, setRowSelection] = React.useState({})
@@ -60,6 +67,7 @@ export default function DataTable<TData, TValue>({
     const table = useReactTable({
         data,
         columns,
+        getRowId,
         getCoreRowModel: getCoreRowModel(),
         getPaginationRowModel: getPaginationRowModel(),
         onSortingChange: setSorting,
@@ -137,26 +145,59 @@ export default function DataTable<TData, TValue>({
                     ))}
                 </TableHeader>
                 <TableBody>
-                    {table.getRowModel().rows?.length ? (
-                        table.getRowModel().rows.map((row, index) => (
-                            <TableRow>
-                                {row.getVisibleCells().map((cell) => (
-                                    <TableCell
-                                        key={cell.id}
-                                        className="border-t px-5  border-slate-200 py-3"
-                                    >
-                                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                    </TableCell>
-                                ))}
+                    <AnimatePresence mode='popLayout' initial={false}>
+                        {table.getRowModel().rows?.length ? (
+                            table.getRowModel().rows.map((row) => (
+                                <MotionTableRow
+                                    key={row.id}
+                                    initial={{
+                                        opacity: 0.7, x: -10,
+                                        y: 10
+                                    }}
+                                    animate={{
+                                        opacity: 1, y: 0, x: 0
+                                    }}
+                                    exit={{
+                                        opacity: 0,
+                                        y: -100,
+                                    }}
+                                    transition={{
+                                        duration: 0.35
+                                    }}
+                                >
+                                    {row.getVisibleCells().map((cell) => (
+                                        <TableCell
+                                            key={cell.id}
+                                            className="border-t px-5  border-slate-200 py-3"
+                                        >
+                                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                        </TableCell>
+                                    ))}
+                                </MotionTableRow>
+                            ))
+                        ) : (
+                            <TableRow key="empty">
+                                <TableCell colSpan={columns.length} className="h-24 text-center">
+                                    <EmptyState
+                                        title='No jobs found'
+                                        description="Try adjusting your search or filters to find what you're looking for."
+                                        icon={
+                                            <User />
+                                        }
+
+                                        action={
+                                            <Link to={"/create-job?from=jobspage"}>
+                                                <Button size={"lg"} variant={"secondary"}>
+                                                    create new job
+                                                </Button>
+                                            </Link>
+                                        }
+
+                                    />
+                                </TableCell>
                             </TableRow>
-                        ))
-                    ) : (
-                        <TableRow>
-                            <TableCell colSpan={columns.length} className="h-24 text-center">
-                                No results.
-                            </TableCell>
-                        </TableRow>
-                    )}
+                        )}
+                    </AnimatePresence>
                 </TableBody>
             </Table>
             {/* do later  */}

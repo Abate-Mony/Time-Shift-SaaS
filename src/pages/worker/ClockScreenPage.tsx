@@ -1,18 +1,54 @@
 import GradientBorder from "@/components/ui/gradient-border"
+import { NoActiveShift } from "@/components/ui/No_Active_Job"
+import { queryClient } from "@/lib/queryClient"
 import { changeWorkerJobStaus } from "@/utils/api-request-functions"
 import customFetch from "@/utils/customFetch"
 import type { CreateJobForm } from "@/utils/types"
 import { useQuery } from "@tanstack/react-query"
 import dayjs from "dayjs"
+import { AnimatePresence, motion } from "framer-motion"
 import { Briefcase, Camera, CheckCircle2, ChevronLeft, Coffee, FileText, MapPin, Play, RotateCcw, Square } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
-import { useParams } from "react-router"
 type ClockState = 'idle' | 'working' | 'break' | 'done' | "in-progress"
+
+export const loader = async () => {
+  // await wait()
+  return await queryClient.ensureQueryData(activeWorkerJob())
+}
 function fmtTime(s: number) {
   const h = Math.floor(s / 3600)
   const m = Math.floor((s % 3600) / 60)
   const sec = s % 60
-  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`
+  return ({
+    h: String(h).padStart(2, '0'),
+    m: String(m).padStart(2, '0'),
+    s: String(sec).padStart(2, '0')
+  })
+  // return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`
+}
+
+function AnimatedDigits({ value }: { value: string }) {
+  return (
+    <span className="relative inline-block w-[2ch] h-[1em] align-bottom overflow-hidden">
+      <AnimatePresence initial={false}>
+        <motion.span
+          key={value}
+          className="absolute inset-0 flex items-center justify-center"
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: -20, opacity: 0 }}
+          transition={{
+            duration: 0.25,
+            opacity: {
+              duration: 0.2
+            }
+          }}
+        >
+          {value}
+        </motion.span>
+      </AnimatePresence>
+    </span>
+  )
 }
 
 function fmtHours(s: number) {
@@ -21,11 +57,11 @@ function fmtHours(s: number) {
   if (h === 0) return `${m}m`
   return m > 0 ? `${h}h ${m}m` : `${h}h`
 }
-const singleWorkerJob = (id: string | undefined) => {
+const activeWorkerJob = () => {
   return ({
-    queryKey: ["job", id],
-    queryFn: async (): Promise<{ job: CreateJobForm }> => {
-      const { data } = await customFetch.get(`/workers/${id}`)
+    queryKey: ["active-job"],
+    queryFn: async (): Promise<{ success: true, job: null } | { job: CreateJobForm }> => {
+      const { data } = await customFetch.get(`/workers/active-job`)
       return data
     }
   })
@@ -46,11 +82,16 @@ interface workerJobWithDetails extends CreateJobForm {
   }
 }
 export default function ClockScreen() {
+
+
+
+  const job = useQuery(activeWorkerJob()).data?.job as workerJobWithDetails
+  // bug here 
+  if (job == null) {
+    return (<NoActiveShift />)
+  }
+
   const onFinish = () => changeWorkerJobStaus(job._id!, "completed")
-
-  const id = useParams().id
-
-  const job = useQuery(singleWorkerJob(id)).data?.job as workerJobWithDetails
   const workerJobDetails = job?.workerJobDetails ?? {}
   const start = dayjs(workerJobDetails.checkedInAt);
   const now = dayjs(dayjs(new Date()));
@@ -103,12 +144,9 @@ export default function ClockScreen() {
     onFinish()
   }
 
-  useEffect(() => () => {
-    if (timerRef.current) {
-      clearInterval(timerRef.current)
-    }
+  useEffect(() => {
     startWork()
-
+    return () => { if (timerRef.current) clearInterval(timerRef.current) }
   }, [])
 
   useEffect(() => {
@@ -257,7 +295,9 @@ export default function ClockScreen() {
 
             {/* Main timer */}
             <p className="text-6xl font-bold text-white mono tracking-tighter mb-1" style={{ fontVariantNumeric: 'tabular-nums' }}>
-              {fmtTime(clockState === 'break' ? breakTime : elapsed)}
+              <AnimatedDigits value={fmtTime(clockState == "working" ? elapsed : breaks).h} />:
+              <AnimatedDigits value={fmtTime(clockState == "working" ? elapsed : breaks).m} />:
+              <AnimatedDigits value={fmtTime(clockState == "working" ? elapsed : breaks).s} />
             </p>
             <p className="text-xs text-white/25 font-medium">
               {clockState === 'break' ? 'break duration' : 'time elapsed'}

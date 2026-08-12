@@ -83,7 +83,7 @@ export const createJobSchema = z.object({
         .string()
         .min(5, "Description is required"),
 
-    company: z
+    client: z
         .string()
         .min(2, "Company is required"),
     createdBy: z

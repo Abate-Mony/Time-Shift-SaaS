@@ -10,7 +10,7 @@ export const changeWorkerJobStaus = async (
     status: "accepted" | "declined" | "in-progress" | "completed"
 ) => {
     try {
-        await wait()
+        // await wait()
         await customFetch.patch(`/workers/${jobId}/status`, {
             status,
         });
@@ -27,6 +27,7 @@ export const changeWorkerJobStaus = async (
         await queryClient.invalidateQueries({
             queryKey: ["worker-job", jobId],
         });
+        await queryClient.invalidateQueries({ queryKey: ["worker-stats"]})
     } catch (err) {
         const message =
             isAxiosError(err)

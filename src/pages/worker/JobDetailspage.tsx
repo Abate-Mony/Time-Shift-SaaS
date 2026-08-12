@@ -34,7 +34,7 @@ export default function JobDetailScreen() {
         { icon: Timer, label: 'Duration', value: `${12} hours` },
         { icon: MapPin, label: 'Location', value: job?.location },
         { icon: CalendarDays, label: 'Date', value: dayjs(job?.date).format("dddd, MMMM D, YYYY") },
-        { icon: Briefcase, label: 'Client', value: job?.company },
+        { icon: Briefcase, label: 'Client', value: job?.client },
     ]
 
     return (
@@ -53,7 +53,7 @@ export default function JobDetailScreen() {
                     <div className="relative">
                         <div className="flex items-start justify-between gap-3 mb-3">
                             <div>
-                                <p className="text-[10px] font-semibold text-white/50 uppercase tracking-widest mb-1.5">{job?.company}</p>
+                                <p className="text-[10px] font-semibold text-white/50 uppercase tracking-widest mb-1.5">{job?.client}</p>
                                 <h2 className="text-base font-bold text-white leading-snug">{job?.title}</h2>
                             </div>
                             <StatusBadge status={job?.status || "pending"} />

@@ -1,5 +1,5 @@
 import { Toaster } from "react-hot-toast";
-
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import {
   QueryClientProvider
 } from '@tanstack/react-query';
@@ -18,6 +18,7 @@ const App = () => {
       {/* <ScrollToTop */}
 
     <QueryClientProvider client={queryClient}>
+       <ReactQueryDevtools initialIsOpen={false} position="left" buttonPosition="top-right" />
               <RouterProvider
                 router={router}
               ></RouterProvider>

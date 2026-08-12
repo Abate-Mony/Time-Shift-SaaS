@@ -11,6 +11,7 @@ import { useQuery, type QueryClient } from '@tanstack/react-query'
 import type { CreateJobForm } from '@/utils/types'
 import DataTable from '@/components/JobsTable'
 import { jobsColumns } from '@/utils/columns'
+import AnimatedHeadLessUi from '@/components/animated-headless-ui'
 
 
 const jobsQuery = (params: Params) => {
@@ -66,12 +67,12 @@ export function Jobs() {
   }
   const tabs = [
     { id: 'all', label: 'All Jobs', count: jobs.length },
-    { id: 'in-progress', label: 'In Progress', count:jobs.filter(job=>job.priority=="high").length},
+    { id: 'in-progress', label: 'In Progress', count: jobs.filter(job => job.priority == "high").length },
     { id: 'assigned', label: 'Assigned', },
     { id: 'completed', label: 'Completed', },
     { id: 'draft', label: 'Draft', },
   ]
-
+const [hoverIndex,setHoverIndex]=useState<number | null>(0)
 
   return (
     <div className="p-6 animate-fade-in">
@@ -89,20 +90,32 @@ export function Jobs() {
 
 
       <div className="flex items-center gap-1 gap-x-0 border-b flex-wrap border-[#E2E8F0]">
-        {tabs.map(tab => (
-          <FilterButton
-            className='hover:bg-black/5 mx-0 rounded-none'
-            name='status'
-            value={tab.id}
-            key={tab.id}
-          >
-            {tab.label}
-            <span className='ml-0.5
-             rounded-full bg-black/5 p-2 text-xs size-2.5 flex items-center justify-center'> 
-              {tab?.count ?? 0}
+        {tabs.map((tab, idx) => (
+          <AnimatedHeadLessUi
+          animatedClassName='bg-black/5 p-0 rounded-sm'
+          className='flex items-center'
+          hoverIndex={hoverIndex}
+          setHoverIndex={setHoverIndex}
+              layoutId='animated-job-filter-button'
+            index={idx} >
+            <FilterButton
+              className=' mx-0 rounded-none flex justify-between'
+              name='status'
+              value={tab.id}
+              key={tab.id}
+              layoutId='job-filter-button'
+              show
+            >
+            <span className='flex items-center justify-center'>
+                {tab.label}
+              <span className='ml-0.5
+             rounded-full bg-black/5 p-2 text-xs size-2.5 flex items-center justify-center'>
+                {tab?.count ?? 0}
+              </span>
             </span>
 
-          </FilterButton>
+            </FilterButton>
+          </AnimatedHeadLessUi>
         ))}
       </div>
       {/* Filters row */}
@@ -119,32 +132,19 @@ export function Jobs() {
         </select>
       </div>
 
-<DataTable
-    columns={jobsColumns}
-    data={jobs}
-/>
-  {/* <EmptyState
-            icon={<Users size={20} />}
-            title="No jobs found"
-            description="Try adjusting your search or filters to find what you're looking for."
-            action={<Button size="sm" onClick={() => onNavigate('/create-job')}>Create Job</Button>}
-          /> */}
-     
+      <DataTable
+        columns={jobsColumns}
+        data={jobs}
+        getRowId={(row) => row._id!}
+      />
+
+
 
       {/* Pagination */}
       <div className="flex items-center justify-between mt-4 text-xs text-slate-500">
         <p>Showing {jobs.length} of {jobs.length} jobs</p>
         <div className="flex items-center gap-1">
-          {/* {Array.from({ length: totalPages }).map((_, index) => (
-            <FilterButton
-              animateClassName="bg-black/75 size-full text-white !rounded-xs shadow-sm"
-              label="page"
-              value={index.toString()}
-              key={index}
-              className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors !group-[active-slide]:text-white `} name={'page'}            >
-              {index + 1}
-            </FilterButton >
-          ))} */}
+
         </div>
       </div>
     </div>

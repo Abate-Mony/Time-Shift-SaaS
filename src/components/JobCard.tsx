@@ -17,9 +17,11 @@ export default function JobCard({
         'assigned': 'bg-violet-500',
         'completed': 'bg-emerald-500',
         'pending': 'bg-amber-500',
+        "declined": "bg-rose-500",
+        "accepted": "bg-green-500"
     }
 
-    const accent = statusColor["in-progress"] ?? 'bg-slate-400'
+    const accent = statusColor[job.status || "completed"] ?? 'bg-slate-400'
     const navigate = useNavigate()
 
     const [loadingAction, setLoadingAction] = useState<'accept' | 'reject' | 'start' | null>(null)
@@ -51,7 +53,7 @@ export default function JobCard({
                 <div className="flex items-start justify-between gap-2 mb-3">
                     <div className="flex-1 min-w-0">
                         <p className="text-sm font-semibold text-slate-900 leading-snug">{job.title}</p>
-                        <p className="text-xs text-slate-400 mt-0.5 font-medium">{job.company}</p>
+                        <p className="text-xs text-slate-400 mt-0.5 font-medium">{job.client}</p>
                     </div>
                     <StatusBadge status={job.status!} />
                 </div>
@@ -110,7 +112,7 @@ export default function JobCard({
                         onClick={e => {
                             e.stopPropagation();
                             e.preventDefault()
-                            navigate(`/worker/clock/${job._id}`)
+                            navigate(`/worker/clock`)
                         }}
                         className="mt-4 w-full h-11 rounded-xl bg-[#1E3A5F] text-center  text-white text-sm font-bold hover:bg-[#162D4A] active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-sm shadow-[#1E3A5F]/25"
                     >

@@ -10,15 +10,55 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Scrollable } from "@/components/ui/scrollable";
+import { queryClient } from "@/lib/queryClient";
+import customFetch from "@/utils/customFetch";
 import { logoutUser } from "@/utils/logout";
 import type { User } from "@/utils/types";
+import { wait } from "@/utils/wait";
+import { useQuery } from "@tanstack/react-query";
 import { Bell, BluetoothIcon, CheckCircle2, ChevronRight, Clock, Download, LogOut, MapPin, Phone, Star, Zap } from "lucide-react";
-import { useNavigate, useOutletContext } from "react-router";
-export default function ProfileScreen() {
+import { useLoaderData, useNavigate, useOutletContext, type LoaderFunctionArgs } from "react-router";
+const reponse = {
+  total_job_completed: 0,
+  "success": true, "jobStats": { "pending": 31, "accepted": 4, "declined": 10, "in-progress": 0, "completed": 6, "cancelled": 0 }, "hoursWorked": 98.99950833333334, "averagePayRate": 0, "monthlyEarnings": 1286.9936083333334
+}
+const workerDashboardstats = () => {
+  return ({
+    queryKey: ["worker-stats"],
+    queryFn: async (): Promise<typeof reponse> => {
+      const { data } = await customFetch.get(`/workers/stats`)
+      return data
+    }
+  })
+}
+export const loader = async ({ params }: LoaderFunctionArgs) => {
+      await wait()
+
+  return await queryClient.ensureQueryData(workerDashboardstats())
+}
+
+export function ProfileScreen() {
   const navigate = useNavigate()
   const user = useOutletContext<{
     user: User
   }>()?.user
+  const {
+    averagePayRate,
+    hoursWorked,
+    jobStats,
+    monthlyEarnings,
+    total_job_completed,
+  } = useQuery(workerDashboardstats()).data as (typeof reponse)
+  // const {
+  //   averagePayRate,
+  //   hoursWorked,
+  //   jobStats,
+  //   monthlyEarnings,
+  //   total_job_completed,
+  // } = data ?? {}
+  const job_completed = Object.values(jobStats!).reduce((acc, next) => acc + next);
+  // console.log("total hours ",total_hours)
   return (
     <div className="flex flex-col gap-4 pb-4">
       {/* Profile hero */}
@@ -60,7 +100,7 @@ export default function ProfileScreen() {
           <div className="flex items-center justify-between mb-4">
             <div>
               <p className="text-xs text-white/50 font-semibold uppercase tracking-wide">Earnings This Month</p>
-              <p className="text-3xl font-bold text-white mt-1">£2,772</p>
+              <p className="text-3xl font-bold text-white mt-1">£{monthlyEarnings.toFixed(1)}</p>
             </div>
             <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
               <Zap size={18} className="text-blue-300" />
@@ -68,9 +108,9 @@ export default function ProfileScreen() {
           </div>
           <div className="grid grid-cols-3 gap-3">
             {[
-              { label: 'Hours', value: `${"1"}h` },
-              { label: 'Jobs', value: "2" },
-              { label: '£/hr avg', value: '£18' },
+              { label: 'Hours', value: `${hoursWorked.toFixed(1)}h` },
+              { label: 'Jobs', value: jobStats.completed },
+              { label: '£/hr avg', value: averagePayRate || 2 },
             ].map(s => (
               <div key={s.label} className="bg-white/10 rounded-xl p-2.5 text-center">
                 <p className="text-base font-bold text-white">{s.value}</p>
@@ -82,12 +122,17 @@ export default function ProfileScreen() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 gap-3">
+      <Scrollable>
+
         {[
-          { label: 'Jobs Completed', value: "12", sub: 'all time', icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-          { label: 'Hours Worked', value: `${"12"}h`, sub: 'this month', icon: Clock, color: 'text-blue-600', bg: 'bg-blue-50' },
+          { label: 'Total Jobs', value: job_completed, sub: 'this month', icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+          { label: 'Job Completed', value: `${jobStats.completed}`, sub: 'this month', icon: Clock, color: 'text-blue-600', bg: 'bg-blue-50' },
+          { label: 'Job Decline', value: `${jobStats.declined}`, sub: 'this month', icon: Clock, color: 'text-blue-600', bg: 'bg-blue-50' },
+          { label: 'Job Inprogress', value: `${jobStats["in-progress"]}`, sub: 'this month', icon: Clock, color: 'text-blue-600', bg: 'bg-blue-50' },
+          { label: 'Job Pending', value: `${jobStats["pending"]}`, sub: 'this month', icon: Clock, color: 'text-blue-600', bg: 'bg-blue-50' },
+          { label: 'Job Accepted', value: `${jobStats["accepted"]}`, sub: 'this month', icon: Clock, color: 'text-blue-600', bg: 'bg-blue-50' },
         ].map(s => (
-          <div key={s.label} className="bg-white rounded-2xl border border-[#E2E8F0] p-4 shadow-sm">
+          <div key={s.label} className="bg-white flex-none w-full max-w-[min(200px,calc(100%-2rem))] rounded-2xl border border-[#E2E8F0] p-4 shadow-sm">
             <div className={`w-9 h-9 rounded-xl ${s.bg} flex items-center justify-center mb-3`}>
               <s.icon size={16} className={s.color} />
             </div>
@@ -96,7 +141,7 @@ export default function ProfileScreen() {
             <p className="text-[10px] text-slate-400">{s.sub}</p>
           </div>
         ))}
-      </div>
+      </Scrollable>
 
       {/* Settings list */}
       <div className="bg-white rounded-2xl border border-[#E2E8F0] shadow-sm overflow-hidden">
@@ -133,7 +178,7 @@ export default function ProfileScreen() {
           </AlertDialogTrigger>
           <AlertDialogContent className=" max-w-[min(400px,calc(100%-1rem))] rounded-sm">
             <AlertDialogHeader>
-                <LogOut size={30} className="mx-auto text-amber-800" />
+              <LogOut size={30} className="mx-auto text-amber-800" />
               <AlertDialogTitle className="text-xl text-center">LogOut </AlertDialogTitle>
               <AlertDialogDescription className="text-center">
                 Do you want to logout?
@@ -142,7 +187,7 @@ export default function ProfileScreen() {
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
               <AlertDialogAction className="bg-rose-400"
-              onClick={logoutUser}
+                onClick={logoutUser}
               >Log Out</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

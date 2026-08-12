@@ -12,10 +12,10 @@ import ScheduleScreen from "@/pages/worker/ScheduleScreen";
 import HomeScreen from "@/pages/worker/WorkerDashboard";
 import NotificationPreferencesScreen from "@/pages/worker/NotificationPreferences";
 import EditProfileScreen from "@/pages/worker/EditProfile";
-import ProfileScreen from "@/pages/worker/WorkerProfilepage";
+// import ProfileScreen from "@/pages/worker/WorkerProfilepage";
 import { createBrowserRouter, Navigate } from "react-router";
 import DashboardLayout from "../layouts/dashboardlayout";
-import { Calendar, calendarLoader, CreateJob, createjobAction, Dashboard, dashboardLoader, EditJob, editJobAction, InvoiceDetail, invoiceDetailLoader, InvoiceForm, invoiceFormLoader, Invoices, invoicesLoader, JobDetail, Jobs, jobsLoader, Locations, loginAction, Reports, Settings, signupAction, singleJobLoader, singleWorkerJobLoader, workerLoader, WorkerProfile, Workers, workersLoader } from "../pages";
+import { Calendar, calendarLoader, clockLoader, CreateJob, createjobAction, Dashboard, dashboardLoader, EditJob, editJobAction, InvoiceDetail, invoiceDetailLoader, InvoiceForm, invoiceFormLoader, Invoices, invoicesLoader, JobDetail, Jobs, jobsLoader, Locations, loginAction, ProfileScreen, Reports, Settings, signupAction, singleJobLoader, singleWorkerJobLoader, workerLoader, WorkerProfile, workerProfileLoader, Workers, workersLoader } from "../pages";
 import RootLayout from "@/layouts/RootLayout";
 
 export const router = createBrowserRouter([
@@ -72,7 +72,7 @@ export const router = createBrowserRouter([
 
 
                     },
-                    {   
+                    {
                         path: "invoices",
                         element: <Invoices />,
                         loader: invoicesLoader(queryClient),
@@ -166,7 +166,8 @@ export const router = createBrowserRouter([
 
                     }, {
                         path: "profile",
-                        element: <ProfileScreen />
+                        element: <ProfileScreen />,
+                        loader: workerProfileLoader
                     },
                     {
                         path: "profile/notifications",
@@ -188,9 +189,9 @@ export const router = createBrowserRouter([
 
                     },
                     {
-                        path: "clock/:id",
+                        path: "clock",
                         element: <ClockScreen />,
-                        loader: singleWorkerJobLoader,
+                        loader: clockLoader,
                         errorElement: <ErrorElement />,
 
                     },
@@ -204,7 +205,7 @@ export const router = createBrowserRouter([
                 path: "*",
                 element: <NotFound />
             },
-      
+
         ]
     }
 
