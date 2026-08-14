@@ -102,7 +102,7 @@ export function Invoices() {
         </button>
       </div>
 
-      <DataTable columns={invoiceColumns} data={invoices} getRowId={(row) => row._id} />
+      <DataTable columns={invoiceColumns} data={invoices}  />
 
       {invoices.length === 0 && (
         <div className="bg-white rounded-2xl border border-[#E2E8F0] p-10 text-center shadow-sm mt-4">

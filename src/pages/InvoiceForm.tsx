@@ -46,7 +46,7 @@ export function InvoiceForm() {
         resolver: zodResolver(invoiceSchema),
         defaultValues: {
             job: jobId,
-            client: job?.company ?? '',
+            client: job?.client ?? '',
             issueDate: dayjs().format('YYYY-MM-DD'),
             dueDate: dayjs().add(14, 'day').format('YYYY-MM-DD'),
             notes: '',
