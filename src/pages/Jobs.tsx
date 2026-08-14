@@ -12,6 +12,8 @@ import type { CreateJobForm } from '@/utils/types'
 import DataTable from '@/components/JobsTable'
 import { jobsColumns } from '@/utils/columns'
 import AnimatedHeadLessUi from '@/components/animated-headless-ui'
+import { queryClient } from '@/lib/queryClient'
+import toast from 'react-hot-toast'
 
 
 const jobsQuery = (params: Params) => {
@@ -74,6 +76,16 @@ export function Jobs() {
   ]
 const [hoverIndex,setHoverIndex]=useState<number | null>(0)
 
+  const deleteSelectedJobs = async (selectedJobs: CreateJobForm[]) => {
+    try {
+      await Promise.all(selectedJobs.map((job) => customFetch.delete(`/jobs/${job._id}`)))
+      queryClient.invalidateQueries({ queryKey: ['jobs'] })
+      toast.success(`${selectedJobs.length} ${selectedJobs.length === 1 ? 'job' : 'jobs'} deleted successfully`)
+    } catch (e) {
+      toast.error('Failed to delete some jobs, try again later')
+    }
+  }
+
   return (
     <div className="p-6 animate-fade-in">
       {/* Header */}
@@ -135,7 +147,7 @@ const [hoverIndex,setHoverIndex]=useState<number | null>(0)
       <DataTable
         columns={jobsColumns}
         data={jobs}
-        getRowId={(row) => row._id!}
+        onDeleteSelected={deleteSelectedJobs}
       />
 
 

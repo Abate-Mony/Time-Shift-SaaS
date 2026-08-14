@@ -22,6 +22,17 @@ import {
     DropdownMenuContent,
     DropdownMenuTrigger
 } from "./ui/dropdown-menu.js";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "./ui/alert-dialog.js";
 
 export type Payment = {
     id: string
@@ -39,23 +50,21 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
-import { User } from 'lucide-react';
-import { EmptyState } from './empty-state.js';
+import { Trash2, User } from 'lucide-react';
 import { Link } from 'react-router';
-import { AnimatePresence, motion } from 'framer-motion';
+import { EmptyState } from './empty-state.js';
 
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[]
     data: TData[]
-    getRowId: (row: TData) => string;
+    onDeleteSelected?: (rows: TData[]) => Promise<void> | void
 }
 
-const MotionTableRow = motion.create(TableRow)
 
 export default function DataTable<TData, TValue>({
     columns,
     data,
-    getRowId
+    onDeleteSelected,
 }: DataTableProps<TData, TValue>) {
     const [sorting, setSorting] = React.useState<SortingState>([])
     const [rowSelection, setRowSelection] = React.useState({})
@@ -64,10 +73,10 @@ export default function DataTable<TData, TValue>({
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
         []
     )
+    const [isDeleting, setIsDeleting] = React.useState(false)
     const table = useReactTable({
         data,
         columns,
-        getRowId,
         getCoreRowModel: getCoreRowModel(),
         getPaginationRowModel: getPaginationRowModel(),
         onSortingChange: setSorting,
@@ -83,8 +92,64 @@ export default function DataTable<TData, TValue>({
         },
 
     })
+
+    const selectedRows = table.getFilteredSelectedRowModel().rows
+    const selectedCount = selectedRows.length
+
+    const handleDeleteSelected = async () => {
+        if (!onDeleteSelected) return
+        try {
+            setIsDeleting(true)
+            await onDeleteSelected(selectedRows.map((row) => row.original))
+            setRowSelection({})
+        } finally {
+            setIsDeleting(false)
+        }
+    }
+
     return (
         <div className="rounded-md">
+            {selectedCount > 0 && (
+                <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-4 py-2.5 mb-3">
+                    <p className="text-sm text-slate-600">
+                        <span className="font-semibold text-slate-900">{selectedCount}</span>{" "}
+                        {selectedCount === 1 ? "row" : "rows"} selected
+                    </p>
+                    <div className="flex items-center gap-2">
+                        <Button variant="ghost" size="sm" onClick={() => setRowSelection({})}>
+                            Clear
+                        </Button>
+                        <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                <Button variant="destructive" size="sm" disabled={!onDeleteSelected || isDeleting}>
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                    Delete
+                                </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>
+                                        Delete {selectedCount} {selectedCount === 1 ? "job" : "jobs"}?
+                                    </AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        This action cannot be undone. This will permanently delete the selected {selectedCount === 1 ? "job" : "jobs"}.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction
+                                        className="bg-red-600 text-white hover:bg-red-700"
+                                        disabled={isDeleting}
+                                        onClick={handleDeleteSelected}
+                                    >
+                                        {isDeleting ? "Deleting..." : "Delete"}
+                                    </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                    </div>
+                </div>
+            )}
             <div className="flex items-center py-4">
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -145,25 +210,11 @@ export default function DataTable<TData, TValue>({
                     ))}
                 </TableHeader>
                 <TableBody>
-                    <AnimatePresence mode='popLayout' initial={false}>
                         {table.getRowModel().rows?.length ? (
                             table.getRowModel().rows.map((row) => (
-                                <MotionTableRow
+                                <TableRow
                                     key={row.id}
-                                    initial={{
-                                        opacity: 0.7, x: -10,
-                                        y: 10
-                                    }}
-                                    animate={{
-                                        opacity: 1, y: 0, x: 0
-                                    }}
-                                    exit={{
-                                        opacity: 0,
-                                        y: -100,
-                                    }}
-                                    transition={{
-                                        duration: 0.35
-                                    }}
+                                 
                                 >
                                     {row.getVisibleCells().map((cell) => (
                                         <TableCell
@@ -173,7 +224,7 @@ export default function DataTable<TData, TValue>({
                                             {flexRender(cell.column.columnDef.cell, cell.getContext())}
                                         </TableCell>
                                     ))}
-                                </MotionTableRow>
+                                </TableRow>
                             ))
                         ) : (
                             <TableRow key="empty">
@@ -197,7 +248,6 @@ export default function DataTable<TData, TValue>({
                                 </TableCell>
                             </TableRow>
                         )}
-                    </AnimatePresence>
                 </TableBody>
             </Table>
             {/* do later  */}

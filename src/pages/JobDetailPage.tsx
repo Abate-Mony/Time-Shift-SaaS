@@ -89,11 +89,15 @@ export const recordFormatUI: Record<ActivityType, { icon: LucideIcon; className:
 const activityLog = [{
     "_id": "6a6f1fc1153487a6a6e0cc55", "job": "6a6f15615746445f28c4fcfc", "workers": [{ "_id": "6a6ed4d18dc34eebbf1a4188", "fullname": "manager" }],
     "actor": { "_id": "6a6ec368b301e127831156a1", "fullname": "Emmanuel Ako Bate" }, "createdAt": "2026-08-02T10:45:21.315Z", "updatedAt": "2026-08-02T10:45:21.315Z", "__v": 0
-}]
-function describeActivity(entry: typeof activityLog[number] & {
-    type: ActivityType
-}): React.ReactNode {
-    const ui = recordFormatUI[entry.type]
+}] as const
+
+type ActivityLogEntry = (typeof activityLog)[number] & {
+    type?: ActivityType
+}
+
+function describeActivity(entry: ActivityLogEntry): React.ReactNode {
+    const type = entry.type ?? 'job_updated'
+    const ui = recordFormatUI[type]
 
     // Per-assignment events describe the worker; job-level events describe the actor
     const subject =
@@ -116,7 +120,7 @@ function describeActivity(entry: typeof activityLog[number] & {
                 </span>
                 
                 <span className="font-semibold text-slate-900">{subject} </span>{" "}
-                <span className="text-slate-600">{ui?.label ?? entry.type}</span>
+                <span className="text-slate-600">{ui?.label ?? type}</span>
             </span>
             <p className="pl-5 text-[10px] text-slate-400 mt-0.5 font-medium">{dayjs(entry.createdAt).format("DD/MM h:mm A")}</p>
 

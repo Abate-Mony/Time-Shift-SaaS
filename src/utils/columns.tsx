@@ -17,6 +17,7 @@ import customFetch from "./customFetch"
 import { queryClient } from "@/lib/queryClient"
 import toast from "react-hot-toast"
 import { AnimatedTooltip } from "@/components/ui/animated-tooltip"
+import { Checkbox } from "@/components/ui/checkbox"
 import { formatCurrency } from "./format"
 
 const STATUS_STYLES: Record<string, string> = {
@@ -59,17 +60,31 @@ function PriorityPill({ value }: { value: string }) {
 }
 
 export const jobsColumns: ColumnDef<CreateJobForm>[] = [
-  // {
-  //   id: "index",
-  //   header: "#",
-  //   enableSorting: false,
-  //   cell: ({ row }) => (
-  //     <span className="text-sm font-medium text-slate-400 tabular-nums">
-  //       {row.index < 9 ? `0${row.index + 1}` : row.index + 1}
-  //     </span>
-  //   ),
-  // },
+  {
+    id: "select",
+    header: ({ table }) => (
+      <Checkbox
+        checked={
+          table.getIsAllPageRowsSelected() ||
+          (table.getIsSomePageRowsSelected() && "indeterminate")
+        }
+        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+        aria-label="Select all"
+      />
+    ),
+    enableSorting: false,
+    enableHiding: false,
+    cell: ({ row }) => (
+      <Checkbox
+        checked={row.getIsSelected()}
+        onCheckedChange={(value) => row.toggleSelected(!!value)}
+        onClick={(e) => e.stopPropagation()}
+        aria-label="Select row"
+      />
+    ),
+  },
 
+  
   {
     accessorKey: "title",
     header: ({ column }) => (
@@ -83,11 +98,11 @@ export const jobsColumns: ColumnDef<CreateJobForm>[] = [
       </Button>
     ),
     cell: ({ row }) => {
-      const { title, company } = row.original
+      const { title, client } = row.original
       return (
         <div className="min-w-45">
           <p className="font-medium text-slate-900 line-clamp-1 max-w-sm">{title}</p>
-          <p className="text-xs text-slate-500 mt-0.5">{company}</p>
+          <p className="text-xs text-slate-500 mt-0.5">{client}</p>
         </div>
       )
     },
@@ -167,7 +182,7 @@ export const jobsColumns: ColumnDef<CreateJobForm>[] = [
             <AnimatedTooltip
               items={workers?.slice(0, 3)?.map((w, idx) => ({
                 id: idx,
-                designation: w.email,
+                designation: w.email || "no email",
                 image: "",
                 name: w.fullname || "debug later",
               }))}

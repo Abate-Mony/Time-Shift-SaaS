@@ -262,12 +262,12 @@ export function EditJob() {
                         <div className="grid sm:grid-cols-2 gap-4">
                             <div>
                                 <Input
-                                    label="Company / Client"
+                                    label="client / Client"
                                     placeholder="e.g. SecureGuard Ltd"
-                                    {...register("company")}
-                                    className={cn(errors.company && "border-red-500!")}
+                                    {...register("client")}
+                                    className={cn(errors.client && "border-red-500!")}
                                 />
-                                <FieldError message={errors.company?.message} />
+                                <FieldError message={errors.client?.message} />
                             </div>
 
                             <div>
