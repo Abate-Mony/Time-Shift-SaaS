@@ -42,6 +42,30 @@ export const changeWorkerJobStaus = async (
     }
 };
 
+export const claimOpenShift = async (jobId: string): Promise<boolean> => {
+    try {
+        await customFetch.post(`/workers/open-shifts/${jobId}/claim`);
+
+        toast.success("Shift picked up successfully");
+
+        await queryClient.invalidateQueries({ queryKey: ["jobs"] });
+        await queryClient.invalidateQueries({ queryKey: ["open-shifts"] });
+        return true;
+    } catch (err) {
+        const message =
+            isAxiosError(err)
+                ? err.response?.data?.msg ??
+                err.response?.data?.message ??
+                "Something went wrong."
+                : err instanceof Error
+                    ? err.message
+                    : "Something went wrong.";
+
+        toast.error(message);
+        return false;
+    }
+};
+
 export const updateInvoiceStatus = async (invoiceId: string, status: InvoiceStatus) => {
     try {
         await customFetch.patch(`/invoices/${invoiceId}/status`, { status });

@@ -1,5 +1,7 @@
 import JobCard from "@/components/JobCard"
+import OpenShiftCard from "@/components/OpenShiftCard"
 import SearchComponent from "@/components/Search"
+import { EmptyState } from "@/components/empty-state"
 import FilterButton from "@/components/ui/FilterButton"
 import { Scrollable } from "@/components/ui/scrollable"
 import { useFilter } from "@/hooks/CustomLinkFilterHook"
@@ -7,9 +9,20 @@ import { cn } from "@/lib/utils"
 import customFetch from "@/utils/customFetch"
 import type { CreateJobForm } from "@/utils/types"
 import { useQuery, type QueryClient } from "@tanstack/react-query"
-import { Briefcase, Check, ChevronLeft, ChevronRight, Clock, Star } from "lucide-react"
+import { AlertCircle, Briefcase, Calendar, Check, ChevronLeft, ChevronRight, Clock, Loader2, Star, X } from "lucide-react"
 import { useState } from "react"
 import { useLoaderData, useSearchParams, type LoaderFunctionArgs, type Params } from "react-router"
+
+// TODO(backend): implement GET /workers/open-shifts — published jobs with no worker
+// assigned yet, returned as { jobs: CreateJobForm[] }. Any worker can then claim one via
+// POST /workers/open-shifts/:jobId/claim (see claimOpenShift in utils/api-request-functions.ts).
+const openShiftsQuery = {
+    queryKey: ['open-shifts'],
+    queryFn: async () => {
+        const { data } = await customFetch.get<{ jobs: CreateJobForm[] }>('/workers/open-shifts')
+        return data
+    },
+}
 const jobsQuery = (params: Params) => {
 
     const { search,
@@ -53,6 +66,7 @@ export default function JobsScreen() {
     const [searchParams] = useSearchParams()
     const activeSlide = searchParams.get("status")
     const [tab, setTab] = useState<any>(activeSlide ?? 'pending')
+    const [view, setView] = useState<'my-jobs' | 'open-shifts'>('my-jobs')
     const { searchValues } = useLoaderData() as {
         searchValues: Params
     }
@@ -65,6 +79,13 @@ export default function JobsScreen() {
         total: number,
         totalPages: number
     }
+
+    const {
+        data: openShiftsData,
+        isPending: isOpenShiftsLoading,
+        isError: isOpenShiftsError,
+    } = useQuery({ ...openShiftsQuery, enabled: view === 'open-shifts' })
+    const openShifts = openShiftsData?.jobs ?? []
     const completedHistory = [
         { date: '24 Jul', job: 'Excel Centre — Event Staffing', hours: 12, pay: 216, rated: true },
         { date: '23 Jul', job: 'Waterloo — Crowd Management', hours: 8, pay: 144, rated: false },
@@ -82,10 +103,85 @@ export default function JobsScreen() {
     return (
         <div className="flex flex-col gap-4 pb-4">
             <div>
-                <h2 className="text-lg font-bold text-slate-900">My Jobs</h2>
-                <p className="text-xs text-slate-400 mt-0.5">All your assignments in one place</p>
+                <h2 className="text-lg font-bold text-slate-900">
+                    {view === 'my-jobs' ? 'My Jobs' : 'Open Shifts'}
+                </h2>
+                <p className="text-xs text-slate-400 mt-0.5">
+                    {view === 'my-jobs' ? 'All your assignments in one place' : 'Unassigned shifts you can pick up'}
+                </p>
             </div>
+
+            {/* View toggle */}
+            <div className="flex gap-1 bg-slate-100 p-1 rounded-xl">
+                <button
+                    type="button"
+                    onClick={() => setView('my-jobs')}
+                    className={`flex-1 h-8 rounded-lg text-xs font-semibold transition-all ${view === 'my-jobs' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                >
+                    My Jobs
+                </button>
+                <button
+                    type="button"
+                    onClick={() => setView('open-shifts')}
+                    className={`flex-1 flex items-center justify-center gap-1.5 h-8 rounded-lg text-xs font-semibold transition-all ${view === 'open-shifts' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                >
+                    Open Shifts
+                    {openShifts.length > 0 && (
+                        <span className="w-4 h-4 rounded-full text-[10px] font-bold flex items-center justify-center bg-blue-100 text-blue-700">
+                            {openShifts.length}
+                        </span>
+                    )}
+                </button>
+            </div>
+
+            {view === 'open-shifts' ? (
+                <div className="flex flex-col gap-3">
+                    {isOpenShiftsLoading ? (
+                        <div className="flex items-center justify-center py-16">
+                            <Loader2 size={20} className="animate-spin text-slate-400" />
+                        </div>
+                    ) : isOpenShiftsError ? (
+                        <EmptyState
+                            icon={<AlertCircle size={20} />}
+                            title="Open shifts aren't available yet"
+                            description="This feature is being connected up — check back soon."
+                        />
+                    ) : openShifts.length ? (
+                        openShifts.map(shift => <OpenShiftCard shift={shift} key={shift._id} />)
+                    ) : (
+                        <EmptyState
+                            icon={<Briefcase size={20} />}
+                            title="No open shifts right now"
+                            description="New unassigned shifts will show up here as they're published."
+                        />
+                    )}
+                </div>
+            ) : (
+                <>
             <SearchComponent placeholder="Search Jobs" />
+
+            {/* Date filter */}
+            <div className="flex items-center gap-2">
+                <h2 className="text-sm font-medium text-slate-900 shrink-0">Filter by Date</h2>
+                <div className="relative">
+                    <Calendar size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                    <input
+                        type="date"
+                        value={searchParams.get('date') ?? ''}
+                        onChange={(e) => handleFilterChange({ key: 'date', value: e.target.value })}
+                        className="h-9 pl-8 pr-2.5 border border-[#E2E8F0] rounded-lg text-xs text-slate-600 bg-white focus:outline-none"
+                    />
+                </div>
+                {searchParams.get('date') && (
+                    <button
+                        type="button"
+                        onClick={() => handleFilterChange({ key: 'date', value: null })}
+                        className="flex items-center gap-1 h-9 px-2 rounded-lg text-xs font-medium text-slate-500 hover:text-slate-700 hover:bg-slate-50 transition-colors"
+                    >
+                        <X size={13} /> Clear
+                    </button>
+                )}
+            </div>
 
             {/* Tab pills */}
             {/* "draft" | "published" | "assigned" | "in-progress" | "completed" | "cancelled"  */}
@@ -94,7 +190,7 @@ export default function JobsScreen() {
             <Scrollable>
                 {tabs.map((t, idx) => (
                     <FilterButton
-                    layoutId="worker-job-screen-job-status"
+                    layoutId="worker-job-screen-job-status"     
                         onClick={() => setTab(t.id)}
                         animateClassName={cn(
                             t.id === 'assigned' ? 'bg-amber-100 ' : 'bg-blue-100 '
@@ -200,6 +296,8 @@ export default function JobsScreen() {
                         </button>
                     </div>
                 </div>
+            )}
+                </>
             )}
         </div>
     )
