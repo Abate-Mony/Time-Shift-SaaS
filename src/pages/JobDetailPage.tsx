@@ -333,7 +333,7 @@ export function JobDetail() {
                                             </div>
                                             <p className="text-xs text-slate-500 mono">{
                                                 // w. todo{}
-                                                w.breaks.length
+                                                w?.breaks?.length
                                                 }</p>
                                             <p className="text-xs font-semibold text-emerald-700 mono">{w.payRate || "£14/ph"}</p>
                                         </div>
