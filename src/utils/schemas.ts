@@ -4,7 +4,7 @@ const breakSchema = z.object({
     endedAt: z.coerce.date().optional(),
 });
 export const workerSchema = z.object({
-    breaks: z.array(breakSchema).default([]),
+
     user: z.string().min(1, "User is required"),
 
     fullname: z
@@ -78,6 +78,7 @@ export const workerSchema = z.object({
 
 export type Worker = z.infer<typeof workerSchema>;
 export const createJobSchema = z.object({
+    breaks: z.array(breakSchema).default([]).optional(),
     _id: z
         .string().optional(),
     title: z
