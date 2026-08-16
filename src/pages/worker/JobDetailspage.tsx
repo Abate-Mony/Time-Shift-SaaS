@@ -1,12 +1,13 @@
 import { StatusBadge } from "@/components/ui"
-import { jobs } from "@/data/mockData"
 import { queryClient } from "@/lib/queryClient"
+import { changeWorkerJobStaus } from "@/utils/api-request-functions"
 import customFetch from "@/utils/customFetch"
 import type { CreateJobForm } from "@/utils/types"
 import { useQuery } from "@tanstack/react-query"
-import { AlertCircle, Briefcase, CalendarDays, ChevronLeft, Clock, MapPin, Navigation, Play, Timer } from "lucide-react"
-import { Link, useParams, type LoaderFunctionArgs } from "react-router"
+import { AlertCircle, Briefcase, CalendarDays, Check, ChevronLeft, Clock, Dot, Loader2, MapPin, Navigation, Timer, X } from "lucide-react"
+import { useNavigate, useParams, type LoaderFunctionArgs } from "react-router"
 import dayjs from "dayjs"
+import { useState } from "react"
 const singleWorkerJob = (id: string | undefined) => {
     return ({
         queryKey: ["job", id],
@@ -27,8 +28,29 @@ export const loader = async ({ params, request }: LoaderFunctionArgs) => {
 }
 export default function JobDetailScreen() {
     const id = useParams().id
+    const navigate = useNavigate()
 
     const job = useQuery(singleWorkerJob(id)).data?.job
+    const [loadingAction, setLoadingAction] = useState<'accept' | 'reject' | 'start' | null>(null)
+
+    const onAccept = async () => {
+        setLoadingAction('accept')
+        await changeWorkerJobStaus(job!._id!, "accepted")
+        setLoadingAction(null)
+    }
+
+    const onReject = async () => {
+        setLoadingAction('reject')
+        await changeWorkerJobStaus(job!._id!, "declined")
+        setLoadingAction(null)
+    }
+
+    const startWorking = async () => {
+        setLoadingAction('start')
+        await changeWorkerJobStaus(job!._id!, "in-progress")
+        setLoadingAction(null)
+    }
+
     const infoRows = [
         { icon: Clock, label: 'Shift Time', value: `${job?.startTime} – ${job?.endTime}` },
         { icon: Timer, label: 'Duration', value: `${12} hours` },
@@ -108,14 +130,49 @@ export default function JobDetailScreen() {
             </a>
 
             {/* Primary CTA */}
-            {(job?.status === 'in-progress') && (
-                <Link to={`/worker/clock/${job._id}`}>
+            {job?.status === 'pending' && (
+                <div className="mt-4 grid grid-cols-2 gap-2.5" onClick={e => e.stopPropagation()}>
                     <button
-                        className="w-full h-14 rounded-2xl bg-[#1E3A5F] text-white text-base font-bold hover:bg-[#162D4A] active:scale-[0.98] transition-all flex items-center justify-center gap-3 shadow-lg shadow-[#1E3A5F]/25 mt-1"
+                        onClick={onReject}
+                        disabled={loadingAction !== null}
+                        className="h-11 rounded-xl bg-slate-50 border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-colors flex items-center justify-center gap-1.5 disabled:opacity-60 disabled:cursor-not-allowed"
                     >
-                        <Play size={18} fill="currentColor" />
-                        {job.status === 'in-progress' ? 'Continue Working -->' : 'Start Work'}
-                    </button></Link>
+                        {loadingAction === 'reject' ? <Loader2 size={14} className="animate-spin" /> : <X size={14} />} Decline
+                    </button>
+                    <button
+                        onClick={onAccept}
+                        disabled={loadingAction !== null}
+                        className="h-11 rounded-xl bg-emerald-500 text-white text-sm font-bold hover:bg-emerald-600 active:scale-[0.97] transition-all flex items-center justify-center gap-1.5 shadow-sm shadow-emerald-500/30 disabled:opacity-60 disabled:cursor-not-allowed"
+                    >
+                        {loadingAction === 'accept' ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />} Accept
+                    </button>
+                </div>
+            )}
+
+            {job?.status === 'in-progress' && (
+                <button
+                    onClick={e => {
+                        e.stopPropagation();
+                        e.preventDefault()
+                        navigate(`/worker/clock`)
+                    }}
+                    className="mt-4 w-full h-11 rounded-xl bg-[#1E3A5F] text-center  text-white text-sm font-bold hover:bg-[#162D4A] active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-sm shadow-[#1E3A5F]/25"
+                >
+                    <Dot className="text-green-400 animate-ping" size={50} /> Job Live
+                </button>
+            )}
+            {job?.status === 'accepted' && (
+                <button
+                    disabled={loadingAction !== null}
+                    onClick={e => {
+                        e.stopPropagation();
+                        e.preventDefault()
+                        startWorking()
+                    }}
+                    className="mt-4 w-full h-11 rounded-xl bg-[#1b7b3d] text-white text-sm font-bold hover:bg-[#13a166] active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-sm shadow-[#1E3A5F]/25 disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                    {loadingAction === 'start' ? <Loader2 size={14} className="animate-spin" /> : <Timer size={14} />} Start Working Job
+                </button>
             )}
         </div>
     )

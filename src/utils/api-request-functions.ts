@@ -1,8 +1,7 @@
-import toast from "react-hot-toast";
-import customFetch from "./customFetch";
 import { queryClient } from "@/lib/queryClient";
 import { isAxiosError } from "axios";
-import { wait } from "./wait";
+import toast from "react-hot-toast";
+import customFetch from "./customFetch";
 import type { EditProfileForm, InvoiceStatus, NotificationPreferences } from "./types";
 
 export const changeWorkerJobStaus = async (
@@ -25,7 +24,7 @@ export const changeWorkerJobStaus = async (
 
         // Refresh single job if it's open
         await queryClient.invalidateQueries({
-            queryKey: ["worker-job", jobId],
+            queryKey: ["job", jobId],
         });
         await queryClient.invalidateQueries({ queryKey: ["worker-stats"]})
     } catch (err) {
@@ -39,6 +38,52 @@ export const changeWorkerJobStaus = async (
                     : "Something went wrong.";
 
         toast.error(message);
+    }
+};
+
+export const startWorkerBreak = async (jobId: string): Promise<boolean> => {
+    try {
+        const { data } = await customFetch.patch(`/workers/${jobId}/break/start`);
+
+        toast.success(data?.message ?? "Break started.");
+
+        await queryClient.invalidateQueries({ queryKey: ["active-job"] });
+        return true;
+    } catch (err) {
+        const message =
+            isAxiosError(err)
+                ? err.response?.data?.msg ??
+                err.response?.data?.message ??
+                "Something went wrong."
+                : err instanceof Error
+                    ? err.message
+                    : "Something went wrong.";
+
+        toast.error(message);
+        return false;
+    }
+};
+
+export const endWorkerBreak = async (jobId: string): Promise<boolean> => {
+    try {
+        const { data } = await customFetch.patch(`/workers/${jobId}/break/end`);
+
+        toast.success(data?.message ?? "Break ended.");
+
+        await queryClient.invalidateQueries({ queryKey: ["active-job"] });
+        return true;
+    } catch (err) {
+        const message =
+            isAxiosError(err)
+                ? err.response?.data?.msg ??
+                err.response?.data?.message ??
+                "Something went wrong."
+                : err instanceof Error
+                    ? err.message
+                    : "Something went wrong.";
+
+        toast.error(message);
+        return false;
     }
 };
 

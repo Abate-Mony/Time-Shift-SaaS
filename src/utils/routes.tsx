@@ -1,8 +1,8 @@
 import ErrorElement from "@/components/ErrorElement";
 import { LoginForm } from "@/components/login-form";
 import { SignUpForm } from "@/components/signup-form";
-import AuthLayout from "@/layouts/AuthLayout";
-import { WorkerAppLayout } from "@/layouts/workerLayout";
+import AuthLayout, { authLoader } from "@/layouts/AuthLayout";
+import { WorkerAppLayout, workerRouteLoader } from "@/layouts/workerLayout";
 import { queryClient } from "@/lib/queryClient";
 import NotFound from "@/pages/404Page";
 import ClockScreen from "@/pages/worker/ClockScreenPage";
@@ -17,6 +17,7 @@ import { createBrowserRouter, Navigate } from "react-router";
 import DashboardLayout from "../layouts/dashboardlayout";
 import { Calendar, calendarLoader, clockLoader, CreateJob, createjobAction, Dashboard, dashboardLoader, EditJob, editJobAction, InvoiceDetail, invoiceDetailLoader, InvoiceForm, invoiceFormLoader, Invoices, invoicesLoader, JobDetail, Jobs, jobsLoader, Locations, loginAction, ProfileScreen, Reports, Settings, signupAction, singleJobLoader, singleWorkerJobLoader, workerLoader, WorkerProfile, workerProfileLoader, Workers, workersLoader } from "../pages";
 import RootLayout from "@/layouts/RootLayout";
+import { NoActiveShift } from "@/components/ui/No_Active_Job";
 
 export const router = createBrowserRouter([
     {
@@ -116,7 +117,7 @@ export const router = createBrowserRouter([
                         element: <Dashboard />,
                     },
                     {
-                        path: "user/:id/worker-profile",
+                        path: "workers/:id/worker-profile",
                         element: <WorkerProfile />,
                     },
                     {
@@ -135,6 +136,7 @@ export const router = createBrowserRouter([
             }, {
                 path: "auth",
                 element: <AuthLayout />,
+                loader: authLoader(queryClient),
                 children: [
                     {
                         index: true,
@@ -151,7 +153,7 @@ export const router = createBrowserRouter([
             }, {
                 path: "worker",
                 element: <WorkerAppLayout />,
-                loader: dashboardLoader(queryClient),
+                loader: workerRouteLoader(queryClient),
                 errorElement: <ErrorElement />,
                 children: [
                     {
@@ -182,7 +184,7 @@ export const router = createBrowserRouter([
                         element: <ScheduleScreen />
                     },
                     {
-                        path: "job/:id",
+                        path: "jobs/:id",
                         element: <JobDetailScreen />,
                         loader: singleWorkerJobLoader,
                         errorElement: <ErrorElement />,
@@ -194,6 +196,9 @@ export const router = createBrowserRouter([
                         loader: clockLoader,
                         errorElement: <ErrorElement />,
 
+                    }, {
+                        path: "clock/no-active-job",
+                        element: <NoActiveShift />
                     },
                     {
                         path: "*",

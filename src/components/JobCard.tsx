@@ -44,7 +44,7 @@ export default function JobCard({
     }
 
     return (
-        <div onClick={() => navigate(`/worker/job/${job._id}`)}
+        <div onClick={() => navigate(`/worker/jobs/${job._id}`)}
             className="bg-white rounded-2xl border border-[#E2E8F0] overflow-hidden shadow-sm hover:shadow-md hover:border-slate-300 transition-all cursor-pointer"
         >
             {/* Accent stripe */}

@@ -41,7 +41,9 @@ export const defaultNotificationPreferences: NotificationPreferences = {
   push: true,
   sms: false,
 };
-export type CreateJobForm = z.infer<typeof createJobSchema>;
+export type CreateJobForm = z.infer<typeof createJobSchema> & {
+
+};
 // Payload shape sent to the API (post-transform: no empty-string gender).
 export type EditProfileForm = z.output<typeof editProfileSchema>;
 // Shape react-hook-form works with (pre-transform: gender can be "" from the placeholder option).

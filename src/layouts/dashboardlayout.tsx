@@ -35,13 +35,19 @@ type Page =
 
 export const loader = (queryClient: QueryClient) => async ({ request: _request }: LoaderFunctionArgs) => {
     try {
-        return await queryClient.ensureQueryData(userQuery)
+        const { user } = await queryClient.ensureQueryData(userQuery) ;
+        // alert(user.role)
+        console.log("user role :",user.role)
+        if (user.role == "worker") {
+            return redirect("/worker")
+        }
+        return
     } catch (error) {
         // toast.error("fail to login you in try again later")
         return redirect(`/auth`)
     }
 }
-const userQuery = {
+export const userQuery = {
     queryKey: ["user"],
     queryFn: async () => {
         const { data } = await customFetch.get<{ user: iUser }>("/users/current-user");
@@ -70,7 +76,7 @@ export default function DashboardLayout() {
         query: "(min-width: 1024px)",
     });
     const { data } = useQuery(userQuery)
-    const user = data?.user  as iUser
+    const user = data?.user as iUser
     return (
         <>
             <ScrollToTop />

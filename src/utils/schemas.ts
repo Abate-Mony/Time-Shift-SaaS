@@ -1,6 +1,10 @@
 import { z } from "zod"
-
+const breakSchema = z.object({
+    startedAt: z.coerce.date(),
+    endedAt: z.coerce.date().optional(),
+});
 export const workerSchema = z.object({
+    breaks: z.array(breakSchema).default([]),
     user: z.string().min(1, "User is required"),
 
     fullname: z
@@ -69,6 +73,7 @@ export const workerSchema = z.object({
     totalPay: z
         .number()
         .default(0),
+
 });
 
 export type Worker = z.infer<typeof workerSchema>;

@@ -115,6 +115,89 @@ export const loader = (queryClient: QueryClient) => async ({ request }: LoaderFu
   })
 
 }
+const SelectedWorkerCard = ({ selectedWorker, setSelected, users, scope, workerJobs }: {
+  selectedWorker: iUser,
+  setSelected: any
+  users: iUser[],
+  scope: any,
+  workerJobs?: any[]
+}) => {
+  return (
+    <motion.div
+      key={selectedWorker.email}
+      ref={scope}
+      initial={{ opacity: 0, y: 100 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="w-full sm:w-80 shrink-0  ">
+      <Card className="p-5 relative md:sticky sm:top-19">
+        <div className="flex items-start justify-between mb-4">
+          <Avatar initials={selectedWorker?.fullname?.slice(0, 2)} size="xl" index={users.findIndex(w => w._id === selectedWorker._id)} />
+          <button onClick={() => setSelected(null)} className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-100 transition-colors">
+            <X size={14} />
+          </button>
+        </div>
+
+        <h2 className="text-base font-semibold text-slate-900">{selectedWorker.fullname}</h2>
+        <p className="text-sm text-slate-500 mt-0.5">{selectedWorker.role ?? "role"}</p>
+        <div className="mt-2"><StatusBadge status={"status"} /></div>
+
+        <div className="mt-4 flex flex-row sm:flex-col gap-2.5">
+          <div className="flex items-center gap-2.5 text-sm text-slate-600">
+            <Mail size={13} className="text-slate-400 shrink-0" />
+            {selectedWorker.email}
+          </div>
+          <div className="flex items-center gap-2.5 text-sm text-slate-600">
+            <Phone size={13} className="text-slate-400 shrink-0" />
+            {"phone number"}
+          </div>
+        </div>
+
+        <div className="mt-5 pt-4 border-t border-[#F1F5F9] grid grid-cols-3 gap-3 text-center">
+          <div>
+            <p className="text-lg font-bold text-slate-900">{selectedWorker.hoursThisWeek}</p>
+            <p className="text-[10px] text-slate-400 mt-0.5">hrs/week</p>
+          </div>
+          <div>
+            <p className="text-lg font-bold text-slate-900">{selectedWorker.jobsCompleted}</p>
+            <p className="text-[10px] text-slate-400 mt-0.5">jobs done</p>
+          </div>
+          <div className='hidden'>
+            <p className="text-lg font-bold text-amber-600">{"selectedWorker.rating"}</p>
+            <p className="text-[10px] text-slate-400 mt-0.5">rating</p>
+          </div>
+        </div>
+
+        <div className=''>
+          <div className="mt-4 pt-4 border-t border-[#F1F5F9] ">
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Assigned Jobs</p>
+            {workerJobs?.length === 0 ? (
+              <p className="text-xs text-slate-400 text-center py-2">No jobs assigned</p>
+            ) : (
+              <div className="flex flex-col gap-2">
+                {workerJobs?.slice(0, 4).map(job => (
+                  <div key={job.id} className="flex items-center justify-between gap-2">
+                    <p className="text-xs text-slate-700 font-medium truncate">{job.name}</p>
+                    <StatusBadge status={job.status} />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="mt-4 flex flex-row sm:flex-col gap-2">
+            <Link to={`/workers/${selectedWorker._id}/worker-profile`} className='w-full'>
+              <Button size="sm" className="w-full"
+              >View Full Profile</Button>
+            </Link>
+            <Link to={"/create-job"} className='w-full'>
+              <Button variant="outline" size="sm" className="w-full">Assign to Job</Button>
+            </Link>
+          </div>
+        </div>
+      </Card>
+    </motion.div>
+  )
+}
 export const createWorkerSchema = z.object({
   fullname: z.string().min(3, "Full name must be at least 3 characters"),
   email: z.string().email("Please enter a valid email address"),
@@ -290,9 +373,9 @@ export default function CreateWorkerForm({
     </form>
   );
 }
-interface iUser extends User{
-    hoursThisWeek: number,
-      jobsCompleted: number
+interface iUser extends User {
+  hoursThisWeek: number,
+  jobsCompleted: number
 }
 export function Workers() {
 
@@ -307,16 +390,19 @@ export function Workers() {
   const { users, nHits } = useQuery(workersQuery(searchValues)).data as {
     users: iUser[], nHits: number
   }
-  console.log("users : ", users)
   const selectedWorker = users.find(w => w._id === selected)
   const workerJobs = selectedWorker ? jobs.filter(j => j.workers.includes(selectedWorker._id)) : []
   const [open, setOpen] = useState(false)
+  const [open_small_device, setOpenSmallDevice] = useState(false)
   const isDesktop = useMediaQuery({ minWidth: 768 })
   const buttonRef = useRef<any>(null)
   const [scope, animate] = useAnimate();
   useEffect(() => {
     animate(scope.current, { x: [20, 0] }, { duration: 0.25 });
   }, [selectedWorker?.email]);
+  useEffect(() => {
+    setOpenSmallDevice(selectedWorker != null)
+  }, [selectedWorker])
   return (
     <div className="p-6 animate-fade-in">
       {/* add new user modal here  */}
@@ -359,6 +445,28 @@ export function Workers() {
 
       }
       {/* add new use modal ends here  */}
+      {/* view worker drawer on small screen  */}
+      <Drawer open={open_small_device && !isDesktop} onOpenChange={setOpenSmallDevice} >
+
+        <DrawerContent className='sm:hidden py-0 '>
+          {selectedWorker && (
+            <SelectedWorkerCard
+              scope={scope}
+              selectedWorker={selectedWorker}
+              users={users}
+              setSelected={setSelected}
+              workerJobs={workerJobs}
+            />
+          )}
+          <DrawerFooter className="pt-2">
+            <DrawerClose asChild>
+              <Button variant="outline">Cancel</Button>
+            </DrawerClose>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
+
+      {/* view worker drawer on small screen ends here  */}
       <div className="flex items-start justify-between mb-6">
         <div>
           <h1 className="text-xl font-semibold text-slate-900 tracking-tight">Workers</h1>
@@ -385,7 +493,11 @@ export function Workers() {
               {users.map((worker, i) => (
                 <Card
                   key={worker._id}
-                  onClick={() => setSelected(selected === worker._id ? null : worker._id)}
+                  onClick={() => {
+                    const nextSelected = selected === worker._id ? null : worker._id;
+                    setSelected(nextSelected);
+                    setOpenSmallDevice(nextSelected !== null ? true : false);
+                  }}
                   className={`p-4 transition-all ${selected === worker._id ? 'border-blue-300 ring-1 ring-blue-200' : ''}`}
                 >
                   <div className={cn("flex items-center gap-4",
@@ -424,79 +536,19 @@ export function Workers() {
               ))}
             </div>
           </div>
+          <div className='hidden sm:block'>
 
+            {selectedWorker && (
+              <SelectedWorkerCard
+                scope={scope}
+                selectedWorker={selectedWorker}
+                users={users}
+                setSelected={setSelected}
+                workerJobs={workerJobs}
+              />
+            )}
+          </div>
           {/* Worker detail panel */}
-          {selectedWorker && (
-            <motion.div
-              key={selectedWorker.email}
-              ref={scope}
-              initial={{ opacity: 0, y: 100 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="w-80 shrink-0 ">
-              <Card className="p-5 sticky top-19">
-                <div className="flex items-start justify-between mb-4">
-                  <Avatar initials={selectedWorker?.fullname?.slice(0, 2)} size="xl" index={users.findIndex(w => w._id === selectedWorker._id)} />
-                  <button onClick={() => setSelected(null)} className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-100 transition-colors">
-                    <X size={14} />
-                  </button>
-                </div>
-
-                <h2 className="text-base font-semibold text-slate-900">{selectedWorker.fullname}</h2>
-                <p className="text-sm text-slate-500 mt-0.5">{selectedWorker.role ?? "role"}</p>
-                <div className="mt-2"><StatusBadge status={"status"} /></div>
-
-                <div className="mt-4 flex flex-col gap-2.5">
-                  <div className="flex items-center gap-2.5 text-sm text-slate-600">
-                    <Mail size={13} className="text-slate-400 shrink-0" />
-                    {selectedWorker.email}
-                  </div>
-                  <div className="flex items-center gap-2.5 text-sm text-slate-600">
-                    <Phone size={13} className="text-slate-400 shrink-0" />
-                    {"phone number"}
-                  </div>
-                </div>
-
-                <div className="mt-5 pt-4 border-t border-[#F1F5F9] grid grid-cols-3 gap-3 text-center">
-                  <div>
-                    <p className="text-lg font-bold text-slate-900">{selectedWorker.hoursThisWeek}</p>
-                    <p className="text-[10px] text-slate-400 mt-0.5">hrs/week</p>
-                  </div>
-                  <div>
-                    <p className="text-lg font-bold text-slate-900">{selectedWorker.jobsCompleted}</p>
-                    <p className="text-[10px] text-slate-400 mt-0.5">jobs done</p>
-                  </div>
-                  <div className='hidden'>
-                    <p className="text-lg font-bold text-amber-600">{"selectedWorker.rating"}</p>
-                    <p className="text-[10px] text-slate-400 mt-0.5">rating</p>
-                  </div>
-                </div>
-
-                <div className="mt-4 pt-4 border-t border-[#F1F5F9]">
-                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Assigned Jobs</p>
-                  {workerJobs.length === 0 ? (
-                    <p className="text-xs text-slate-400 text-center py-2">No jobs assigned</p>
-                  ) : (
-                    <div className="flex flex-col gap-2">
-                      {workerJobs.slice(0, 4).map(job => (
-                        <div key={job.id} className="flex items-center justify-between gap-2">
-                          <p className="text-xs text-slate-700 font-medium truncate">{job.name}</p>
-                          <StatusBadge status={job.status} />
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                <div className="mt-4 flex flex-col gap-2">
-                  <Link to={`/user/${selectedWorker._id}/worker-profile`}>
-                    <Button size="sm" className="w-full"
-                    >View Full Profile</Button>
-                    <Button variant="outline" size="sm" className="w-full">Assign to Job</Button>
-                  </Link>
-                </div>
-              </Card>
-            </motion.div>
-          )}
         </AnimatePresence>
       </div>
     </div>

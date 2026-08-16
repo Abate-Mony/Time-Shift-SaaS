@@ -1,8 +1,8 @@
 import BottomNav from '@/components/ui/BottomNav'
 import customFetch from '@/utils/customFetch'
 import ScrollToTop from '@/utils/scroll-to-top'
-import { useQuery } from '@tanstack/react-query'
-import { Outlet, useLocation, useNavigation } from 'react-router'
+import { QueryClient, useQuery } from '@tanstack/react-query'
+import { Outlet, redirect, useLocation, useNavigation } from 'react-router'
 
 // // ─── Types ──────────────────────────────────────────────────────────────────
 // type WorkerTab = '/' | 'jobs' | 'clock' | 'schedule' | 'profile'
@@ -107,6 +107,18 @@ const userQuery = {
 
   }
 }
+
+
+// guards/workerLoader.ts
+export const workerRouteLoader = (queryClient: QueryClient) => async () => {
+  try {
+    const { user } = await queryClient.ensureQueryData(userQuery);
+    if (user.role !== "worker") return redirect("/");
+    return null;
+  } catch {
+    return redirect("/auth");
+  }
+};
 // ─── Root ──────────────────────────────────────────────────────────────────────
 export function WorkerAppLayout() {
 

@@ -1,19 +1,24 @@
 import GradientBorder from "@/components/ui/gradient-border"
-import { NoActiveShift } from "@/components/ui/No_Active_Job"
 import { queryClient } from "@/lib/queryClient"
-import { changeWorkerJobStaus } from "@/utils/api-request-functions"
+import { changeWorkerJobStaus, endWorkerBreak, startWorkerBreak } from "@/utils/api-request-functions"
 import customFetch from "@/utils/customFetch"
 import type { CreateJobForm } from "@/utils/types"
 import { useQuery } from "@tanstack/react-query"
 import dayjs from "dayjs"
 import { AnimatePresence, motion } from "framer-motion"
-import { Briefcase, Camera, CheckCircle2, ChevronLeft, Coffee, FileText, MapPin, Play, RotateCcw, Square } from "lucide-react"
-import { useEffect, useRef, useState } from "react"
-type ClockState = 'idle' | 'working' | 'break' | 'done' | "in-progress"
+import { Briefcase, Camera, CheckCircle2, Coffee, FileText, Loader2, MapPin, RotateCcw, Square } from "lucide-react"
+import { useEffect, useState } from "react"
+import { redirect } from "react-router"
+type ClockState = 'working' | 'break' | 'done'
 
 export const loader = async () => {
   // await wait()
-  return await queryClient.ensureQueryData(activeWorkerJob())
+  const { job } = await queryClient.ensureQueryData(activeWorkerJob())
+  if (job === null) {
+    console.log("active-job : ",job)
+    return redirect("/worker/clock/no-active-job")
+  }
+  return job
 }
 function fmtTime(s: number) {
   const h = Math.floor(s / 3600)
@@ -66,6 +71,10 @@ const activeWorkerJob = () => {
     }
   })
 }
+interface WorkerBreak {
+  startedAt: string
+  endedAt?: string | null
+}
 interface workerJobWithDetails extends CreateJobForm {
   workerJobDetails: {
     workerStatus: "pending" |
@@ -79,27 +88,24 @@ interface workerJobWithDetails extends CreateJobForm {
     declinedAt: string,
     checkedInAt: string,
     completedAt: string,
+    // TODO(backend): not yet returned by GET /workers/active-job — add the
+    // assignment's `breaks` array here so the clock screen can tell whether
+    // the worker is currently on a break after a remount/refetch.
+    breaks?: WorkerBreak[],
   }
 }
 export default function ClockScreen() {
 
-
-
   const job = useQuery(activeWorkerJob()).data?.job as workerJobWithDetails
-  // bug here 
-  if (job == null) {
-    return (<NoActiveShift />)
-  }
 
   const onFinish = () => changeWorkerJobStaus(job._id!, "completed")
   const workerJobDetails = job?.workerJobDetails ?? {}
-  const start = dayjs(workerJobDetails.checkedInAt);
-  const now = dayjs(dayjs(new Date()));
-  const seconds = now.diff(start, "second");
-  const today = dayjs().format("YYYY-MM-DD");
+  const breaksList = workerJobDetails.breaks ?? []
+  const openBreak = breaksList.find(b => !b.endedAt)
 
-  const scheduledStart = dayjs(`${today} ${job.startTime}`);
-  let scheduledEnd = dayjs(`${today} ${job.endTime}`);
+  const today = dayjs().format("YYYY-MM-DD");
+  const scheduledStart = dayjs(`${today} ${job?.startTime}`);
+  let scheduledEnd = dayjs(`${today} ${job?.endTime}`);
 
   // Handle overnight shifts
   if (scheduledEnd.isBefore(scheduledStart)) {
@@ -107,52 +113,60 @@ export default function ClockScreen() {
   }
 
   const totalSeconds = scheduledEnd.diff(scheduledStart, "second");
-  const elapsedSeconds = now.diff(start, "second");
+
+  const [note, setNote] = useState('')
+  const [showNote, setShowNote] = useState(false)
+  const [isBreakActionLoading, setIsBreakActionLoading] = useState(false)
+  // Snapshot of the counters at the moment the shift is finished, so the
+  // summary screen stops ticking once the job is done.
+  const [doneSnapshot, setDoneSnapshot] = useState<{ elapsedSeconds: number; breakSeconds: number; breaksTaken: number } | null>(null)
+
+  // A 1s heartbeat so elapsed/break time re-derive from real timestamps every
+  // tick, instead of being tracked as counters that reset on remount.
+  const [, forceTick] = useState(0)
+  useEffect(() => {
+    const id = setInterval(() => forceTick(t => t + 1), 1000)
+    return () => clearInterval(id)
+  }, [])
+
+  const now = dayjs()
+  const checkedInAt = dayjs(workerJobDetails.checkedInAt)
+  const elapsedSeconds = Math.max(now.diff(checkedInAt, "second"), 0)
+  const breakSeconds = breaksList.reduce((total, b) => {
+    const breakStart = dayjs(b.startedAt)
+    const breakEnd = b.endedAt ? dayjs(b.endedAt) : now
+    return total + Math.max(breakEnd.diff(breakStart, "second"), 0)
+  }, 0)
+  const currentBreakSeconds = openBreak ? Math.max(now.diff(dayjs(openBreak.startedAt), "second"), 0) : 0
 
   const progress = Math.min(
     Math.max((elapsedSeconds / totalSeconds) * 100, 0),
     100
   );
-  const [clockState, setClockState] = useState<ClockState>('in-progress')
-  const [elapsed, setElapsed] = useState(seconds)
-  const [breakTime, setBreakTime] = useState(0)
-  const [breaks, setBreaks] = useState(0)
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const [note, setNote] = useState('')
-  const [showNote, setShowNote] = useState(false)
-  const startWork = () => {
-    timerRef.current = setInterval(() => setElapsed(s => s + 1), 1000)
-    setClockState('working')
+  const clockState: ClockState = doneSnapshot ? 'done' : openBreak ? 'break' : 'working'
+
+  const startBreak = async () => {
+    setIsBreakActionLoading(true)
+    await startWorkerBreak(job._id!)
+    setIsBreakActionLoading(false)
   }
 
-  const startBreak = () => {
-    if (timerRef.current) clearInterval(timerRef.current)
-    timerRef.current = setInterval(() => setBreakTime(s => s + 1), 1000)
-    setBreaks(b => b + 1)
-    setClockState('break')
-  }
-
-  const endBreak = () => {
-    if (timerRef.current) clearInterval(timerRef.current)
-    timerRef.current = setInterval(() => setElapsed(s => s + 1), 1000)
-    setClockState('working')
+  const endBreak = async () => {
+    setIsBreakActionLoading(true)
+    await endWorkerBreak(job._id!)
+    setIsBreakActionLoading(false)
   }
 
   const finish = () => {
-    if (timerRef.current) clearInterval(timerRef.current)
-    setClockState('done')
+    setDoneSnapshot({ elapsedSeconds, breakSeconds, breaksTaken: breaksList.length })
     onFinish()
   }
 
   useEffect(() => {
-    startWork()
-    return () => { if (timerRef.current) clearInterval(timerRef.current) }
-  }, [])
-
-  useEffect(() => {
-    if (progress > 99) {
+    if (progress > 99 && !doneSnapshot) {
       finish()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [progress])
 
 
@@ -176,9 +190,9 @@ export default function ClockScreen() {
           <div className="p-5">
             <div className="grid grid-cols-3 gap-3 mb-4">
               {[
-                { label: 'Total Time', value: fmtHours(elapsed) },
-                { label: 'Break Time', value: fmtHours(breakTime) },
-                { label: 'Breaks Taken', value: breaks },
+                { label: 'Total Time', value: fmtHours(doneSnapshot!.elapsedSeconds) },
+                { label: 'Break Time', value: fmtHours(doneSnapshot!.breakSeconds) },
+                { label: 'Breaks Taken', value: doneSnapshot!.breaksTaken },
               ].map(s => (
                 <div key={s.label} className="bg-slate-50 rounded-xl p-3 text-center border border-slate-100">
                   <p className="text-base font-bold text-slate-900">{s.value}</p>
@@ -229,12 +243,6 @@ export default function ClockScreen() {
 
   return (
     <div className="flex flex-col gap-4 pb-4 animate-fade-in">
-      {clockState === 'idle' && (
-        <button className="flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors">
-          <ChevronLeft size={16} /> Back
-        </button>
-      )}
-
       {/* Job context */}
       {job && (
         <div className="bg-white rounded-2xl border border-[#E2E8F0] px-4 py-3.5 flex items-center gap-3 shadow-sm">
@@ -288,26 +296,23 @@ export default function ClockScreen() {
                   <p className="text-xs font-semibold text-amber-400/80 uppercase tracking-widest">On Break</p>
                 </>
               )}
-              {clockState === 'idle' && (
-                <p className="text-xs font-semibold text-white/30 uppercase tracking-widest">Ready to Start</p>
-              )}
             </div>
 
             {/* Main timer */}
             <p className="text-6xl font-bold text-white mono tracking-tighter mb-1" style={{ fontVariantNumeric: 'tabular-nums' }}>
-              <AnimatedDigits value={fmtTime(clockState == "working" ? elapsed : breaks).h} />:
-              <AnimatedDigits value={fmtTime(clockState == "working" ? elapsed : breaks).m} />:
-              <AnimatedDigits value={fmtTime(clockState == "working" ? elapsed : breaks).s} />
+              <AnimatedDigits value={fmtTime(clockState == "working" ? elapsedSeconds : currentBreakSeconds).h} />:
+              <AnimatedDigits value={fmtTime(clockState == "working" ? elapsedSeconds : currentBreakSeconds).m} />:
+              <AnimatedDigits value={fmtTime(clockState == "working" ? elapsedSeconds : currentBreakSeconds).s} />
             </p>
             <p className="text-xs text-white/25 font-medium">
               {clockState === 'break' ? 'break duration' : 'time elapsed'}
             </p>
 
             {/* Break info */}
-            {clockState === 'working' && breakTime > 0 && (
+            {clockState === 'working' && breakSeconds > 0 && (
               <div className="mt-4 inline-flex items-center gap-2 bg-white/5 rounded-full px-4 py-1.5">
                 <Coffee size={12} className="text-white/40" />
-                <p className="text-xs text-white/40">Break: {fmtHours(breakTime)} · {breaks} taken</p>
+                <p className="text-xs text-white/40">Break: {fmtHours(breakSeconds)} · {breaksList.length} taken</p>
               </div>
             )}
 
@@ -322,27 +327,14 @@ export default function ClockScreen() {
         </div>
       </GradientBorder>
       {/* Controls */}
-      {clockState === 'idle' && (
-        <button
-          onClick={startWork}
-          className="w-full h-16 rounded-2xl bg-emerald-500 text-white text-lg font-bold hover:bg-emerald-600 active:scale-[0.97] transition-all flex items-center justify-center gap-3 shadow-lg shadow-emerald-500/30"
-        >
-          <div
-            // onClick={onInProgress}
-            className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
-            <Play size={20} fill="currentColor" />
-          </div>
-          Start Work
-        </button>
-      )}
-
       {clockState === 'working' && (
         <div className="grid grid-cols-2 gap-3">
           <button
             onClick={startBreak}
-            className="h-14 rounded-2xl bg-amber-50 border border-amber-200 text-amber-700 text-sm font-bold hover:bg-amber-100 active:scale-[0.97] transition-all flex items-center justify-center gap-2"
+            disabled={isBreakActionLoading}
+            className="h-14 rounded-2xl bg-amber-50 border border-amber-200 text-amber-700 text-sm font-bold hover:bg-amber-100 active:scale-[0.97] transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            <Coffee size={16} /> Take Break
+            {isBreakActionLoading ? <Loader2 size={16} className="animate-spin" /> : <Coffee size={16} />} Take Break
           </button>
           <button
             onClick={finish}
@@ -357,9 +349,10 @@ export default function ClockScreen() {
         <div className="flex flex-col gap-3">
           <button
             onClick={endBreak}
-            className="w-full h-14 rounded-2xl bg-emerald-500 text-white text-sm font-bold hover:bg-emerald-600 active:scale-[0.97] transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25"
+            disabled={isBreakActionLoading}
+            className="w-full h-14 rounded-2xl bg-emerald-500 text-white text-sm font-bold hover:bg-emerald-600 active:scale-[0.97] transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25 disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            <RotateCcw size={16} /> Resume Work
+            {isBreakActionLoading ? <Loader2 size={16} className="animate-spin" /> : <RotateCcw size={16} />} Resume Work
           </button>
           <button
             onClick={finish}
@@ -375,7 +368,7 @@ export default function ClockScreen() {
         <div className="grid grid-cols-3 gap-3 mt-1">
           {[
             { label: 'Clocked In', value: dayjs(job?.workerJobDetails?.checkedInAt).format("HH:mm") ?? '--:--' },
-            { label: 'Billable', value: fmtHours(elapsed - breakTime) },
+            { label: 'Billable', value: fmtHours(elapsedSeconds - breakSeconds) },
             { label: 'Est. Finish', value: job?.endTime ?? '--:--' },
           ].map(s => (
             <div key={s.label} className="bg-white rounded-xl border border-[#E2E8F0] p-3 text-center shadow-sm">

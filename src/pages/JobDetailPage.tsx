@@ -54,6 +54,7 @@ const workerTimeLogs: Record<string, { clockIn: string; clockOut: string | null;
 import type { LucideIcon } from "lucide-react"
 import type { ActivityType } from '@/utils/types'
 import { cn } from '@/lib/utils'
+import { getInitials } from '@/utils/getInitials'
 
 export const recordFormatUI: Record<ActivityType, { icon: LucideIcon; className: string; label: string }> = {
     // ── Job lifecycle ──────────────────────────────────────────────
@@ -107,7 +108,7 @@ function describeActivity(entry: ActivityLogEntry): React.ReactNode {
 
     return (
         <div className='relative  ml-2 -mb-px'>
-                <span className="absolute h-full w-px bg-slate-200 left-1.5 top-0"></span>
+            <span className="absolute h-full w-px bg-slate-200 left-1.5 top-0"></span>
             <span className='flex items-center space-x-1.5  py-4 '>
                 <span className={cn("size-4 relative z-10 rounded-full flex items-center justify-center shadow-sm", ui.className)}>
                     <ui.icon className={cn(
@@ -118,7 +119,7 @@ function describeActivity(entry: ActivityLogEntry): React.ReactNode {
                     ></ui.icon>
 
                 </span>
-                
+
                 <span className="font-semibold text-slate-900">{subject} </span>{" "}
                 <span className="text-slate-600">{ui?.label ?? type}</span>
             </span>
@@ -156,7 +157,6 @@ export function JobDetail() {
     console.log(job.workers)
     return (
         <div className="p-6 animate-fade-in">
-            {JSON.stringify(data ?? {})}
             {/* Breadcrumb */}
             <div className="flex items-center gap-2 mb-5">
                 <button
@@ -315,10 +315,10 @@ export function JobDetail() {
                                         <div
                                             key={w.email}
                                             className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-4 px-5 py-3.5 items-center hover:bg-slate-50/50 transition-colors cursor-pointer"
-                                            onClick={() => onNavigate(`/user/${w.job}/worker-profile`)}
+                                            onClick={() => onNavigate(`/workers/${w.job}/worker-profile`)}
                                         >
                                             <div className="flex items-center gap-2.5">
-                                                <Avatar initials={w.fullname?.[0]} size="sm" index={i} />
+                                                <Avatar initials={getInitials(w.fullname)} size="sm" index={i} />
                                                 <div>
                                                     <p className="text-sm font-medium text-slate-800">{w.fullname}</p>
                                                     <p className="text-[10px] text-slate-400">{"worker"}</p>
@@ -331,7 +331,10 @@ export function JobDetail() {
                                                     : <span className="flex items-center gap-1 text-xs text-blue-600 font-semibold"><span className="w-1.5 h-1.5 bg-blue-500 rounded-full pulse-dot" />Live</span>
                                                 }
                                             </div>
-                                            <p className="text-xs text-slate-500 mono">{"log.break"}</p>
+                                            <p className="text-xs text-slate-500 mono">{
+                                                // w. todo{}
+                                                w.breaks.length
+                                                }</p>
                                             <p className="text-xs font-semibold text-emerald-700 mono">{w.payRate || "£14/ph"}</p>
                                         </div>
                                     )
@@ -365,7 +368,7 @@ export function JobDetail() {
                             {
                                 data?.activity?.map((entry: typeof activityLog[number], i: number) => (
                                     <div key={i} className="">
-                              
+
                                         <div className="flex-1 min-w-0 pt-px">
                                             <p className="text-sm text-slate-700 leading-snug">{describeActivity(entry)}</p>
                                         </div>
