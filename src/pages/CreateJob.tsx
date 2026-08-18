@@ -14,7 +14,7 @@ import { Calendar, Check, ChevronDown, ChevronLeft, Clock, MapPin, Paperclip, Re
 import { useState } from 'react'
 import { useForm } from "react-hook-form"
 import toast from 'react-hot-toast'
-import { Form, redirect, useLoaderData, useNavigate, type ActionFunctionArgs, type Params } from 'react-router'
+import { Form, redirect, useLoaderData, useNavigate, useNavigation, type ActionFunctionArgs, type Params } from 'react-router'
 import { Avatar, Input } from '../components/ui'
 import type { RecurringState } from '@/components/RecurringJobSection'
 import { mapRecurringStateToPayload } from '@/utils/mapRecurringStateToPayload'
@@ -119,6 +119,12 @@ export function CreateJob() {
   const [invoiceRates, setInvoiceRates] = useState<Record<string, number>>({})
   const navigate = useNavigate()
   const onNavigate = (path: string) => navigate(path)
+  const navigation = useNavigation()
+  // RHF's isSubmitting only covers client-side validation — it flips back to
+  // false as soon as `onValid` returns, before the actual POST /jobs (driven
+  // by <Form>'s own submission) resolves. Track that with navigation.state
+  // so the buttons stay disabled for the real request, not just validation.
+  const isFormSubmitting = navigation.state === 'submitting' || navigation.state === 'loading'
   const isEdit = false
   const [recurring, setRecurring] = useState<RecurringState>(() =>
     isEdit
@@ -573,11 +579,11 @@ export function CreateJob() {
           <Button type="button" variant="outline" onClick={() => onNavigate('jobs')}>
             Cancel
           </Button>
-          <Button type="submit" name="status-" value="draft" variant="secondary" disabled={isSubmitting}>
+          <Button type="submit" name="status-" value="draft" variant="secondary" disabled={isSubmitting || isFormSubmitting}>
             Save as Draft
           </Button>
-          <Button type="submit" name="status-" value="published" disabled={isSubmitting}>
-            Publish Job
+          <Button type="submit" name="status-" value="published" disabled={isSubmitting || isFormSubmitting}>
+            {isFormSubmitting ? 'Publishing…' : 'Publish Job'}
           </Button>
         </div>
       </Form>
