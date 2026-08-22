@@ -2,6 +2,7 @@ import GradientBorder from "@/components/ui/gradient-border"
 import { queryClient } from "@/lib/queryClient"
 import { changeWorkerJobStaus, endWorkerBreak, startWorkerBreak } from "@/utils/api-request-functions"
 import customFetch from "@/utils/customFetch"
+import { formatSecondsAsClock, formatSecondsAsDuration } from "@/utils/date"
 import type { CreateJobForm } from "@/utils/types"
 import { useQuery } from "@tanstack/react-query"
 import dayjs from "dayjs"
@@ -19,17 +20,6 @@ export const loader = async () => {
     return redirect("/worker/clock/no-active-job")
   }
   return job
-}
-function fmtTime(s: number) {
-  const h = Math.floor(s / 3600)
-  const m = Math.floor((s % 3600) / 60)
-  const sec = s % 60
-  return ({
-    h: String(h).padStart(2, '0'),
-    m: String(m).padStart(2, '0'),
-    s: String(sec).padStart(2, '0')
-  })
-  // return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`
 }
 
 function AnimatedDigits({ value }: { value: string }) {
@@ -56,12 +46,6 @@ function AnimatedDigits({ value }: { value: string }) {
   )
 }
 
-function fmtHours(s: number) {
-  const h = Math.floor(s / 3600)
-  const m = Math.floor((s % 3600) / 60)
-  if (h === 0) return `${m}m`
-  return m > 0 ? `${h}h ${m}m` : `${h}h`
-}
 const activeWorkerJob = () => {
   return ({
     queryKey: ["active-job"],
@@ -190,8 +174,8 @@ export default function ClockScreen() {
           <div className="p-5">
             <div className="grid grid-cols-3 gap-3 mb-4">
               {[
-                { label: 'Total Time', value: fmtHours(doneSnapshot!.elapsedSeconds) },
-                { label: 'Break Time', value: fmtHours(doneSnapshot!.breakSeconds) },
+                { label: 'Total Time', value: formatSecondsAsDuration(doneSnapshot!.elapsedSeconds) },
+                { label: 'Break Time', value: formatSecondsAsDuration(doneSnapshot!.breakSeconds) },
                 { label: 'Breaks Taken', value: doneSnapshot!.breaksTaken },
               ].map(s => (
                 <div key={s.label} className="bg-slate-50 rounded-xl p-3 text-center border border-slate-100">
@@ -300,9 +284,9 @@ export default function ClockScreen() {
 
             {/* Main timer */}
             <p className="text-6xl font-bold text-white mono tracking-tighter mb-1" style={{ fontVariantNumeric: 'tabular-nums' }}>
-              <AnimatedDigits value={fmtTime(clockState == "working" ? elapsedSeconds : currentBreakSeconds).h} />:
-              <AnimatedDigits value={fmtTime(clockState == "working" ? elapsedSeconds : currentBreakSeconds).m} />:
-              <AnimatedDigits value={fmtTime(clockState == "working" ? elapsedSeconds : currentBreakSeconds).s} />
+              <AnimatedDigits value={formatSecondsAsClock(clockState == "working" ? elapsedSeconds : currentBreakSeconds).h} />:
+              <AnimatedDigits value={formatSecondsAsClock(clockState == "working" ? elapsedSeconds : currentBreakSeconds).m} />:
+              <AnimatedDigits value={formatSecondsAsClock(clockState == "working" ? elapsedSeconds : currentBreakSeconds).s} />
             </p>
             <p className="text-xs text-white/25 font-medium">
               {clockState === 'break' ? 'break duration' : 'time elapsed'}
@@ -312,7 +296,7 @@ export default function ClockScreen() {
             {clockState === 'working' && breakSeconds > 0 && (
               <div className="mt-4 inline-flex items-center gap-2 bg-white/5 rounded-full px-4 py-1.5">
                 <Coffee size={12} className="text-white/40" />
-                <p className="text-xs text-white/40">Break: {fmtHours(breakSeconds)} · {breaksList.length} taken</p>
+                <p className="text-xs text-white/40">Break: {formatSecondsAsDuration(breakSeconds)} · {breaksList.length} taken</p>
               </div>
             )}
 
@@ -368,7 +352,7 @@ export default function ClockScreen() {
         <div className="grid grid-cols-3 gap-3 mt-1">
           {[
             { label: 'Clocked In', value: dayjs(job?.workerJobDetails?.checkedInAt).format("HH:mm") ?? '--:--' },
-            { label: 'Billable', value: fmtHours(elapsedSeconds - breakSeconds) },
+            { label: 'Billable', value: formatSecondsAsDuration(elapsedSeconds - breakSeconds) },
             { label: 'Est. Finish', value: job?.endTime ?? '--:--' },
           ].map(s => (
             <div key={s.label} className="bg-white rounded-xl border border-[#E2E8F0] p-3 text-center shadow-sm">

@@ -134,32 +134,15 @@ export const createJobSchema = z.object({
         .optional(),
     location: z
         .string()
-        .optional(),
-    hours: z.number().optional()
-
-    // siteName: z
-    //     .string()
-    //     .min(1, "Site name is required"),
-
-    // address: z
-    //     .string()
-    //     .min(1, "Address is required"),
-
-    // city: z
-    //     .string()
-    //     .min(1, "City is required"),
-
-    // postcode: z
-    //     .string()
-    //     .min(1, "Postcode is required"),
-
-    // country: z
-    //     .string()
-    //     .min(1, "Country is required"),
-
-    // latitude: z.number(),
-
-    // longitude: z.number(),
+        .min(1, "Location is required"),
+    address: z
+        .string()
+        .default(""),
+    coordinates: z.object({
+        lat: z.number(),
+        lng: z.number(),
+    }).optional(),
+    minutes: z.number().optional()
 });
 
 export const editProfileSchema = z.object({

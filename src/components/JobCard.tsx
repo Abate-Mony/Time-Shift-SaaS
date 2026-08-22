@@ -1,7 +1,9 @@
 import { changeWorkerJobStaus } from "@/utils/api-request-functions"
+import { formatDate, formatDuration } from "@/utils/date"
 import type { CreateJobForm } from "@/utils/types"
-import { AlertCircle, Check, Clock, Dot, Loader2, MapPin, Timer, X } from "lucide-react"
-import { useState } from "react"
+import { useShiftStartGate } from "@/hooks/useShiftStartGate"
+import { AlertCircle, CalendarDays, Check, Clock, Dot, Loader2, MapPin, Timer, X } from "lucide-react"
+import { useEffect, useState } from "react"
 import { useNavigate } from "react-router"
 import { StatusBadge } from "./ui"
 
@@ -23,23 +25,45 @@ export default function JobCard({
 
     const accent = statusColor[job.status || "completed"] ?? 'bg-slate-400'
     const navigate = useNavigate()
+    const { canStart, minutesUntilStart, hasExpired } = useShiftStartGate(job.date, job.startTime, job.endTime)
 
     const [loadingAction, setLoadingAction] = useState<'accept' | 'reject' | 'start' | null>(null)
+    const [actionError, setActionError] = useState<string | null>(null)
+    // Bumped on every new error so the countdown bar restarts even if the
+    // same error message fires twice in a row (key change forces a remount).
+    const [errorNonce, setErrorNonce] = useState(0)
+
+    const raiseError = (message: string) => {
+        setActionError(message)
+        setErrorNonce(n => n + 1)
+    }
+
+    useEffect(() => {
+        if (!actionError) return
+        const id = setTimeout(() => setActionError(null), 5000)
+        return () => clearTimeout(id)
+    }, [actionError, errorNonce])
 
     const onAccept = async () => {
         setLoadingAction('accept')
-        await changeWorkerJobStaus(job._id!, "accepted")
+        setActionError(null)
+        const result = await changeWorkerJobStaus(job._id!, "accepted")
+        if (!result.success) raiseError(result.message ?? "Couldn't accept this job. Try again.")
         setLoadingAction(null)
     }
 
     const onReject = async () => {
         setLoadingAction('reject')
-        await changeWorkerJobStaus(job._id!, "declined")
+        setActionError(null)
+        const result = await changeWorkerJobStaus(job._id!, "declined")
+        if (!result.success) raiseError(result.message ?? "Couldn't decline this job. Try again.")
         setLoadingAction(null)
     }
     const startWorking = async () => {
         setLoadingAction('start')
-        await changeWorkerJobStaus(job._id!, "in-progress")
+        setActionError(null)
+        const result = await changeWorkerJobStaus(job._id!, "in-progress")
+        if (!result.success) raiseError(result.message ?? "Couldn't start this job. Try again.")
         setLoadingAction(null)
     }
 
@@ -61,15 +85,21 @@ export default function JobCard({
                 <div className="grid grid-cols-2 gap-y-2 gap-x-3">
                     <div className="flex items-center gap-1.5 text-xs text-slate-500">
                         <div className="w-5 h-5 rounded-md bg-slate-50 flex items-center justify-center shrink-0">
+                            <CalendarDays size={11} className="text-slate-400" />
+                        </div>
+                        {formatDate(job.date, "ddd, D MMM")}
+                    </div>
+                    <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                        <div className="w-5 h-5 rounded-md bg-slate-50 flex items-center justify-center shrink-0">
                             <Clock size={11} className="text-slate-400" />
                         </div>
                         {job.startTime} – {job.endTime}
                     </div>
-                    <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                    <div className="flex items-center gap-1.5 text-xs text-slate-500 col-span-2">
                         <div className="w-5 h-5 rounded-md bg-slate-50 flex items-center justify-center shrink-0">
                             <Timer size={11} className="text-slate-400" />
                         </div>
-                        {job.startTime}h shift
+                        {formatDuration(job.minutes)} shift
                     </div>
                     <div className="flex items-center gap-1.5 text-xs text-slate-500 col-span-2">
                         <div className="w-5 h-5 rounded-md bg-slate-50 flex items-center justify-center shrink-0">
@@ -83,6 +113,18 @@ export default function JobCard({
                     <div className="mt-3 flex items-start gap-2 bg-amber-50 border border-amber-100 rounded-xl px-3 py-2">
                         <AlertCircle size={12} className="text-amber-500 shrink-0 mt-0.5" />
                         <p className="text-xs text-amber-700 leading-relaxed">{job.description}</p>
+                    </div>
+                )}
+
+                {actionError && (
+                    <div className="mt-3 rounded-xl bg-red-50 border border-red-100 overflow-hidden" onClick={e => e.stopPropagation()}>
+                        <div className="flex items-start gap-2 px-3 py-2">
+                            <AlertCircle size={12} className="text-red-500 shrink-0 mt-0.5" />
+                            <p className="text-xs text-red-600 leading-relaxed">{actionError}</p>
+                        </div>
+                        <div className="h-0.5 bg-red-100">
+                            <div key={errorNonce} className="h-full bg-red-400 animate-shrink-5s" />
+                        </div>
                     </div>
                 )}
 
@@ -120,18 +162,27 @@ export default function JobCard({
                     </button>
                 )}
                 {job.status === 'accepted' && (
-                    <button
-                        disabled={loadingAction !== null}
-                        onClick={e => {
-                            e.stopPropagation();
-                            e.preventDefault()
-                            // navigate(`/worker/clock/${job._id}`)
-                            startWorking()
-                        }}
-                        className="mt-4 w-full h-11 rounded-xl bg-[#1b7b3d] text-white text-sm font-bold hover:bg-[#13a166] active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-sm shadow-[#1E3A5F]/25 disabled:opacity-60 disabled:cursor-not-allowed"
-                    >
-                        {loadingAction === 'start' ? <Loader2 size={14} className="animate-spin" /> : <Timer size={14} />} Start Working Job
-                    </button>
+                    canStart ? (
+                        <button
+                            disabled={loadingAction !== null}
+                            onClick={e => {
+                                e.stopPropagation();
+                                e.preventDefault()
+                                startWorking()
+                            }}
+                            className="mt-4 w-full h-11 rounded-xl bg-[#1b7b3d] text-white text-sm font-bold hover:bg-[#13a166] active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-sm shadow-[#1E3A5F]/25 disabled:opacity-60 disabled:cursor-not-allowed"
+                        >
+                            {loadingAction === 'start' ? <Loader2 size={14} className="animate-spin" /> : <Timer size={14} />} Start Working Job
+                        </button>
+                    ) : (
+                        <div
+                            onClick={e => e.stopPropagation()}
+                            className="mt-4 w-full h-11 rounded-xl bg-slate-100 text-slate-500 text-sm font-semibold flex items-center justify-center gap-2 cursor-not-allowed"
+                        >
+                            <Timer size={14} className="text-slate-400" />
+                            {hasExpired ? "Shift window missed" : `Starts in ${formatDuration(minutesUntilStart ?? 0)}`}
+                        </div>
+                    )
                 )}
             </div>
         </div>

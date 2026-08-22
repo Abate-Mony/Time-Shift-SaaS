@@ -1,6 +1,6 @@
 import { claimOpenShift } from "@/utils/api-request-functions"
+import { formatDate, formatDuration } from "@/utils/date"
 import type { CreateJobForm } from "@/utils/types"
-import { format } from "date-fns"
 import { CalendarDays, Check, Clock, Loader2, MapPin, Timer } from "lucide-react"
 import { useState } from "react"
 
@@ -36,7 +36,7 @@ export default function OpenShiftCard({
             <div className="w-5 h-5 rounded-md bg-slate-50 flex items-center justify-center shrink-0">
               <CalendarDays size={11} className="text-slate-400" />
             </div>
-            {shift.date ? format(new Date(shift.date), "dd MMMM") : "Date TBC"}
+            {formatDate(shift.date, "dd MMMM")}
           </div>
           <div className="flex items-center gap-1.5 text-xs text-slate-500">
             <div className="w-5 h-5 rounded-md bg-slate-50 flex items-center justify-center shrink-0">
@@ -48,7 +48,7 @@ export default function OpenShiftCard({
             <div className="w-5 h-5 rounded-md bg-slate-50 flex items-center justify-center shrink-0">
               <Timer size={11} className="text-slate-400" />
             </div>
-            {shift.hours ? `${shift.hours}h shift` : "—"}
+            {shift.minutes ? `${formatDuration(shift.minutes)} shift` : "—"}
           </div>
           <div className="flex items-center gap-1.5 text-xs text-slate-500 col-span-2">
             <div className="w-5 h-5 rounded-md bg-slate-50 flex items-center justify-center shrink-0">

@@ -2,12 +2,12 @@ import { queryClient } from "@/lib/queryClient";
 import { isAxiosError } from "axios";
 import toast from "react-hot-toast";
 import customFetch from "./customFetch";
-import type { EditProfileForm, InvoiceStatus, NotificationPreferences } from "./types";
+import type { CreateJobForm, EditProfileForm, InvoiceStatus, NotificationPreferences } from "./types";
 
 export const changeWorkerJobStaus = async (
     jobId: string,
     status: "accepted" | "declined" | "in-progress" | "completed"
-) => {
+): Promise<{ success: boolean; message?: string }> => {
     try {
         // await wait()
         await customFetch.patch(`/workers/${jobId}/status`, {
@@ -26,7 +26,8 @@ export const changeWorkerJobStaus = async (
         await queryClient.invalidateQueries({
             queryKey: ["job", jobId],
         });
-        await queryClient.invalidateQueries({ queryKey: ["worker-stats"]})
+        await queryClient.invalidateQueries({ queryKey: ["worker-stats"] })
+        return { success: true };
     } catch (err) {
         const message =
             isAxiosError(err)
@@ -38,6 +39,7 @@ export const changeWorkerJobStaus = async (
                     : "Something went wrong.";
 
         toast.error(message);
+        return { success: false, message };
     }
 };
 
@@ -187,3 +189,6 @@ export const updateNotificationPreferences = async (
         toast.error(message);
     }
 };
+export const duplicateJob = async (id: string) => {
+    return await customFetch.post(`/jobs/duplicate-job/${id}`)
+}

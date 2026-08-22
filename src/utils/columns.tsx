@@ -1,5 +1,4 @@
 import type { ColumnDef } from "@tanstack/react-table"
-import { format } from "date-fns"
 import { ArrowUpDown, Clock, MapPin, MoreHorizontal, Users } from "lucide-react"
 import { Link } from "react-router"
 
@@ -19,6 +18,9 @@ import toast from "react-hot-toast"
 import { AnimatedTooltip } from "@/components/ui/animated-tooltip"
 import { Checkbox } from "@/components/ui/checkbox"
 import { formatCurrency } from "./format"
+import { formatDate, formatDuration } from "./date"
+import { duplicateJob } from "./api-request-functions"
+import { useMutation } from "@tanstack/react-query"
 
 const STATUS_STYLES: Record<string, string> = {
   draft: "bg-slate-100 text-slate-600",
@@ -84,7 +86,7 @@ export const jobsColumns: ColumnDef<CreateJobForm>[] = [
     ),
   },
 
-  
+
   {
     accessorKey: "title",
     header: ({ column }) => (
@@ -135,14 +137,12 @@ export const jobsColumns: ColumnDef<CreateJobForm>[] = [
       </Button>
     ),
     cell: ({ row }) => {
-      const { date, startTime, endTime, hours } = row.original
+      const { date, startTime, endTime, minutes } = row.original
 
-      const hour = Math.floor(hours || 0) < 1 ? 0 : Math.floor(hours || 0)
-      const min = Math.floor(((hours || 0) - hour) * 60)
       return (
         <div className="min-w-32.5">
           <p className="text-sm font-medium text-slate-800">
-            {format(new Date(date), "dd MMMM")}
+            {formatDate(date, "dd MMMM")}
           </p>
           <div className="flex items-center gap-1 text-xs text-slate-500 mt-0.5">
             <Clock className="h-3 w-3" />
@@ -150,7 +150,7 @@ export const jobsColumns: ColumnDef<CreateJobForm>[] = [
           </div>
           <p className="text-[0.6rem] hidden tracking-wide text-blue-700/60 italic">
             <span className="font-semibold">
-              {hour}h-{min}m shift
+              {formatDuration(minutes)} shift
             </span>
           </p>
         </div>
@@ -173,7 +173,7 @@ export const jobsColumns: ColumnDef<CreateJobForm>[] = [
           </span>
         )
       }
-      console.log("workers : ",workers.slice(0,5))
+      // console.log("workers : ", workers.slice(0, 5))
 
       return (
         <div className="flex items-center">
@@ -216,7 +216,23 @@ export const jobsColumns: ColumnDef<CreateJobForm>[] = [
     enableSorting: false,
     cell: ({ row }) => {
       const job = row.original
+      const duplicateJobMutation = useMutation({
+        mutationFn: duplicateJob,
 
+        onSuccess: () => {
+          queryClient.invalidateQueries({
+            queryKey: ["jobs"],
+          });
+
+          toast.success("Job duplicated successfully");
+        },
+
+        onError: (error) => {
+          console.error(error);
+
+          toast.error("Failed to duplicate job");
+        },
+      });
       const deleteJob = async () => {
         try {
           await customFetch.delete(`/jobs/${job._id}`)
@@ -244,7 +260,17 @@ export const jobsColumns: ColumnDef<CreateJobForm>[] = [
               <Link to={`/jobs/${job._id}/edit`}>Edit Job</Link>
             </DropdownMenuItem>
 
-            <DropdownMenuItem>Duplicate</DropdownMenuItem>
+            <DropdownMenuItem>
+              <Button
+                disabled={duplicateJobMutation.isPending}
+                onClick={() => duplicateJobMutation.mutate(job._id!)}
+              >
+                {duplicateJobMutation.isPending
+                  ? "Duplicating..."
+                  : "Duplicate"}
+              </Button>
+
+            </DropdownMenuItem>
 
             <DropdownMenuSeparator />
 
@@ -307,7 +333,7 @@ export const invoiceColumns: ColumnDef<Invoice>[] = [
     accessorKey: "issueDate",
     header: "Issue Date",
     cell: ({ row }) => (
-      <span className="text-sm text-slate-600">{format(new Date(row.original.issueDate), "dd MMMM yyyy")}</span>
+      <span className="text-sm text-slate-600">{formatDate(row.original.issueDate, "dd MMMM yyyy")}</span>
     ),
   },
 
@@ -315,7 +341,7 @@ export const invoiceColumns: ColumnDef<Invoice>[] = [
     accessorKey: "dueDate",
     header: "Due Date",
     cell: ({ row }) => (
-      <span className="text-sm text-slate-600">{format(new Date(row.original.dueDate), "dd MMMM yyyy")}</span>
+      <span className="text-sm text-slate-600">{formatDate(row.original.dueDate, "dd MMMM yyyy")}</span>
     ),
   },
 

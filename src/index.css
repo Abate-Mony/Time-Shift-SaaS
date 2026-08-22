@@ -252,6 +252,20 @@ body {
   animation: pulse-dot 1.5s ease-in-out infinite;
 }
 
+@keyframes shrink-width {
+  from {
+    width: 100%;
+  }
+
+  to {
+    width: 0%;
+  }
+}
+
+.animate-shrink-5s {
+  animation: shrink-width 5s linear forwards;
+}
+
 /* Skeleton loading */
 @keyframes shimmer {
   0% {

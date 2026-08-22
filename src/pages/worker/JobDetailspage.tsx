@@ -2,11 +2,12 @@ import { StatusBadge } from "@/components/ui"
 import { queryClient } from "@/lib/queryClient"
 import { changeWorkerJobStaus } from "@/utils/api-request-functions"
 import customFetch from "@/utils/customFetch"
+import { formatDate, formatDuration } from "@/utils/date"
+import { useShiftStartGate } from "@/hooks/useShiftStartGate"
 import type { CreateJobForm } from "@/utils/types"
 import { useQuery } from "@tanstack/react-query"
 import { AlertCircle, Briefcase, CalendarDays, Check, ChevronLeft, Clock, Dot, Loader2, MapPin, Navigation, Timer, X } from "lucide-react"
 import { useNavigate, useParams, type LoaderFunctionArgs } from "react-router"
-import dayjs from "dayjs"
 import { useState } from "react"
 const singleWorkerJob = (id: string | undefined) => {
     return ({
@@ -32,6 +33,7 @@ export default function JobDetailScreen() {
 
     const job = useQuery(singleWorkerJob(id)).data?.job
     const [loadingAction, setLoadingAction] = useState<'accept' | 'reject' | 'start' | null>(null)
+    const { canStart, minutesUntilStart, hasExpired } = useShiftStartGate(job?.date, job?.startTime, job?.endTime)
 
     const onAccept = async () => {
         setLoadingAction('accept')
@@ -53,9 +55,9 @@ export default function JobDetailScreen() {
 
     const infoRows = [
         { icon: Clock, label: 'Shift Time', value: `${job?.startTime} – ${job?.endTime}` },
-        { icon: Timer, label: 'Duration', value: `${12} hours` },
+        { icon: Timer, label: 'Duration', value: formatDuration(job?.minutes) },
         { icon: MapPin, label: 'Location', value: job?.location },
-        { icon: CalendarDays, label: 'Date', value: dayjs(job?.date).format("dddd, MMMM D, YYYY") },
+        { icon: CalendarDays, label: 'Date', value: formatDate(job?.date, "dddd, MMMM D, YYYY") },
         { icon: Briefcase, label: 'Client', value: job?.client },
     ]
 
@@ -162,17 +164,24 @@ export default function JobDetailScreen() {
                 </button>
             )}
             {job?.status === 'accepted' && (
-                <button
-                    disabled={loadingAction !== null}
-                    onClick={e => {
-                        e.stopPropagation();
-                        e.preventDefault()
-                        startWorking()
-                    }}
-                    className="mt-4 w-full h-11 rounded-xl bg-[#1b7b3d] text-white text-sm font-bold hover:bg-[#13a166] active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-sm shadow-[#1E3A5F]/25 disabled:opacity-60 disabled:cursor-not-allowed"
-                >
-                    {loadingAction === 'start' ? <Loader2 size={14} className="animate-spin" /> : <Timer size={14} />} Start Working Job
-                </button>
+                canStart ? (
+                    <button
+                        disabled={loadingAction !== null}
+                        onClick={e => {
+                            e.stopPropagation();
+                            e.preventDefault()
+                            startWorking()
+                        }}
+                        className="mt-4 w-full h-11 rounded-xl bg-[#1b7b3d] text-white text-sm font-bold hover:bg-[#13a166] active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-sm shadow-[#1E3A5F]/25 disabled:opacity-60 disabled:cursor-not-allowed"
+                    >
+                        {loadingAction === 'start' ? <Loader2 size={14} className="animate-spin" /> : <Timer size={14} />} Start Working Job
+                    </button>
+                ) : (
+                    <div className="mt-4 w-full h-11 rounded-xl bg-slate-100 text-slate-500 text-sm font-semibold flex items-center justify-center gap-2 cursor-not-allowed">
+                        <Timer size={14} className="text-slate-400" />
+                        {hasExpired ? "Shift window missed" : `Starts in ${formatDuration(minutesUntilStart ?? 0)}`}
+                    </div>
+                )
             )}
         </div>
     )

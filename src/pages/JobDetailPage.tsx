@@ -1,4 +1,5 @@
 import customFetch from '@/utils/customFetch'
+import { formatDuration } from '@/utils/date'
 import { useQuery } from '@tanstack/react-query'
 import dayjs from 'dayjs'
 import {
@@ -489,7 +490,7 @@ export function JobDetail() {
                         <div className="flex flex-col gap-2.5">
                             {[
                                 { label: 'Workers', value: `${assignedWorkers.length}` },
-                                { label: 'Hours each', value: `${"job.hours"}h` },
+                                { label: 'Hours each', value: formatDuration(job?.minutes) },
                                 { label: 'Total hours', value: `${totalHours}h` },
                                 { label: 'Rate (avg)', value: '£18.00/hr' },
                             ].map(r => (

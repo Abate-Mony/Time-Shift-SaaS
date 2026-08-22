@@ -71,9 +71,22 @@ const workersQuery = (params: Params) => {
 
 export const action = async ({ request, params }: ActionFunctionArgs) => {
     const formData = await request.formData()
-    const data = Object.fromEntries(formData)
+    const raw = Object.fromEntries(formData) as Record<string, string>
+    const payload: Record<string, unknown> = { ...raw }
+
+    // Coordinates arrive as a JSON string from a hidden input — convert back to an object
+    if (raw.coordinates) {
+        try {
+            payload.coordinates = JSON.parse(raw.coordinates)
+        } catch {
+            delete payload.coordinates
+        }
+    } else {
+        delete payload.coordinates
+    }
+
     try {
-        await customFetch.patch(`/jobs/${params.id}`, data)
+        await customFetch.patch(`/jobs/${params.id}`, payload)
 
         toast.success('Job edited successfully!')
         queryClient.invalidateQueries({
@@ -146,6 +159,8 @@ export function EditJob() {
     const startTime = watch("startTime")
     const endTime = watch("endTime")
     const priority = watch("priority")
+    const address = watch("address")
+    const coordinates = watch("coordinates")
     const toggleWorker = (id: string) => {
         const exists = selectedWorkers.some((w) => w.email === id);
 
@@ -309,10 +324,29 @@ export function EditJob() {
                         Location
                     </h2>
                     <SearchLocation
+                        defaultQuery={job?.location}
                         onSelect={(location) => {
-
+                            setValue("location", location.siteName, { shouldValidate: true })
+                            setValue(
+                                "address",
+                                [location.address, location.city, location.postcode].filter(Boolean).join(", "),
+                                { shouldValidate: true }
+                            )
+                            setValue("coordinates", { lat: location.lat, lng: location.lng }, { shouldValidate: true })
                         }}
                     />
+                    <FieldError message={errors.location?.message} />
+                    {address && (
+                        <p className="mt-2 flex items-center gap-1.5 text-xs text-slate-500">
+                            <MapPin size={12} className="text-slate-400" /> {address}
+                        </p>
+                    )}
+                    {/* Coordinates/address ride along as hidden fields — <Form> submits from the
+                        DOM, not RHF state, so they need real inputs to reach the action */}
+                    <input type="hidden" name="address" value={address ?? ""} />
+                    {coordinates && (
+                        <input type="hidden" name="coordinates" value={JSON.stringify(coordinates)} />
+                    )}
 
                     {/* Map placeholder */}
                     <div className="mt-3 h-36 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center overflow-hidden">

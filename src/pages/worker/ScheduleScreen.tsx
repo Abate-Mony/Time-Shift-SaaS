@@ -16,7 +16,7 @@ function startOfWeek(d: dayjs.Dayjs) {
 }
 
 function shiftHours(job: CreateJobForm) {
-  if (job.hours) return job.hours
+  if (job.minutes) return job.minutes / 60
   const diff = dayjs(`2000-01-01T${job.endTime}`).diff(dayjs(`2000-01-01T${job.startTime}`), 'minute')
   return Math.max(0, diff) / 60
 }

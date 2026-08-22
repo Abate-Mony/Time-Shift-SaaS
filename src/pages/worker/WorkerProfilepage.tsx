@@ -15,10 +15,9 @@ import { queryClient } from "@/lib/queryClient";
 import customFetch from "@/utils/customFetch";
 import { logoutUser } from "@/utils/logout";
 import type { User } from "@/utils/types";
-import { wait } from "@/utils/wait";
 import { useQuery } from "@tanstack/react-query";
-import { Bell, BluetoothIcon, CheckCircle2, ChevronRight, Clock, Download, LogOut, MapPin, Phone, Star, Zap } from "lucide-react";
-import { useLoaderData, useNavigate, useOutletContext, type LoaderFunctionArgs } from "react-router";
+import { Bell, CheckCircle2, ChevronRight, Clock, Download, LogOut, MapPin, Phone, Star, Zap } from "lucide-react";
+import { useNavigate, useOutletContext, type LoaderFunctionArgs } from "react-router";
 const reponse = {
   total_job_completed: 0,
   "success": true, "jobStats": { "pending": 31, "accepted": 4, "declined": 10, "in-progress": 0, "completed": 6, "cancelled": 0 }, "hoursWorked": 98.99950833333334, "averagePayRate": 0, "monthlyEarnings": 1286.9936083333334
@@ -33,8 +32,6 @@ const workerDashboardstats = () => {
   })
 }
 export const loader = async ({ params }: LoaderFunctionArgs) => {
-      await wait()
-
   return await queryClient.ensureQueryData(workerDashboardstats())
 }
 
@@ -48,7 +45,6 @@ export function ProfileScreen() {
     hoursWorked,
     jobStats,
     monthlyEarnings,
-    total_job_completed,
   } = useQuery(workerDashboardstats()).data as (typeof reponse)
   // const {
   //   averagePayRate,
@@ -149,7 +145,7 @@ export function ProfileScreen() {
           { label: 'Download Timesheet', icon: Download, sub: 'July 2025', to: undefined },
           { label: 'Notification Preferences', icon: Bell, sub: 'Job alerts, reminders', to: '/worker/profile/notifications' },
           { label: 'Contact Manager', icon: Phone, sub: 'Get in touch', to: undefined },
-        ].map((item, i, arr) => (
+        ].map((item) => (
           <button
             key={item.label}
             onClick={() => item.to && navigate(item.to)}

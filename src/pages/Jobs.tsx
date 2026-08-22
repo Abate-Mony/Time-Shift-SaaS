@@ -1,19 +1,17 @@
-import { Clock, Copy, Edit, Eye, Filter, MapPin, MoreHorizontal, Plus, Search, Trash2, Users } from 'lucide-react'
-import { useState } from 'react'
-import { useLoaderData, useNavigate, type LoaderFunctionArgs, type Params } from 'react-router'
-import { Avatar, EmptyState, PriorityBadge, StatusBadge } from '../components/ui'
-import { workers } from '../data/mockData'
+import AnimatedHeadLessUi from '@/components/animated-headless-ui'
+import DataTable from '@/components/JobsTable'
+import SearchComponent from '@/components/Search'
 import { Button } from '@/components/ui/button'
 import FilterButton from '@/components/ui/FilterButton'
-import SearchComponent from '@/components/Search'
-import customFetch from '@/utils/customFetch'
-import { useQuery, type QueryClient } from '@tanstack/react-query'
-import type { CreateJobForm } from '@/utils/types'
-import DataTable from '@/components/JobsTable'
-import { jobsColumns } from '@/utils/columns'
-import AnimatedHeadLessUi from '@/components/animated-headless-ui'
 import { queryClient } from '@/lib/queryClient'
+import { jobsColumns } from '@/utils/columns'
+import customFetch from '@/utils/customFetch'
+import type { CreateJobForm } from '@/utils/types'
+import { useQuery, type QueryClient } from '@tanstack/react-query'
+import { Filter, Plus } from 'lucide-react'
+import { useState } from 'react'
 import toast from 'react-hot-toast'
+import { useLoaderData, useNavigate, type LoaderFunctionArgs, type Params } from 'react-router'
 
 
 const jobsQuery = (params: Params) => {
@@ -56,7 +54,6 @@ export const loader = (queryClient: QueryClient) => async ({ request }: LoaderFu
 
 }
 export function Jobs() {
-  const [openMenu, setOpenMenu] = useState<string | null>(null)
   const { searchValues } = useLoaderData() as {
     searchValues: Params
   }
@@ -74,6 +71,7 @@ export function Jobs() {
     { id: 'completed', label: 'Completed', },
     { id: 'draft', label: 'Draft', },
   ]
+  // console.log("jobs obj : ", jobs)
 const [hoverIndex,setHoverIndex]=useState<number | null>(0)
 
   const deleteSelectedJobs = async (selectedJobs: CreateJobForm[]) => {
