@@ -62,6 +62,37 @@ export type Invoice = InvoiceForm & {
   createdAt: string;
   updatedAt: string;
 };
+export type GeofenceMode = "off" | "warn" | "enforce";
+export type Currency = "GBP" | "USD" | "EUR";
+export type WeekStartsOn = "monday" | "sunday";
+
+// Company-wide policy — durations are stored as integer minutes throughout.
+export interface CompanySettings {
+  clockInGraceMinutes: number;
+  lateThresholdMinutes: number;
+  autoClockOutEnabled: boolean;
+  payFromScheduledStart: boolean;
+
+  geofenceMode: GeofenceMode;
+  defaultGeofenceRadiusMeters: number;
+
+  breaksArePaid: boolean;
+  autoDeductBreakMinutes: number;
+  autoDeductAfterMinutes: number;
+
+  overtimeThresholdMinutes: number;
+  overtimeMultiplier: number;
+  weeklyHoursTarget: number;
+  currency: Currency;
+  defaultPayRate: number;
+
+  timezone: string;
+  weekStartsOn: WeekStartsOn;
+  generateAheadDays: number;
+  openShiftsEnabled: boolean;
+  openShiftsRequireApproval: boolean;
+}
+
 export const ACTIVITY_TYPES = [
   "job_created",
   "job_updated",

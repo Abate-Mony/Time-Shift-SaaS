@@ -1,7 +1,11 @@
 import customFetch from '@/utils/customFetch'
-import { formatDuration } from '@/utils/date'
-import { useQuery } from '@tanstack/react-query'
+import { formatCurrency } from '@/utils/format'
+import { formatDate, formatDuration } from '@/utils/date'
+import { queryClient } from '@/lib/queryClient'
+import { duplicateJob } from '@/utils/api-request-functions'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import dayjs from 'dayjs'
+import toast from 'react-hot-toast'
 import {
     AlertCircle,
     Briefcase,
@@ -19,6 +23,7 @@ import {
     MoreHorizontal,
     Navigation,
     Play,
+    Plus,
     Receipt,
     Timer,
     Trash2,
@@ -27,7 +32,7 @@ import {
 import {
     Pencil, Send, XCircle,
     UserMinus, XOctagon,
-    LogIn, LogOut, Coffee, CoffeeIcon,
+    LogIn, LogOut, Coffee,
     Ban, Bot, StickyNote, CircleCheck,
 } from "lucide-react"
 import { useState } from 'react'
@@ -35,25 +40,8 @@ import { Link, useNavigate, useParams } from 'react-router'
 import { Avatar, Card, Divider, PriorityBadge, StatusBadge } from '../components/ui'
 import { singleJob } from './EditJobPage'
 
-// ── Timeline events per job ──────────────────────────────────────────────────
-const timelineEvents = [
-    { type: 'created', label: 'Job created by Owen Wright', time: '22 Jul, 09:14', icon: FileText, color: 'bg-slate-400' },
-    { type: 'assigned', label: 'Workers assigned', time: '22 Jul, 09:20', icon: Users, color: 'bg-violet-500' },
-    { type: 'accepted', label: 'James Mitchell accepted', time: '22 Jul, 11:30', icon: CheckCircle2, color: 'bg-emerald-500' },
-    { type: 'accepted', label: 'Priya Patel accepted', time: '22 Jul, 13:45', icon: CheckCircle2, color: 'bg-emerald-500' },
-    { type: 'started', label: 'James Mitchell clocked in', time: '25 Jul, 22:03', icon: Play, color: 'bg-blue-500' },
-    { type: 'started', label: 'Priya Patel clocked in', time: '25 Jul, 22:07', icon: Play, color: 'bg-blue-500' },
-]
-
-const workerTimeLogs: Record<string, { clockIn: string; clockOut: string | null; break: string; billable: string }> = {
-    w1: { clockIn: '22:03', clockOut: null, break: '0m', billable: '4h 02m (ongoing)' },
-    w4: { clockIn: '22:07', clockOut: null, break: '0m', billable: '3h 58m (ongoing)' },
-    w2: { clockIn: '08:02', clockOut: '20:08', break: '30m', billable: '11h 30m' },
-    w3: { clockIn: '08:00', clockOut: '20:05', break: '45m', billable: '11h 15m' },
-}
-
 import type { LucideIcon } from "lucide-react"
-import type { ActivityType } from '@/utils/types'
+import type { ActivityType, CreateJobForm } from '@/utils/types'
 import { cn } from '@/lib/utils'
 import { getInitials } from '@/utils/getInitials'
 
@@ -88,24 +76,85 @@ export const recordFormatUI: Record<ActivityType, { icon: LucideIcon; className:
     note_added: { icon: StickyNote, className: "bg-sky-500", label: "added a note" },
 }
 
-const activityLog = [{
-    "_id": "6a6f1fc1153487a6a6e0cc55", "job": "6a6f15615746445f28c4fcfc", "workers": [{ "_id": "6a6ed4d18dc34eebbf1a4188", "fullname": "manager" }],
-    "actor": { "_id": "6a6ec368b301e127831156a1", "fullname": "Emmanuel Ako Bate" }, "createdAt": "2026-08-02T10:45:21.315Z", "updatedAt": "2026-08-02T10:45:21.315Z", "__v": 0
-}] as const
+interface PopulatedRef {
+    _id: string
+    fullname: string
+}
 
-type ActivityLogEntry = (typeof activityLog)[number] & {
-    type?: ActivityType
+// Matches the GET /activity-logs/:id response — actor and workers come back
+// populated with fullname, worker (singular) does not (denormalised for
+// querying only, never displayed).
+interface ActivityLogEntry {
+    _id: string
+    job: string
+    type: ActivityType
+    assignment?: string
+    worker?: string
+    workers?: PopulatedRef[]
+    actor?: PopulatedRef | null
+    isSystem?: boolean
+    jobDate?: string
+    changes?: { field: string; from: unknown; to: unknown }[]
+    // Mixed by design — shape varies per event type. assignment_checked_in
+    // carries geo-verification fields (see CheckInMetadata below); other
+    // event types may put unrelated things here.
+    metadata?: Record<string, unknown>
+    createdAt: string
+    updatedAt: string
+}
+
+interface CheckInMetadata {
+    minutesLate?: number
+    location?: string
+    distanceMeters?: number
+    flagged?: boolean
+    accuracy?: number | null
+}
+
+type AssignedWorker = CreateJobForm["workers"][number]
+
+function getWorkerBreakMinutes(w: AssignedWorker): number {
+    if (!w.breaks?.length) return 0
+    const now = dayjs()
+    return w.breaks.reduce((total, b) => {
+        const start = dayjs(b.startedAt)
+        const end = b.endedAt ? dayjs(b.endedAt) : now
+        return total + Math.max(end.diff(start, "minute"), 0)
+    }, 0)
+}
+
+// Trusts the backend's hoursWorked once a shift is checked out (it may factor
+// in things this component doesn't know about); computes live from
+// checkedInAt otherwise, so an in-progress shift still shows a real number.
+function getWorkerMinutes(w: AssignedWorker): number {
+    if (w.checkedOutAt && w.hoursWorked) return w.hoursWorked * 60
+    if (!w.checkedInAt) return 0
+    const start = dayjs(w.checkedInAt)
+    const end = w.checkedOutAt ? dayjs(w.checkedOutAt) : dayjs()
+    const totalMinutes = Math.max(end.diff(start, "minute"), 0)
+    return Math.max(totalMinutes - getWorkerBreakMinutes(w), 0)
 }
 
 function describeActivity(entry: ActivityLogEntry): React.ReactNode {
     const type = entry.type ?? 'job_updated'
-    const ui = recordFormatUI[type]
+    const ui = recordFormatUI[type] ?? recordFormatUI.job_updated
 
-    // Per-assignment events describe the worker; job-level events describe the actor
-    const subject =
-        // entry.workers?.fullname ??
-        entry.actor?.fullname ??
-        "System"
+    // actor is the worker themselves for self-service events (accept, check-in,
+    // break, ...) and the admin/manager for job-level events — already the
+    // right "who did this" field for every event type.
+    const subject = entry.actor?.fullname ?? "System"
+
+    // workers_assigned is the one batch event — actor did the assigning,
+    // but which workers were assigned is worth naming, not just implying.
+    const assignedNames = type === 'workers_assigned' ? entry.workers?.map(w => w.fullname).filter(Boolean) : undefined
+
+    // Geo-verification details attached to check-ins — surface them so a
+    // late or off-site check-in doesn't get buried in an unread metadata blob.
+    const checkIn = type === 'assignment_checked_in' ? (entry.metadata as CheckInMetadata | undefined) : undefined
+    const hasCheckInDetail = !!checkIn && (
+        checkIn.flagged || (checkIn.minutesLate ?? 0) > 0 || checkIn.distanceMeters != null
+        || checkIn.accuracy != null || !!checkIn.location
+    )
 
     return (
         <div className='relative  ml-2 -mb-px'>
@@ -122,10 +171,42 @@ function describeActivity(entry: ActivityLogEntry): React.ReactNode {
                 </span>
 
                 <span className="font-semibold text-slate-900">{subject} </span>{" "}
-                <span className="text-slate-600">{ui?.label ?? type}</span>
+                <span className="text-slate-600">
+                    {ui?.label ?? type}
+                    {assignedNames?.length ? `: ${assignedNames.join(", ")}` : ""}
+                </span>
             </span>
             <p className="pl-5 text-[10px] text-slate-400 mt-0.5 font-medium">{dayjs(entry.createdAt).format("DD/MM h:mm A")}</p>
 
+            {hasCheckInDetail && (
+                <div className="pl-5 mt-1 flex flex-wrap items-center gap-1.5">
+                    {checkIn.flagged && (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-red-600 bg-red-50 px-1.5 py-0.5 rounded-full">
+                            <AlertCircle size={9} /> Flagged
+                        </span>
+                    )}
+                    {(checkIn.minutesLate ?? 0) > 0 && (
+                        <span className="text-[10px] font-medium text-amber-600">
+                            {checkIn.minutesLate}m late
+                        </span>
+                    )}
+                    {checkIn.distanceMeters != null && (
+                        <span className="text-[10px] text-slate-400">
+                            ~{Math.round(checkIn.distanceMeters)}m from site
+                        </span>
+                    )}
+                    {checkIn.location && (
+                        <span className="text-[10px] text-slate-400">
+                            near {checkIn.location}
+                        </span>
+                    )}
+                    {checkIn.accuracy != null && (
+                        <span className="text-[10px] text-slate-300">
+                            (±{Math.round(checkIn.accuracy)}m GPS accuracy)
+                        </span>
+                    )}
+                </div>
+            )}
         </div>
     )
 }
@@ -141,8 +222,20 @@ export function JobDetail() {
             return data
         }
     })
-    const assignedWorkers = job?.workers
+    const assignedWorkers = job?.workers ?? []
     const [showApproveModal, setShowApproveModal] = useState(false)
+
+    const duplicateJobMutation = useMutation({
+        mutationFn: duplicateJob,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["jobs"] })
+            toast.success("Job duplicated successfully")
+        },
+        onError: (error) => {
+            console.error(error)
+            toast.error("Failed to duplicate job")
+        },
+    })
 
     const statusColor: Record<string, string> = {
         'in-progress': 'from-blue-600 to-blue-700',
@@ -153,9 +246,17 @@ export function JobDetail() {
     }
     const gradient = statusColor[job?.status ?? "accepted"] ?? 'from-[#1E3A5F] to-[#2D5A8E]'
 
-    const totalHours = assignedWorkers.length * 10
-    const estimatedCost = assignedWorkers.length * 10 * 18
-    console.log(job.workers)
+    // Total minutes across all workers — trusts hoursWorked for a checked-out
+    // shift, computes live (minus breaks) for one still in progress.
+    const totalMinutes = assignedWorkers.reduce((sum, w) => sum + getWorkerMinutes(w), 0)
+    const avgRate = assignedWorkers.length
+        ? assignedWorkers.reduce((sum, w) => sum + (w.payRate || 0), 0) / assignedWorkers.length
+        : 0
+    const estimatedCost = assignedWorkers.reduce((sum, w) => {
+        if (w.checkedOutAt && w.totalPay) return sum + w.totalPay
+        return sum + (getWorkerMinutes(w) / 60) * (w.payRate || 0)
+    }, 0)
+
     return (
         <div className="p-6 animate-fade-in">
             {/* Breadcrumb */}
@@ -194,11 +295,18 @@ export function JobDetail() {
 
                         {/* Hero actions */}
                         <div className="flex items-center gap-2 shrink-0">
-                            <button className="h-9 px-3.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors backdrop-blur-sm">
+                            <button
+                                onClick={() => onNavigate(`/jobs/${id}/edit`)}
+                                className="h-9 px-3.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors backdrop-blur-sm"
+                            >
                                 <Edit size={13} /> Edit
                             </button>
-                            <button className="h-9 px-3.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors backdrop-blur-sm">
-                                <Copy size={13} /> Duplicate
+                            <button
+                                onClick={() => duplicateJobMutation.mutate(id!)}
+                                disabled={duplicateJobMutation.isPending}
+                                className="h-9 px-3.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors backdrop-blur-sm disabled:opacity-60 disabled:cursor-not-allowed"
+                            >
+                                <Copy size={13} /> {duplicateJobMutation.isPending ? "Duplicating..." : "Duplicate"}
                             </button>
                             <button className="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors">
                                 <MoreHorizontal size={15} />
@@ -209,9 +317,9 @@ export function JobDetail() {
                     {/* Key metrics bar */}
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                         {[
-                            { icon: Calendar, label: 'Date', value: new Date(job.date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) },
+                            { icon: Calendar, label: 'Date', value: formatDate(job.date, "ddd, D MMM") },
                             { icon: Clock, label: 'Shift', value: `${job.startTime} – ${job.endTime}` },
-                            { icon: Timer, label: 'Duration', value: `${10}h per worker` },
+                            { icon: Timer, label: 'Duration', value: `${formatDuration(job.minutes)} per worker` },
                             { icon: Users, label: 'Workers', value: assignedWorkers.length > 0 ? `${assignedWorkers.length} assigned` : 'Unassigned' },
                         ].map(m => (
                             <div key={m.label} className="bg-white/10 rounded-xl px-3.5 py-3 backdrop-blur-sm">
@@ -249,10 +357,10 @@ export function JobDetail() {
                                         </button>
                                     ),
                                 },
-                                { icon: Calendar, label: 'Date', value: new Date(job.date).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) },
+                                { icon: Calendar, label: 'Date', value: formatDate(job.date, "dddd, D MMMM YYYY") },
                                 { icon: Clock, label: 'Start Time', value: job.startTime },
                                 { icon: Clock, label: 'Finish Time', value: job.endTime },
-                                { icon: Timer, label: 'Shift Duration', value: `${10} hours per worker` },
+                                { icon: Timer, label: 'Shift Duration', value: `${formatDuration(job.minutes)} per worker` },
                                 { icon: Briefcase, label: 'Client / Company', value: job.client },
                                 { icon: Flag, label: 'Priority', value: <PriorityBadge priority={job.priority} /> },
                             ].map((row, i) => (
@@ -308,35 +416,35 @@ export function JobDetail() {
 
                             <div className="divide-y divide-[#F8FAFC]">
                                 {assignedWorkers.map((w, i) => {
-                                    // const log = w.checkedInAt
-                                    //  ?? { clockIn: '—', clockOut: '—', break: '—', billable: '—' }
-                                    const { checkedOutAt, checkedInAt } = w
-                                    console.log("worker : ", w)
+                                    const breakMinutes = getWorkerBreakMinutes(w)
                                     return (
                                         <div
                                             key={w.email}
                                             className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-4 px-5 py-3.5 items-center hover:bg-slate-50/50 transition-colors cursor-pointer"
-                                            onClick={() => onNavigate(`/workers/${w.job}/worker-profile`)}
+                                            onClick={() => onNavigate(`/workers/${w.user}/worker-profile`)}
                                         >
                                             <div className="flex items-center gap-2.5">
                                                 <Avatar initials={getInitials(w.fullname)} size="sm" index={i} />
                                                 <div>
                                                     <p className="text-sm font-medium text-slate-800">{w.fullname}</p>
-                                                    <p className="text-[10px] text-slate-400">{"worker"}</p>
+                                                    <p className="text-[10px] text-slate-400">{w.email}</p>
                                                 </div>
                                             </div>
-                                            <p className="text-xs font-semibold text-slate-700 mono">{dayjs(w?.checkedInAt!).format("HH:mm")}</p>
+                                            <p className="text-xs font-semibold text-slate-700 mono">
+                                                {w.checkedInAt ? dayjs(w.checkedInAt).format("HH:mm") : "—"}
+                                            </p>
                                             <div>
-                                                {checkedInAt
-                                                    ? <p className="text-xs font-semibold text-slate-700 ">{dayjs(checkedOutAt).format("HH:mm")}</p>
-                                                    : <span className="flex items-center gap-1 text-xs text-blue-600 font-semibold"><span className="w-1.5 h-1.5 bg-blue-500 rounded-full pulse-dot" />Live</span>
+                                                {w.checkedOutAt
+                                                    ? <p className="text-xs font-semibold text-slate-700 ">{dayjs(w.checkedOutAt).format("HH:mm")}</p>
+                                                    : w.checkedInAt
+                                                        ? <span className="flex items-center gap-1 text-xs text-blue-600 font-semibold"><span className="w-1.5 h-1.5 bg-blue-500 rounded-full pulse-dot" />Live</span>
+                                                        : <span className="text-xs text-slate-300">—</span>
                                                 }
                                             </div>
-                                            <p className="text-xs text-slate-500 mono">{
-                                                // w. todo{}
-                                                w?.breaks?.length
-                                                }</p>
-                                            <p className="text-xs font-semibold text-emerald-700 mono">{w.payRate || "£14/ph"}</p>
+                                            <p className="text-xs text-slate-500 mono">{breakMinutes > 0 ? formatDuration(breakMinutes) : "—"}</p>
+                                            <p className="text-xs font-semibold text-emerald-700 mono">
+                                                {w.checkedInAt ? formatDuration(getWorkerMinutes(w)) : "—"}
+                                            </p>
                                         </div>
                                     )
                                 })}
@@ -345,7 +453,7 @@ export function JobDetail() {
                             {/* Totals row */}
                             <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-4 px-5 py-3.5 bg-slate-50/60 border-t border-[#E2E8F0]">
                                 <p className="text-xs font-bold text-slate-700 col-span-4">Estimated Total Billable</p>
-                                <p className="text-xs font-bold text-emerald-700">{totalHours}h</p>
+                                <p className="text-xs font-bold text-emerald-700">{formatDuration(totalMinutes)}</p>
                             </div>
                         </Card>
                     )}
@@ -367,7 +475,7 @@ export function JobDetail() {
                                 )
                             }
                             {
-                                data?.activity?.map((entry: typeof activityLog[number], i: number) => (
+                                data?.activity?.map((entry: ActivityLogEntry, i: number) => (
                                     <div key={i} className="">
 
                                         <div className="flex-1 min-w-0 pt-px">
@@ -375,17 +483,6 @@ export function JobDetail() {
                                         </div>
                                     </div>
                                 ))}
-                            {timelineEvents.map((e, i) => (
-                                <div key={i} className="flex items-start gap-3.5 pb-5 last:pb-0 hidden">
-                                    <div className={`w-3.5 h-3.5 rounded-full shrink-0 mt-0.5 ${e.color} ring-2 ring-white z-10 flex items-center justify-center`}>
-                                        <e.icon size={7} className="text-white" strokeWidth={3} />
-                                    </div>
-                                    <div className="flex-1 min-w-0 pt-px">
-                                        <p className="text-sm text-slate-700 leading-snug">{e.label}</p>
-                                        <p className="text-[10px] text-slate-400 mt-0.5 font-medium">{e.time}</p>
-                                    </div>
-                                </div>
-                            ))}
                         </div>
                     </Card>
                 </div>
@@ -420,7 +517,10 @@ export function JobDetail() {
                                 </>
                             )}
                             {(job?.status === 'assigned' || job?.status === 'accepted' || job.status === 'draft') && (
-                                <button className="w-full h-11 rounded-xl bg-[#1E3A5F] text-white text-sm font-bold hover:bg-[#162D4A] transition-colors flex items-center justify-center gap-2 shadow-sm shadow-[#1E3A5F]/20">
+                                <button
+                                    onClick={() => onNavigate(`/jobs/${id}/edit?edit=assigned-workers#assigned-worker`)}
+                                    className="w-full h-11 rounded-xl bg-[#1E3A5F] text-white text-sm font-bold hover:bg-[#162D4A] transition-colors flex items-center justify-center gap-2 shadow-sm shadow-[#1E3A5F]/20"
+                                >
                                     <Users size={14} /> Assign Workers
                                 </button>
                             )}
@@ -430,8 +530,12 @@ export function JobDetail() {
                             >
                                 <Edit size={13} className="text-slate-400" /> Edit Job
                             </button>
-                            <button className="w-full h-10 rounded-xl border border-[#E2E8F0] text-sm font-semibold text-slate-600 hover:bg-slate-50 flex items-center justify-center gap-2 transition-colors">
-                                <Copy size={13} className="text-slate-400" /> Duplicate
+                            <button
+                                onClick={() => duplicateJobMutation.mutate(id!)}
+                                disabled={duplicateJobMutation.isPending}
+                                className="w-full h-10 rounded-xl border border-[#E2E8F0] text-sm font-semibold text-slate-600 hover:bg-slate-50 flex items-center justify-center gap-2 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                            >
+                                <Copy size={13} className="text-slate-400" /> {duplicateJobMutation.isPending ? "Duplicating..." : "Duplicate"}
                             </button>
                             <button className="w-full h-10 rounded-xl border border-red-100 bg-red-50 text-sm font-semibold text-red-500 hover:bg-red-100 flex items-center justify-center gap-2 transition-colors mt-1">
                                 <Trash2 size={13} /> Cancel Job
@@ -467,12 +571,12 @@ export function JobDetail() {
                                     <div
                                         key={w.email}
                                         className="flex items-center gap-3 px-5 py-3.5 hover:bg-slate-50/60 transition-colors cursor-pointer group"
-                                        onClick={() => onNavigate('worker-profile')}
+                                        onClick={() => onNavigate(`/workers/${w.user}/worker-profile`)}
                                     >
                                         <Avatar initials={w.fullname?.slice(0, 2)} size="sm" index={i} />
                                         <div className="flex-1 min-w-0">
                                             <p className="text-sm font-medium text-slate-800 group-hover:text-blue-700 transition-colors">{w.fullname}</p>
-                                            <p className="text-[10px] text-slate-400">{"w.role"}</p>
+                                            <p className="text-[10px] text-slate-400">{w.email}</p>
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <StatusBadge status={w.status} />
@@ -491,8 +595,8 @@ export function JobDetail() {
                             {[
                                 { label: 'Workers', value: `${assignedWorkers.length}` },
                                 { label: 'Hours each', value: formatDuration(job?.minutes) },
-                                { label: 'Total hours', value: `${totalHours}h` },
-                                { label: 'Rate (avg)', value: '£18.00/hr' },
+                                { label: 'Total hours', value: formatDuration(totalMinutes) },
+                                { label: 'Rate (avg)', value: avgRate ? `${formatCurrency(avgRate)}/hr` : '—' },
                             ].map(r => (
                                 <div key={r.label} className="flex items-center justify-between">
                                     <p className="text-xs text-slate-500">{r.label}</p>
@@ -502,7 +606,7 @@ export function JobDetail() {
                             <Divider className="my-1" />
                             <div className="flex items-center justify-between">
                                 <p className="text-sm font-bold text-slate-900">Estimated Cost</p>
-                                <p className="text-base font-bold text-slate-900 mono">£{estimatedCost.toLocaleString()}</p>
+                                <p className="text-base font-bold text-slate-900 mono">{formatCurrency(estimatedCost)}</p>
                             </div>
                         </div>
                     </Card>
@@ -550,8 +654,8 @@ export function JobDetail() {
                             {[
                                 { label: 'Job', value: job.title.split('—')[0].trim() },
                                 { label: 'Workers', value: `${assignedWorkers.length} workers` },
-                                { label: 'Total Hours', value: `${totalHours}h` },
-                                { label: 'Est. Cost', value: `£${estimatedCost.toLocaleString()}` },
+                                { label: 'Total Hours', value: formatDuration(totalMinutes) },
+                                { label: 'Est. Cost', value: formatCurrency(estimatedCost) },
                             ].map(r => (
                                 <div key={r.label} className="flex items-center justify-between">
                                     <p className="text-xs text-slate-500">{r.label}</p>
@@ -577,14 +681,5 @@ export function JobDetail() {
                 </div>
             )}
         </div>
-    )
-}
-
-// Small helper used in JobDetail
-function Plus({ size, className }: { size?: number; className?: string }) {
-    return (
-        <svg width={size ?? 16} height={size ?? 16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" className={className}>
-            <path d="M12 5v14M5 12h14" />
-        </svg>
     )
 }

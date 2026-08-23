@@ -15,7 +15,7 @@ import EditProfileScreen from "@/pages/worker/EditProfile";
 // import ProfileScreen from "@/pages/worker/WorkerProfilepage";
 import { createBrowserRouter, Navigate } from "react-router";
 import DashboardLayout from "../layouts/dashboardlayout";
-import { Calendar, calendarLoader, clockLoader, CreateJob, createjobAction, Dashboard, dashboardLoader, EditJob, editJobAction, InvoiceDetail, invoiceDetailLoader, InvoiceForm, invoiceFormLoader, Invoices, invoicesLoader, JobDetail, Jobs, jobsLoader, Locations, loginAction, ProfileScreen, Reports, Settings, signupAction, singleJobLoader, singleWorkerJobLoader, workerLoader, WorkerProfile, workerProfileLoader, Workers, workersLoader } from "../pages";
+import { Calendar, calendarLoader, clockLoader, CreateJob, createjobAction, Dashboard, dashboardLoader, EditJob, editJobAction, InvoiceDetail, invoiceDetailLoader, InvoiceForm, invoiceFormLoader, Invoices, invoicesLoader, JobDetail, Jobs, jobsLoader, Locations, loginAction, ProfileScreen, Reports, Settings, settingsLoader, signupAction, singleJobLoader, singleWorkerJobLoader, workerLoader, WorkerProfile, workerProfileLoader, Workers, workersLoader } from "../pages";
 import RootLayout from "@/layouts/RootLayout";
 import { NoActiveShift } from "@/components/ui/No_Active_Job";
 
@@ -126,7 +126,8 @@ export const router = createBrowserRouter([
                     },
                     {
                         path: "settings",
-                        element: <Settings />
+                        element: <Settings />,
+                        loader: settingsLoader(queryClient),
                     },
                     {
                         path: "*",
