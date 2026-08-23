@@ -4,43 +4,49 @@ import toast from "react-hot-toast";
 import customFetch from "./customFetch";
 import type { CreateJobForm, EditProfileForm, InvoiceStatus, NotificationPreferences } from "./types";
 
+import { getCurrentPosition } from "./getPosition";
+
 export const changeWorkerJobStaus = async (
-    jobId: string,
-    status: "accepted" | "declined" | "in-progress" | "completed"
+  jobId: string,
+  status: "accepted" | "declined" | "in-progress" | "completed",
+  opts?: { reason?: string }
 ): Promise<{ success: boolean; message?: string }> => {
-    try {
-        // await wait()
-        await customFetch.patch(`/workers/${jobId}/status`, {
-            status,
-        });
+  try {
+    // Only clock-in and clock-out are worth locating. Asking for GPS on
+    // accept/decline is a permission prompt for no reason.
+    const needsLocation = status === "in-progress" || status === "completed";
+    const location = needsLocation ? await getCurrentPosition() : undefined;
 
-        toast.success(
-            "Job updated successfully"
-        );
-        // Refresh worker jobs
-        await queryClient.invalidateQueries({
-            queryKey: ["jobs"],
-        });
+    await customFetch.patch(`/workers/${jobId}/status`, {
+      status,
+      ...(location ? { location } : {}),
+      ...(opts?.reason ? { reason: opts.reason } : {}),
+    });
 
-        // Refresh single job if it's open
-        await queryClient.invalidateQueries({
-            queryKey: ["job", jobId],
-        });
-        await queryClient.invalidateQueries({ queryKey: ["worker-stats"] })
-        return { success: true };
-    } catch (err) {
-        const message =
-            isAxiosError(err)
-                ? err.response?.data?.msg ??
-                err.response?.data?.message ??
-                "Something went wrong."
-                : err instanceof Error
-                    ? err.message
-                    : "Something went wrong.";
+    toast.success("Job updated successfully");
 
-        toast.error(message);
-        return { success: false, message };
+    await queryClient.invalidateQueries({ queryKey: ["jobs"] });
+    await queryClient.invalidateQueries({ queryKey: ["job", jobId] });
+    await queryClient.invalidateQueries({ queryKey: ["worker-stats"] });
+
+    // The shift is over — clear the active job immediately rather than
+    // waiting on a refetch, or the clock screen keeps showing a finished shift
+    if (status === "completed" || status === "declined") {
+      queryClient.setQueryData(["active-job"], { success: true, job: null });
     }
+    await queryClient.invalidateQueries({ queryKey: ["active-job"] });
+
+    return { success: true };
+  } catch (err) {
+    const message = isAxiosError(err)
+      ? err.response?.data?.msg ?? err.response?.data?.message ?? "Something went wrong."
+      : err instanceof Error
+        ? err.message
+        : "Something went wrong.";
+
+    toast.error(message);
+    return { success: false, message };
+  }
 };
 
 export const startWorkerBreak = async (jobId: string): Promise<boolean> => {
