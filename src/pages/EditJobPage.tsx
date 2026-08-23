@@ -446,12 +446,12 @@ export function EditJob() {
                     {workerOpen && (
                         <div className="mt-2 border border-[#E2E8F0] rounded-xl overflow-hidden animate-fade-in">
                             {users.map((w, i) => {
-                                const selected = selectedWorkers.find(sw => sw.email == w.email)
+                                const selected = selectedWorkers.find(sw => sw.fullname! == w.fullname!)
                                 return (
                                     <button
                                         type="button"
                                         key={w._id}
-                                        onClick={() => toggleWorker(w.email)}
+                                        onClick={() => toggleWorker(w.fullname)}
                                         className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 transition-colors border-b border-[#F1F5F9] last:border-0 ${selected ? 'bg-blue-50/40' : ''}`}
                                     >
                                         <Avatar initials={w.fullname.slice(0, 2)} size="sm" index={i} />
@@ -471,7 +471,7 @@ export function EditJob() {
                     {selectedWorkers.length > 0 && (
                         <div className="flex flex-wrap gap-2 mt-3">
                             {selectedWorkers.map(id => {
-                                const w = users.find(w => w.email === id.email)
+                                const w = users.find(w => w.fullname === id.fullname)
                                 if (!w) return null
                                 return (
                                     <div key={id.email} className="flex items-center gap-1.5 bg-blue-50 border border-blue-200 rounded-full pl-1.5 pr-2 py-0.5">

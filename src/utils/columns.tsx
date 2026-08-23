@@ -21,6 +21,7 @@ import { formatCurrency } from "./format"
 import { formatDate, formatDuration } from "./date"
 import { duplicateJob } from "./api-request-functions"
 import { useMutation } from "@tanstack/react-query"
+import dayjs from "dayjs"
 
 const STATUS_STYLES: Record<string, string> = {
   draft: "bg-slate-100 text-slate-600",
@@ -138,9 +139,9 @@ export const jobsColumns: ColumnDef<CreateJobForm>[] = [
     ),
     cell: ({ row }) => {
       const { date, startTime, endTime, minutes } = row.original
-
+      // start=2026-08-22&end=2026-08-22&view=day
       return (
-        <div className="min-w-32.5">
+        <Link to={`/calendar?start=${dayjs(date).format("YYYY-MM-DD")}&end=${dayjs(date).format("YYYY-MM-DD")}&view=day`} className="min-w-32.5 cursor-pointer block" >
           <p className="text-sm font-medium text-slate-800">
             {formatDate(date, "dd MMMM")}
           </p>
@@ -153,7 +154,7 @@ export const jobsColumns: ColumnDef<CreateJobForm>[] = [
               {formatDuration(minutes)} shift
             </span>
           </p>
-        </div>
+        </Link>
       )
     },
   },
