@@ -1,14 +1,18 @@
+import { EmptyState } from "@/components/empty-state"
 import JobCard from "@/components/JobCard"
 import { Avatar } from "@/components/ui"
-import { jobs, workers } from "@/data/mockData"
+import { workers } from "@/data/mockData"
 import type { User } from "@/utils/types"
+import { useQuery } from "@tanstack/react-query"
 import { ArrowUpRight, Bell, Briefcase, ChevronRight, Clock, Timer, TrendingUp } from "lucide-react"
-import { useOutletContext } from "react-router"
+import { Link, useNavigate, useOutletContext } from "react-router"
+import { activeWorkerJob } from "./ClockScreenPage"
+import { Button } from "@/components/ui/button"
 
 export default function HomeScreen() {
     const worker = workers[0]
-    const myJobs = jobs.filter(j => j.workers.includes(worker.id))
-    const activeJob = myJobs.find(j => j.status === 'in-progress')
+    const navigate = useNavigate()
+    const activeJob = useQuery(activeWorkerJob()).data?.job
     // const pendingJobs = myJobs.filter(j => j.status === 'assigned')
     // const completedJobs = myJobs.filter(j => j.status === 'completed')
 
@@ -37,7 +41,7 @@ export default function HomeScreen() {
                 <div className="relative">
                     <div className="flex items-center justify-between mb-5">
                         <div className="flex items-center gap-3">
-                            <Avatar initials={user?.fullname?.slice(0,2)} size="md" index={0} />
+                            <Avatar initials={user?.fullname?.slice(0, 2)} size="md" index={0} />
                             <div>
                                 <p className="text-xs text-white/50 font-medium">{greeting}</p>
                                 <p className="text-base font-bold text-white leading-tight">{user?.fullname.split(' ')[0]}</p>
@@ -68,6 +72,7 @@ export default function HomeScreen() {
             {/* Active job banner */}
             {activeJob && (
                 <div
+                    onClick={() => navigate('/worker/clock')}
                     className="bg-blue-600 rounded-2xl p-4 text-white cursor-pointer hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/20"
                 >
                     <div className="flex items-center justify-between">
@@ -80,7 +85,7 @@ export default function HomeScreen() {
                                     <span className="w-2 h-2 bg-emerald-400 rounded-full pulse-dot" />
                                     <p className="text-xs font-semibold text-white/80 uppercase tracking-wide">You're on the clock</p>
                                 </div>
-                                <p className="text-sm font-bold text-white leading-tight truncate max-w-[180px]">{activeJob.name.split('—')[0].trim()}</p>
+                                <p className="text-sm font-bold text-white leading-tight truncate max-w-[180px]">{activeJob.title.split('—')[0].trim()}</p>
                             </div>
                         </div>
                         <ChevronRight size={18} className="text-white/60 shrink-0" />
@@ -110,30 +115,36 @@ export default function HomeScreen() {
                 </div>
             )} */}
 
-            {/* Today's schedule */}
-            {/* <div>
+            Today's schedule
+            <div>
                 <div className="flex items-center justify-between mb-3">
                     <h2 className="text-sm font-bold text-slate-800">Today's Shift</h2>
-                    <button  className="text-xs text-blue-600 font-semibold flex items-center gap-1 hover:text-blue-800 transition-colors">
+                 <Link to={"/worker/jobs"}>
+                 
+                    <Button variant={"link"} className="text-xs text-blue-600 font-semibold flex items-center gap-1 hover:text-blue-800 transition-colors">
                         View all <ArrowUpRight size={12} />
-                    </button>
+                    </Button></Link>
                 </div>
 
-                {activeJob ? (
-                    <JobCard
-                        key={activeJob.id}
-                        job={activeJob}
-                    />
-                ) : (
-                    <div className="bg-white rounded-2xl border border-[#E2E8F0] p-8 text-center shadow-sm">
-                        <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-3">
-                            <Briefcase size={20} className="text-slate-400" />
-                        </div>
-                        <p className="text-sm font-semibold text-slate-700 mb-1">No shifts today</p>
-                        <p className="text-xs text-slate-400">Check the Jobs tab for upcoming assignments</p>
-                    </div>
-                )}
-            </div> */}
+            </div>
+
+            {activeJob ? (
+                <JobCard
+                    job={activeJob}
+                />
+            ) : (<EmptyState
+            icon={<Briefcase size={20} />}
+            // action={
+            //     <p>
+            //         browse jobs <Link to={"/worker/jobs"}><Button variant={"link"} className={""}> here </Button></Link>
+            //     </p>
+            // }
+            title="No Shifts Today"
+            description="Check the Jobs tab for upcoming assignments"
+            />
+
+            
+            )}
 
             {/* This week */}
             <div>

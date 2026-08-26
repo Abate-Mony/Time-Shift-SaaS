@@ -7,9 +7,9 @@ import { ChevronLeft, ChevronRight, X } from "lucide-react"
 import { useMemo, useState } from "react"
 import { useNavigate } from "react-router"
 
-const DAY_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
+export const DAY_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
 
-function startOfWeek(d: dayjs.Dayjs) {
+export function startOfWeek(d: dayjs.Dayjs) {
   const day = d.day() // 0 (Sun) .. 6 (Sat)
   const diffToMonday = day === 0 ? -6 : 1 - day
   return d.add(diffToMonday, 'day').startOf('day')

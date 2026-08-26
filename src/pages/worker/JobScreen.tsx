@@ -9,9 +9,11 @@ import { cn } from "@/lib/utils"
 import customFetch from "@/utils/customFetch"
 import type { CreateJobForm } from "@/utils/types"
 import { useQuery, type QueryClient } from "@tanstack/react-query"
-import { AlertCircle, Briefcase, Calendar, ChevronLeft, ChevronRight, Clock, Loader2, Star, X } from "lucide-react"
-import { useState } from "react"
+import dayjs from "dayjs"
+import { AlertCircle, Briefcase, ChevronLeft, ChevronRight, Clock, Loader2, Star, X } from "lucide-react"
+import { useMemo, useState } from "react"
 import { useLoaderData, useSearchParams, type LoaderFunctionArgs, type Params } from "react-router"
+import { DAY_LABELS, startOfWeek } from "./ScheduleScreen"
 
 // TODO(backend): implement GET /workers/open-shifts — published jobs with no worker
 // assigned yet, returned as { jobs: CreateJobForm[] }. Any worker can then claim one via
@@ -71,7 +73,22 @@ export default function JobsScreen() {
     const { searchValues } = useLoaderData() as {
         searchValues: Params
     }
-    const { handleFilterChange } = useFilter()
+    const { handleFilterChange, handleFiltersChange } = useFilter()
+    const [weekStart, setWeekStart] = useState(() => {
+        const start = searchValues.start
+        return startOfWeek(start ? dayjs(start) : dayjs())
+    })
+    const weekDays = useMemo(() => (
+        Array.from({ length: 7 }, (_, i) => {
+            const date = weekStart.add(i, 'day')
+            return {
+                day: DAY_LABELS[i],
+                date,
+                dateStr: date.format('YYYY-MM-DD'),
+                isToday: date.isSame(dayjs(), 'day'),
+            }
+        })
+    ), [weekStart])
 
     const { jobs, page, limit, total, totalPages } = useQuery(jobsQuery(searchValues)).data as {
         jobs: CreateJobForm[],
@@ -161,35 +178,57 @@ export default function JobsScreen() {
                 <>
                     <SearchComponent placeholder="Search Jobs" />
 
-                    {/* Date filter */}
-                    <div className="flex items-center gap-2">
-                        <h2 className="text-sm font-medium text-slate-900 shrink-0">Filter by Date</h2>
-                        <div className="relative">
-                            <Calendar size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                            <input
-                                type="date"
-                                value={searchParams.get('start') ?? ''}
-                                onChange={(e) => {
-                                    handleFilterChange({ key: 'start', value: e.target.value }),
-                                        handleFilterChange({ key: 'end', value: e.target.value })
-
-                                }}
-                                className="h-9 pl-8 pr-2.5 border border-[#E2E8F0] rounded-lg text-xs text-slate-600 bg-white focus:outline-none"
-                            />
+                    {/* Date filter — week strip, same UI as the Schedule screen */}
+                    <div className="bg-white rounded-2xl border border-[#E2E8F0] p-4 shadow-sm">
+                        <div className="flex items-center justify-between mb-3">
+                            <p className="text-xs font-bold text-slate-700">Week of {weekStart.format('D MMMM')}</p>
+                            <div className="flex items-center gap-1">
+                                {searchParams.get('start') && (
+                                    <button
+                                        type="button"
+                                        onClick={() => handleFiltersChange({ start: null, end: null })}
+                                        className="flex items-center gap-1 h-7 px-2 rounded-lg text-[11px] font-medium text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors mr-1"
+                                    >
+                                        <X size={11} /> Clear
+                                    </button>
+                                )}
+                                <button
+                                    type="button"
+                                    onClick={() => setWeekStart(w => w.subtract(7, 'day'))}
+                                    className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-100 transition-colors"
+                                >
+                                    <ChevronLeft size={14} />
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setWeekStart(w => w.add(7, 'day'))}
+                                    className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-100 transition-colors"
+                                >
+                                    <ChevronRight size={14} />
+                                </button>
+                            </div>
                         </div>
-                        {searchParams.get('start') && (
-                            <button
-                                type="button"
-                                onChange={(e) => {
-                                    handleFilterChange({ key: 'start', value: null }),
-                                        handleFilterChange({ key: 'end', value: null })
-
-                                }}
-                                className="flex items-center gap-1 h-9 px-2 rounded-lg text-xs font-medium text-slate-500 hover:text-slate-700 hover:bg-slate-50 transition-colors"
-                            >
-                                <X size={13} /> Clear
-                            </button>
-                        )}
+                        <div className="grid grid-cols-7 gap-1.5">
+                            {weekDays.map((d, i) => {
+                                const isSelected = d.dateStr === searchParams.get('start')
+                                return (
+                                    <button
+                                        key={i}
+                                        type="button"
+                                        onClick={() => handleFiltersChange(
+                                            isSelected ? { start: null, end: null } : { start: d.dateStr, end: d.dateStr }
+                                        )}
+                                        className="flex flex-col items-center gap-1.5"
+                                    >
+                                        <span className="text-[10px] font-semibold text-slate-400">{d.day}</span>
+                                        <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold relative transition-colors
+                                          ${isSelected ? 'bg-[#1E3A5F] text-white shadow-sm' : d.isToday ? 'bg-blue-50 text-blue-700 border-2 border-blue-200' : 'text-slate-500 border border-slate-100'}`}>
+                                            {d.date.date()}
+                                        </div>
+                                    </button>
+                                )
+                            })}
+                        </div>
                     </div>
 
                     {/* Tab pills */}

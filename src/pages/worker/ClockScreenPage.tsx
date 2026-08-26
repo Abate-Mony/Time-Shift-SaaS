@@ -46,7 +46,7 @@ function AnimatedDigits({ value }: { value: string }) {
   )
 }
 
-const activeWorkerJob = () => {
+export const activeWorkerJob = () => {
   return ({
     queryKey: ["active-job"],
     queryFn: async (): Promise<{ success: true, job: null } | { job: CreateJobForm }> => {

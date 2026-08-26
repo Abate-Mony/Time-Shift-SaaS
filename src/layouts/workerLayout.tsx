@@ -1,4 +1,5 @@
 import BottomNav from '@/components/ui/BottomNav'
+import { activeWorkerJob } from '@/pages/worker/ClockScreenPage'
 import customFetch from '@/utils/customFetch'
 import ScrollToTop from '@/utils/scroll-to-top'
 import { QueryClient, useQuery } from '@tanstack/react-query'
@@ -111,13 +112,22 @@ const userQuery = {
 
 // guards/workerLoader.ts
 export const workerRouteLoader = (queryClient: QueryClient) => async () => {
+  let user;
   try {
-    const { user } = await queryClient.ensureQueryData(userQuery);
-    if (user.role !== "worker") return redirect("/");
-    return null;
+    ({ user } = await queryClient.ensureQueryData(userQuery));
   } catch {
     return redirect("/auth");
   }
+  if (user.role !== "worker") return redirect("/");
+
+  // Warmed here so it's ready the instant the worker app opens — the
+  // dashboard's active-job banner and the clock screen both read this same
+  // cached query, not just whoever navigates to /worker/clock first.
+  // Best-effort: a failure here shouldn't block navigation or log the
+  // worker out, it just means the banner shows once its own query lands.
+  await queryClient.ensureQueryData(activeWorkerJob()).catch(() => { });
+
+  return null;
 };
 // ─── Root ──────────────────────────────────────────────────────────────────────
 export function WorkerAppLayout() {
