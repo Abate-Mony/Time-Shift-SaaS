@@ -4,6 +4,8 @@ import { changeWorkerJobStaus } from "@/utils/api-request-functions"
 import customFetch from "@/utils/customFetch"
 import { formatDate, formatDuration } from "@/utils/date"
 import { useShiftStartGate } from "@/hooks/useShiftStartGate"
+import { ensureNotificationPermission } from "@/utils/notifications"
+import { ensurePushSubscription } from "@/utils/pushSubscription"
 import { buildMapUrl, MAP_SERVICES, type MapService } from "@/utils/mapLinks"
 import type { CreateJobForm } from "@/utils/types"
 import { useQuery } from "@tanstack/react-query"
@@ -42,6 +44,15 @@ export default function JobDetailScreen() {
         setLoadingAction('accept')
         await changeWorkerJobStaus(job!._id!, "accepted")
         setLoadingAction(null)
+
+        // Shift reminders are sent well before the shift starts — i.e.
+        // before this job would ever show up as "active" — so the push
+        // subscription has to exist from the moment the shift is accepted,
+        // not only once the worker clocks in. Best-effort: a denied prompt
+        // or failed subscribe shouldn't block accepting the shift.
+        ensureNotificationPermission().then(permission => {
+            if (permission === "granted") ensurePushSubscription().catch(() => { })
+        })
     }
 
     const onReject = async () => {

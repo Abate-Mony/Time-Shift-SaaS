@@ -1,9 +1,15 @@
 import BottomNav from '@/components/ui/BottomNav'
 import { activeWorkerJob } from '@/pages/worker/ClockScreenPage'
 import customFetch from '@/utils/customFetch'
+import { formatSecondsAsDuration } from '@/utils/date'
+import { ensureNotificationPermission } from '@/utils/notifications'
+import { ensurePushSubscription } from '@/utils/pushSubscription'
 import ScrollToTop from '@/utils/scroll-to-top'
+import type { CreateJobForm } from '@/utils/types'
 import { QueryClient, useQuery } from '@tanstack/react-query'
-import { Outlet, redirect, useLocation, useNavigation } from 'react-router'
+import dayjs from 'dayjs'
+import { useEffect, useRef } from 'react'
+import { Outlet, redirect, useLocation, useNavigate, useNavigation } from 'react-router'
 
 // // ─── Types ──────────────────────────────────────────────────────────────────
 // type WorkerTab = '/' | 'jobs' | 'clock' | 'schedule' | 'profile'
@@ -134,6 +140,7 @@ export function WorkerAppLayout() {
 
   const navigation = useNavigation()
   const location = useLocation();
+  const navigate = useNavigate()
 
   const isRouteChange =
     navigation.state === "loading" &&
@@ -141,6 +148,74 @@ export function WorkerAppLayout() {
     navigation.location.pathname !== location.pathname;
 
   const { user } = useQuery(userQuery)?.data as unknown as any || { user: null }
+
+  const activeJob = useQuery(activeWorkerJob()).data?.job as
+    (CreateJobForm & { workerJobDetails?: { checkedInAt?: string } }) | null | undefined
+  const notificationRef = useRef<Notification | null>(null)
+
+  // Best-effort top-up, independent of activeJob: covers shifts accepted
+  // before push subscribing existed, and subscriptions that silently
+  // dropped (cleared site data, reinstall). ensureNotificationPermission
+  // only actually shows the native prompt once per origin (while
+  // permission is still "default") — once answered, this is a silent no-op
+  // on every future load, granted or denied.
+  useEffect(() => {
+    ensureNotificationPermission().then(permission => {
+      if (permission === "granted") ensurePushSubscription().catch(() => { })
+    })
+  }, [])
+
+  // Shows a system-level notification with the running elapsed time while a
+  // shift is in progress, so a worker still sees it's running without the
+  // app open. Only actually prompts for permission once there's a job to
+  // tell them about, not proactively on every app load.
+  useEffect(() => {
+    if (!activeJob) {
+      notificationRef.current?.close()
+      notificationRef.current = null
+      return
+    }
+
+    let cancelled = false
+    let intervalId: ReturnType<typeof setInterval> | undefined
+
+    ensureNotificationPermission().then(permission => {
+      if (cancelled || permission !== "granted") return
+
+      // Reaches the device even once the app/browser is closed — the
+      // foreground ticking notification below only covers the app-open case.
+      ensurePushSubscription().catch(() => { })
+
+      const update = () => {
+        const checkedInAt = activeJob.workerJobDetails?.checkedInAt
+        const elapsedSeconds = checkedInAt ? Math.max(dayjs().diff(dayjs(checkedInAt), "second"), 0) : 0
+
+        notificationRef.current?.close()
+        const notification = new Notification("You're on the clock", {
+          body: `${activeJob.title} — ${formatSecondsAsDuration(elapsedSeconds)} elapsed`,
+          tag: "active-job",
+          silent: true,
+        })
+        notification.onclick = () => {
+          window.focus()
+          navigate('/worker/clock')
+        }
+        notificationRef.current = notification
+      }
+
+      update()
+      intervalId = setInterval(update, 60_000)
+    })
+
+    return () => {
+      cancelled = true
+      if (intervalId) clearInterval(intervalId)
+    }
+    // Keyed on the job id only — re-running this on every activeJob object
+    // identity change (e.g. a background refetch) would tear down and
+    // recreate the notification/interval for no reason.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeJob?._id])
 
   return (
     <div className="border-black   bg-[#F8FAFC]">
