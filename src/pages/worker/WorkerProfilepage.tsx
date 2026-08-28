@@ -142,7 +142,7 @@ export function ProfileScreen() {
       {/* Settings list */}
       <div className="bg-white rounded-2xl border border-[#E2E8F0] shadow-sm overflow-hidden">
         {[
-          { label: 'Download Timesheet', icon: Download, sub: 'July 2025', to: undefined },
+          { label: 'Download Timesheet', icon: Download, sub: 'July 2025', to: "/worker/profile/download-time-sheet" },
           { label: 'Notification Preferences', icon: Bell, sub: 'Job alerts, reminders', to: '/worker/profile/notifications' },
           { label: 'Contact Manager', icon: Phone, sub: 'Get in touch', to: undefined },
         ].map((item) => (

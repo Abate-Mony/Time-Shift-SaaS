@@ -10,12 +10,12 @@ import JobDetailScreen from "@/pages/worker/JobDetailspage";
 import JobsScreen from "@/pages/worker/JobScreen";
 import ScheduleScreen from "@/pages/worker/ScheduleScreen";
 import HomeScreen from "@/pages/worker/WorkerDashboard";
-import NotificationPreferencesScreen from "@/pages/worker/NotificationPreferences";
+import NotificationPreferencesScreen, { loader as notificationPreferencesLoader } from "@/pages/worker/NotificationPreferences";
 import EditProfileScreen from "@/pages/worker/EditProfile";
 // import ProfileScreen from "@/pages/worker/WorkerProfilepage";
 import { createBrowserRouter, Navigate } from "react-router";
 import DashboardLayout from "../layouts/dashboardlayout";
-import { Calendar, calendarLoader, clockLoader, CreateJob, createjobAction, Dashboard, dashboardLoader, EditJob, editJobAction, InvoiceDetail, invoiceDetailLoader, InvoiceForm, invoiceFormLoader, Invoices, invoicesLoader, JobDetail, Jobs, jobsLoader, Locations, loginAction, ProfileScreen, Reports, Settings, settingsLoader, signupAction, singleJobLoader, singleWorkerJobLoader, workerLoader, WorkerProfile, workerProfileLoader, Workers, workersLoader } from "../pages";
+import { Calendar, calendarLoader, clockLoader, CreateJob, createjobAction, Dashboard, dashboardLoader, DownloadTimesheetScreen, EditJob, editJobAction, InvoiceDetail, invoiceDetailLoader, InvoiceForm, invoiceFormLoader, Invoices, invoicesLoader, JobDetail, Jobs, jobsLoader, Locations, loginAction, ProfileScreen, Reports, Settings, settingsLoader, signupAction, singleJobLoader, singleWorkerJobLoader, workerLoader, WorkerProfile, workerProfileLoader, Workers, workersLoader } from "../pages";
 import RootLayout from "@/layouts/RootLayout";
 import { NoActiveShift } from "@/components/ui/No_Active_Job";
 
@@ -174,11 +174,16 @@ export const router = createBrowserRouter([
                     },
                     {
                         path: "profile/notifications",
-                        element: <NotificationPreferencesScreen />
+                        element: <NotificationPreferencesScreen />,
+                        loader: notificationPreferencesLoader(queryClient)
                     },
                     {
                         path: "profile/edit",
                         element: <EditProfileScreen />
+                    },
+                    {
+                        path: "profile/download-time-sheet",
+                        element: <DownloadTimesheetScreen />
                     },
                     {
                         path: "schedule",

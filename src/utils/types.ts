@@ -3,16 +3,16 @@ import type { createJobSchema, editProfileSchema, invoiceLineItemSchema, invoice
 
 export type UserRole = "admin" | "manager" | "worker";
 
-export type NotificationPreferences = {
-  jobAssigned: boolean;
-  jobCancelled: boolean;
-  shiftReminder: boolean;
-  scheduleChanged: boolean;
-  payment: boolean;
-  email: boolean;
-  push: boolean;
-  sms: boolean;
-};
+// export type NotificationPreferences = {
+//   jobAssigned: boolean;
+//   jobCancelled: boolean;
+//   shiftReminder: boolean;
+//   scheduleChanged: boolean;
+//   payment: boolean;
+//   email: boolean;
+//   push: boolean;
+//   sms: boolean;
+// };
 
 export type User = {
   _id: string;
@@ -31,16 +31,16 @@ export type User = {
   notificationPreferences?: NotificationPreferences;
 };
 
-export const defaultNotificationPreferences: NotificationPreferences = {
-  jobAssigned: true,
-  jobCancelled: true,
-  shiftReminder: true,
-  scheduleChanged: true,
-  payment: true,
-  email: true,
-  push: true,
-  sms: false,
-};
+// export const defaultNotificationPreferences: NotificationPreferences = {
+//   jobAssigned: true,
+//   jobCancelled: true,
+//   shiftReminder: true,
+//   scheduleChanged: true,
+//   payment: true,
+//   email: true,
+//   push: true,
+//   sms: false,
+// };
 export type CreateJobForm = z.infer<typeof createJobSchema> & {
 
 };
@@ -92,7 +92,45 @@ export interface CompanySettings {
   openShiftsEnabled: boolean;
   openShiftsRequireApproval: boolean;
 }
+export type NotificationChannel =
+  | "email"
+  | "push"
+  | "inApp";
 
+export type NotificationEvent =
+  | "job_assigned"
+  | "job_accepted"
+  | "job_declined"
+  | "worker_checked_in"
+  | "worker_late"
+  | "worker_checked_out"
+  | "job_completed"
+  | "geofence_warning"
+  | "timesheet_submitted"
+  | "timesheet_approved"
+  | "timesheet_rejected";
+
+export type EventNotificationPreference = {
+  email: boolean;
+  push: boolean;
+  inApp: boolean;
+};
+
+export interface NotificationPreferences {
+  _id?: string;
+
+  user?: string;
+  company?: string;
+
+  emailEnabled: boolean;
+  pushEnabled: boolean;
+  inAppEnabled: boolean;
+
+  events: Record<
+    NotificationEvent,
+    EventNotificationPreference
+  >;
+}
 export const ACTIVITY_TYPES = [
   "job_created",
   "job_updated",
@@ -115,3 +153,15 @@ export const ACTIVITY_TYPES = [
   "assignment_auto_completed"
 ] as const;
 export type ActivityType = (typeof ACTIVITY_TYPES)[number];
+
+export type TimesheetPeriodType =
+  | "weekly"
+  | "biweekly"
+  | "monthly";
+
+export interface TimesheetSummaryResponse {
+  success: boolean;
+  totalMinutes: number;
+  shiftsCount: number;
+  hasData: boolean;
+}

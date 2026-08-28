@@ -282,8 +282,8 @@ function TimezoneSelect({ value, onChange, disabled, error }: {
     }, [value])
 
     const filtered = useMemo(() => {
-        const q = query.trim().toLowerCase()
-        const matches = q ? zones.filter(z => z.toLowerCase().includes(q)) : zones
+        const q = query?.trim().toLowerCase()
+        const matches = q ? zones.filter(z => z?.toLowerCase().includes(q)) : zones
         return matches.slice(0, 50)
     }, [zones, query])
 
