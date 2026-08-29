@@ -335,9 +335,14 @@ export function CreateJob() {
           />
           <FieldError message={errors.location?.message} />
           {address && (
-            <p className="mt-2 flex items-center gap-1.5 text-xs text-slate-500">
-              <MapPin size={12} className="text-slate-400" /> {address}
-            </p>
+            <>
+              <p className="mt-2 flex items-center gap-1.5 text-xs text-slate-500">
+                <MapPin size={12} className="text-slate-400" /> {address}
+              </p>
+              <p className="mt-1 text-[11px] text-slate-400">
+                Only the general area above is shown to workers before they're assigned — this exact address is used for directions once someone is.
+              </p>
+            </>
           )}
           {/* Coordinates/address ride along as hidden fields — <Form> submits from the
               DOM, not RHF state, so they need real inputs to reach the action */}

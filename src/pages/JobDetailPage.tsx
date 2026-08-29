@@ -2,7 +2,7 @@ import customFetch from '@/utils/customFetch'
 import { formatCurrency } from '@/utils/format'
 import { formatDate, formatDuration } from '@/utils/date'
 import { queryClient } from '@/lib/queryClient'
-import { duplicateJob } from '@/utils/api-request-functions'
+import { deleteJob, duplicateJob, updateJobWorkers } from '@/utils/api-request-functions'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import dayjs from 'dayjs'
 import toast from 'react-hot-toast'
@@ -27,7 +27,8 @@ import {
     Receipt,
     Timer,
     Trash2,
-    Users
+    Users,
+    X
 } from 'lucide-react'
 import {
     Pencil, Send, XCircle,
@@ -35,8 +36,9 @@ import {
     LogIn, LogOut, Coffee,
     Ban, Bot, StickyNote, CircleCheck,
 } from "lucide-react"
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
+import AssignWorkersModal from '@/components/AssignWorkersModal'
 import { Avatar, Card, Divider, PriorityBadge, StatusBadge } from '../components/ui'
 import { singleJob } from './EditJobPage'
 
@@ -44,6 +46,7 @@ import type { LucideIcon } from "lucide-react"
 import type { ActivityType, CreateJobForm } from '@/utils/types'
 import { cn } from '@/lib/utils'
 import { getInitials } from '@/utils/getInitials'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 
 export const recordFormatUI: Record<ActivityType, { icon: LucideIcon; className: string; label: string }> = {
     // ── Job lifecycle ──────────────────────────────────────────────
@@ -223,7 +226,9 @@ export function JobDetail() {
         }
     })
     const assignedWorkers = job?.workers ?? []
+    console.log("assign workers :",assignedWorkers)
     const [showApproveModal, setShowApproveModal] = useState(false)
+    const [showAssignWorkersModal, setShowAssignWorkersModal] = useState(false)
 
     const duplicateJobMutation = useMutation({
         mutationFn: duplicateJob,
@@ -235,6 +240,15 @@ export function JobDetail() {
             console.error(error)
             toast.error("Failed to duplicate job")
         },
+    })
+
+    const removeWorkerMutation = useMutation({
+        mutationFn: (worker: typeof assignedWorkers[number]) =>
+            updateJobWorkers(
+                id!,
+                assignedWorkers.filter(w => w.email !== worker.email),
+                `${worker.fullname} removed from this job`
+            ),
     })
 
     const statusColor: Record<string, string> = {
@@ -256,6 +270,9 @@ export function JobDetail() {
         if (w.checkedOutAt && w.totalPay) return sum + w.totalPay
         return sum + (getWorkerMinutes(w) / 60) * (w.payRate || 0)
     }, 0)
+    const overtimeWorkersCount = job?.minutes
+        ? assignedWorkers.filter(w => !!w.checkedInAt && getWorkerMinutes(w) > job.minutes!).length
+        : 0
 
     return (
         <div className="p-6 animate-fade-in">
@@ -398,9 +415,16 @@ export function JobDetail() {
                     {assignedWorkers.length > 0 && (
                         <Card>
                             <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-[#E2E8F0]">
-                                <div>
-                                    <h3 className="text-sm font-semibold text-slate-900">Time Logs</h3>
-                                    <p className="text-xs text-slate-400 mt-0.5">Individual clock-in/out records</p>
+                                <div className="flex items-center gap-2.5">
+                                    <div>
+                                        <h3 className="text-sm font-semibold text-slate-900">Time Logs</h3>
+                                        <p className="text-xs text-slate-400 mt-0.5">Individual clock-in/out records</p>
+                                    </div>
+                                    {overtimeWorkersCount > 0 && (
+                                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-700 bg-amber-100 px-2 py-1 rounded-full">
+                                            <Flag size={9} /> {overtimeWorkersCount} over required time
+                                        </span>
+                                    )}
                                 </div>
                                 <button className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 border border-[#E2E8F0] rounded-lg px-3 py-1.5 hover:bg-slate-50 transition-colors">
                                     <Download size={12} /> Export
@@ -417,10 +441,18 @@ export function JobDetail() {
                             <div className="divide-y divide-[#F8FAFC]">
                                 {assignedWorkers.map((w, i) => {
                                     const breakMinutes = getWorkerBreakMinutes(w)
+                                    const workedMinutes = getWorkerMinutes(w)
+                                    // Flag once they've worked past the job's required duration —
+                                    // whether still clocked in (live overtime) or already checked
+                                    // out, either way it's worth a manager's eyes before payroll.
+                                    const isOvertime = !!w.checkedInAt && !!job?.minutes && workedMinutes > job.minutes
                                     return (
                                         <div
                                             key={w.email}
-                                            className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-4 px-5 py-3.5 items-center hover:bg-slate-50/50 transition-colors cursor-pointer"
+                                            className={cn(
+                                                "grid grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-4 px-5 py-3.5 items-center hover:bg-slate-50/50 transition-colors cursor-pointer",
+                                                isOvertime && "bg-amber-50/40"
+                                            )}
                                             onClick={() => onNavigate(`/workers/${w.user}/worker-profile`)}
                                         >
                                             <div className="flex items-center gap-2.5">
@@ -442,9 +474,16 @@ export function JobDetail() {
                                                 }
                                             </div>
                                             <p className="text-xs text-slate-500 mono">{breakMinutes > 0 ? formatDuration(breakMinutes) : "—"}</p>
-                                            <p className="text-xs font-semibold text-emerald-700 mono">
-                                                {w.checkedInAt ? formatDuration(getWorkerMinutes(w)) : "—"}
-                                            </p>
+                                            <div>
+                                                <p className={cn("text-xs font-semibold mono", isOvertime ? "text-amber-700" : "text-emerald-700")}>
+                                                    {w.checkedInAt ? formatDuration(workedMinutes) : "—"}
+                                                </p>
+                                                {isOvertime && (
+                                                    <span className="inline-flex items-center gap-1 text-[9px] font-semibold text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded-full mt-1">
+                                                        <Flag size={8} /> +{formatDuration(workedMinutes - job.minutes!)} over
+                                                    </span>
+                                                )}
+                                            </div>
                                         </div>
                                     )
                                 })}
@@ -537,7 +576,11 @@ export function JobDetail() {
                             >
                                 <Copy size={13} className="text-slate-400" /> {duplicateJobMutation.isPending ? "Duplicating..." : "Duplicate"}
                             </button>
-                            <button className="w-full h-10 rounded-xl border border-red-100 bg-red-50 text-sm font-semibold text-red-500 hover:bg-red-100 flex items-center justify-center gap-2 transition-colors mt-1">
+                            <button
+                                onClick={() => deleteJob(job!._id as string).then(undefined => {
+                                    navigate("/jobs")
+                                })}
+                                className="w-full h-10 rounded-xl border border-red-100 bg-red-50 text-sm font-semibold text-red-500 hover:bg-red-100 flex items-center justify-center gap-2 transition-colors mt-1">
                                 <Trash2 size={13} /> Cancel Job
                             </button>
                         </div>
@@ -550,11 +593,12 @@ export function JobDetail() {
                                 <h3 className="text-sm font-semibold text-slate-900">Assigned Workers</h3>
                                 <p className="text-xs text-slate-400 mt-0.5">{assignedWorkers.length} assigned</p>
                             </div>
-                            <Link to={`/jobs/${id}/edit?edit=assigned-workers#assigned-worker`}>
-                                <button className="h-7 px-2.5 rounded-lg bg-[#1E3A5F]/10 text-[#1E3A5F] text-xs font-semibold hover:bg-[#1E3A5F]/20 transition-colors flex items-center gap-1">
-                                    <Plus size={11} /> Add
-                                </button>
-                            </Link>
+                            <button
+                                onClick={() => setShowAssignWorkersModal(true)}
+                                className="h-7 px-2.5 rounded-lg bg-[#1E3A5F]/10 text-[#1E3A5F] text-xs font-semibold hover:bg-[#1E3A5F]/20 transition-colors flex items-center gap-1"
+                            >
+                                <Plus size={11} /> Add
+                            </button>
                         </div>
 
                         {assignedWorkers.length === 0 ? (
@@ -573,6 +617,27 @@ export function JobDetail() {
                                         className="flex items-center gap-3 px-5 py-3.5 hover:bg-slate-50/60 transition-colors cursor-pointer group"
                                         onClick={() => onNavigate(`/workers/${w.user}/worker-profile`)}
                                     >
+
+                                        <Tooltip>
+                                            <TooltipTrigger asChild
+                                                onClick={e => {
+                                                    e.stopPropagation()
+                                                    removeWorkerMutation.mutate(w)
+                                                }}
+                                            >
+                                                <button
+                                                    disabled={removeWorkerMutation.isPending}
+                                                    className="p-1 cursor-pointer rounded-full hover:bg-slate-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                                                >
+                                                    <X size={20} className='text-rose-400' />
+                                                </button>
+                                            </TooltipTrigger>
+                                            <TooltipContent className='bg-black'>
+                                                Remove <span className='font-black '>{w.fullname}</span>  <br/>
+                                                from this job
+                                            </TooltipContent>
+                                        </Tooltip>
+
                                         <Avatar initials={w.fullname?.slice(0, 2)} size="sm" index={i} />
                                         <div className="flex-1 min-w-0">
                                             <p className="text-sm font-medium text-slate-800 group-hover:text-blue-700 transition-colors">{w.fullname}</p>
@@ -641,6 +706,14 @@ export function JobDetail() {
                 </div>
             </div>
 
+            <AssignWorkersModal
+                // assignedWorkers
+                jobId={id!}
+                assignedWorkers={assignedWorkers}
+                open={showAssignWorkersModal}
+                onOpenChange={setShowAssignWorkersModal}
+            />
+
             {/* Approve modal */}
             {showApproveModal && (
                 <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
@@ -652,7 +725,7 @@ export function JobDetail() {
                         <p className="text-sm text-slate-500 text-center mb-6">This will mark the job as completed and notify all workers. Hours will be submitted for payroll.</p>
                         <div className="bg-slate-50 rounded-xl p-4 mb-5 flex flex-col gap-2">
                             {[
-                                { label: 'Job', value: job.title.split('—')[0].trim() },
+                                { label: 'Job', value: job.title?.split('—')[0]?.trim() },
                                 { label: 'Workers', value: `${assignedWorkers.length} workers` },
                                 { label: 'Total Hours', value: formatDuration(totalMinutes) },
                                 { label: 'Est. Cost', value: formatCurrency(estimatedCost) },

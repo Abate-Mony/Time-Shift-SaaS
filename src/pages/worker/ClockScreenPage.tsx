@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button"
 import GradientBorder from "@/components/ui/gradient-border"
 import { queryClient } from "@/lib/queryClient"
 import { changeWorkerJobStaus, endWorkerBreak, startWorkerBreak } from "@/utils/api-request-functions"
@@ -146,15 +147,6 @@ export default function ClockScreen() {
     onFinish()
   }
 
-  useEffect(() => {
-    if (progress > 99 && !doneSnapshot) {
-      finish()
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [progress])
-
-
-
   if (clockState === 'done') {
     return (
       <div className="flex flex-col items-center pb-4 animate-fade-in">
@@ -194,12 +186,12 @@ export default function ClockScreen() {
                 <Camera size={15} className="text-slate-400" /> Upload Site Photos
               </button>
               {!showNote ? (
-                <button
+                <Button
                   onClick={() => setShowNote(true)}
                   className="w-full h-11 rounded-xl border border-[#E2E8F0] text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors flex items-center justify-center gap-2"
                 >
                   <FileText size={15} className="text-slate-400" /> Add a Note
-                </button>
+                </Button>
               ) : (
                 <div>
                   <textarea
@@ -211,12 +203,11 @@ export default function ClockScreen() {
                   />
                 </div>
               )}
-              <button
-                // onClick={}
+              <Button
                 className="w-full h-12 rounded-xl bg-[#1E3A5F] text-white text-sm font-bold hover:bg-[#162D4A] transition-colors mt-1"
               >
                 Done
-              </button>
+              </Button>
             </div>
           </div>
         </div>

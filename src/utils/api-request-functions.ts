@@ -2,7 +2,7 @@ import { queryClient } from "@/lib/queryClient";
 import { isAxiosError } from "axios";
 import toast from "react-hot-toast";
 import customFetch from "./customFetch";
-import type { EditProfileForm, EventNotificationPreference, InvoiceStatus, NotificationEvent, NotificationPreferences, TimesheetSummaryResponse } from "./types";
+import type { CreateJobForm, EditProfileForm, EventNotificationPreference, InvoiceStatus, NotificationEvent, NotificationPreferences, TimesheetSummaryResponse } from "./types";
 
 import { getCurrentPosition } from "./getPosition";
 
@@ -218,22 +218,36 @@ export const duplicateJob = async (id: string) => {
     return await customFetch.post(`/jobs/duplicate-job/${id}`)
 }
 
-export type TimesheetPeriodType = "weekly" | "biweekly" | "monthly"
+// PATCH /jobs/:id has no separate add/remove-worker endpoints — the backend
+// diffs the `workers` array you send against the job's current assignments
+// (anything missing gets marked removed, anything new gets inserted), so
+// both "add" and "remove" are just this same call with a different array.
+export const updateJobWorkers = async (
+    jobId: string,
+    workers: CreateJobForm["workers"],
+    successMessage = "Workers updated"
+): Promise<boolean> => {
+    try {
+        await customFetch.patch(`/jobs/${jobId}`, { workers })
 
-export type TimesheetPeriodParams = {
-    period: TimesheetPeriodType
-    start: string
-    end: string
+        toast.success(successMessage)
+
+        await queryClient.invalidateQueries({ queryKey: ["job", jobId] })
+        await queryClient.invalidateQueries({ queryKey: ["jobs"] })
+        return true
+    } catch (err) {
+        const message = isAxiosError(err)
+            ? err.response?.data?.msg ?? err.response?.data?.message ?? "Something went wrong."
+            : err instanceof Error
+                ? err.message
+                : "Something went wrong.";
+
+        toast.error(message)
+        return false
+    }
 }
 
-// export const getTimesheetSummary = async (params: TimesheetPeriodParams) => {
-//     const { data } = await customFetch.get<{
-//         success: boolean
-//         summary: { totalMinutes: number; shiftsCount: number; hasData: boolean }
-//     }>("/workers/timesheet/summary", { params })
-
-//     return data.summary
-// }
+export type TimesheetPeriodType = "weekly" | "biweekly" | "monthly"
 
 // Blob responses carry JSON error bodies as a Blob too (responseType is
 // fixed per-request), so a failed request needs its body read back out as
@@ -255,31 +269,6 @@ const extractBlobErrorMessage = async (err: unknown): Promise<string> => {
     return responseData?.msg ?? responseData?.message ?? "Something went wrong."
 }
 
-// export const downloadTimesheet = async (params: TimesheetPeriodParams): Promise<boolean> => {
-//     try {
-//         const response = await customFetch.get<Blob>("/workers/timesheet/download", {
-//             params,
-//             responseType: "blob",
-//         })
-
-//         const disposition = response.headers["content-disposition"] as string | undefined
-//         const filename = disposition?.match(/filename="?([^"]+)"?/)?.[1] ?? `timesheet-${params.start}-to-${params.end}.pdf`
-
-//         const url = URL.createObjectURL(response.data)
-//         const link = document.createElement("a")
-//         link.href = url
-//         link.download = filename
-//         document.body.appendChild(link)
-//         link.click()
-//         link.remove()
-//         URL.revokeObjectURL(url)
-
-//         return true
-//     } catch (err) {
-//         toast.error(await extractBlobErrorMessage(err))
-//         return false
-//     }
-// }
 export const getNotificationPreferences =
     async () => {
         const { data } = await customFetch.get<{
@@ -313,7 +302,6 @@ export const getTimesheetSummary = async ({
                 },
             }
         );
-    console.log("data-summary : ", data)
     return data;
 };
 export const downloadTimesheet = async ({
@@ -324,43 +312,46 @@ export const downloadTimesheet = async ({
     period: TimesheetPeriodType;
     start: string;
     end: string;
-}) => {
-    const response = await customFetch.get(
-        "/timesheets/me/pdf",
-        {
-            params: {
-                period,
-                startDate: start,
-                endDate: end,
-            },
+}): Promise<boolean> => {
+    try {
+        const response = await customFetch.get(
+            "/timesheets/me/pdf",
+            {
+                params: {
+                    period,
+                    startDate: start,
+                    endDate: end,
+                },
+                responseType: "blob",
+            }
+        );
 
-            responseType: "blob",
-        }
-    );
+        const blob = new Blob([response.data], { type: "application/pdf" });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
 
-    const blob = new Blob(
-        [response.data],
-        {
-            type: "application/pdf",
-        }
-    );
+        link.href = url;
+        link.download = `timesheet-${period}-${start}-${end}.pdf`;
 
-    const url =
-        window.URL.createObjectURL(blob);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
 
-    const link =
-        document.createElement("a");
+        window.URL.revokeObjectURL(url);
 
-    link.href = url;
-
-    link.download =
-        `timesheet-${period}-${start}-${end}.pdf`;
-
-    document.body.appendChild(link);
-
-    link.click();
-
-    link.remove();
-
-    window.URL.revokeObjectURL(url);
+        return true;
+    } catch (err) {
+        toast.error(await extractBlobErrorMessage(err));
+        return false;
+    }
 };
+export const deleteJob = async (id: string) => {
+    try {
+        await customFetch.delete(`/jobs/${id}`)
+        queryClient.invalidateQueries({ queryKey: ["jobs"] })
+        queryClient.invalidateQueries({ queryKey: ["job",id] })
+        toast.success("Job deleted successfully")
+    } catch (e) {
+        toast.error("Failed to delete job, try again later")
+    }
+}

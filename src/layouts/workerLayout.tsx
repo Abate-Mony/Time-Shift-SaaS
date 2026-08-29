@@ -190,9 +190,24 @@ export function WorkerAppLayout() {
         const checkedInAt = activeJob.workerJobDetails?.checkedInAt
         const elapsedSeconds = checkedInAt ? Math.max(dayjs().diff(dayjs(checkedInAt), "second"), 0) : 0
 
+        // Scheduled shift window, same overnight-shift handling as ClockScreenPage.
+        const today = dayjs().format("YYYY-MM-DD")
+        const scheduledStart = dayjs(`${today} ${activeJob.startTime}`)
+        let scheduledEnd = dayjs(`${today} ${activeJob.endTime}`)
+        if (scheduledEnd.isBefore(scheduledStart)) scheduledEnd = scheduledEnd.add(1, "day")
+        const totalSeconds = Math.max(scheduledEnd.diff(scheduledStart, "second"), 0)
+
+        const percentComplete = totalSeconds > 0
+          ? Math.min(100, Math.max(0, Math.round((elapsedSeconds / totalSeconds) * 100)))
+          : 0
+        const remainingSeconds = Math.max(totalSeconds - elapsedSeconds, 0)
+
         notificationRef.current?.close()
-        const notification = new Notification("You're on the clock", {
-          body: `${activeJob.title} — ${formatSecondsAsDuration(elapsedSeconds)} elapsed`,
+        // The Web Notification API has no native progress-bar UI (that's an
+        // Android-app-only affordance) — the percentage is shown as text
+        // instead, in the title so it's visible even if the body truncates.
+        const notification = new Notification(`${percentComplete}% through your shift`, {
+          body: `${activeJob.title} — ${formatSecondsAsDuration(remainingSeconds)} remaining`,
           tag: "active-job",
           silent: true,
         })

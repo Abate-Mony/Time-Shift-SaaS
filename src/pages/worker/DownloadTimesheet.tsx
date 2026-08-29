@@ -4,7 +4,7 @@ import {
   getTimesheetSummary,
   type TimesheetPeriodType,
 } from "@/utils/api-request-functions";
-import { formatDuration } from "@/utils/date";
+import { formatDate, formatDuration } from "@/utils/date";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import dayjs, { type Dayjs } from "dayjs";
 import { ChevronLeft, ChevronRight, Download, Loader2 } from "lucide-react";
@@ -165,10 +165,32 @@ export default function DownloadTimesheetScreen() {
         <div className="flex items-center justify-between py-3.5">
           <span className="text-sm text-slate-500">Shifts</span>
           <span className="text-sm font-semibold text-slate-900">
-            {summaryLoading ? "—" : (summary?.shiftsCount ?? 0)}
+            {summaryLoading ? "—" : (summary?.totalJobs ?? 0)}
           </span>
         </div>
       </div>
+
+      {!summaryLoading && summary?.hasData && summary.assignments?.length > 0 && (
+        <div className="bg-white rounded-2xl border border-[#E2E8F0] px-5 shadow-sm divide-y divide-[#F8FAFC]">
+          <div className="py-3.5">
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+              Shifts in this period
+            </p>
+          </div>
+
+          {summary.assignments.map((a, i) => (
+            <div key={a._id ?? i} className="flex items-center justify-between gap-3 py-3">
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-slate-800 truncate">{a.title || "Shift"}</p>
+                <p className="text-xs text-slate-400 mt-0.5">{formatDate(a.date, "ddd, D MMM")}</p>
+              </div>
+              <span className="text-sm font-semibold text-slate-900 shrink-0">
+                {formatDuration(a.minutes)}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
 
       <button
         type="button"
@@ -184,7 +206,7 @@ export default function DownloadTimesheetScreen() {
         {downloadMutation.isPending ? "Generating…" : "Download Timesheet"}
       </button>
 
-      {!summaryLoading && summary && !summary.hasData && (
+      {!summaryLoading && !summary?.totalJobs && (
         <p className="text-xs text-center text-slate-400 -mt-2">
           No shifts recorded in this period
         </p>

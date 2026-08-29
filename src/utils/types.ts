@@ -159,9 +159,25 @@ export type TimesheetPeriodType =
   | "biweekly"
   | "monthly";
 
+// NOTE: shape is a best guess — confirm the real field names against a live
+// /timesheets/ response and adjust. This describes one shift/job the worker
+// worked in the requested period, not a co-worker on a job (which is what
+// CreateJobForm["workers"] — the type this replaced — actually describes).
+export interface TimesheetAssignment {
+  _id?: string;
+  title?: string;
+  date?: string;
+  startTime?: string;
+  endTime?: string;
+  minutes?: number;
+}
+
 export interface TimesheetSummaryResponse {
   success: boolean;
   totalMinutes: number;
   shiftsCount: number;
   hasData: boolean;
+  totalJobs:number,
+  totalHours:number,
+  assignments: TimesheetAssignment[]
 }

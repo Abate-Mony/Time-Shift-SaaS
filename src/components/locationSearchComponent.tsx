@@ -98,13 +98,30 @@ export default function SearchLocation({
             const find = (type: string) =>
                 components.find((c) => c.types.includes(type))?.longText ?? "";
 
+            const city = find("postal_town") || find("locality");
+            const postcode = find("postal_code");
+            // UK postcode "outward code" (e.g. "LS9" out of "LS9 8AB") — precise
+            // enough to be useful, general enough not to pin the exact building.
+            const postcodeArea = postcode.split(" ")[0] || "";
+            const region = find("administrative_area_level_2") || find("administrative_area_level_1");
+            const country = find("country") || "United Kingdom";
+
             const location: LocationResult = {
                 id: suggestion.id,
-                siteName: [find("street_number"), find("route")].filter(Boolean).join(" ") || suggestion.label,
+                // Shown to every worker browsing this job, including on Open
+                // Shifts before anyone's actually assigned — deliberately NOT the
+                // street number/name (that's `address`, only used for directions
+                // once a worker is assigned). Chain never falls through to
+                // suggestion.label/formattedAddress — those are street-level, and
+                // Google doesn't always return postal_town/locality/postal_code
+                // (e.g. some POI results), so that fallback would leak the exact
+                // address right back. region/country are effectively always
+                // present on a resolved place, so this can't bottom out unsafe.
+                siteName: [city, postcodeArea].filter(Boolean).join(" ") || region || country,
                 address: place.formattedAddress ?? suggestion.label,
-                city: find("postal_town") || find("locality"),
-                postcode: find("postal_code"),
-                country: find("country") || "United Kingdom",
+                city,
+                postcode,
+                country,
                 lat: place.location?.lat() ?? 0,
                 lng: place.location?.lng() ?? 0,
             };

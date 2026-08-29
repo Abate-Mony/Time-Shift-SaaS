@@ -1,3 +1,4 @@
+import CompletedJobCard from "@/components/CompletedJobCard"
 import JobCard from "@/components/JobCard"
 import OpenShiftCard from "@/components/OpenShiftCard"
 import SearchComponent from "@/components/Search"
@@ -10,7 +11,7 @@ import customFetch from "@/utils/customFetch"
 import type { CreateJobForm } from "@/utils/types"
 import { useQuery, type QueryClient } from "@tanstack/react-query"
 import dayjs from "dayjs"
-import { AlertCircle, Briefcase, ChevronLeft, ChevronRight, Clock, Loader2, Star, X } from "lucide-react"
+import { AlertCircle, Briefcase, ChevronLeft, ChevronRight, Loader2, X } from "lucide-react"
 import { useMemo, useState } from "react"
 import { useLoaderData, useSearchParams, type LoaderFunctionArgs, type Params } from "react-router"
 import { DAY_LABELS, startOfWeek } from "./ScheduleScreen"
@@ -104,12 +105,6 @@ export default function JobsScreen() {
         isError: isOpenShiftsError,
     } = useQuery({ ...openShiftsQuery, enabled: view === 'open-shifts' })
     const openShifts = openShiftsData?.jobs ?? []
-    const completedHistory = [
-        { date: '24 Jul', job: 'Excel Centre — Event Staffing', hours: 12, pay: 216, rated: true },
-        { date: '23 Jul', job: 'Waterloo — Crowd Management', hours: 8, pay: 144, rated: false },
-        { date: '22 Jul', job: 'Heathrow T5 — Security', hours: 8, pay: 144, rated: true },
-        { date: '21 Jul', job: 'Canary Wharf — Day Patrol', hours: 8, pay: 144, rated: true },
-    ]
     const tabs: { id: CreateJobForm["status"] | "all"; label: string; count: number }[] = [
         { id: 'all', label: 'All', count: jobs.length },
         { id: 'accepted', label: 'Accepted', count: jobs.filter(job => job.status == "accepted").length },
@@ -277,37 +272,12 @@ export default function JobsScreen() {
 
 
 
-                        {tab === 'completed' && completedHistory.map((h, i) => (
-                            <div key={i} className="bg-white rounded-2xl border border-[#E2E8F0] overflow-hidden shadow-sm">
-                                <div className="h-1 bg-emerald-500" />
-                                <div className="p-4">
-                                    <div className="flex items-start justify-between gap-2 mb-2">
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-semibold text-slate-900 truncate">{h.job}</p>
-                                            <p className="text-xs text-slate-400 mt-0.5">{h.date}</p>
-                                        </div>
-                                        <span className="text-sm font-bold text-emerald-600 shrink-0">£{h.pay}</span>
-                                    </div>
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-1.5 text-xs text-slate-500">
-                                            <Clock size={11} className="text-slate-400" />
-                                            {h.hours} hours worked
-                                        </div>
-                                        {h.rated ? (
-                                            <div className="flex items-center gap-1 text-amber-500">
-                                                {[1, 2, 3, 4, 5].map(s => <Star key={s} size={11} fill="currentColor" />)}
-                                            </div>
-                                        ) : (
-                                            <button className="text-xs text-blue-600 font-semibold hover:text-blue-800 transition-colors">
-                                                Rate job →
-                                            </button>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
                         {
-                            jobs?.length ? jobs.map(job => <JobCard job={job} key={job._id} />) : <div className="bg-white rounded-2xl border border-[#E2E8F0] p-10 text-center shadow-sm">
+                            jobs?.length ? jobs.map(job =>
+                                job.status === 'completed'
+                                    ? <CompletedJobCard job={job} key={job._id} />
+                                    : <JobCard job={job} key={job._id} />
+                            ) : <div className="bg-white rounded-2xl border border-[#E2E8F0] p-10 text-center shadow-sm">
                                 <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center mx-auto mb-3">
                                     <Briefcase size={20} className="text-blue-400" />
                                 </div>

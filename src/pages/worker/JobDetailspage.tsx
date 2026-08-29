@@ -9,7 +9,7 @@ import { ensurePushSubscription } from "@/utils/pushSubscription"
 import { buildMapUrl, MAP_SERVICES, type MapService } from "@/utils/mapLinks"
 import type { CreateJobForm } from "@/utils/types"
 import { useQuery } from "@tanstack/react-query"
-import { AlertCircle, Briefcase, CalendarDays, Check, ChevronLeft, Clock, Dot, Loader2, MapPin, Navigation, Timer, X } from "lucide-react"
+import { AlertCircle, Briefcase, CalendarDays, Check, CheckCircle2, ChevronLeft, Clock, Dot, Loader2, MapPin, Navigation, Timer, X } from "lucide-react"
 import { useNavigate, useParams, type LoaderFunctionArgs } from "react-router"
 import { useState } from "react"
 
@@ -87,6 +87,15 @@ export default function JobDetailScreen() {
         address: job?.address || job?.location,
     })
 
+    // The job's over either way — no reason to keep offering directions to it.
+    const showDirections = directionsHref && job?.status !== 'completed' && job?.status !== 'declined'
+
+    const heroGradient = job?.status === 'completed'
+        ? 'from-emerald-500 to-emerald-600'
+        : job?.status === 'declined'
+            ? 'from-slate-400 to-slate-500'
+            : 'from-[#1E3A5F] to-[#2D5A8E]'
+
     return (
         <div className="flex flex-col gap-4 pb-4 animate-fade-in">
             <button
@@ -98,7 +107,7 @@ export default function JobDetailScreen() {
 
             {/* Hero card */}
             <div className="bg-white rounded-2xl border border-[#E2E8F0] overflow-hidden shadow-sm">
-                <div className="bg-gradient-to-br from-[#1E3A5F] to-[#2D5A8E] p-5 relative overflow-hidden">
+                <div className={`bg-gradient-to-br ${heroGradient} p-5 relative overflow-hidden`}>
                     <div className="absolute inset-0 opacity-[0.05]"
                         style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '20px 20px' }} />
                     <div className="relative">
@@ -147,6 +156,30 @@ export default function JobDetailScreen() {
                         <p className="text-xs font-bold text-amber-800 uppercase tracking-wide">Manager Note</p>
                     </div>
                     <p className="text-sm text-amber-800 leading-relaxed">{job?.description}</p>
+                </div>
+            )}
+
+            {job?.status === 'completed' && (
+                <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
+                        <CheckCircle2 size={16} className="text-emerald-600" />
+                    </div>
+                    <div>
+                        <p className="text-sm font-bold text-emerald-800">Shift completed</p>
+                        <p className="text-xs text-emerald-700 mt-0.5">Your hours have been recorded and sent to your manager.</p>
+                    </div>
+                </div>
+            )}
+
+            {job?.status === 'declined' && (
+                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
+                        <X size={16} className="text-slate-500" />
+                    </div>
+                    <div>
+                        <p className="text-sm font-bold text-slate-700">You declined this shift</p>
+                        <p className="text-xs text-slate-500 mt-0.5">This job is no longer assigned to you.</p>
+                    </div>
                 </div>
             )}
 
@@ -204,7 +237,7 @@ export default function JobDetailScreen() {
             )}
 
             {/* Secondary action — directions to the actual job site */}
-            {directionsHref && (
+            {showDirections && (
                 <div className="flex flex-col gap-2">
                     <a href={directionsHref} target="_blank" rel="noreferrer">
                         <button className="w-full h-11 rounded-xl bg-slate-100 text-slate-700 text-sm font-semibold hover:bg-slate-200 transition-colors flex items-center justify-center gap-2">

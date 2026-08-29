@@ -19,7 +19,7 @@ import { AnimatedTooltip } from "@/components/ui/animated-tooltip"
 import { Checkbox } from "@/components/ui/checkbox"
 import { formatCurrency } from "./format"
 import { formatDate, formatDuration } from "./date"
-import { duplicateJob } from "./api-request-functions"
+import { deleteJob, duplicateJob } from "./api-request-functions"
 import { useMutation } from "@tanstack/react-query"
 import dayjs from "dayjs"
 
@@ -234,15 +234,7 @@ export const jobsColumns: ColumnDef<CreateJobForm>[] = [
           toast.error("Failed to duplicate job");
         },
       });
-      const deleteJob = async () => {
-        try {
-          await customFetch.delete(`/jobs/${job._id}`)
-          queryClient.invalidateQueries({ queryKey: ["jobs"] })
-          toast.success("Job deleted successfully")
-        } catch (e) {
-          toast.error("Failed to delete job, try again later")
-        }
-      }
+      //deletejob
 
       return (
         <DropdownMenu>
@@ -275,7 +267,7 @@ export const jobsColumns: ColumnDef<CreateJobForm>[] = [
 
             <DropdownMenuSeparator />
 
-            <DropdownMenuItem className="text-red-600 focus:text-red-600 focus:bg-red-50" onClick={deleteJob}>
+            <DropdownMenuItem className="text-red-600 focus:text-red-600 focus:bg-red-50" onClick={()=>deleteJob(job!._id as string)}>
               Delete Job
             </DropdownMenuItem>
           </DropdownMenuContent>
