@@ -34,6 +34,7 @@ import NewUserInvitePage from "@/pages/acceptInvites/NewUserInvitePage";
 import { createBrowserRouter, Navigate } from "react-router";
 import DashboardLayout from "../layouts/dashboardlayout";
 import { Analytics, Calendar, calendarLoader, clockLoader, CreateJob, createjobAction, Dashboard, dashboardLoader, DownloadTimesheetScreen, EditJob, editJobAction, InvoiceDetail, invoiceDetailLoader, InvoiceForm, invoiceFormLoader, Invoices, invoicesLoader, JobDetail, Jobs, jobsLoader, Locations, loginAction, ProfileScreen, RecurringJobDetail, RecurringJobs, Reports, Settings, settingsLoader, signupAction, singleJobLoader, singleWorkerJobLoader, Team, teamLoader, workerLoader, WorkerProfile, workerProfileLoader, Workers, workersLoader } from "../pages";
+import { workerDashboardstats } from "@/pages/worker/WorkerProfilepage";
 
 export const router = createBrowserRouter([
     {
@@ -73,13 +74,13 @@ export const router = createBrowserRouter([
                                 index: true,
                                 element: <Jobs />,
                                 loader: jobsLoader(queryClient)
-                            },{
-                                path:"recurring",
-                                element:<RecurringJobs/>
-                            },{
-                                path:"recurring/recurring-job-detail/:id",
-                                element:<RecurringJobDetail
-                                scheduleId="rs1"
+                            }, {
+                                path: "recurring",
+                                element: <RecurringJobs />
+                            }, {
+                                path: "recurring/recurring-job-detail/:id",
+                                element: <RecurringJobDetail
+                                    scheduleId="rs1"
                                 />
                             }
                         ]
@@ -272,7 +273,8 @@ export const router = createBrowserRouter([
                 children: [
                     {
                         index: true,
-                        element: <HomeScreen />
+                        element: <HomeScreen />,
+                        loader: workerDashboardstats
                     },
                     {
                         path: "jobs",

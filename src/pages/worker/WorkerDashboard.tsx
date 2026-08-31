@@ -4,10 +4,12 @@ import { Avatar } from "@/components/ui"
 import { workers } from "@/data/mockData"
 import type { User } from "@/utils/types"
 import { useQuery } from "@tanstack/react-query"
-import { ArrowUpRight, Bell, Briefcase, ChevronRight, Clock, Timer, TrendingUp } from "lucide-react"
+import { ArrowUpRight, Bell, Briefcase, ChevronRight, Clock, Timer, TrendingUp, Zap } from "lucide-react"
 import { Link, useNavigate, useOutletContext } from "react-router"
 import { activeWorkerJob } from "./ClockScreenPage"
 import { Button } from "@/components/ui/button"
+import type { WorkerDashboardStats } from "@/utils/types/workerType"
+import { workerDashboardstats } from "./WorkerProfilepage"
 
 export default function HomeScreen() {
     const worker = workers[0]
@@ -30,6 +32,13 @@ export default function HomeScreen() {
     const user = useOutletContext<{
         user: User
     }>()?.user
+      const {
+        jobStats,
+    
+        monthly
+        ,
+        totalJobs
+      } = useQuery(workerDashboardstats()).data as WorkerDashboardStats
     return (
         <div className="flex flex-col gap-5 pb-4">
             {/* Header */}
@@ -54,7 +63,35 @@ export default function HomeScreen() {
                     </div>
 
                     {/* Stats row */}
-                    <div className="grid grid-cols-3 gap-3">
+                    {/* Earnings card */}
+                    <div className="bg-[#1E3A5F] rounded-2xl p-5 relative overflow-hidden">
+                        <div className="absolute inset-0 opacity-[0.04]"
+                            style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '20px 20px' }} />
+                        <div className="relative">
+                            <div className="flex items-center justify-between mb-4">
+                                <div>
+                                    <p className="text-xs text-white/50 font-semibold uppercase tracking-wide">Earnings This Month</p>
+                                    <p className="text-3xl font-bold text-white mt-1">£{monthly.earnings}</p>
+                                </div>
+                                <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
+                                    <Zap size={18} className="text-blue-300" />
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-3 gap-3">
+                                {[
+                                    { label: 'Hours', value: `${monthly.hoursWorked?.toFixed(1)}h` },
+                                    { label: 'Jobs', value: jobStats.completed },
+                                    { label: '£/hr avg', value: monthly.averagePayRate || 2 },
+                                ].map(s => (
+                                    <div key={s.label} className="bg-white/10 rounded-xl p-2.5 text-center">
+                                        <p className="text-base font-bold text-white">{s.value}</p>
+                                        <p className="text-[10px] text-white/40 mt-0.5">{s.label}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                    {/* <div className="grid grid-cols-3 gap-3">
                         {[
                             { label: 'This Week', value: `${worker.hoursThisWeek}h`, icon: Clock },
                             { label: 'This Month', value: `${worker.hoursThisMonth}h`, icon: TrendingUp },
@@ -65,7 +102,7 @@ export default function HomeScreen() {
                                 <p className="text-[10px] text-white/50 mt-0.5 font-medium">{s.label}</p>
                             </div>
                         ))}
-                    </div>
+                    </div> */}
                 </div>
             </div>
 
@@ -119,11 +156,11 @@ export default function HomeScreen() {
             <div>
                 <div className="flex items-center justify-between mb-3">
                     <h2 className="text-sm font-bold text-slate-800">Today's Shift</h2>
-                 <Link to={"/worker/jobs"}>
-                 
-                    <Button variant={"link"} className="text-xs text-blue-600 font-semibold flex items-center gap-1 hover:text-blue-800 transition-colors">
-                        View all <ArrowUpRight size={12} />
-                    </Button></Link>
+                    <Link to={"/worker/jobs"}>
+
+                        <Button variant={"link"} className="text-xs text-blue-600 font-semibold flex items-center gap-1 hover:text-blue-800 transition-colors">
+                            View all <ArrowUpRight size={12} />
+                        </Button></Link>
                 </div>
 
             </div>
@@ -133,17 +170,17 @@ export default function HomeScreen() {
                     job={activeJob}
                 />
             ) : (<EmptyState
-            icon={<Briefcase size={20} />}
-            // action={
-            //     <p>
-            //         browse jobs <Link to={"/worker/jobs"}><Button variant={"link"} className={""}> here </Button></Link>
-            //     </p>
-            // }
-            title="No Shifts Today"
-            description="Check the Jobs tab for upcoming assignments"
+                icon={<Briefcase size={20} />}
+                // action={
+                //     <p>
+                //         browse jobs <Link to={"/worker/jobs"}><Button variant={"link"} className={""}> here </Button></Link>
+                //     </p>
+                // }
+                title="No Shifts Today"
+                description="Check the Jobs tab for upcoming assignments"
             />
 
-            
+
             )}
 
             {/* This week */}

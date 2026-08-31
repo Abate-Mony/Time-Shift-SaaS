@@ -20,7 +20,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Bell, CheckCircle2, ChevronRight, Clock, Download, LogOut, MapPin, Phone, Star, Zap } from "lucide-react";
 import { useNavigate, useOutletContext, type LoaderFunctionArgs } from "react-router";
 
-const workerDashboardstats = () => {
+export const workerDashboardstats = () => {
   return ({
     queryKey: ["worker-dashboard-stats"],
     queryFn: async ()=> {
