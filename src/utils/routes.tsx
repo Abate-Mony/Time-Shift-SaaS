@@ -2,22 +2,38 @@ import ErrorElement from "@/components/ErrorElement";
 import { LoginForm } from "@/components/login-form";
 import { SignUpForm } from "@/components/signup-form";
 import AuthLayout, { authLoader } from "@/layouts/AuthLayout";
+import SettingsLayout from "@/layouts/SettingsLayout";
 import { WorkerAppLayout, workerRouteLoader } from "@/layouts/workerLayout";
 import { queryClient } from "@/lib/queryClient";
 import NotFound from "@/pages/404Page";
+import ForgotPasswordPage from "@/pages/ForgotPasswordPage";
+import ResetPasswordPage from "@/pages/ResetPasswordPage";
+import BillingSettings from "@/pages/settings/BillingSettings";
+import CompanySettings from "@/pages/settings/CompanySettings";
+import NotificationSettings from "@/pages/settings/NotificationSettings";
+import ProfileSettings from "@/pages/settings/ProfileSettings";
+import SecuritySettings from "@/pages/settings/SecuritySettings";
+import VerifyEmailPage from "@/pages/VerifyEmailPage";
 import ClockScreen from "@/pages/worker/ClockScreenPage";
+import EditProfileScreen from "@/pages/worker/EditProfile";
 import JobDetailScreen from "@/pages/worker/JobDetailspage";
 import JobsScreen from "@/pages/worker/JobScreen";
+import NotificationPreferencesScreen, { loader as notificationPreferencesLoader } from "@/pages/worker/NotificationPreferences";
 import ScheduleScreen from "@/pages/worker/ScheduleScreen";
 import HomeScreen from "@/pages/worker/WorkerDashboard";
-import NotificationPreferencesScreen, { loader as notificationPreferencesLoader } from "@/pages/worker/NotificationPreferences";
-import EditProfileScreen from "@/pages/worker/EditProfile";
 // import ProfileScreen from "@/pages/worker/WorkerProfilepage";
+import { NoActiveShift } from "@/components/ui/No_Active_Job";
+import InvitationLayout from "@/layouts/AccpetInviteLayout";
+import JobLayout from "@/layouts/JobLayout";
+import RootLayout from "@/layouts/RootLayout";
+import AcceptInvitePage from "@/pages/acceptInvites/AcceptInvitePage";
+import ExistingUserInvitePage from "@/pages/acceptInvites/ExistingUserInvitePage";
+import InvitationStatusPage from "@/pages/acceptInvites/InvitationStatusPage";
+import InvitationSuccessPage from "@/pages/acceptInvites/InvitationSuccessPage";
+import NewUserInvitePage from "@/pages/acceptInvites/NewUserInvitePage";
 import { createBrowserRouter, Navigate } from "react-router";
 import DashboardLayout from "../layouts/dashboardlayout";
-import { Calendar, calendarLoader, clockLoader, CreateJob, createjobAction, Dashboard, dashboardLoader, DownloadTimesheetScreen, EditJob, editJobAction, InvoiceDetail, invoiceDetailLoader, InvoiceForm, invoiceFormLoader, Invoices, invoicesLoader, JobDetail, Jobs, jobsLoader, Locations, loginAction, ProfileScreen, Reports, Settings, settingsLoader, signupAction, singleJobLoader, singleWorkerJobLoader, workerLoader, WorkerProfile, workerProfileLoader, Workers, workersLoader } from "../pages";
-import RootLayout from "@/layouts/RootLayout";
-import { NoActiveShift } from "@/components/ui/No_Active_Job";
+import { Analytics, Calendar, calendarLoader, clockLoader, CreateJob, createjobAction, Dashboard, dashboardLoader, DownloadTimesheetScreen, EditJob, editJobAction, InvoiceDetail, invoiceDetailLoader, InvoiceForm, invoiceFormLoader, Invoices, invoicesLoader, JobDetail, Jobs, jobsLoader, Locations, loginAction, ProfileScreen, RecurringJobDetail, RecurringJobs, Reports, Settings, settingsLoader, signupAction, singleJobLoader, singleWorkerJobLoader, Team, teamLoader, workerLoader, WorkerProfile, workerProfileLoader, Workers, workersLoader } from "../pages";
 
 export const router = createBrowserRouter([
     {
@@ -50,8 +66,23 @@ export const router = createBrowserRouter([
                     },
                     {
                         path: "jobs",
-                        element: <Jobs />,
-                        loader: jobsLoader(queryClient)
+                        element: <JobLayout />,
+                        children: [
+
+                            {
+                                index: true,
+                                element: <Jobs />,
+                                loader: jobsLoader(queryClient)
+                            },{
+                                path:"recurring",
+                                element:<RecurringJobs/>
+                            },{
+                                path:"recurring/recurring-job-detail/:id",
+                                element:<RecurringJobDetail
+                                scheduleId="rs1"
+                                />
+                            }
+                        ]
 
                     },
                     {
@@ -71,12 +102,16 @@ export const router = createBrowserRouter([
                         element: <JobDetail />,
                         loader: singleJobLoader(queryClient),
 
-
+                    }, {
+                        path: "team",
+                        element: <Team />,
+                        loader: teamLoader(queryClient)
                     },
                     {
                         path: "invoices",
                         element: <Invoices />,
                         loader: invoicesLoader(queryClient),
+                        errorElement: <ErrorElement />,
                     },
                     {
                         path: "invoices/new",
@@ -114,20 +149,35 @@ export const router = createBrowserRouter([
                     },
                     {
                         path: "analytics",
-                        element: <Dashboard />,
+                        element: <Analytics />,
                     },
                     {
                         path: "workers/:id/worker-profile",
                         element: <WorkerProfile />,
                     },
                     {
+                        // Kept pointing at the real Company Settings page rather
+                        // than the new /settings/billing placeholder — that page
+                        // has no real content yet, so redirecting here would trade
+                        // working billing content for an empty stub.
                         path: "billing",
                         element: <Settings />
                     },
                     {
                         path: "settings",
-                        element: <Settings />,
-                        loader: settingsLoader(queryClient),
+                        element: <SettingsLayout />,
+                        children: [
+                            {
+                                index: true,
+                                element: <Settings />,
+                                loader: settingsLoader(queryClient),
+                            },
+                            { path: "profile", element: <ProfileSettings /> },
+                            { path: "company", element: <CompanySettings /> },
+                            { path: "notifications", element: <NotificationSettings /> },
+                            { path: "security", element: <SecuritySettings /> },
+                            { path: "billing", element: <BillingSettings /> },
+                        ],
                     },
                     {
                         path: "*",
@@ -150,8 +200,71 @@ export const router = createBrowserRouter([
                         action: signupAction
 
                     },
+                    {
+                        path: "verify-email",
+                        element: <VerifyEmailPage />
+                    },
+                    {
+                        path: "forgot-password",
+                        element: <ForgotPasswordPage />
+                    },
+                    {
+                        path: "reset-password",
+                        element: <ResetPasswordPage />
+                    },
+
+                    {
+                        path: "*",
+                        element: <NotFound />
+                    },
                 ]
-            }, {
+            },
+
+            {
+                path: "/invite",
+                element: <InvitationLayout />,
+                children: [
+                    // {
+                    //     index: true,
+                    //     element: <Navigate to="accept" replace />,
+                    // },
+                    {
+                        path: "accept",
+                        element: (
+                            <AcceptInvitePage />
+                        ),
+                    },
+
+                    {
+                        path: "new-user",
+                        element: (
+                            <NewUserInvitePage />
+                        ),
+                    },
+
+                    {
+                        path: "existing-user",
+                        element: (
+                            <ExistingUserInvitePage />
+                        ),
+                    },
+
+                    {
+                        path: "success",
+                        element: (
+                            <InvitationSuccessPage />
+                        ),
+                    },
+
+                    {
+                        path: "status/:status",
+                        element: (
+                            <InvitationStatusPage />
+                        ),
+                    },
+                ],
+            },
+            {
                 path: "worker",
                 element: <WorkerAppLayout />,
                 loader: workerRouteLoader(queryClient),

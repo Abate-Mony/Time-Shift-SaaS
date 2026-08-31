@@ -34,7 +34,7 @@ function ShiftRow({ job }: { job: CreateJobForm }) {
   return (
     <button
       type="button"
-      onClick={() => navigate(`/worker/job/${job._id}`)}
+      onClick={() => navigate(`/worker/jobs/${job._id}`)}
       className="w-full flex items-center gap-3 bg-white rounded-xl border border-[#E2E8F0] p-3 text-left hover:border-slate-300 hover:shadow-sm transition-all"
     >
       <div className="flex flex-col items-center justify-center w-12 shrink-0">

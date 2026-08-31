@@ -58,6 +58,9 @@ interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[]
     data: TData[]
     onDeleteSelected?: (rows: TData[]) => Promise<void> | void
+    /** Optional — this table is shared across entities (jobs, invoices), so
+     * navigation-on-click is opt-in per usage rather than baked in here. */
+    onRowClick?: (row: TData) => void
 }
 
 
@@ -65,6 +68,7 @@ export default function DataTable<TData, TValue>({
     columns,
     data,
     onDeleteSelected,
+    onRowClick,
 }: DataTableProps<TData, TValue>) {
     const [sorting, setSorting] = React.useState<SortingState>([])
     const [rowSelection, setRowSelection] = React.useState({})
@@ -214,7 +218,8 @@ export default function DataTable<TData, TValue>({
                             table.getRowModel().rows.map((row) => (
                                 <TableRow
                                     key={row.id}
-                                 
+                                    onClick={() => onRowClick?.(row.original)}
+                                    className={onRowClick ? "cursor-pointer" : undefined}
                                 >
                                     {row.getVisibleCells().map((cell) => (
                                         <TableCell

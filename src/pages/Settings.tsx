@@ -29,6 +29,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select'
+import { Input } from '@/components/ui'
 
 // ── Same pattern as CreateJob.tsx — a plain message under the field ─────────
 const FieldError = ({ message }: { message?: string }) => {
@@ -172,7 +173,7 @@ function NumberField({ label, description, error, suffix, className, ...props }:
             <label className="text-sm font-medium text-slate-800">{label}</label>
             <p className="text-xs text-slate-500">{description}</p>
             <div className="relative max-w-[220px] mt-1">
-                <input
+                <Input
                     type="number"
                     className={cn(
                         'w-full h-9 pl-3 pr-3 border border-[#E2E8F0] rounded-lg text-sm text-slate-800 bg-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#3B82F6]/30 focus:border-[#3B82F6] transition-all disabled:opacity-60 disabled:cursor-not-allowed',
@@ -292,7 +293,7 @@ function TimezoneSelect({ value, onChange, disabled, error }: {
             <label className="text-sm font-medium text-slate-800">Timezone</label>
             <p className="text-xs text-slate-500">Used to schedule shifts and generate recurring occurrences.</p>
             <div className="relative max-w-xs mt-1 min-w-0">
-                <input
+                <Input
                     value={query}
                     disabled={disabled}
                     onChange={e => { setQuery(e.target.value); setOpen(true) }}
@@ -389,11 +390,6 @@ export function Settings() {
 
     return (
         <div className="p-6 max-w-3xl mx-auto animate-fade-in pb-28">
-            <div className="mb-6">
-                <h1 className="text-xl font-semibold text-slate-900 tracking-tight">Company Settings</h1>
-                <p className="text-sm text-slate-500 mt-0.5">Policy that applies across every job and worker in your company</p>
-            </div>
-
             {!isAdmin && (
                 <div className="mb-5 flex items-center gap-2.5 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
                     <Lock size={14} className="text-amber-600 shrink-0" />

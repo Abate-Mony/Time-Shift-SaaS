@@ -6,7 +6,7 @@ const breakSchema = z.object({
 export const workerSchema = z.object({
     breaks: z.array(breakSchema).default([]).optional(),
 
-    user: z.string().min(1, "User is required"),
+    worker: z.string().min(1, "workter id required"),
 
     fullname: z
         .string()
@@ -78,72 +78,77 @@ export const workerSchema = z.object({
 });
 
 export type Worker = z.infer<typeof workerSchema>;
-export const createJobSchema = z.object({
-    _id: z
-        .string().optional(),
-    title: z
-        .string()
-        .min(3, "Job title is required"),
+export const createJobSchema = z
+    .object({
+        _id: z.string().optional(),
 
-    description: z
-        .string()
-        .min(5, "Description is required"),
+        title: z.string().min(3, "Job title is required"),
 
-    client: z
-        .string()
-        .min(2, "Company is required"),
-    createdBy: z
-        .string()
-        .optional(),
+        description: z.string().min(5, "Description is required"),
 
-    priority: z.enum([
-        "low",
-        "medium",
-        "high",
-    ]),
-    status: z.enum([
-        "draft",
-        "published",
-        "assigned",
-        "accepted",
-        "in-progress",
-        "completed",
-        "cancelled",
-        "declined",
-        "pending"
-    ]).optional(),
+        client: z.string().min(2, "Client is required"),
 
-    date: z
-        .string()
-        .min(1, "Date is required"),
+        createdBy: z.string().optional(),
 
-    startTime: z
-        .string()
-        .min(1, "Start time is required"),
+        priority: z.enum(["low", "medium", "high", "urgent"]).default("medium"),
 
-    endTime: z
-        .string()
-        .min(1, "End time is required"),
+        // CreateJobForm is reused for both the admin's job shape (status:
+        // draft/published/completed/cancelled) and the worker-facing
+        // /workers responses, where the backend merges the worker's own
+        // JobAssignment status onto this same field (pending/accepted/
+        // declined/in-progress/completed/cancelled) — so the type has to
+        // cover both meanings even though only one applies in any given
+        // response.
+        status: z
+            .enum(["draft", "published", "assigned", "pending", "accepted", "declined", "in-progress", "completed", "cancelled"])
+            .optional(),
 
-    workers: z
-        .array(workerSchema)
-        .min(1, "Please select at least one worker"),
+        date: z.string().min(1, "Date is required"),
+        startTime: z.string().min(1, "Start time is required"),
+        endTime: z.string().min(1, "End time is required"),
+        minutes: z.number().int().min(0).optional(), // server-derived
 
-    additional_notes: z
-        .string()
-        .optional(),
-    location: z
-        .string()
-        .min(1, "Location is required"),
-    address: z
-        .string()
-        .default(""),
-    coordinates: z.object({
-        lat: z.number(),
-        lng: z.number(),
-    }).optional(),
-    minutes: z.number().optional()
-});
+        location: z.string().min(1, "Location is required"),
+        address: z.string().default(""),
+        coordinates: z
+            .object({
+                lat: z.number(),
+                lng: z.number(),
+            })
+            .optional(),
+        geofenceRadiusMeters: z.number().int().min(25).max(5000).optional(),
+
+        // ── Staffing ──────────────────────────────────────────────────────
+        requiredWorkers: z.number().int().min(1, "At least one worker").default(1),
+
+        // Workers may be empty — an unstaffed job is a legitimate open shift
+        workers: z.array(workerSchema).default([]),
+
+        // ── Money ─────────────────────────────────────────────────────────
+        payRate: z.number().min(0, "Pay rate can't be negative").default(0),
+        chargeType: z.enum(["hourly", "fixed"]).default("hourly"),
+        chargeRate: z.number().min(0, "Charge rate can't be negative").default(0),
+        chargeAmount: z.number().min(0, "Amount can't be negative").default(0),
+        geofenceMode: z.enum(["off", "warn", "enforce"]).optional(),
+        // geofenceRadiusMeters: z.number().int().min(25).max(5000).optional(),
+        additional_notes: z.string().optional(),
+
+        // ── Advanced options ─────────────────────────────────────────────
+        supervisor: z.string().optional(),
+        instructions: z.string().optional(),
+        notes: z.string().optional(),
+        openToClaims: z.boolean().default(false),
+        requiresApproval: z.boolean().default(true),
+        clockInGraceMinutes: z.number().int().min(0).max(240).optional(),
+    })
+    .refine(d => d.chargeType !== "fixed" || d.chargeAmount > 0, {
+        message: "Enter a price for fixed-price jobs",
+        path: ["chargeAmount"],
+    })
+    .refine(d => d.workers.length <= d.requiredWorkers, {
+        message: "You've assigned more workers than this job needs",
+        path: ["workers"],
+    });
 
 export const editProfileSchema = z.object({
     fullname: z

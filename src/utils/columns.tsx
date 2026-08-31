@@ -141,7 +141,11 @@ export const jobsColumns: ColumnDef<CreateJobForm>[] = [
       const { date, startTime, endTime, minutes } = row.original
       // start=2026-08-22&end=2026-08-22&view=day
       return (
-        <Link to={`/calendar?start=${dayjs(date).format("YYYY-MM-DD")}&end=${dayjs(date).format("YYYY-MM-DD")}&view=day`} className="min-w-32.5 cursor-pointer block" >
+        <Link
+          to={`/calendar?start=${dayjs(date).format("YYYY-MM-DD")}&end=${dayjs(date).format("YYYY-MM-DD")}&view=day`}
+          className="min-w-32.5 cursor-pointer block"
+          onClick={(e) => e.stopPropagation()}
+        >
           <p className="text-sm font-medium text-slate-800">
             {formatDate(date, "dd MMMM")}
           </p>
@@ -186,6 +190,7 @@ export const jobsColumns: ColumnDef<CreateJobForm>[] = [
                 designation: w.email || "no email",
                 image: "",
                 name: w.fullname || "debug later",
+                user_id: w!.worker
               }))}
             />
             {workers.length > 3 && (
@@ -237,6 +242,9 @@ export const jobsColumns: ColumnDef<CreateJobForm>[] = [
       //deletejob
 
       return (
+        // Row itself is clickable (navigates to the job) — stop the trigger
+        // click from bubbling there, or opening the menu also fires a nav.
+        <div onClick={(e) => e.stopPropagation()}>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="rounded-full hover:bg-slate-100">
@@ -267,11 +275,12 @@ export const jobsColumns: ColumnDef<CreateJobForm>[] = [
 
             <DropdownMenuSeparator />
 
-            <DropdownMenuItem className="text-red-600 focus:text-red-600 focus:bg-red-50" onClick={()=>deleteJob(job!._id as string)}>
+            <DropdownMenuItem className="text-red-600 focus:text-red-600 focus:bg-red-50" onClick={() => deleteJob(job!._id as string)}>
               Delete Job
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+        </div>
       )
     },
   },

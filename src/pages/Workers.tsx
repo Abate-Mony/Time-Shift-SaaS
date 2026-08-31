@@ -70,7 +70,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useMediaQuery } from 'react-responsive'
 import z from 'zod'
-import { Controller, useForm } from 'react-hook-form'
+import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { queryClient } from '@/lib/queryClient'
 import { AnimatePresence, motion, useAnimate } from 'framer-motion'
@@ -96,8 +96,10 @@ const workersQuery = (params: Params) => {
       ],
       queryFn: async () => {
         await sleep(3000)
+        // This page is workers-only — managers show up on the Team page
+        // instead. The backend narrows /users/users to just `role=worker`.
         const { data } = await customFetch.get<any>('/users/users', {
-          params
+          params: { ...params, role: 'worker' }
         });
         return data;
       }
@@ -224,9 +226,8 @@ export default function CreateWorkerForm({
     register,
     handleSubmit,
     reset,
-    control,
     formState: { errors },
-  } = useForm<CreateWorkerForm & { role: string }>({
+  } = useForm<CreateWorkerForm>({
     resolver: zodResolver(createWorkerSchema),
     defaultValues: {
       fullname: "",
@@ -240,12 +241,10 @@ export default function CreateWorkerForm({
     try {
       setLoading(true);
 
-      await customFetch.post("/workers", data);
-      queryClient.invalidateQueries({
-        queryKey: [
-          "workers"
-        ]
-      });
+      // This page only creates workers — managers are added from the Team page.
+      await customFetch.post("/workers", { ...data, role: "worker" });
+      queryClient.invalidateQueries({ queryKey: ["workers"] });
+      queryClient.invalidateQueries({ queryKey: ["team"] });
       reset();
       setOpen(false);
 
@@ -278,59 +277,6 @@ export default function CreateWorkerForm({
         {errors.fullname && (
           <p className="text-sm text-red-500">
             {errors.fullname.message}
-          </p>
-        )}
-      </div>
-      <div className="grid gap-2">
-        <Label>Role</Label>
-
-        <Controller
-          control={control}
-          name="role"
-          render={({ field }) => (
-            <RadioGroup
-              value={field.value}
-              onValueChange={field.onChange}
-              className="max-w-sm"
-            >
-              <FieldLabel htmlFor="manager">
-                <Field orientation="horizontal">
-                  <FieldContent>
-                    <FieldTitle>Manager</FieldTitle>
-                    <FieldDescription>
-                      For managing and scheduling jobs for workers
-                    </FieldDescription>
-                  </FieldContent>
-
-                  <RadioGroupItem
-                    value="manager"
-                    id="manager"
-                  />
-                </Field>
-              </FieldLabel>
-
-              <FieldLabel htmlFor="worker">
-                <Field orientation="horizontal">
-                  <FieldContent>
-                    <FieldTitle>Worker</FieldTitle>
-                    <FieldDescription>
-                      For working on site
-                    </FieldDescription>
-                  </FieldContent>
-
-                  <RadioGroupItem
-                    value="worker"
-                    id="worker"
-                  />
-                </Field>
-              </FieldLabel>
-            </RadioGroup>
-          )}
-        />
-
-        {errors.role && (
-          <p className="text-sm text-red-500">
-            {errors.role.message}
           </p>
         )}
       </div>
@@ -470,7 +416,7 @@ export function Workers() {
       <div className="flex items-start justify-between mb-6">
         <div>
           <h1 className="text-xl font-semibold text-slate-900 tracking-tight">Workers</h1>
-          <p className="text-sm text-slate-500 mt-0.5">{nHits} team members across all locations</p>
+          <p className="text-sm text-slate-500 mt-0.5">{nHits} workers across all locations</p>
         </div>
         <Button
           onClick={() => {

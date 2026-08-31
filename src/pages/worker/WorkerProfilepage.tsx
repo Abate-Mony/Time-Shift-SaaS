@@ -15,18 +15,16 @@ import { queryClient } from "@/lib/queryClient";
 import customFetch from "@/utils/customFetch";
 import { logoutUser } from "@/utils/logout";
 import type { User } from "@/utils/types";
+import type { WorkerDashboardStats } from "@/utils/types/workerType";
 import { useQuery } from "@tanstack/react-query";
 import { Bell, CheckCircle2, ChevronRight, Clock, Download, LogOut, MapPin, Phone, Star, Zap } from "lucide-react";
 import { useNavigate, useOutletContext, type LoaderFunctionArgs } from "react-router";
-const reponse = {
-  total_job_completed: 0,
-  "success": true, "jobStats": { "pending": 31, "accepted": 4, "declined": 10, "in-progress": 0, "completed": 6, "cancelled": 0 }, "hoursWorked": 98.99950833333334, "averagePayRate": 0, "monthlyEarnings": 1286.9936083333334
-}
+
 const workerDashboardstats = () => {
   return ({
-    queryKey: ["worker-stats"],
-    queryFn: async (): Promise<typeof reponse> => {
-      const { data } = await customFetch.get(`/workers/stats`)
+    queryKey: ["worker-dashboard-stats"],
+    queryFn: async ()=> {
+      const { data } = await customFetch.get<WorkerDashboardStats>(`/workers/stats`)
       return data
     }
   })
@@ -41,18 +39,13 @@ export function ProfileScreen() {
     user: User
   }>()?.user
   const {
-    averagePayRate,
-    hoursWorked,
     jobStats,
-    monthlyEarnings,
-  } = useQuery(workerDashboardstats()).data as (typeof reponse)
-  // const {
-  //   averagePayRate,
-  //   hoursWorked,
-  //   jobStats,
-  //   monthlyEarnings,
-  //   total_job_completed,
-  // } = data ?? {}
+
+    monthly
+    ,
+    totalJobs
+  } = useQuery(workerDashboardstats()).data as WorkerDashboardStats
+
   const job_completed = Object.values(jobStats!).reduce((acc, next) => acc + next);
   // console.log("total hours ",total_hours)
   return (
@@ -76,12 +69,12 @@ export function ProfileScreen() {
           <h2 className="text-base font-bold text-slate-900">{user?.fullname}</h2>
           <p className="text-sm text-slate-500 mt-0.5">{user?.role}</p>
           <div className="flex items-center gap-2 mt-2">
-            <StatusBadge status={"user?.status"} />
-            <span className="flex items-center gap-1 text-xs text-amber-600 font-semibold">
+            {/* <StatusBadge status={"user?.status"} /> */}
+            {/* <span className="flex items-center gap-1 text-xs text-amber-600 font-semibold">
               <Star size={12} fill="currentColor" /> {"user?.rating"} rating
-            </span>
+            </span> */}
           </div>
-          <div className="flex items-center gap-4 mt-4 text-xs text-slate-500">
+          <div className="flex- hidden items-center gap-4 mt-4 text-xs text-slate-500">
             <span className="flex items-center gap-1.5"><MapPin size={11} />{"user?.location"}</span>
             <span className="flex items-center gap-1.5"><Phone size={11} />{"user?.phone"}</span>
           </div>
@@ -96,7 +89,7 @@ export function ProfileScreen() {
           <div className="flex items-center justify-between mb-4">
             <div>
               <p className="text-xs text-white/50 font-semibold uppercase tracking-wide">Earnings This Month</p>
-              <p className="text-3xl font-bold text-white mt-1">£{monthlyEarnings.toFixed(1)}</p>
+              <p className="text-3xl font-bold text-white mt-1">£{monthly.earnings}</p>
             </div>
             <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
               <Zap size={18} className="text-blue-300" />
@@ -104,9 +97,9 @@ export function ProfileScreen() {
           </div>
           <div className="grid grid-cols-3 gap-3">
             {[
-              { label: 'Hours', value: `${hoursWorked.toFixed(1)}h` },
+              { label: 'Hours', value: `${monthly.hoursWorked?.toFixed(1)}h` },
               { label: 'Jobs', value: jobStats.completed },
-              { label: '£/hr avg', value: averagePayRate || 2 },
+              { label: '£/hr avg', value: monthly.averagePayRate || 2 },
             ].map(s => (
               <div key={s.label} className="bg-white/10 rounded-xl p-2.5 text-center">
                 <p className="text-base font-bold text-white">{s.value}</p>

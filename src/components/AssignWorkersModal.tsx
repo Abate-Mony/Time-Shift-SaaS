@@ -58,7 +58,7 @@ export default function AssignWorkersModal({
             current.some(w => w.email === worker.email)
                 ? current.filter(w => w.email !== worker.email)
                 : [...current, {
-                    user: worker._id,
+                    worker: worker._id,
                     fullname: worker.fullname,
                     email: worker.email,
                     phone: worker.phone ?? "",

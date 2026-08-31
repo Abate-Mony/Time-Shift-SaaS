@@ -15,13 +15,16 @@ import type { CreateJobForm, User } from '@/utils/types'
 import { zodResolver } from "@hookform/resolvers/zod"
 import { QueryClient, useQuery } from '@tanstack/react-query'
 import { isAxiosError } from 'axios'
+import { AnimatePresence, motion } from 'framer-motion'
 import dayjs from "dayjs"
-import { Calendar, Check, ChevronDown, ChevronLeft, Clock, MapPin, Paperclip, Users, X } from 'lucide-react'
+import { Calendar, Check, ChevronDown, ChevronLeft, Clock, MapPin, Paperclip, Settings2, Users, X } from 'lucide-react'
 import { useState } from 'react'
 import { useForm } from "react-hook-form"
 import toast from 'react-hot-toast'
 import { Form, redirect, useLoaderData, useNavigate, useParams, useSearchParams, type ActionFunctionArgs, type LoaderFunctionArgs, type Params } from 'react-router'
 import { Avatar, Input } from '../components/ui'
+
+type AssignedWorker = CreateJobForm["workers"][number]
 
 // Small reusable error renderer so we don't repeat the same JSX everywhere
 const FieldError = ({ message }: { message?: string }) => {
@@ -73,6 +76,17 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
     const formData = await request.formData()
     const raw = Object.fromEntries(formData) as Record<string, string>
     const payload: Record<string, unknown> = { ...raw }
+
+    // Advanced options — openToClaims/requiresApproval are always present
+    // (toggles default to false/true either way); clockInGraceMinutes and
+    // geofenceRadiusMeters are real number inputs that are just empty when
+    // left blank, meaning "inherit".
+    payload.openToClaims = raw.openToClaims === 'true'
+    payload.requiresApproval = raw.requiresApproval === 'true'
+    if (raw.clockInGraceMinutes) payload.clockInGraceMinutes = Number(raw.clockInGraceMinutes)
+    else delete payload.clockInGraceMinutes
+    if (raw.geofenceRadiusMeters) payload.geofenceRadiusMeters = Number(raw.geofenceRadiusMeters)
+    else delete payload.geofenceRadiusMeters
 
     // Coordinates arrive as a JSON string from a hidden input — convert back to an object
     if (raw.coordinates) {
@@ -129,7 +143,6 @@ export function EditJob() {
         job?.workers ? job.workers : []
 
     )
-    console.log("selectedworkers :", selectedWorkers)
     const { users } = useQuery<{ users: User[] }>(workersQuery(searchValues))?.data || {
         users: []
     } as {
@@ -161,6 +174,24 @@ export function EditJob() {
     const priority = watch("priority")
     const address = watch("address")
     const coordinates = watch("coordinates")
+    const [advancedOpen, setAdvancedOpen] = useState(false)
+    const supervisor = watch("supervisor")
+    const openToClaims = watch("openToClaims") ?? false
+    const requiresApproval = watch("requiresApproval") ?? true
+    const clockInGraceMinutes = watch("clockInGraceMinutes")
+    const geofenceMode = watch("geofenceMode")
+    const geofenceRadius = watch("geofenceRadiusMeters") ?? 150
+
+    const supervisorUser = users.find(u => u._id === supervisor)
+    const advancedSummaryParts: string[] = []
+    if (supervisorUser) advancedSummaryParts.push(`Supervisor: ${supervisorUser.fullname}`)
+    if (openToClaims) advancedSummaryParts.push(`Open to claims${requiresApproval ? "" : " (auto-approved)"}`)
+    if (clockInGraceMinutes) advancedSummaryParts.push(`Grace: ${clockInGraceMinutes}m`)
+    if (geofenceMode) advancedSummaryParts.push(`Clock-in location: ${geofenceMode} · ${geofenceRadius}m`)
+    const advancedSummary = advancedSummaryParts.length > 0
+        ? advancedSummaryParts.join(" · ")
+        : "Using company defaults · No supervisor assigned"
+
     const toggleWorker = (id: string) => {
         const exists = selectedWorkers.some((w) => w.email === id);
 
@@ -173,24 +204,17 @@ export function EditJob() {
                         fullname: worker.fullname,
                         email: worker.email,
                         phone: worker.phone ?? "",
-                        user: worker._id,
-                        job: job?.title ?? "",
-                        createdBy: job?.createdBy ?? "",
-                        status: "pending",
-                        cancellationReason: "",
-                        workerNotes: "",
-                        managerNotes: "",
-                        hoursWorked: 0,
-                        overtimeHours: 0,
-                        payRate: 0,
-                        totalPay: 0,
-                    }]
+                        worker: worker._id,
+                        // Remaining AssignedWorker fields (status, job, createdBy, ...)
+                        // are zod-defaulted server-side on save — not this component's
+                        // job to guess at. (job used to be set to job?.title here,
+                        // which is wrong — that field expects the job's ObjectId.)
+                    } as AssignedWorker]
                     : selectedWorkers;
             })();
 
         setSelectedWorkers(next);
         setValue("workers", next, { shouldValidate: true });
-        console.log("values", next, exists, id)
     };
     // Runs only when validation passes; React Router's <Form> then submits
     // to the `action` above as normal.
@@ -442,21 +466,24 @@ export function EditJob() {
                         <ChevronDown size={14} className={`text-slate-400 transition-transform ${workerOpen ? 'rotate-180' : ''}`} />
                     </button>
 
-                    {/* One hidden input per selected worker id, so FormData serializes an array correctly */}
-                    {selectedWorkers.map((id) => (
-                        <input key={id.email} type="hidden" name="workers" value={JSON.stringify(selectedWorkers)} />
-                    ))}
+                    {/* Single hidden input carrying the whole array as JSON — matching
+                        CreateJob.tsx's convention (one-per-worker with the same `name`
+                        would just have the last duplicate win, and an empty selection
+                        would render no input at all, silently failing to clear workers). */}
+                    {selectedWorkers.length > 0 && (
+                        <input type="hidden" name="workers" value={JSON.stringify(selectedWorkers)} />
+                    )}
                     <FieldError message={errors.workers?.message as string | undefined} />
 
                     {workerOpen && (
                         <div className="mt-2 border border-[#E2E8F0] rounded-xl overflow-hidden animate-fade-in">
                             {users.map((w, i) => {
-                                const selected = selectedWorkers.find(sw => sw.fullname! == w.fullname!)
+                                const selected = selectedWorkers.find(sw => sw.email === w.email)
                                 return (
                                     <button
                                         type="button"
                                         key={w._id}
-                                        onClick={() => toggleWorker(w.fullname)}
+                                        onClick={() => toggleWorker(w.email)}
                                         className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 transition-colors border-b border-[#F1F5F9] last:border-0 ${selected ? 'bg-blue-50/40' : ''}`}
                                     >
                                         <Avatar initials={w.fullname.slice(0, 2)} size="sm" index={i} />
@@ -476,7 +503,7 @@ export function EditJob() {
                     {selectedWorkers.length > 0 && (
                         <div className="flex flex-wrap gap-2 mt-3">
                             {selectedWorkers.map(id => {
-                                const w = users.find(w => w.fullname === id.fullname)
+                                const w = users.find(w => w.email === id.email)
                                 if (!w) return null
                                 return (
                                     <div key={id.email} className="flex items-center gap-1.5 bg-blue-50 border border-blue-200 rounded-full pl-1.5 pr-2 py-0.5">
@@ -491,19 +518,305 @@ export function EditJob() {
                     )}
                 </div>
 
-                {/* Notes & Attachments */}
+                {/* Advanced — collapsed by default so the common case stays a short form */}
+                <div className="bg-white rounded-xl border border-[#E2E8F0] overflow-hidden">
+                    <button
+                        type="button"
+                        onClick={() => setAdvancedOpen(o => !o)}
+                        className="w-full flex items-center justify-between px-6 py-4 hover:bg-slate-50/60 transition-colors"
+                    >
+                        <span className="flex items-center gap-2.5 min-w-0">
+                            <Settings2 size={15} className="text-slate-400 shrink-0" />
+                            <span className="text-left min-w-0">
+                                <span className="block text-sm font-semibold text-slate-800">Advanced options</span>
+                                <span className="block text-[11px] text-slate-400 truncate">
+                                    {advancedSummary}
+                                </span>
+                            </span>
+                        </span>
+                        <ChevronDown
+                            size={15}
+                            className={cn("text-slate-400 transition-transform shrink-0", advancedOpen && "rotate-180")}
+                        />
+                    </button>
+
+                    <AnimatePresence initial={false}>
+                        {advancedOpen && (
+                            <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: "auto", opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+                                style={{ overflow: "hidden" }}
+                                className="min-w-0"
+                            >
+                                <div className="px-6 pb-6 pt-1 min-w-0 flex flex-col gap-6">
+                                    <div className="h-px bg-[#F1F5F9]" />
+
+                                    {/* Supervisor */}
+                                    <div className="min-w-0">
+                                        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">
+                                            Supervisor
+                                        </p>
+                                        <p className="text-[11px] text-slate-400 mb-2">
+                                            The person workers should contact on site. Optional.
+                                        </p>
+                                        <div className="relative max-w-xs min-w-0">
+                                            <select
+                                                value={supervisor ?? ""}
+                                                onChange={e => setValue("supervisor", e.target.value || undefined, { shouldValidate: true })}
+                                                className="w-full h-10 pl-3 pr-8 border border-[#E2E8F0] rounded-lg text-sm text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-[#3B82F6]/30 focus:border-[#3B82F6] appearance-none cursor-pointer transition-all"
+                                            >
+                                                <option value="">No supervisor assigned</option>
+                                                {users.map(u => (
+                                                    <option key={u._id} value={u._id}>{u.fullname}</option>
+                                                ))}
+                                            </select>
+                                            <ChevronDown size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                                        </div>
+                                        {supervisor && <input type="hidden" name="supervisor" value={supervisor} />}
+                                    </div>
+
+                                    {/* Internal notes — manager-only, never shown to workers. Worker-visible
+                                        instructions stay in the main form (below) since that's the common
+                                        case, not an edge case worth burying here. */}
+                                    <div className="min-w-0 pt-6 border-t border-[#F1F5F9]">
+                                        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">
+                                            Internal notes
+                                        </p>
+                                        <p className="text-[11px] text-slate-400 mb-2">
+                                            Internal only — never shown to workers.
+                                        </p>
+                                        <Textarea
+                                            {...register("notes")}
+                                            placeholder="Anything the team should know but workers shouldn't see..."
+                                            rows={3}
+                                        />
+                                    </div>
+
+                                    {/* Open shifts */}
+                                    <div className="min-w-0 pt-6 border-t border-[#F1F5F9]">
+                                        <div className="flex items-center justify-between gap-3 min-w-0">
+                                            <div className="min-w-0">
+                                                <p className="text-sm font-semibold text-slate-800">Open to claims</p>
+                                                <p className="text-[11px] text-slate-400 mt-0.5">
+                                                    Lets any worker claim an unfilled slot on this shift.
+                                                </p>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                role="switch"
+                                                aria-checked={openToClaims}
+                                                onClick={() => setValue("openToClaims", !openToClaims, { shouldValidate: true })}
+                                                className={cn(
+                                                    "relative w-11 h-6 rounded-full transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#3B82F6] focus-visible:ring-offset-1 shrink-0",
+                                                    openToClaims ? "bg-[#1E3A5F]" : "bg-slate-200"
+                                                )}
+                                            >
+                                                <motion.span
+                                                    layout
+                                                    transition={{ type: "spring", stiffness: 500, damping: 35 }}
+                                                    className={cn("absolute top-1 w-4 h-4 rounded-full bg-white shadow-sm", openToClaims ? "left-6" : "left-1")}
+                                                />
+                                            </button>
+                                        </div>
+
+                                        <AnimatePresence initial={false}>
+                                            {openToClaims && (
+                                                <motion.div
+                                                    initial={{ opacity: 0, y: -6, height: 0 }}
+                                                    animate={{ opacity: 1, y: 0, height: "auto" }}
+                                                    exit={{ opacity: 0, y: -6, height: 0 }}
+                                                    transition={{ duration: 0.18 }}
+                                                    style={{ overflow: "hidden" }}
+                                                    className="min-w-0"
+                                                >
+                                                    <div className="flex items-center justify-between gap-3 min-w-0 mt-4 pl-4 border-l-2 border-slate-100">
+                                                        <div className="min-w-0">
+                                                            <p className="text-sm font-medium text-slate-700">Require approval</p>
+                                                            <p className="text-[11px] text-slate-400 mt-0.5">
+                                                                You approve each claim before the shift is theirs.
+                                                            </p>
+                                                        </div>
+                                                        <button
+                                                            type="button"
+                                                            role="switch"
+                                                            aria-checked={requiresApproval}
+                                                            onClick={() => setValue("requiresApproval", !requiresApproval, { shouldValidate: true })}
+                                                            className={cn(
+                                                                "relative w-11 h-6 rounded-full transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#3B82F6] focus-visible:ring-offset-1 shrink-0",
+                                                                requiresApproval ? "bg-[#1E3A5F]" : "bg-slate-200"
+                                                            )}
+                                                        >
+                                                            <motion.span
+                                                                layout
+                                                                transition={{ type: "spring", stiffness: 500, damping: 35 }}
+                                                                className={cn("absolute top-1 w-4 h-4 rounded-full bg-white shadow-sm", requiresApproval ? "left-6" : "left-1")}
+                                                            />
+                                                        </button>
+                                                    </div>
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
+
+                                        <input type="hidden" name="openToClaims" value={String(openToClaims)} />
+                                        <input type="hidden" name="requiresApproval" value={String(requiresApproval)} />
+                                    </div>
+
+                                    {/* Clock-in grace override */}
+                                    <div className="min-w-0 pt-6 border-t border-[#F1F5F9]">
+                                        <div className="max-w-xs min-w-0">
+                                            <Input
+                                                label="Clock-in grace period"
+                                                type="number"
+                                                min="0"
+                                                max="240"
+                                                placeholder="e.g. 30"
+                                                {...register("clockInGraceMinutes", { valueAsNumber: true })}
+                                                className={cn(errors.clockInGraceMinutes && "border-red-500!")}
+                                            />
+                                            <p className="text-[11px] text-slate-400 mt-1">
+                                                How early a worker can clock in. Leave blank to use your company setting.
+                                            </p>
+                                            <FieldError message={errors.clockInGraceMinutes?.message} />
+                                        </div>
+                                    </div>
+
+                                    <div className="pt-6 border-t border-[#F1F5F9]" />
+
+                                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">
+                                        Clock-in location check
+                                    </p>
+                                    <p className="text-[11px] text-slate-400 -mt-4">
+                                        Overrides your company setting for this job only. Useful for sites with poor
+                                        signal, or where workers move around a large area.
+                                    </p>
+
+                                    <div className="flex flex-col gap-2 min-w-0 -mt-2">
+                                        {[
+                                            {
+                                                value: "",
+                                                label: "Use company default",
+                                                sub: "Whatever's set in Settings — recommended",
+                                            },
+                                            {
+                                                value: "off",
+                                                label: "No location check",
+                                                sub: "Workers clock in from anywhere, nothing recorded",
+                                            },
+                                            {
+                                                value: "warn",
+                                                label: "Record and flag",
+                                                sub: "Always lets them clock in, but flags it if they're off site",
+                                            },
+                                            {
+                                                value: "enforce",
+                                                label: "Require them on site",
+                                                sub: "Blocks clock-in outside the radius — they'll need you to override it",
+                                            },
+                                        ].map(opt => (
+                                            <label
+                                                key={opt.value}
+                                                className={cn(
+                                                    "flex items-start gap-3 px-4 py-3 rounded-xl border-2 cursor-pointer transition-all min-w-0",
+                                                    (geofenceMode ?? "") === opt.value
+                                                        ? "border-[#1E3A5F] bg-[#1E3A5F]/[0.03]"
+                                                        : "border-[#E2E8F0] hover:border-slate-300"
+                                                )}
+                                            >
+                                                <Input
+                                                    type="radio"
+                                                    className="sr-only"
+                                                    checked={(geofenceMode ?? "") === opt.value}
+                                                    onChange={() =>
+                                                        setValue(
+                                                            "geofenceMode",
+                                                            (opt.value === "" ? undefined : (opt.value as "off" | "warn" | "enforce")),
+                                                            { shouldValidate: true }
+                                                        )
+                                                    }
+                                                />
+                                                <span
+                                                    className={cn(
+                                                        "mt-0.5 w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors",
+                                                        (geofenceMode ?? "") === opt.value
+                                                            ? "border-[#1E3A5F] bg-[#1E3A5F]"
+                                                            : "border-slate-300"
+                                                    )}
+                                                >
+                                                    {(geofenceMode ?? "") === opt.value && (
+                                                        <span className="w-1.5 h-1.5 rounded-full bg-white" />
+                                                    )}
+                                                </span>
+                                                <span className="min-w-0">
+                                                    <span className="block text-sm font-semibold text-slate-800">{opt.label}</span>
+                                                    <span className="block text-[11px] text-slate-400 mt-0.5">{opt.sub}</span>
+                                                </span>
+                                            </label>
+                                        ))}
+                                    </div>
+
+                                    <AnimatePresence initial={false}>
+                                        {geofenceMode && geofenceMode !== "off" && (
+                                            <motion.div
+                                                initial={{ opacity: 0, y: -6, height: 0 }}
+                                                animate={{ opacity: 1, y: 0, height: "auto" }}
+                                                exit={{ opacity: 0, y: -6, height: 0 }}
+                                                transition={{ duration: 0.18 }}
+                                                className="-mt-4 max-w-xs min-w-0"
+                                            >
+                                                <Input
+                                                    label="Radius"
+                                                    type="number"
+                                                    min="25"
+                                                    max="5000"
+                                                    step="25"
+                                                    placeholder="150"
+                                                    icon={<MapPin size={13} />}
+                                                    {...register("geofenceRadiusMeters", { valueAsNumber: true })}
+                                                    className={cn(errors.geofenceRadiusMeters && "border-red-500!")}
+                                                />
+                                                <p className="text-[11px] text-slate-400 mt-1">
+                                                    Metres from the site. Phone GPS is often 50–100m out indoors, so anything
+                                                    under 100m will flag people who are genuinely there.
+                                                </p>
+                                                <FieldError message={errors.geofenceRadiusMeters?.message} />
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+
+                                    {!coordinates && geofenceMode && geofenceMode !== "off" && (
+                                        <p className="-mt-4 text-xs text-amber-600">
+                                            Pick a location above first — without map coordinates there's nothing to
+                                            measure against, so this won't do anything.
+                                        </p>
+                                    )}
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
+
+                {/* Hidden inputs for geofence — <Form> submits from the DOM, not RHF state */}
+                {geofenceMode && <input type="hidden" name="geofenceMode" value={geofenceMode} />}
+                {geofenceMode && geofenceMode !== "off" && geofenceRadius && (
+                    <input type="hidden" name="geofenceRadiusMeters" value={String(geofenceRadius)} />
+                )}
+
+                {/* Instructions & Attachments */}
                 <div className="bg-white rounded-xl border border-[#E2E8F0] p-6">
                     <h2 className="text-sm font-semibold text-slate-800 mb-4 flex items-center gap-2">
                         <span className="w-5 h-5 rounded-full bg-[#1E3A5F] text-white flex items-center justify-center text-[10px] font-bold">5</span>
-                        Notes & Attachments
+                        Instructions & Attachments
                     </h2>
                     <Textarea
-                        {...register("additional_notes")}
-                        placeholder="Access instructions, equipment needed, special requirements..."
+                        {...register("instructions")}
+                        placeholder="Gate code, where to park, who to ask for..."
                         rows={4}
-                        className={cn(errors.additional_notes && "border-red-500!")}
+                        className={cn(errors.instructions && "border-red-500!")}
                     />
-                    <FieldError message={errors.additional_notes?.message} />
+                    <p className="text-[11px] text-slate-400 mt-1">Workers assigned to this job will see this.</p>
+                    <FieldError message={errors.instructions?.message} />
 
                     <button type="button" className="mt-3 flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700 border border-dashed border-slate-300 rounded-lg w-full py-3 px-4 hover:bg-slate-50 transition-colors">
                         <Paperclip size={14} />

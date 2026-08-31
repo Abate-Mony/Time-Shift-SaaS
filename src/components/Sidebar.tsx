@@ -28,6 +28,7 @@ const navItems = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'jobs', label: 'Jobs', icon: Briefcase, badge: 3 },
   { id: 'workers', label: 'Workers', icon: Users },
+  { id: 'team', label: 'Teams', icon: MapPin },
   { id: 'calendar', label: 'Calendar', icon: Calendar },
   { id: 'locations', label: 'Locations', icon: MapPin },
   // { id: 'messages', label: 'Messages', icon: MessageSquare, badge: 2 },

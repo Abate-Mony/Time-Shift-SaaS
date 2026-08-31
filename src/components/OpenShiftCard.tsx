@@ -58,9 +58,12 @@ export default function OpenShiftCard({
           </div>
         </div>
 
-        {shift.additional_notes && (
+        {/* instructions is the current worker-visible field; additional_notes
+            is its predecessor, kept as a fallback for jobs created before
+            the split into instructions (worker-visible) vs notes (internal). */}
+        {(shift.instructions || shift.additional_notes) && (
           <p className="mt-3 text-xs text-slate-500 leading-relaxed bg-slate-50 border border-slate-100 rounded-xl px-3 py-2">
-            {shift.additional_notes}
+            {shift.instructions || shift.additional_notes}
           </p>
         )}
 

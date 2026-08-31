@@ -38,6 +38,11 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     return redirect(role === "worker" ? "/worker" : "/")
   } catch (err) {
     if (isAxiosError(err)) {
+      // Right credentials, unverified account — send them to the same
+      // reusable verify screen signup uses, instead of a dead-end error.
+      if (err.response?.data?.code === "EMAIL_NOT_VERIFIED") {
+        return redirect(`/auth/verify-email?email=${encodeURIComponent(data.email as string)}`)
+      }
       return err.response?.data?.msg ?? err.response?.data ?? null
     }
     return err instanceof Error ? err.message : "Something went wrong"
@@ -346,9 +351,9 @@ export function LoginForm() {
                 <input type="checkbox" className="w-3.5 h-3.5 rounded accent-blue-600" />
                 <span className="text-xs text-slate-500">Remember me</span>
               </label>
-              <button type="button" className="text-xs font-semibold text-blue-600 hover:text-blue-800 transition-colors">
+              <Link to="/auth/forgot-password" className="text-xs font-semibold text-blue-600 hover:text-blue-800 transition-colors">
                 Forgot password?
-              </button>
+              </Link>
             </div>
 
             <motion.button

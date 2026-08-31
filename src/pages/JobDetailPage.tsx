@@ -9,8 +9,10 @@ import toast from 'react-hot-toast'
 import {
     AlertCircle,
     Briefcase,
+    Building2,
     Calendar,
     Camera,
+    Check,
     CheckCircle2,
     ChevronLeft,
     Clock,
@@ -20,13 +22,16 @@ import {
     FileText,
     Flag,
     MapPin,
+    MapPinOff,
     MoreHorizontal,
     Navigation,
     Play,
     Plus,
     Receipt,
+    ShieldCheck,
     Timer,
     Trash2,
+    TriangleAlert,
     Users,
     X
 } from 'lucide-react'
@@ -39,14 +44,22 @@ import {
 import { useState, type ReactNode } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import AssignWorkersModal from '@/components/AssignWorkersModal'
+import { Input } from '@/components/ui/input'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { buildMapUrl, MAP_SERVICES, type MapService } from '@/utils/mapLinks'
 import { Avatar, Card, Divider, PriorityBadge, StatusBadge } from '../components/ui'
 import { singleJob } from './EditJobPage'
+
+// Same key as the worker app's JobDetailspage.tsx — if the same person uses
+// both, their preferred map service carries over.
+const PREFERRED_MAP_STORAGE_KEY = "preferredMapService"
 
 import type { LucideIcon } from "lucide-react"
 import type { ActivityType, CreateJobForm } from '@/utils/types'
 import { cn } from '@/lib/utils'
 import { getInitials } from '@/utils/getInitials'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { Separator } from '@radix-ui/react-separator'
 
 export const recordFormatUI: Record<ActivityType, { icon: LucideIcon; className: string; label: string }> = {
     // ── Job lifecycle ──────────────────────────────────────────────
@@ -226,7 +239,21 @@ export function JobDetail() {
         }
     })
     const assignedWorkers = job?.workers ?? []
-    console.log("assign workers :",assignedWorkers)
+    console.log("assign workers :", assignedWorkers)
+
+    const [preferredMap, setPreferredMap] = useState<MapService>(
+        () => (localStorage.getItem(PREFERRED_MAP_STORAGE_KEY) as MapService | null) ?? "google"
+    )
+    const chooseMapService = (service: MapService) => {
+        setPreferredMap(service)
+        localStorage.setItem(PREFERRED_MAP_STORAGE_KEY, service)
+    }
+    const directionsHref = buildMapUrl(preferredMap, {
+        lat: job?.coordinates?.lat,
+        lng: job?.coordinates?.lng,
+        address: job?.address || job?.location,
+    })
+
     const [showApproveModal, setShowApproveModal] = useState(false)
     const [showAssignWorkersModal, setShowAssignWorkersModal] = useState(false)
 
@@ -249,6 +276,71 @@ export function JobDetail() {
                 assignedWorkers.filter(w => w.email !== worker.email),
                 `${worker.fullname} removed from this job`
             ),
+    })
+
+    // Geofence inline editor — seeded from `job` fresh every time it opens
+    // (not just on mount), so it can't go stale after other edits refetch
+    // the job in the background.
+    const [geofenceEditOpen, setGeofenceEditOpen] = useState(false)
+    const [geofenceModeInput, setGeofenceModeInput] = useState<"" | "off" | "warn" | "enforce">("")
+    const [geofenceRadiusInput, setGeofenceRadiusInput] = useState(150)
+
+    const openGeofenceEditor = (open: boolean) => {
+        if (open) {
+            setGeofenceModeInput(job?.geofenceMode ?? "")
+            setGeofenceRadiusInput(job?.geofenceRadiusMeters ?? 150)
+        }
+        setGeofenceEditOpen(open)
+    }
+
+    const updateGeofenceMutation = useMutation({
+        // null (not undefined/omitted) so "Use company default" actually
+        // clears an existing override server-side, rather than the field
+        // just being left untouched by an allowlist-style PATCH handler.
+        mutationFn: () => customFetch.patch(`/jobs/${id}`, {
+            geofenceMode: geofenceModeInput || null,
+            geofenceRadiusMeters: geofenceModeInput && geofenceModeInput !== "off" ? geofenceRadiusInput : null,
+        }),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["job", id] })
+            toast.success("Clock-in policy updated")
+            setGeofenceEditOpen(false)
+        },
+        onError: () => toast.error("Couldn't update clock-in policy. Try again."),
+    })
+
+    const GEOFENCE_LABELS: Record<string, string> = {
+        off: "No location check",
+        warn: "Record and flag",
+        enforce: "Require them on site",
+    }
+
+    // Job-level status only (draft/published/completed/cancelled) — distinct
+    // from a worker's own assignment status, which this same `status` field
+    // is also reused for elsewhere (see the note on CreateJobForm's status
+    // enum in schemas.ts). Anyone who can see this page is already an admin
+    // or manager (workers are redirected to /worker), so no extra role gate.
+    const [statusEditOpen, setStatusEditOpen] = useState(false)
+    // Second entry point (Actions card) — independent open-state from the
+    // hero badge's popover, since Radix positions PopoverContent relative to
+    // its own trigger; sharing one boolean would pop both open together.
+    const [statusEditOpenActions, setStatusEditOpenActions] = useState(false)
+    const JOB_STATUSES: { value: "draft" | "published" | "completed" | "cancelled"; label: string }[] = [
+        { value: "draft", label: "Draft" },
+        { value: "published", label: "Published" },
+        { value: "completed", label: "Completed" },
+        { value: "cancelled", label: "Cancelled" },
+    ]
+
+    const updateStatusMutation = useMutation({
+        mutationFn: (status: string) => customFetch.patch(`/jobs/${id}`, { status }),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["job", id] })
+            queryClient.invalidateQueries({ queryKey: ["jobs"] })
+            toast.success("Job status updated")
+            setStatusEditOpen(false)
+        },
+        onError: () => toast.error("Couldn't update job status. Try again."),
     })
 
     const statusColor: Record<string, string> = {
@@ -279,7 +371,7 @@ export function JobDetail() {
             {/* Breadcrumb */}
             <div className="flex items-center gap-2 mb-5">
                 <button
-                    onClick={() => onNavigate('jobs')}
+                    onClick={() => onNavigate('/jobs')}
                     className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition-colors group"
                 >
                     <ChevronLeft size={15} className="group-hover:-translate-x-0.5 transition-transform" />
@@ -303,7 +395,33 @@ export function JobDetail() {
                     <div className="flex items-start justify-between gap-4 mb-5">
                         <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-2">
-                                <StatusBadge status={job?.status ?? "accepted"} />
+                                <Popover open={statusEditOpen} onOpenChange={setStatusEditOpen}>
+                                    <PopoverTrigger asChild>
+                                        <button className="cursor-pointer hover:opacity-80 transition-opacity">
+                                            <StatusBadge status={job?.status ?? "accepted"} />
+                                        </button>
+                                    </PopoverTrigger>
+                                    <PopoverContent align="start" className="w-56 flex flex-col gap-1">
+                                        <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide px-1 pb-1">Job status</p>
+                                        {JOB_STATUSES.map(opt => (
+                                            <button
+                                                key={opt.value}
+                                                type="button"
+                                                disabled={updateStatusMutation.isPending}
+                                                onClick={() => updateStatusMutation.mutate(opt.value)}
+                                                className={cn(
+                                                    "flex items-center justify-between px-3 py-2 rounded-lg text-sm text-left transition-colors disabled:opacity-60 disabled:cursor-not-allowed",
+                                                    job?.status === opt.value
+                                                        ? "bg-[#1E3A5F]/[0.06] text-[#1E3A5F] font-semibold"
+                                                        : "text-slate-600 hover:bg-slate-50"
+                                                )}
+                                            >
+                                                {opt.label}
+                                                {job?.status === opt.value && <Check size={13} />}
+                                            </button>
+                                        ))}
+                                    </PopoverContent>
+                                </Popover>
                                 <PriorityBadge priority={job.priority} />
                             </div>
                             <h1 className="text-xl font-bold text-white leading-snug mb-1">{job.title}</h1>
@@ -368,11 +486,16 @@ export function JobDetail() {
                                     icon: MapPin,
                                     label: 'Location',
                                     value: job.location,
-                                    action: (
-                                        <button className="flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-800 transition-colors">
+                                    action: directionsHref ? (
+                                        <a
+                                            href={directionsHref}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-800 transition-colors"
+                                        >
                                             <Navigation size={11} /> Directions
-                                        </button>
-                                    ),
+                                        </a>
+                                    ) : undefined,
                                 },
                                 { icon: Calendar, label: 'Date', value: formatDate(job.date, "dddd, D MMMM YYYY") },
                                 { icon: Clock, label: 'Start Time', value: job.startTime },
@@ -396,6 +519,26 @@ export function JobDetail() {
                                 </div>
                             ))}
                         </div>
+
+                        {directionsHref && (
+                            <div className="px-5 py-3 border-t border-[#F8FAFC] flex items-center justify-center gap-1.5">
+                                {MAP_SERVICES.map(service => (
+                                    <button
+                                        key={service.id}
+                                        type="button"
+                                        onClick={() => chooseMapService(service.id)}
+                                        className={cn(
+                                            "text-xs font-medium px-2.5 py-1 rounded-full transition-colors",
+                                            preferredMap === service.id
+                                                ? "bg-slate-800 text-white"
+                                                : "text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+                                        )}
+                                    >
+                                        {service.label}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
 
                         {/* Notes */}
                         {job.description && (
@@ -453,7 +596,7 @@ export function JobDetail() {
                                                 "grid grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-4 px-5 py-3.5 items-center hover:bg-slate-50/50 transition-colors cursor-pointer",
                                                 isOvertime && "bg-amber-50/40"
                                             )}
-                                            onClick={() => onNavigate(`/workers/${w.user}/worker-profile`)}
+                                            onClick={() => onNavigate(`/workers/${w.worker}/worker-profile`)}
                                         >
                                             <div className="flex items-center gap-2.5">
                                                 <Avatar initials={getInitials(w.fullname)} size="sm" index={i} />
@@ -563,6 +706,35 @@ export function JobDetail() {
                                     <Users size={14} /> Assign Workers
                                 </button>
                             )}
+                            <Popover open={statusEditOpenActions} onOpenChange={setStatusEditOpenActions}>
+                                <PopoverTrigger asChild>
+                                    <button
+                                        className="w-full h-10 rounded-xl border border-[#E2E8F0] text-sm font-semibold text-slate-600 hover:bg-slate-50 flex items-center justify-center gap-2 transition-colors"
+                                    >
+                                        <Flag size={13} className="text-slate-400" /> Change Status
+                                    </button>
+                                </PopoverTrigger>
+                                <PopoverContent align="start" className="w-56 flex flex-col gap-1">
+                                    <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide px-1 pb-1">Job status</p>
+                                    {JOB_STATUSES.map(opt => (
+                                        <button
+                                            key={opt.value}
+                                            type="button"
+                                            disabled={updateStatusMutation.isPending}
+                                            onClick={() => updateStatusMutation.mutate(opt.value, { onSuccess: () => setStatusEditOpenActions(false) })}
+                                            className={cn(
+                                                "flex items-center justify-between px-3 py-2 rounded-lg text-sm text-left transition-colors disabled:opacity-60 disabled:cursor-not-allowed",
+                                                job?.status === opt.value
+                                                    ? "bg-[#1E3A5F]/[0.06] text-[#1E3A5F] font-semibold"
+                                                    : "text-slate-600 hover:bg-slate-50"
+                                            )}
+                                        >
+                                            {opt.label}
+                                            {job?.status === opt.value && <Check size={13} />}
+                                        </button>
+                                    ))}
+                                </PopoverContent>
+                            </Popover>
                             <button
                                 onClick={() => onNavigate(`/jobs/${id}/edit`)}
                                 className="w-full h-10 rounded-xl border border-[#E2E8F0] text-sm font-semibold text-slate-600 hover:bg-slate-50 flex items-center justify-center gap-2 transition-colors"
@@ -615,7 +787,7 @@ export function JobDetail() {
                                     <div
                                         key={w.email}
                                         className="flex items-center gap-3 px-5 py-3.5 hover:bg-slate-50/60 transition-colors cursor-pointer group"
-                                        onClick={() => onNavigate(`/workers/${w.user}/worker-profile`)}
+                                        onClick={() => onNavigate(`/workers/${w.worker}/worker-profile`)}
                                     >
 
                                         <Tooltip>
@@ -633,7 +805,7 @@ export function JobDetail() {
                                                 </button>
                                             </TooltipTrigger>
                                             <TooltipContent className='bg-black'>
-                                                Remove <span className='font-black '>{w.fullname}</span>  <br/>
+                                                Remove <span className='font-black '>{w.fullname}</span>  <br />
                                                 from this job
                                             </TooltipContent>
                                         </Tooltip>
@@ -653,15 +825,342 @@ export function JobDetail() {
                         )}
                     </Card>
 
+                    {/* Clock-in Policy */}
+                    <Card className="overflow-hidden border-slate-200/80 shadow-sm">
+                        {/* Header */}
+                        <div className="flex items-start justify-between gap-4 p-5 pb-4">
+                            <div className="flex items-start gap-3">
+                                <div
+                                    className={cn(
+                                        "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl",
+                                        job?.geofenceMode === "enforce"
+                                            ? "bg-emerald-50 text-emerald-600"
+                                            : job?.geofenceMode === "warn"
+                                                ? "bg-amber-50 text-amber-600"
+                                                : job?.geofenceMode === "off"
+                                                    ? "bg-slate-100 text-slate-500"
+                                                    : "bg-blue-50 text-blue-600"
+                                    )}
+                                >
+                                    <MapPin size={17} />
+                                </div>
+
+                                <div>
+                                    <h3 className="text-sm font-semibold text-slate-900">
+                                        Clock-in Policy
+                                    </h3>
+
+                                    <p className="mt-0.5 text-xs leading-5 text-slate-500">
+                                        Control where workers are allowed to clock in
+                                    </p>
+                                </div>
+                            </div>
+
+                            <Popover
+                                open={geofenceEditOpen}
+                                onOpenChange={openGeofenceEditor}
+                            >
+                                <PopoverTrigger asChild>
+                                    <button
+                                        type="button"
+                                        className="
+            inline-flex h-8 items-center gap-1.5 rounded-lg
+            border border-slate-200 bg-white px-2.5
+            text-xs font-semibold text-slate-600
+            shadow-sm transition-all
+            hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900
+          "
+                                    >
+                                        <Pencil size={12} />
+                                        Edit
+                                    </button>
+                                </PopoverTrigger>
+
+                                <PopoverContent
+                                    align="end"
+                                    className="w-[340px] rounded-xl border-slate-200 p-0 shadow-xl"
+                                >
+                                    {/* Popover heading */}
+                                    <div className="border-b border-slate-100 px-4 py-3.5">
+                                        <h4 className="text-sm font-semibold text-slate-900">
+                                            Clock-in location
+                                        </h4>
+
+                                        <p className="mt-0.5 text-xs text-slate-500">
+                                            Choose how location should affect clock-in.
+                                        </p>
+                                    </div>
+
+                                    <div className="space-y-2 p-4">
+                                        {[
+                                            {
+                                                value: "",
+                                                label: "Use company default",
+                                                description:
+                                                    "Follow the company's standard clock-in policy.",
+                                                icon: Building2,
+                                            },
+                                            {
+                                                value: "off",
+                                                label: "No location check",
+                                                description:
+                                                    "Workers can clock in from any location.",
+                                                icon: MapPinOff,
+                                            },
+                                            {
+                                                value: "warn",
+                                                label: "Record and flag",
+                                                description:
+                                                    "Allow clock-in but flag workers outside the radius.",
+                                                icon: TriangleAlert,
+                                            },
+                                            {
+                                                value: "enforce",
+                                                label: "Require them on site",
+                                                description:
+                                                    "Block clock-in when workers are outside the radius.",
+                                                icon: ShieldCheck,
+                                            },
+                                        ].map((opt) => {
+                                            const Icon = opt.icon;
+                                            const selected = geofenceModeInput === opt.value;
+
+                                            return (
+                                                <button
+                                                    key={opt.value}
+                                                    type="button"
+                                                    onClick={() =>
+                                                        setGeofenceModeInput(
+                                                            opt.value as typeof geofenceModeInput
+                                                        )
+                                                    }
+                                                    className={cn(
+                                                        `
+                    flex w-full items-start gap-3 rounded-xl border
+                    px-3 py-3 text-left transition-all
+                  `,
+                                                        selected
+                                                            ? "border-[#1E3A5F] bg-[#1E3A5F]/[0.04] ring-1 ring-[#1E3A5F]/10"
+                                                            : "border-slate-200 hover:border-slate-300 hover:bg-slate-50/70"
+                                                    )}
+                                                >
+                                                    <div
+                                                        className={cn(
+                                                            "mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg",
+                                                            selected
+                                                                ? "bg-[#1E3A5F] text-white"
+                                                                : "bg-slate-100 text-slate-500"
+                                                        )}
+                                                    >
+                                                        <Icon size={15} />
+                                                    </div>
+
+                                                    <div className="min-w-0 flex-1">
+                                                        <div className="flex items-center justify-between gap-2">
+                                                            <p
+                                                                className={cn(
+                                                                    "text-sm font-medium",
+                                                                    selected
+                                                                        ? "text-slate-900"
+                                                                        : "text-slate-700"
+                                                                )}
+                                                            >
+                                                                {opt.label}
+                                                            </p>
+
+                                                            <div
+                                                                className={cn(
+                                                                    `
+                          flex h-4 w-4 shrink-0 items-center
+                          justify-center rounded-full border
+                        `,
+                                                                    selected
+                                                                        ? "border-[#1E3A5F] bg-[#1E3A5F]"
+                                                                        : "border-slate-300"
+                                                                )}
+                                                            >
+                                                                {selected && (
+                                                                    <Check
+                                                                        size={10}
+                                                                        strokeWidth={3}
+                                                                        className="text-white"
+                                                                    />
+                                                                )}
+                                                            </div>
+                                                        </div>
+
+                                                        <p className="mt-0.5 pr-3 text-xs leading-4 text-slate-500">
+                                                            {opt.description}
+                                                        </p>
+                                                    </div>
+                                                </button>
+                                            );
+                                        })}
+
+                                        {/* Radius */}
+                                        {geofenceModeInput &&
+                                            geofenceModeInput !== "off" && (
+                                                <div className="mt-4 rounded-xl bg-slate-50 p-3.5">
+                                                    <div className="mb-2 flex items-center justify-between">
+                                                        <div>
+                                                            <p className="text-xs font-semibold text-slate-700">
+                                                                Allowed radius
+                                                            </p>
+
+                                                            <p className="mt-0.5 text-[11px] text-slate-500">
+                                                                Distance from the job location
+                                                            </p>
+                                                        </div>
+
+                                                        <span className="rounded-md bg-white px-2 py-1 text-xs font-semibold text-slate-700 shadow-sm ring-1 ring-slate-200">
+                                                            {geofenceRadiusInput} m
+                                                        </span>
+                                                    </div>
+
+                                                    <Input
+                                                        type="number"
+                                                        min={25}
+                                                        max={5000}
+                                                        step={25}
+                                                        value={geofenceRadiusInput}
+                                                        onChange={(e) =>
+                                                            setGeofenceRadiusInput(
+                                                                Number(e.target.value)
+                                                            )
+                                                        }
+                                                        className="h-9 bg-white"
+                                                    />
+                                                </div>
+                                            )}
+                                    </div>
+
+                                    {/* Actions */}
+                                    <div className="flex items-center justify-end gap-2 border-t border-slate-100 bg-slate-50/50 px-4 py-3">
+                                        <button
+                                            type="button"
+                                            onClick={() => setGeofenceEditOpen(false)}
+                                            className="
+              h-9 rounded-lg px-3
+              text-xs font-semibold text-slate-600
+              transition-colors hover:bg-slate-100
+            "
+                                        >
+                                            Cancel
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            onClick={() => updateGeofenceMutation.mutate()}
+                                            disabled={updateGeofenceMutation.isPending}
+                                            className="
+              h-9 rounded-lg bg-[#1E3A5F] px-4
+              text-xs font-semibold text-white
+              transition-colors
+              hover:bg-[#162D4A]
+              disabled:cursor-not-allowed disabled:opacity-60
+            "
+                                        >
+                                            {updateGeofenceMutation.isPending
+                                                ? "Saving..."
+                                                : "Save changes"}
+                                        </button>
+                                    </div>
+                                </PopoverContent>
+                            </Popover>
+                        </div>
+
+                        {/* Current policy */}
+                        <div className="border-t border-slate-100 bg-slate-50/60 px-5 py-4">
+                            {job?.geofenceMode === "enforce" ? (
+                                <div className="flex items-center justify-between gap-4">
+                                    <div className="flex items-center gap-2">
+                                        <span className="relative flex h-2 w-2">
+                                            <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-40" />
+                                            <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+                                        </span>
+
+                                        <div>
+                                            <p className="text-sm font-semibold text-slate-800">
+                                                On-site required
+                                            </p>
+
+                                            <p className="mt-0.5 text-xs text-slate-500">
+                                                Workers outside the allowed area cannot clock in.
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <span className="shrink-0 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 shadow-sm">
+                                        {job.geofenceRadiusMeters ?? 150} m
+                                    </span>
+                                </div>
+                            ) : job?.geofenceMode === "warn" ? (
+                                <div className="flex items-center justify-between gap-4">
+                                    <div className="flex items-center gap-2">
+                                        <span className="h-2 w-2 shrink-0 rounded-full bg-amber-500" />
+
+                                        <div>
+                                            <p className="text-sm font-semibold text-slate-800">
+                                                Record & flag
+                                            </p>
+
+                                            <p className="mt-0.5 text-xs text-slate-500">
+                                                Out-of-range clock-ins are allowed but flagged for review.
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <span className="shrink-0 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 shadow-sm">
+                                        {job.geofenceRadiusMeters ?? 150} m
+                                    </span>
+                                </div>
+                            ) : job?.geofenceMode === "off" ? (
+                                <div className="flex items-center gap-2">
+                                    <span className="h-2 w-2 shrink-0 rounded-full bg-slate-400" />
+
+                                    <div>
+                                        <p className="text-sm font-semibold text-slate-800">
+                                            Location check disabled
+                                        </p>
+
+                                        <p className="mt-0.5 text-xs text-slate-500">
+                                            Workers can clock in regardless of their location.
+                                        </p>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="flex items-center gap-2">
+                                    <span className="h-2 w-2 shrink-0 rounded-full bg-blue-500" />
+
+                                    <div>
+                                        <p className="text-sm font-semibold text-slate-800">
+                                            Company default
+                                        </p>
+
+                                        <p className="mt-0.5 text-xs text-slate-500">
+                                            This job follows your company's default clock-in policy.
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </Card>
                     {/* Cost estimate */}
                     <Card className="p-5">
                         <h3 className="text-sm font-semibold text-slate-900 mb-4">Cost Summary</h3>
                         <div className="flex flex-col gap-2.5">
                             {[
                                 { label: 'Workers', value: `${assignedWorkers.length}` },
+                                { label: 'Pay Rate', value: job?.payRate ? `${formatCurrency(job.payRate)}/hr` : '—' },
+                                {
+                                    label: 'Charge Rate',
+                                    value: job?.chargeType === 'fixed'
+                                        ? `${formatCurrency(job?.chargeAmount ?? 0)} (fixed)`
+                                        : job?.chargeRate ? `${formatCurrency(job.chargeRate)}/hr` : '—',
+                                },
                                 { label: 'Hours each', value: formatDuration(job?.minutes) },
                                 { label: 'Total hours', value: formatDuration(totalMinutes) },
-                                { label: 'Rate (avg)', value: avgRate ? `${formatCurrency(avgRate)}/hr` : '—' },
+                                { label: 'Rate (avg actual)', value: avgRate ? `${formatCurrency(avgRate)}/hr` : '—' },
                             ].map(r => (
                                 <div key={r.label} className="flex items-center justify-between">
                                     <p className="text-xs text-slate-500">{r.label}</p>
@@ -744,10 +1243,11 @@ export function JobDetail() {
                                 Cancel
                             </button>
                             <button
-                                onClick={() => setShowApproveModal(false)}
-                                className="flex-1 h-11 rounded-xl bg-emerald-500 text-white text-sm font-bold hover:bg-emerald-600 transition-colors shadow-sm shadow-emerald-500/25"
+                                onClick={() => updateStatusMutation.mutate("completed", { onSuccess: () => setShowApproveModal(false) })}
+                                disabled={updateStatusMutation.isPending}
+                                className="flex-1 h-11 rounded-xl bg-emerald-500 text-white text-sm font-bold hover:bg-emerald-600 transition-colors shadow-sm shadow-emerald-500/25 disabled:opacity-60 disabled:cursor-not-allowed"
                             >
-                                Approve Job
+                                {updateStatusMutation.isPending ? "Approving..." : "Approve Job"}
                             </button>
                         </div>
                     </div>
