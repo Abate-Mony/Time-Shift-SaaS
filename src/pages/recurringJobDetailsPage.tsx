@@ -1,36 +1,52 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-    ChevronLeft, Repeat2, MapPin, Edit2, StopCircle, PlayCircle,
-    X, AlertTriangle, CheckCircle2, Clock, Users, Calendar, Info,
+    ChevronLeft, Edit2, StopCircle, PlayCircle,
+    X, AlertTriangle, Clock, Users, Calendar, Info, MapPin,
 } from 'lucide-react'
 import {
-    SCHEDULE_DETAILS, SCHEDULES, describeRecurrence, fmtDate, fmtDateLong,
-    type RecurringOccurrence,
-} from '../data/recurringMockData'
-import { useNavigate } from 'react-router'
+    fmtDate, fmtDateLong, describeRecurrence,
+    type Frequency, type RecurringDetail, type RecurringOccurrence,
+} from '@/utils/recurring'
+import { useNavigate, useParams, type LoaderFunctionArgs } from 'react-router'
+import { useMutation, useQuery, type QueryClient } from '@tanstack/react-query'
+import customFetch from '@/utils/customFetch'
+import { queryClient } from '@/lib/queryClient'
+import toast from 'react-hot-toast'
+import { StatusBadge as JobStatusBadge } from '@/components/ui'
+
+// ─── Data ─────────────────────────────────────────────────────────────────────
+
+type ScheduleDoc = Omit<RecurringDetail, 'occurrences'>
+
+const recurringJobDetailQuery = (id: string) => ({
+    queryKey: ['recurring-job', id],
+    queryFn: async () => {
+        const { data } = await customFetch.get<{
+            schedule: ScheduleDoc
+            occurrences: RecurringDetail['occurrences']
+        }>(`/recurring-jobs/${id}`)
+        return data
+    },
+})
+
+export const loader = (queryClient: QueryClient) => async ({ params }: LoaderFunctionArgs) => {
+    await queryClient.ensureQueryData(recurringJobDetailQuery(params.id as string))
+    return null
+}
+
+const invalidateSchedule = (id: string) => {
+    queryClient.invalidateQueries({ queryKey: ['recurring-job', id] })
+    queryClient.invalidateQueries({ queryKey: ['recurring-jobs'] })
+}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function StatusBadge({ active }: { active: boolean }) {
+function ScheduleStatusBadge({ active }: { active: boolean }) {
     return (
         <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${active ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'
             }`}>
             {active ? 'Active' : 'Stopped'}
-        </span>
-    )
-}
-
-function OccurrenceStatusBadge({ status }: { status: string }) {
-    const styles: Record<string, string> = {
-        Completed: 'bg-emerald-50 text-emerald-700',
-        Published: 'bg-blue-50 text-[#1E3A5F]',
-        Draft: 'bg-slate-100 text-slate-600',
-        Cancelled: 'bg-red-50 text-red-600',
-    }
-    return (
-        <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${styles[status] ?? 'bg-slate-100 text-slate-500'}`}>
-            {status}
         </span>
     )
 }
@@ -66,18 +82,14 @@ function StopScheduleDialog({
     upcomingCount,
     onConfirm,
     onClose,
+    loading,
 }: {
     upcomingCount: number
     onConfirm: (cancelFutureJobs: boolean) => void
     onClose: () => void
+    loading: boolean
 }) {
     const [choice, setChoice] = useState<'keep' | 'cancel'>('keep')
-    const [loading, setLoading] = useState(false)
-
-    const handleConfirm = () => {
-        setLoading(true)
-        setTimeout(() => onConfirm(choice === 'cancel'), 1200)
-    }
 
     return (
         <Backdrop onClose={onClose}>
@@ -142,7 +154,7 @@ function StopScheduleDialog({
                         Keep schedule running
                     </button>
                     <button
-                        onClick={handleConfirm}
+                        onClick={() => onConfirm(choice === 'cancel')}
                         disabled={loading}
                         className={`h-9 px-5 text-sm font-bold text-white rounded-xl transition-colors disabled:opacity-60 flex items-center gap-2 ${choice === 'cancel' ? 'bg-red-600 hover:bg-red-700' : 'bg-[#1E3A5F] hover:bg-[#162D4A]'
                             }`}
@@ -161,16 +173,17 @@ function StopScheduleDialog({
 function RestartScheduleDialog({
     onConfirm,
     onClose,
-    endDatePassed,
+    onEditInstead,
+    blocked,
+    loading,
 }: {
     onConfirm: () => void
     onClose: () => void
-    endDatePassed?: boolean
+    onEditInstead: () => void
+    blocked: string | null
+    loading: boolean
 }) {
-    const [loading, setLoading] = useState(false)
-    const handleConfirm = () => { setLoading(true); setTimeout(onConfirm, 1200) }
-
-    if (endDatePassed) {
+    if (blocked) {
         return (
             <Backdrop onClose={onClose}>
                 <div className="bg-white rounded-2xl shadow-2xl p-6">
@@ -178,13 +191,15 @@ function RestartScheduleDialog({
                         <AlertTriangle size={18} className="text-amber-500" />
                     </div>
                     <h3 className="text-base font-bold text-slate-900 mb-1">{"Can't restart this schedule"}</h3>
-                    <p className="text-sm text-slate-500 leading-relaxed mb-2">
-                        The schedule end date has already passed. Update the end date before restarting.
-                    </p>
-                    <p className="text-xs text-slate-400 mb-5">Pattern editing is coming soon.</p>
-                    <button onClick={onClose} className="w-full h-10 border border-slate-200 text-sm font-semibold text-slate-600 rounded-xl hover:bg-slate-50 transition-colors">
-                        Close
-                    </button>
+                    <p className="text-sm text-slate-500 leading-relaxed mb-5">{blocked}</p>
+                    <div className="flex gap-3">
+                        <button onClick={onClose} className="flex-1 h-10 border border-slate-200 text-sm font-semibold text-slate-600 rounded-xl hover:bg-slate-50 transition-colors">
+                            Close
+                        </button>
+                        <button onClick={onEditInstead} className="flex-1 h-10 bg-[#1E3A5F] text-white text-sm font-bold rounded-xl hover:bg-[#162D4A] transition-colors">
+                            Edit end date
+                        </button>
+                    </div>
                 </div>
             </Backdrop>
         )
@@ -205,7 +220,7 @@ function RestartScheduleDialog({
                         Cancel
                     </button>
                     <button
-                        onClick={handleConfirm}
+                        onClick={onConfirm}
                         disabled={loading}
                         className="h-9 px-5 text-sm font-bold text-white bg-[#1E3A5F] rounded-xl hover:bg-[#162D4A] transition-colors disabled:opacity-60 flex items-center gap-2"
                     >
@@ -218,11 +233,212 @@ function RestartScheduleDialog({
     )
 }
 
+// ─── Edit pattern dialog ──────────────────────────────────────────────────────
+
+const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+const FREQUENCIES: { value: Frequency; label: string }[] = [
+    { value: 'daily', label: 'Daily' },
+    { value: 'weekly', label: 'Weekly' },
+    { value: 'monthly', label: 'Monthly' },
+]
+
+export interface EditPatternForm {
+    frequency: Frequency
+    interval: number
+    daysOfWeek: number[]
+    endDate: string
+    maxOccurrences: string
+    defaultWorkerIds: string[]
+}
+
+function EditPatternDialog({
+    detail,
+    workers,
+    workersLoading,
+    onClose,
+    onSubmit,
+    loading,
+}: {
+    detail: RecurringDetail
+    workers: { _id: string; fullname: string; email: string }[]
+    workersLoading: boolean
+    onClose: () => void
+    onSubmit: (form: EditPatternForm) => void
+    loading: boolean
+}) {
+    const [form, setForm] = useState<EditPatternForm>({
+        frequency: detail.frequency,
+        interval: detail.interval,
+        daysOfWeek: detail.daysOfWeek ?? [],
+        endDate: detail.endDate ? detail.endDate.slice(0, 10) : '',
+        maxOccurrences: detail.maxOccurrences ? String(detail.maxOccurrences) : '',
+        defaultWorkerIds: detail.defaultWorkers.map(w => w._id),
+    })
+
+    const toggleDay = (d: number) => setForm(f => ({
+        ...f,
+        daysOfWeek: f.daysOfWeek.includes(d) ? f.daysOfWeek.filter(x => x !== d) : [...f.daysOfWeek, d].sort(),
+    }))
+    const toggleWorker = (id: string) => setForm(f => ({
+        ...f,
+        defaultWorkerIds: f.defaultWorkerIds.includes(id) ? f.defaultWorkerIds.filter(x => x !== id) : [...f.defaultWorkerIds, id],
+    }))
+
+    const daysMissing = form.frequency === 'weekly' && form.daysOfWeek.length === 0
+    const canSubmit = !daysMissing && form.interval >= 1
+
+    return (
+        <Backdrop onClose={onClose}>
+            <div className="bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] w-full max-w-lg">
+                <div className="px-6 pt-6 pb-5 border-b border-slate-100 flex items-start justify-between shrink-0">
+                    <div>
+                        <h3 className="text-base font-bold text-slate-900">Edit schedule pattern</h3>
+                        <p className="text-sm text-slate-500 mt-0.5">
+                            Pending future shifts are regenerated under the new pattern. Shifts a worker already accepted are left as-is.
+                        </p>
+                    </div>
+                    <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-100 transition-colors ml-3 shrink-0">
+                        <X size={15} />
+                    </button>
+                </div>
+
+                <div className="px-6 py-5 flex flex-col gap-5 overflow-y-auto">
+                    {/* Frequency */}
+                    <div className="flex flex-col gap-2">
+                        <label className="text-sm font-semibold text-slate-700">Repeats</label>
+                        <div className="grid grid-cols-3 gap-2">
+                            {FREQUENCIES.map(f => (
+                                <button
+                                    key={f.value}
+                                    type="button"
+                                    onClick={() => setForm(v => ({ ...v, frequency: f.value }))}
+                                    className={`h-10 rounded-xl text-sm font-semibold border-2 transition-all ${form.frequency === f.value
+                                        ? 'border-[#1E3A5F] bg-[#1E3A5F]/[0.04] text-[#1E3A5F]'
+                                        : 'border-slate-200 text-slate-600 hover:border-slate-300'
+                                        }`}
+                                >
+                                    {f.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Interval */}
+                    <div className="flex items-center gap-3">
+                        <label className="text-sm font-semibold text-slate-700 shrink-0">Every</label>
+                        <input
+                            type="number"
+                            min={1}
+                            value={form.interval}
+                            onChange={e => setForm(v => ({ ...v, interval: Math.max(1, Number(e.target.value) || 1) }))}
+                            className="w-20 h-9 px-3 border border-slate-200 rounded-lg text-sm text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/15 focus:border-[#1E3A5F]/40 transition-all"
+                        />
+                        <span className="text-sm text-slate-500">
+                            {form.frequency === 'weekly' ? (form.interval === 1 ? 'week' : 'weeks') : form.frequency === 'monthly' ? (form.interval === 1 ? 'month' : 'months') : (form.interval === 1 ? 'day' : 'days')}
+                        </span>
+                    </div>
+
+                    {/* Days of week */}
+                    {form.frequency === 'weekly' && (
+                        <div className="flex flex-col gap-2">
+                            <label className="text-sm font-semibold text-slate-700">Repeat on</label>
+                            <div className="flex flex-wrap gap-2">
+                                {DAY_NAMES.map((day, i) => (
+                                    <button
+                                        key={day}
+                                        type="button"
+                                        onClick={() => toggleDay(i)}
+                                        className={`h-9 w-12 rounded-xl text-xs font-bold transition-all border ${form.daysOfWeek.includes(i)
+                                            ? 'bg-[#1E3A5F] text-white border-[#1E3A5F]'
+                                            : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'
+                                            }`}
+                                    >
+                                        {day}
+                                    </button>
+                                ))}
+                            </div>
+                            {daysMissing && (
+                                <p className="text-xs text-amber-600 flex items-center gap-1">
+                                    <Info size={11} /> Select at least one day
+                                </p>
+                            )}
+                        </div>
+                    )}
+
+                    {/* End date + max occurrences */}
+                    <div className="grid grid-cols-2 gap-3">
+                        <div className="flex flex-col gap-1.5">
+                            <label className="text-sm font-semibold text-slate-700">End date</label>
+                            <input
+                                type="date"
+                                value={form.endDate}
+                                onChange={e => setForm(v => ({ ...v, endDate: e.target.value }))}
+                                className="h-9 px-3 border border-slate-200 rounded-lg text-sm text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/15 focus:border-[#1E3A5F]/40 transition-all"
+                            />
+                            <p className="text-xs text-slate-400">Leave blank for no end date.</p>
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                            <label className="text-sm font-semibold text-slate-700">Max occurrences</label>
+                            <input
+                                type="number"
+                                min={1}
+                                value={form.maxOccurrences}
+                                onChange={e => setForm(v => ({ ...v, maxOccurrences: e.target.value }))}
+                                placeholder="No limit"
+                                className="h-9 px-3 border border-slate-200 rounded-lg text-sm text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/15 focus:border-[#1E3A5F]/40 transition-all"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Default workers */}
+                    <div className="flex flex-col gap-2">
+                        <label className="text-sm font-semibold text-slate-700">Default workers</label>
+                        <p className="text-xs text-slate-400 -mt-1">Automatically assigned when new shifts are generated.</p>
+                        {workersLoading ? (
+                            <div className="h-24 rounded-xl bg-slate-100 animate-pulse" />
+                        ) : workers.length === 0 ? (
+                            <p className="text-sm text-slate-400 italic">No workers available.</p>
+                        ) : (
+                            <div className="flex flex-col gap-1 max-h-40 overflow-y-auto border border-slate-200 rounded-xl p-2">
+                                {workers.map(w => (
+                                    <label key={w._id} className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-slate-50 cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={form.defaultWorkerIds.includes(w._id)}
+                                            onChange={() => toggleWorker(w._id)}
+                                            className="rounded border-slate-300 text-[#1E3A5F] focus:ring-[#1E3A5F]/30"
+                                        />
+                                        <span className="text-sm text-slate-700">{w.fullname}</span>
+                                        <span className="text-xs text-slate-400">{w.email}</span>
+                                    </label>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                <div className="px-6 py-4 border-t border-slate-100 flex items-center justify-end gap-3 shrink-0 bg-white">
+                    <button onClick={onClose} className="h-9 px-4 text-sm font-semibold text-slate-600 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors">
+                        Cancel
+                    </button>
+                    <button
+                        onClick={() => onSubmit(form)}
+                        disabled={!canSubmit || loading}
+                        className="h-9 px-5 text-sm font-bold text-white bg-[#1E3A5F] rounded-xl hover:bg-[#162D4A] transition-colors disabled:opacity-60 flex items-center gap-2"
+                    >
+                        {loading && <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />}
+                        {loading ? 'Saving…' : 'Save changes'}
+                    </button>
+                </div>
+            </div>
+        </Backdrop>
+    )
+}
+
 // ─── Pattern card ─────────────────────────────────────────────────────────────
 
-function SchedulePatternCard({ schedule }: { schedule: ReturnType<typeof SCHEDULES[0]['frequency'] extends string ? any : any> }) {
+function SchedulePatternCard({ schedule }: { schedule: RecurringDetail }) {
     const FREQ_LABEL: Record<string, string> = { daily: 'Daily', weekly: 'Weekly', monthly: 'Monthly' }
-    const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
     const rows = [
         { label: 'Repeats', value: FREQ_LABEL[schedule.frequency] ?? schedule.frequency },
@@ -230,12 +446,13 @@ function SchedulePatternCard({ schedule }: { schedule: ReturnType<typeof SCHEDUL
         schedule.daysOfWeek?.length ? { label: 'Days', value: schedule.daysOfWeek.map((d: number) => DAY_NAMES[d]).join(', ') } : null,
         { label: 'Start date', value: fmtDateLong(schedule.startDate) },
         { label: 'End date', value: schedule.endDate ? fmtDateLong(schedule.endDate) : 'No end date' },
+        schedule.maxOccurrences ? { label: 'Max occurrences', value: String(schedule.maxOccurrences) } : null,
         { label: 'Shift time', value: `${schedule.templateJob.startTime}–${schedule.templateJob.endTime}` },
         schedule.generatedUntil ? { label: 'Generated through', value: fmtDateLong(schedule.generatedUntil) } : null,
     ].filter(Boolean) as { label: string; value: string }[]
 
     return (
-        <div className="bg-white rounded-xl border border-[#E2E8F0] p-6">
+        <div className="bg-white rounded-xl border border-[#E2E8F0] p-6 ">
             <h3 className="text-sm font-bold text-slate-800 mb-4">Schedule pattern</h3>
             <div className="flex flex-col gap-0">
                 {rows.map((row, i) => (
@@ -283,7 +500,7 @@ function DefaultWorkersCard({ workers }: { workers: { _id: string; fullname: str
 
 // ─── Schedule metadata card ───────────────────────────────────────────────────
 
-function ScheduleMetadataCard({ detail }: { detail: (typeof SCHEDULE_DETAILS)[keyof typeof SCHEDULE_DETAILS] }) {
+function ScheduleMetadataCard({ detail }: { detail: RecurringDetail }) {
     const rows = [
         { label: 'Created by', value: detail.createdBy.fullname },
         { label: 'Created', value: fmtDateLong(detail.createdAt) },
@@ -310,11 +527,11 @@ function OccurrenceRow({
     onNavigate,
 }: {
     occ: RecurringOccurrence
-    onNavigate: (id: string, recordId?: string) => void
+    onNavigate: (path: string) => void
 }) {
     return (
         <button
-            onClick={() => onNavigate('/jobs/id')}
+            onClick={() => onNavigate(`/jobs/${occ._id}`)}
             className="w-full text-left flex items-center gap-4 px-5 py-4 hover:bg-slate-50/70 transition-colors border-b border-slate-50 last:border-0 group"
         >
             <div className="flex-1 min-w-0">
@@ -326,7 +543,7 @@ function OccurrenceRow({
                     <span className="text-xs text-slate-400 flex items-center gap-1">
                         <Clock size={10} /> {occ.startTime}–{occ.endTime}
                     </span>
-                    {occ.requiredWorkers > 0 && occ.status !== 'Completed' && occ.status !== 'Cancelled' && (
+                    {occ.requiredWorkers > 0 && occ.status !== 'completed' && occ.status !== 'cancelled' && (
                         <span className="text-xs text-slate-400 flex items-center gap-1">
                             <Users size={10} /> {occ.requiredWorkers} workers needed
                         </span>
@@ -334,7 +551,7 @@ function OccurrenceRow({
                 </div>
             </div>
             <div className="flex items-center gap-2 shrink-0">
-                <OccurrenceStatusBadge status={occ.status} />
+                <JobStatusBadge status={occ.status} />
                 <ChevronLeft size={14} className="rotate-180 text-slate-300 group-hover:text-slate-500 transition-colors" />
             </div>
         </button>
@@ -348,13 +565,13 @@ function OccurrencesTabs({
     active,
     onNavigate,
 }: {
-    detail: any
+    detail: RecurringDetail
     active: boolean
-    onNavigate: (id: string, recordId?: string) => void
+    onNavigate: (path: string) => void
 }) {
     const [tab, setTab] = useState<'upcoming' | 'past'>('upcoming')
-    const upcoming = detail.occurrences.upcoming as RecurringOccurrence[]
-    const past = detail.occurrences.past as RecurringOccurrence[]
+    const upcoming = detail.occurrences.upcoming
+    const past = detail.occurrences.past
     const list = tab === 'upcoming' ? upcoming : past
 
     return (
@@ -368,8 +585,8 @@ function OccurrencesTabs({
                             key={t}
                             onClick={() => setTab(t)}
                             className={`px-4 py-2 text-sm font-semibold border-b-2 transition-all capitalize -mb-px ${tab === t
-                                    ? 'border-[#1E3A5F] text-[#1E3A5F]'
-                                    : 'border-transparent text-slate-500 hover:text-slate-700'
+                                ? 'border-[#1E3A5F] text-[#1E3A5F]'
+                                : 'border-transparent text-slate-500 hover:text-slate-700'
                                 }`}
                         >
                             {t === 'upcoming' ? `Upcoming (${upcoming.length})` : `Past (${past.length})`}
@@ -409,60 +626,92 @@ function OccurrencesTabs({
     )
 }
 
-// ─── Toast ────────────────────────────────────────────────────────────────────
-
-function Toast({ message, onDone }: { message: string; onDone: () => void }) {
-    return (
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            onAnimationComplete={() => setTimeout(onDone, 3500)}
-            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[200] flex items-center gap-3 px-4 py-3 bg-slate-900 text-white rounded-xl shadow-xl text-sm font-semibold pointer-events-none"
-        >
-            <CheckCircle2 size={15} className="text-emerald-400 shrink-0" />
-            {message}
-        </motion.div>
-    )
-}
-
 // ─── Main detail page ─────────────────────────────────────────────────────────
 
-export function RecurringJobDetail({
-    scheduleId,
-
-}: {
-    scheduleId: string
-    //   onNavigate: (id: string, recordId?: string) => void
-}) {
-    const detail = SCHEDULE_DETAILS[scheduleId] ?? SCHEDULE_DETAILS['rs1']
-    const [active, setActive] = useState(detail.active)
-    const [showStop, setShowStop] = useState(false)
-    const [showRestart, setShowRestart] = useState(false)
-    const [toast, setToast] = useState<string | null>(null)
+export function RecurringJobDetail() {
+    const { id } = useParams() as { id: string }
     const navigate = useNavigate()
     const onNavigate = (path: string) => navigate(path)
-    const handleStop = (cancelFutureJobs: boolean) => {
-        setActive(false)
-        setShowStop(false)
-        setToast(
-            cancelFutureJobs
-                ? `Schedule stopped — ${detail.upcomingCount} upcoming shifts cancelled. Affected workers were notified.`
-                : 'Schedule stopped.'
-        )
-    }
 
-    const handleRestart = () => {
-        setActive(true)
-        setShowRestart(false)
-        setToast('Schedule restarted — 12 shifts created.')
+    const { schedule, occurrences } = useQuery(recurringJobDetailQuery(id)).data as {
+        schedule: ScheduleDoc
+        occurrences: RecurringDetail['occurrences']
     }
+    const detail: RecurringDetail = { ...schedule, occurrences }
+    const active = detail.active
+
+    const [showStop, setShowStop] = useState(false)
+    const [showRestart, setShowRestart] = useState(false)
+    const [showEdit, setShowEdit] = useState(false)
+    const [restartError, setRestartError] = useState<string | null>(null)
+
+    const { data: editWorkers, isLoading: editWorkersLoading } = useQuery({
+        queryKey: ['recurring-edit-workers'],
+        queryFn: async () => {
+            const { data } = await customFetch.get<{ users: { _id: string; fullname: string; email: string }[] }>(
+                '/users/users',
+                { params: { role: 'worker', limit: 100 } }
+            )
+            return data.users
+        },
+        enabled: showEdit,
+    })
+
+    const stopMutation = useMutation({
+        mutationFn: (cancelFutureJobs: boolean) =>
+            customFetch.patch(`/recurring-jobs/${id}/cancel`, { cancelFutureJobs }),
+        onSuccess: ({ data }) => {
+            setShowStop(false)
+            invalidateSchedule(id)
+            toast.success(data.message)
+            if (data.notifiedWorkers?.length) {
+                toast(`Workers with an already-accepted shift affected: ${data.notifiedWorkers.join(', ')}`, { duration: 7000 })
+            }
+        },
+        onError: (err: any) => toast.error(err.response?.data?.msg ?? 'Failed to stop the schedule.'),
+    })
+
+    const restartMutation = useMutation({
+        mutationFn: () => customFetch.patch(`/recurring-jobs/${id}/reactivate`),
+        onSuccess: ({ data }) => {
+            setShowRestart(false)
+            setRestartError(null)
+            invalidateSchedule(id)
+            toast.success(data.message)
+        },
+        onError: (err: any) => setRestartError(err.response?.data?.msg ?? 'Failed to restart the schedule.'),
+    })
+
+    const editMutation = useMutation({
+        mutationFn: (form: EditPatternForm) =>
+            customFetch.patch(`/recurring-jobs/${id}`, {
+                frequency: form.frequency,
+                interval: form.interval,
+                daysOfWeek: form.frequency === 'weekly' ? form.daysOfWeek : undefined,
+                endDate: form.endDate || null,
+                // No way to explicitly clear this server-side today — only
+                // send it when set, leave the existing value alone otherwise.
+                maxOccurrences: form.maxOccurrences ? Number(form.maxOccurrences) : undefined,
+                defaultWorkers: form.defaultWorkerIds,
+            }),
+        onSuccess: ({ data }) => {
+            setShowEdit(false)
+            invalidateSchedule(id)
+            toast.success(
+                `Schedule updated. ${data.regenerated} shift${data.regenerated === 1 ? '' : 's'} regenerated under the new pattern — any already accepted by a worker were left as-is.`,
+                { duration: 7000 }
+            )
+        },
+        onError: (err: any) => toast.error(err.response?.data?.msg ?? 'Failed to update the schedule.'),
+    })
+
+    const endDatePassed = !!detail.endDate && new Date(detail.endDate) < new Date()
 
     return (
-        <div className="p-6 max-w-[960px]">
+        <div className="p-6 max-w-8xl mx-x-auto">
             {/* Back link */}
             <button
-                onClick={() => onNavigate('recurring-jobs')}
+                onClick={() => onNavigate('/jobs/recurring')}
                 className="flex items-center gap-1.5 text-sm text-slate-400 hover:text-slate-700 transition-colors mb-5"
             >
                 <ChevronLeft size={15} /> Recurring Shifts
@@ -475,31 +724,25 @@ export function RecurringJobDetail({
                         <h1 className="text-xl font-bold text-slate-900 tracking-tight min-w-0 truncate">
                             {detail.templateJob.title}
                         </h1>
-                        <StatusBadge active={active} />
+                        <ScheduleStatusBadge active={active} />
                     </div>
                     <p className="text-sm text-slate-600 mb-1">
                         {describeRecurrence(detail)} · {detail.templateJob.startTime}–{detail.templateJob.endTime}
                         {detail.endDate ? ` · until ${fmtDateLong(detail.endDate)}` : ''}
                     </p>
                     <p className="text-xs text-slate-400 flex items-center gap-1">
-                        <MapPin size={11} /> {detail.templateJob.client} · {detail.templateJob.location}
+                        <MapPin size={11} />
+                        {detail.templateJob.client ? `${detail.templateJob.client} · ` : ''}{detail.templateJob.location}
                     </p>
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0">
-                    {/* Edit pattern — disabled with tooltip */}
-                    <div className="relative group">
-                        <button
-                            disabled
-                            className="h-9 px-4 text-sm font-semibold text-slate-400 border border-slate-200 rounded-xl flex items-center gap-2 cursor-not-allowed"
-                            aria-label="Edit pattern — coming soon"
-                        >
-                            <Edit2 size={13} /> Edit pattern
-                        </button>
-                        <div className="absolute bottom-full right-0 mb-2 px-2.5 py-1.5 bg-slate-800 text-white text-xs rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                            Editing recurring patterns is coming soon.
-                        </div>
-                    </div>
+                    <button
+                        onClick={() => setShowEdit(true)}
+                        className="h-9 px-4 text-sm font-semibold text-slate-600 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors flex items-center gap-2"
+                    >
+                        <Edit2 size={13} /> Edit pattern
+                    </button>
 
                     {active ? (
                         <button
@@ -510,7 +753,7 @@ export function RecurringJobDetail({
                         </button>
                     ) : (
                         <button
-                            onClick={() => setShowRestart(true)}
+                            onClick={() => { setRestartError(null); setShowRestart(true) }}
                             className="h-9 px-4 text-sm font-semibold text-white bg-[#1E3A5F] rounded-xl hover:bg-[#162D4A] transition-colors flex items-center gap-2"
                         >
                             <PlayCircle size={13} /> Restart schedule
@@ -556,21 +799,30 @@ export function RecurringJobDetail({
                 {showStop && (
                     <StopScheduleDialog
                         upcomingCount={detail.upcomingCount}
-                        onConfirm={handleStop}
+                        onConfirm={cancelFutureJobs => stopMutation.mutate(cancelFutureJobs)}
                         onClose={() => setShowStop(false)}
+                        loading={stopMutation.isPending}
                     />
                 )}
                 {showRestart && (
                     <RestartScheduleDialog
-                        onConfirm={handleRestart}
-                        onClose={() => setShowRestart(false)}
+                        onConfirm={() => restartMutation.mutate()}
+                        onClose={() => { setShowRestart(false); setRestartError(null) }}
+                        onEditInstead={() => { setShowRestart(false); setRestartError(null); setShowEdit(true) }}
+                        blocked={endDatePassed ? "This schedule's end date has already passed. Set a new end date before reactivating." : restartError}
+                        loading={restartMutation.isPending}
                     />
                 )}
-            </AnimatePresence>
-
-            {/* Toast */}
-            <AnimatePresence>
-                {toast && <Toast message={toast} onDone={() => setToast(null)} />}
+                {showEdit && (
+                    <EditPatternDialog
+                        detail={detail}
+                        workers={editWorkers ?? []}
+                        workersLoading={editWorkersLoading}
+                        onClose={() => setShowEdit(false)}
+                        onSubmit={form => editMutation.mutate(form)}
+                        loading={editMutation.isPending}
+                    />
+                )}
             </AnimatePresence>
         </div>
     )

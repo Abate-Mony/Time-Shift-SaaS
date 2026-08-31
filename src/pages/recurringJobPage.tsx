@@ -1,8 +1,31 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Repeat2, ChevronRight, Plus, Search, Calendar, MapPin, Clock, AlertCircle } from 'lucide-react'
-import { SCHEDULES, describeRecurrence, fmtDate, fmtDateLong, type RecurringSchedule } from '../data/recurringMockData'
+import { Repeat2, ChevronRight, Plus, Search, Calendar, MapPin } from 'lucide-react'
+import { describeRecurrence, fmtDate, fmtDateLong, type RecurringSchedule } from '@/utils/recurring'
 import { useNavigate } from 'react-router'
+import { useQuery, type QueryClient } from '@tanstack/react-query'
+import customFetch from '@/utils/customFetch'
+
+// ─── Data ─────────────────────────────────────────────────────────────────────
+
+const recurringJobsQuery = () => ({
+  queryKey: ['recurring-jobs'],
+  queryFn: async () => {
+    // Recurring schedules are a small, manageable set per company (unlike
+    // jobs or invitations) — fetch a generous page once and filter/search
+    // client-side rather than round-tripping per tab switch or keystroke.
+    const { data } = await customFetch.get<{ schedules: RecurringSchedule[]; total: number }>(
+      '/recurring-jobs',
+      { params: { limit: 100 } }
+    )
+    return data
+  },
+})
+
+export const loader = (queryClient: QueryClient) => async () => {
+  await queryClient.ensureQueryData(recurringJobsQuery())
+  return null
+}
 
 // ─── Status badge ──────────────────────────────────────────────────────────────
 
@@ -61,7 +84,10 @@ function RecurringScheduleCard({
           {/* Client / location */}
           <div className="flex items-center gap-1.5 mt-1.5 text-xs text-slate-400 min-w-0">
             <MapPin size={11} className="shrink-0" />
-            <span className="truncate">{schedule.templateJob.client} · {schedule.templateJob.location}</span>
+            <span className="truncate">
+              {schedule.templateJob.client ? `${schedule.templateJob.client} · ` : ''}
+              {schedule.templateJob.location}
+            </span>
           </div>
 
           {/* Stats row */}
@@ -84,35 +110,6 @@ function RecurringScheduleCard({
         <ChevronRight size={16} className="text-slate-300 group-hover:text-slate-500 transition-colors shrink-0 mt-1" />
       </div>
     </motion.button>
-  )
-}
-
-// ─── Skeleton ─────────────────────────────────────────────────────────────────
-
-function RecurringListSkeleton() {
-  return (
-    <div className="flex flex-col gap-3">
-      {[1, 2, 3].map(i => (
-        <div key={i} className="bg-white border border-[#E2E8F0] rounded-xl p-5 animate-pulse">
-          <div className="flex items-start gap-3">
-            <div className="flex-1">
-              <div className="flex gap-2 mb-2">
-                <div className="h-4 bg-slate-200 rounded w-3/5" />
-                <div className="h-5 bg-slate-100 rounded-full w-14" />
-              </div>
-              <div className="h-3.5 bg-slate-100 rounded w-4/5 mb-1.5" />
-              <div className="h-3 bg-slate-100 rounded w-2/5 mb-3" />
-              <div className="flex gap-4">
-                <div className="h-3 bg-slate-100 rounded w-20" />
-                <div className="h-3 bg-slate-100 rounded w-16" />
-                <div className="h-3 bg-slate-100 rounded w-16" />
-              </div>
-            </div>
-            <div className="w-4 h-4 bg-slate-100 rounded mt-1" />
-          </div>
-        </div>
-      ))}
-    </div>
   )
 }
 
@@ -150,37 +147,19 @@ function EmptyRecurringState({
   )
 }
 
-// ─── Error state ──────────────────────────────────────────────────────────────
-
-function ErrorState({ onRetry }: { onRetry: () => void }) {
-  return (
-    <div className="bg-white border border-[#E2E8F0] rounded-xl flex flex-col items-center justify-center py-14 text-center px-8">
-      <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center mb-3">
-        <AlertCircle size={18} className="text-red-400" />
-      </div>
-      <p className="text-sm font-semibold text-slate-700 mb-1">Could not load recurring shifts</p>
-      <p className="text-xs text-slate-400 mb-4">Check your connection and try again.</p>
-      <button onClick={onRetry} className="h-8 px-4 text-sm font-semibold text-[#1E3A5F] border border-[#1E3A5F]/20 rounded-lg hover:bg-[#1E3A5F]/5 transition-colors">
-        Try again
-      </button>
-    </div>
-  )
-}
-
 // ─── Main list page ───────────────────────────────────────────────────────────
 
 type FilterType = 'all' | 'active' | 'stopped'
 
-export function RecurringJobs({
-}) {
-    const navigate=useNavigate()
-  const onNavigate=(path:string)=>navigate(path)
+export function RecurringJobs() {
+  const navigate = useNavigate()
+  const onNavigate = (path: string) => navigate(path)
+  const { schedules } = useQuery(recurringJobsQuery()).data as { schedules: RecurringSchedule[]; total: number }
+
   const [filter, setFilter] = useState<FilterType>('all')
   const [search, setSearch] = useState('')
-  const [loading] = useState(false)
-  const [error] = useState(false)
 
-  const filtered = SCHEDULES.filter(s => {
+  const filtered = schedules.filter(s => {
     const matchFilter =
       filter === 'all' ||
       (filter === 'active' && s.active) ||
@@ -189,7 +168,7 @@ export function RecurringJobs({
     const matchSearch =
       !q ||
       s.templateJob.title.toLowerCase().includes(q) ||
-      s.templateJob.client.toLowerCase().includes(q) ||
+      (s.templateJob.client ?? '').toLowerCase().includes(q) ||
       s.templateJob.location.toLowerCase().includes(q)
     return matchFilter && matchSearch
   })
@@ -223,7 +202,7 @@ export function RecurringJobs({
                 filter === f ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
               }`}
             >
-              {f === 'all' ? `All (${SCHEDULES.length})` : f === 'active' ? `Active (${SCHEDULES.filter(s => s.active).length})` : `Stopped (${SCHEDULES.filter(s => !s.active).length})`}
+              {f === 'all' ? `All (${schedules.length})` : f === 'active' ? `Active (${schedules.filter(s => s.active).length})` : `Stopped (${schedules.filter(s => !s.active).length})`}
             </button>
           ))}
         </div>
@@ -240,11 +219,7 @@ export function RecurringJobs({
       </div>
 
       {/* Content */}
-      {loading ? (
-        <RecurringListSkeleton />
-      ) : error ? (
-        <ErrorState onRetry={() => {}} />
-      ) : filtered.length === 0 ? (
+      {filtered.length === 0 ? (
         <EmptyRecurringState filter={filter} onCreateJob={() => onNavigate('/create-job')} />
       ) : (
         <AnimatePresence mode="wait">
@@ -260,21 +235,13 @@ export function RecurringJobs({
               <RecurringScheduleCard
                 key={s._id}
                 schedule={s}
-                onClick={() => onNavigate('/jobs/recurring/recurring-job-detail/8282873')}
+                onClick={() => onNavigate(`/jobs/recurring/recurring-job-detail/${s._id}`)}
               />
             ))}
 
-            {/* Pagination hint */}
-            {filtered.length > 0 && (
-              <div className="flex items-center justify-between pt-4 text-xs text-slate-400">
-                <span>Showing 1–{filtered.length} of {filtered.length}</span>
-                <div className="flex items-center gap-1">
-                  <button disabled className="h-7 px-3 rounded-lg border border-slate-200 text-slate-300 cursor-not-allowed">‹ Previous</button>
-                  <button className="h-7 px-3 rounded-lg border border-[#1E3A5F]/20 text-[#1E3A5F] bg-[#1E3A5F]/5 font-semibold">1</button>
-                  <button disabled className="h-7 px-3 rounded-lg border border-slate-200 text-slate-300 cursor-not-allowed">Next ›</button>
-                </div>
-              </div>
-            )}
+            <div className="flex items-center justify-between pt-4 text-xs text-slate-400">
+              <span>Showing 1–{filtered.length} of {filtered.length}</span>
+            </div>
           </motion.div>
         </AnimatePresence>
       )}

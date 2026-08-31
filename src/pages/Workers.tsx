@@ -1,33 +1,21 @@
-import { Briefcase, ChevronRight, Clock, Mail, Phone, Plus, Search, Star, X } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
-import { Avatar, Card, StatusBadge } from '../components/ui'
-import { jobs, workers } from '../data/mockData'
-import { useQuery, type QueryClient } from '@tanstack/react-query'
-import { Link, useLoaderData, useNavigation, type LoaderFunctionArgs, type Params } from 'react-router'
-import customFetch from '@/utils/customFetch'
 import SearchComponent from '@/components/Search'
-import { cn } from '@/lib/utils'
-import { sleep } from '@/utils/sleep'
 import { Button } from '@/components/ui/button'
-import type { User } from '@/utils/types'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
 import {
   Drawer,
   DrawerClose,
   DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
+  DrawerFooter
 } from "@/components/ui/drawer"
+import { cn } from '@/lib/utils'
+import customFetch from '@/utils/customFetch'
+import { sleep } from '@/utils/sleep'
+import type { User } from '@/utils/types'
+import { useQuery, type QueryClient } from '@tanstack/react-query'
+import { Briefcase, ChevronRight, Clock, Mail, Phone, Star, X } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { Link, useLoaderData, useNavigation, type LoaderFunctionArgs, type Params } from 'react-router'
+import { Avatar, Card, StatusBadge } from '../components/ui'
+import { jobs } from '../data/mockData'
 
 import {
   Field,
@@ -66,14 +54,9 @@ function RadioGroupChoiceCard() {
   )
 }
 
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { AnimatePresence, motion, useAnimate } from 'framer-motion'
 import { useMediaQuery } from 'react-responsive'
 import z from 'zod'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { queryClient } from '@/lib/queryClient'
-import { AnimatePresence, motion, useAnimate } from 'framer-motion'
 
 const workersQuery = (params: Params) => {
 
@@ -210,115 +193,13 @@ export const createWorkerSchema = z.object({
   }),
 });
 
-type CreateWorkerForm = z.infer<typeof createWorkerSchema>;
+// type CreateWorkerForm = z.infer<typeof createWorkerSchema>;
 
 interface Props {
   className?: string;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
-export default function CreateWorkerForm({
-  className,
-  setOpen,
-}: Props) {
-  const [loading, setLoading] = useState(false);
 
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors },
-  } = useForm<CreateWorkerForm>({
-    resolver: zodResolver(createWorkerSchema),
-    defaultValues: {
-      fullname: "",
-      email: "",
-      password: "",
-      role: "worker"
-    },
-  });
-
-  const onSubmit = async (data: CreateWorkerForm) => {
-    try {
-      setLoading(true);
-
-      // This page only creates workers — managers are added from the Team page.
-      await customFetch.post("/workers", { ...data, role: "worker" });
-      queryClient.invalidateQueries({ queryKey: ["workers"] });
-      queryClient.invalidateQueries({ queryKey: ["team"] });
-      reset();
-      setOpen(false);
-
-      // toast.success("Worker created successfully");
-    } catch (error: any) {
-      console.log(error);
-
-      // toast.error(
-      //   error.response?.data?.message ?? "Something went wrong"
-      // );
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <form
-      onSubmit={handleSubmit(onSubmit)}
-      className={cn("grid items-start gap-6", className)}
-    >
-      <div className="grid gap-2">
-        <Label htmlFor="fullname">Full Name</Label>
-
-        <Input
-          id="fullname"
-          placeholder="John Smith"
-          {...register("fullname")}
-        />
-
-        {errors.fullname && (
-          <p className="text-sm text-red-500">
-            {errors.fullname.message}
-          </p>
-        )}
-      </div>
-      <div className="grid gap-2">
-        <Label htmlFor="email">Email</Label>
-
-        <Input
-          id="email"
-          type="email"
-          placeholder="john@example.com"
-          {...register("email")}
-        />
-
-        {errors.email && (
-          <p className="text-sm text-red-500">
-            {errors.email.message}
-          </p>
-        )}
-      </div>
-
-      <div className="grid gap-2">
-        <Label htmlFor="password">Password</Label>
-
-        <Input
-          id="password"
-          type="password"
-          {...register("password")}
-        />
-
-        {errors.password && (
-          <p className="text-sm text-red-500">
-            {errors.password.message}
-          </p>
-        )}
-      </div>
-
-      <Button className="rounded-none" size={"lg"} type="submit" disabled={loading}>
-        {loading ? "Creating..." : "Create User"}
-      </Button>
-    </form>
-  );
-}
 interface iUser extends User {
   hoursThisWeek: number,
   jobsCompleted: number
@@ -352,46 +233,7 @@ export function Workers() {
   return (
     <div className="p-6 animate-fade-in">
       {/* add new user modal here  */}
-      {
-        isDesktop ?
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger ref={buttonRef} asChild className='hidden'>
-              <Button variant="outline">Edit Profile</Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px] rounded-none!">
-              <DialogHeader>
-                <DialogTitle>Create Worker</DialogTitle>
-                <DialogDescription>
-                  {/* Make changes to your profile here. Click save when you're done. */}
-                </DialogDescription>
-              </DialogHeader>
-              <CreateWorkerForm setOpen={setOpen} />
-            </DialogContent>
-          </Dialog>
-          :
-          <Drawer open={open} onOpenChange={setOpen}>
-            <DrawerTrigger asChild ref={buttonRef} className='hidden'>
-              <Button variant="outline">Edit Profile</Button>
-            </DrawerTrigger>
-            <DrawerContent className=''>
-              <DrawerHeader className="text-left">
-                <DrawerTitle>Create Worker</DrawerTitle>
-                <DrawerDescription>
-                  {/* Make changes to your profile here. Click save when you're done. */}
-                </DrawerDescription>
-              </DrawerHeader>
-              <CreateWorkerForm setOpen={setOpen} className="px-4" />
-              <DrawerFooter className="pt-2">
-                <DrawerClose asChild>
-                  <Button variant="outline">Cancel</Button>
-                </DrawerClose>
-              </DrawerFooter>
-            </DrawerContent>
-          </Drawer>
-
-      }
-      {/* add new use modal ends here  */}
-      {/* view worker drawer on small screen  */}
+   
       <Drawer open={open_small_device && !isDesktop} onOpenChange={setOpenSmallDevice} >
 
         <DrawerContent className='sm:hidden py-0 '>
@@ -418,11 +260,7 @@ export function Workers() {
           <h1 className="text-xl font-semibold text-slate-900 tracking-tight">Workers</h1>
           <p className="text-sm text-slate-500 mt-0.5">{nHits} workers across all locations</p>
         </div>
-        <Button
-          onClick={() => {
-            buttonRef.current?.click()
-          }}
-          size="sm"><Plus size={14} /> Add Worker </Button>
+     
       </div>
 
       <div className="flex gap-5">

@@ -124,52 +124,8 @@ export default function JobsScreen() {
                 </p>
             </div>
 
-            {/* View toggle */}
-            <div className="flex gap-1 bg-slate-100 p-1 rounded-xl">
-                <button
-                    type="button"
-                    onClick={() => setView('my-jobs')}
-                    className={`flex-1 h-8 rounded-lg text-xs font-semibold transition-all ${view === 'my-jobs' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-                >
-                    My Jobs
-                </button>
-                <button
-                    type="button"
-                    onClick={() => setView('open-shifts')}
-                    className={`flex-1 flex items-center justify-center gap-1.5 h-8 rounded-lg text-xs font-semibold transition-all ${view === 'open-shifts' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-                >
-                    Open Shifts
-                    {openShifts.length > 0 && (
-                        <span className="w-4 h-4 rounded-full text-[10px] font-bold flex items-center justify-center bg-blue-100 text-blue-700">
-                            {openShifts.length}
-                        </span>
-                    )}
-                </button>
-            </div>
 
-            {view === 'open-shifts' ? (
-                <div className="flex flex-col gap-3">
-                    {isOpenShiftsLoading ? (
-                        <div className="flex items-center justify-center py-16">
-                            <Loader2 size={20} className="animate-spin text-slate-400" />
-                        </div>
-                    ) : isOpenShiftsError ? (
-                        <EmptyState
-                            icon={<AlertCircle size={20} />}
-                            title="Open shifts aren't available yet"
-                            description="This feature is being connected up — check back soon."
-                        />
-                    ) : openShifts.length ? (
-                        openShifts.map(shift => <OpenShiftCard shift={shift} key={shift._id} />)
-                    ) : (
-                        <EmptyState
-                            icon={<Briefcase size={20} />}
-                            title="No open shifts right now"
-                            description="New unassigned shifts will show up here as they're published."
-                        />
-                    )}
-                </div>
-            ) : (
+            
                 <>
                     <SearchComponent placeholder="Search Jobs" />
 
@@ -316,7 +272,6 @@ export default function JobsScreen() {
                         </div>
                     )}
                 </>
-            )}
         </div>
     )
 }

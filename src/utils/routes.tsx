@@ -26,15 +26,16 @@ import { NoActiveShift } from "@/components/ui/No_Active_Job";
 import InvitationLayout from "@/layouts/AccpetInviteLayout";
 import JobLayout from "@/layouts/JobLayout";
 import RootLayout from "@/layouts/RootLayout";
+import WorkerJobLayout from "@/layouts/WorkerJobLayout";
 import AcceptInvitePage from "@/pages/acceptInvites/AcceptInvitePage";
 import ExistingUserInvitePage from "@/pages/acceptInvites/ExistingUserInvitePage";
 import InvitationStatusPage from "@/pages/acceptInvites/InvitationStatusPage";
 import InvitationSuccessPage from "@/pages/acceptInvites/InvitationSuccessPage";
 import NewUserInvitePage from "@/pages/acceptInvites/NewUserInvitePage";
+import RecurringAssignmentPage, { loader as recurringAssignmentsLoader } from "@/pages/worker/RecurringAssignmentPage";
 import { createBrowserRouter, Navigate } from "react-router";
 import DashboardLayout from "../layouts/dashboardlayout";
-import { Analytics, Calendar, calendarLoader, clockLoader, CreateJob, createjobAction, Dashboard, dashboardLoader, DownloadTimesheetScreen, EditJob, editJobAction, InvoiceDetail, invoiceDetailLoader, InvoiceForm, invoiceFormLoader, Invoices, invoicesLoader, JobDetail, Jobs, jobsLoader, Locations, loginAction, ProfileScreen, RecurringJobDetail, RecurringJobs, Reports, Settings, settingsLoader, signupAction, singleJobLoader, singleWorkerJobLoader, Team, teamLoader, workerLoader, WorkerProfile, workerProfileLoader, Workers, workersLoader } from "../pages";
-import { workerDashboardstats } from "@/pages/worker/WorkerProfilepage";
+import { Analytics, Calendar, calendarLoader, clockLoader, CreateJob, createjobAction, Dashboard, dashboardLoader, DownloadTimesheetScreen, EditJob, editJobAction, InvoiceDetail, invoiceDetailLoader, InvoiceForm, invoiceFormLoader, Invoices, invoicesLoader, JobDetail, Jobs, jobsLoader, Locations, loginAction, ProfileScreen, RecurringJobDetail, recurringJobDetailLoader, RecurringJobs, recurringJobsLoader, Reports, Settings, settingsLoader, signupAction, singleJobLoader, singleWorkerJobLoader, Team, teamLoader, workerLoader, WorkerProfile, workerProfileLoader, Workers, workersLoader } from "../pages";
 
 export const router = createBrowserRouter([
     {
@@ -76,12 +77,12 @@ export const router = createBrowserRouter([
                                 loader: jobsLoader(queryClient)
                             }, {
                                 path: "recurring",
-                                element: <RecurringJobs />
+                                element: <RecurringJobs />,
+                                loader: recurringJobsLoader(queryClient)
                             }, {
                                 path: "recurring/recurring-job-detail/:id",
-                                element: <RecurringJobDetail
-                                    scheduleId="rs1"
-                                />
+                                element: <RecurringJobDetail />,
+                                loader: recurringJobDetailLoader(queryClient)
                             }
                         ]
 
@@ -196,7 +197,7 @@ export const router = createBrowserRouter([
                         action: loginAction
                     }, {
                         path: "login",
-                        element: <Navigate to={"/auth"} replace/>
+                        element: <Navigate to={"/auth"} replace />
                     },
                     {
                         path: "signup",
@@ -277,12 +278,30 @@ export const router = createBrowserRouter([
                     {
                         index: true,
                         element: <HomeScreen />,
-                        loader: workerDashboardstats
+                        // Same query as /worker/profile's loader — reused as-is
+                        // so it actually awaits ensureQueryData (workerDashboardstats
+                        // itself is just query options, not a loader function).
+                        loader: workerProfileLoader
                     },
                     {
                         path: "jobs",
-                        element: <JobsScreen />,
-                        loader: workerLoader(queryClient)
+                        element: <WorkerJobLayout />,
+                        children: [
+                            {
+                                index: true,
+                                element: <Navigate to={"/worker/jobs/my-jobs"} replace />
+                            },
+                            {
+                                loader: workerLoader(queryClient),
+                                path: "my-jobs",
+                                element: <JobsScreen />
+                            }, {
+
+                                path:"recurring-jobs",
+                                element: <RecurringAssignmentPage />,
+                                loader: recurringAssignmentsLoader(queryClient)
+                            }
+                        ]
                     }, {
                         path: "profile",
                         element: <ProfileScreen />,

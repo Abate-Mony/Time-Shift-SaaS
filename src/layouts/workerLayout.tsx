@@ -122,8 +122,8 @@ export const workerRouteLoader = (queryClient: QueryClient) => async () => {
   let user;
   try {
     ({ user } = await queryClient.ensureQueryData(userQuery));
-    queryClient.ensureQueryData(workerDashboardstats())
-    
+    queryClient.ensureQueryData(workerDashboardstats()).catch(() => { });
+
   } catch {
     return redirect("/auth");
   }

@@ -181,3 +181,32 @@ export interface TimesheetSummaryResponse {
   totalHours:number,
   assignments: TimesheetAssignment[]
 }
+
+export type AssignmentStatus = 'pending' | 'accepted' | 'declined' | 'in-progress' | 'completed' | 'cancelled'
+
+export interface WorkerRecurringShift {
+  jobId: string
+  assignmentId: string
+  date: string
+  startTime: string
+  endTime: string
+  location?: string
+  status: AssignmentStatus
+}
+
+export interface WorkerRecurringGroup {
+  recurringJobId: string
+  title: string
+  location?: string
+  client?: string
+  recurrenceLabel: string
+  startTime: string
+  endTime: string
+  pendingCount: number
+  acceptedCount: number
+  declinedCount: number
+  upcomingCount: number
+  nextShift?: { jobId: string; assignmentId: string; date: string; startTime: string; endTime: string }
+  shifts: WorkerRecurringShift[]
+}
+export type DialogState = 'confirm' | 'loading' | 'success' | 'partial' | 'error' | 'empty'

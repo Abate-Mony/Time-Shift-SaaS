@@ -25,6 +25,7 @@ export function Badge({ variant = 'neutral', children, dot }: { variant?: BadgeV
 const statusMap: Record<string, { label: string; variant: BadgeVariant; dot?: boolean }> = {
   'in-progress': { label: 'In Progress', variant: 'info', dot: true },
   'assigned': { label: 'Assigned', variant: 'primary', dot: true },
+  'published': { label: 'Published', variant: 'primary' },
   'completed': { label: 'Completed', variant: 'success' },
   'pending': { label: 'Pending', variant: 'warning' },
   'draft': { label: 'Draft', variant: 'neutral' },
