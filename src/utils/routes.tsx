@@ -194,6 +194,9 @@ export const router = createBrowserRouter([
                         index: true,
                         element: <LoginForm />,
                         action: loginAction
+                    }, {
+                        path: "login",
+                        element: <Navigate to={"/auth"} replace/>
                     },
                     {
                         path: "signup",
