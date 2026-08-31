@@ -1,5 +1,6 @@
 import BottomNav from '@/components/ui/BottomNav'
 import { activeWorkerJob } from '@/pages/worker/ClockScreenPage'
+import { workerDashboardstats } from '@/pages/worker/WorkerProfilepage'
 import customFetch from '@/utils/customFetch'
 import { formatSecondsAsDuration } from '@/utils/date'
 import { ensureNotificationPermission } from '@/utils/notifications'
@@ -9,7 +10,7 @@ import type { CreateJobForm } from '@/utils/types'
 import { QueryClient, useQuery } from '@tanstack/react-query'
 import dayjs from 'dayjs'
 import { useEffect, useRef } from 'react'
-import { Outlet, redirect, useLocation, useNavigate, useNavigation } from 'react-router'
+import { Outlet, redirect, useLocation, useNavigate, useNavigation ,} from 'react-router'
 
 // // ─── Types ──────────────────────────────────────────────────────────────────
 // type WorkerTab = '/' | 'jobs' | 'clock' | 'schedule' | 'profile'
@@ -121,6 +122,8 @@ export const workerRouteLoader = (queryClient: QueryClient) => async () => {
   let user;
   try {
     ({ user } = await queryClient.ensureQueryData(userQuery));
+    queryClient.ensureQueryData(workerDashboardstats())
+    
   } catch {
     return redirect("/auth");
   }

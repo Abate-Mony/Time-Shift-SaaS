@@ -283,8 +283,6 @@ export const router = createBrowserRouter([
                         path: "jobs",
                         element: <JobsScreen />,
                         loader: workerLoader(queryClient)
-
-
                     }, {
                         path: "profile",
                         element: <ProfileScreen />,
