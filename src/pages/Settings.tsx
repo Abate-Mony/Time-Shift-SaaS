@@ -94,6 +94,10 @@ function toFormValues(s: CompanySettings): FormValues {
     const { overtimeThresholdMinutes, ...rest } = s
     return {
         ...rest,
+        // Optional on CompanySettings (a company that's never touched this
+        // setting has no value stored yet) — the form always needs a real
+        // number, so fall back to the same default a brand-new company gets.
+        clockInGraceMinutes: rest.clockInGraceMinutes ?? DEFAULT_FORM_VALUES.clockInGraceMinutes,
         overtimeThresholdHours: overtimeThresholdMinutes / 60,
     }
 }
