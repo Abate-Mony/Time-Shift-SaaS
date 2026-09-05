@@ -46,7 +46,11 @@ export function InvoiceForm() {
         resolver: zodResolver(invoiceSchema),
         defaultValues: {
             job: jobId,
-            client: job?.client ?? '',
+            // job.client is now a populated Client ref, not free text — the
+            // invoice's own `client` field is still a plain string pending
+            // its own Client-picker integration (out of scope here), so
+            // just prefill the name rather than passing the object through.
+            client: job?.client?.name ?? '',
             issueDate: dayjs().format('YYYY-MM-DD'),
             dueDate: dayjs().add(14, 'day').format('YYYY-MM-DD'),
             notes: '',

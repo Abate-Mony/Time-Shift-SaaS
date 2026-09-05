@@ -8,13 +8,13 @@ const WorkerJobLayout = () => {
             to: "/worker/jobs/my-jobs"
         },
         {
+            label: "Open Shifts",
+            to: "/worker/jobs/open-shifts"
+        },
+        {
             label: "Recurring Jobs",
             to: "/worker/jobs/recurring-jobs"
         },
-        // {
-        //     label: "Open Shifts",
-        //     to: "/worker/jobs/recurring-jobs"
-        // },
     ]
     return (
         <div>

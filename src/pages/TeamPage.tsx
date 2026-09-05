@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   UserPlus, Search, Mail, Users, ShieldCheck, Clock, MoreHorizontal,
-  RefreshCw, Ban, X, ChevronDown,
+  RefreshCw, Ban, X, ChevronDown, ShieldAlert, Scale, Check,
   Briefcase, User,
 } from 'lucide-react'
 import { useQuery, type QueryClient } from '@tanstack/react-query'
@@ -11,6 +11,15 @@ import toast from 'react-hot-toast'
 import customFetch from '@/utils/customFetch'
 import { queryClient } from '@/lib/queryClient'
 import type { User as AppUser } from '@/utils/types'
+import { RestrictUserDialog } from '@/components/restriction/RestrictUserDialog'
+import { ACCESS_LEVEL_LABELS, type AccessLevel, type AccountRestriction } from '@/data/restrictionMockData'
+import {
+  createRestriction,
+  getActiveRestrictions,
+  liftRestriction,
+  respondToRestrictionAppeal,
+  type CreateRestrictionPayload,
+} from '@/utils/api-request-functions'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -45,9 +54,16 @@ interface Row {
   lastActive?: string | null
   invitedAt?: string
   invitationId?: string
+  // Present only when this member currently has an active UserRestriction.
+  restriction?: AccountRestriction
 }
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
+
+const restrictionsQuery = () => ({
+  queryKey: ['restrictions', 'active'],
+  queryFn: getActiveRestrictions,
+})
 
 const teamQuery = () => ({
   queryKey: ['team'],
@@ -75,6 +91,7 @@ export const loader = (queryClient: QueryClient) => async () => {
   await Promise.all([
     queryClient.ensureQueryData(teamQuery()),
     queryClient.ensureQueryData(invitationsQuery()),
+    queryClient.ensureQueryData(restrictionsQuery()),
   ])
   return null
 }
@@ -103,7 +120,7 @@ function MemberAvatar({ row, size = 'md' }: { row: Row; size?: 'sm' | 'md' | 'lg
 
 // ─── Badges ───────────────────────────────────────────────────────────────────
 
-function StatusBadge({ status, sentDate }: { status: RowStatus; sentDate?: string }) {
+function StatusBadge({ status, sentDate, restriction }: { status: RowStatus; sentDate?: string; restriction?: AccountRestriction }) {
   if (status === 'active') return (
     <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full">
       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
@@ -119,10 +136,16 @@ function StatusBadge({ status, sentDate }: { status: RowStatus; sentDate?: strin
       {sentDate && <span className="text-[11px] text-slate-400 pl-1">Sent {sentDate}</span>}
     </div>
   )
+  // A restriction can be a full suspension or something lighter (read-only /
+  // limited) — show which, rather than flattening every non-active worker
+  // into the same "Suspended" label.
+  const label = restriction ? ACCESS_LEVEL_LABELS[restriction.accessLevel] : 'Suspended'
   return (
-    <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full">
-      <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
-      Suspended
+    <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${
+      restriction && restriction.accessLevel !== 'none' ? 'text-amber-700 bg-amber-50' : 'text-red-600 bg-red-50'
+    }`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${restriction && restriction.accessLevel !== 'none' ? 'bg-amber-400' : 'bg-red-500'}`} />
+      {label}
     </span>
   )
 }
@@ -146,10 +169,18 @@ function ActionsMenu({
   row,
   onResend,
   onRevoke,
+  onSuspend,
+  onLift,
+  onReviewAppeal,
+  liftLoading,
 }: {
   row: Row
   onResend: (row: Row) => void
   onRevoke: (row: Row) => void
+  onSuspend: (row: Row) => void
+  onLift: (row: Row) => void
+  onReviewAppeal: (row: Row) => void
+  liftLoading: boolean
 }) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
@@ -158,10 +189,6 @@ function ActionsMenu({
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
   }, [])
-
-  // Active managers don't have a profile page yet, and there's nothing else
-  // to do from here — no menu for that row.
-  if (row.status !== 'pending' && row.role !== 'worker') return null
 
   return (
     <div ref={ref} className="relative">
@@ -179,7 +206,7 @@ function ActionsMenu({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: -4 }}
             transition={{ duration: 0.1 }}
-            className="absolute right-0 top-9 w-48 bg-white border border-slate-200 rounded-xl shadow-lg z-10 py-1 overflow-hidden"
+            className="absolute right-0 top-9 w-52 bg-white border border-slate-200 rounded-xl shadow-lg z-10 py-1 overflow-hidden"
           >
             {row.status === 'pending' ? (
               <>
@@ -188,13 +215,35 @@ function ActionsMenu({
                 <MenuButton icon={<Ban size={13} />} label="Revoke invitation" onClick={() => { onRevoke(row); setOpen(false) }} destructive />
               </>
             ) : (
-              <Link
-                to={`/workers/${row.key}/worker-profile`}
-                onClick={() => setOpen(false)}
-                className="w-full flex items-center gap-2.5 px-3.5 py-2 text-sm transition-colors text-left text-slate-700 hover:bg-slate-50"
-              >
-                <User size={13} className="shrink-0" /> View profile
-              </Link>
+              <>
+                {/* Active managers don't have a profile page yet */}
+                {row.role === 'worker' && (
+                  <Link
+                    to={`/workers/${row.key}/worker-profile`}
+                    onClick={() => setOpen(false)}
+                    className="w-full flex items-center gap-2.5 px-3.5 py-2 text-sm transition-colors text-left text-slate-700 hover:bg-slate-50"
+                  >
+                    <User size={13} className="shrink-0" /> View profile
+                  </Link>
+                )}
+                {row.role === 'worker' && <div className="h-px bg-slate-100 my-1" />}
+                {row.restriction?.appeal?.status === 'pending' && (
+                  <MenuButton
+                    icon={<Scale size={13} />}
+                    label="Review appeal"
+                    onClick={() => { onReviewAppeal(row); setOpen(false) }}
+                  />
+                )}
+                {row.restriction ? (
+                  <MenuButton
+                    icon={<ShieldCheck size={13} />}
+                    label={liftLoading ? 'Lifting…' : 'Lift restriction'}
+                    onClick={() => { if (!liftLoading) { onLift(row); setOpen(false) } }}
+                  />
+                ) : (
+                  <MenuButton icon={<ShieldAlert size={13} />} label="Suspend / restrict" onClick={() => { onSuspend(row); setOpen(false) }} destructive />
+                )}
+              </>
             )}
           </motion.div>
         )}
@@ -243,6 +292,70 @@ function RevokeDialog({ row, onConfirm, onCancel, loading }: {
           >
             {loading && <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />}
             Revoke invitation
+          </button>
+        </div>
+      </div>
+    </DialogBackdrop>
+  )
+}
+
+// ─── Appeal review dialog ─────────────────────────────────────────────────────
+
+function ReviewAppealDialog({ row, onRespond, onCancel, loading }: {
+  row: Row
+  onRespond: (status: 'accepted' | 'rejected', response: string) => void
+  onCancel: () => void
+  loading: boolean
+}) {
+  const [response, setResponse] = useState('')
+  const appeal = row.restriction?.appeal
+
+  return (
+    <DialogBackdrop onClose={onCancel}>
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+        <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center mb-4">
+          <Scale size={18} className="text-blue-500" />
+        </div>
+        <h3 className="text-base font-bold text-slate-900 mb-1">
+          {row.fullname ?? row.email}'s appeal
+        </h3>
+        <p className="text-sm text-slate-500 leading-relaxed mb-4">
+          Their restriction: <strong className="text-slate-700">{row.restriction && ACCESS_LEVEL_LABELS[row.restriction.accessLevel]}</strong>
+        </p>
+        <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 mb-4">
+          <p className="text-xs font-semibold text-slate-500 mb-1.5">Their message</p>
+          <p className="text-sm text-slate-700 leading-relaxed">{appeal?.message}</p>
+        </div>
+        <label className="block text-xs font-semibold text-slate-700 mb-1.5">Your response <span className="text-red-400">*</span></label>
+        <p className="text-[11px] text-slate-400 mb-1.5">Sent to them either way — a decline with no explanation is worse than no appeal process.</p>
+        <textarea
+          value={response}
+          onChange={e => setResponse(e.target.value)}
+          rows={3}
+          placeholder="Explain your decision…"
+          className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/15 focus:border-[#1E3A5F]/40 resize-none transition-all mb-5"
+        />
+        <div className="flex gap-2.5">
+          <button
+            onClick={onCancel}
+            className="flex-1 h-10 text-sm font-semibold text-slate-600 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => response.trim() && onRespond('rejected', response)}
+            disabled={loading || !response.trim()}
+            className="flex-1 h-10 text-sm font-bold text-red-600 border border-red-200 rounded-xl hover:bg-red-50 disabled:opacity-40 transition-colors"
+          >
+            Decline
+          </button>
+          <button
+            onClick={() => response.trim() && onRespond('accepted', response)}
+            disabled={loading || !response.trim()}
+            className="flex-1 h-10 text-sm font-bold bg-[#1E3A5F] text-white rounded-xl hover:bg-[#162D4A] disabled:opacity-40 transition-colors flex items-center justify-center gap-1.5"
+          >
+            {loading ? <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Check size={13} />}
+            Approve
           </button>
         </div>
       </div>
@@ -547,6 +660,7 @@ type FilterStatus = 'all' | 'active' | 'pending' | 'suspended'
 export function Team() {
   const { users } = useQuery(teamQuery()).data as { users: TeamUser[]; nHits: number }
   const { invitations } = useQuery(invitationsQuery()).data as { invitations: InvitationListItem[]; totalInvitations: number }
+  const restrictions = useQuery(restrictionsQuery()).data ?? []
 
   const [search, setSearch] = useState('')
   const [filterRole, setFilterRole] = useState<FilterRole>('all')
@@ -555,16 +669,31 @@ export function Team() {
   const [revokeTarget, setRevokeTarget] = useState<Row | null>(null)
   const [revokeLoading, setRevokeLoading] = useState(false)
   const [resendLoading, setResendLoading] = useState<string | null>(null)
+  const [suspendTarget, setSuspendTarget] = useState<Row | null>(null)
+  const [suspending, setSuspending] = useState(false)
+  const [liftingKey, setLiftingKey] = useState<string | null>(null)
+  const [appealTarget, setAppealTarget] = useState<Row | null>(null)
+  const [respondingToAppeal, setRespondingToAppeal] = useState(false)
+
+  const restrictionByUser = new Map(
+    restrictions.map(r => [(r as unknown as { user: { _id: string } }).user._id, r])
+  )
 
   const rows: Row[] = [
-    ...users.map((u): Row => ({
-      key: u._id,
-      email: u.email,
-      fullname: u.fullname,
-      role: u.role as TeamRole,
-      status: u.isActive ? 'active' : 'suspended',
-      lastActive: u.lastLogin,
-    })),
+    ...users.map((u): Row => {
+      const restriction = restrictionByUser.get(u._id)
+      return {
+        key: u._id,
+        email: u.email,
+        fullname: u.fullname,
+        role: u.role as TeamRole,
+        // An active restriction of any level takes precedence over the
+        // legacy isActive flag — it's the richer, user-visible mechanism now.
+        status: restriction ? 'suspended' : (u.isActive ? 'active' : 'suspended'),
+        lastActive: u.lastLogin,
+        restriction,
+      }
+    }),
     ...invitations.map((inv): Row => ({
       key: inv._id,
       email: inv.email,
@@ -624,6 +753,37 @@ export function Team() {
     } finally {
       setResendLoading(null)
     }
+  }
+
+  const handleApplyRestriction = async (data: Omit<CreateRestrictionPayload, 'user'>) => {
+    if (!suspendTarget) return
+    setSuspending(true)
+    try {
+      await createRestriction({ user: suspendTarget.key, ...data })
+      setSuspendTarget(null)
+    } catch {
+      // createRestriction already toasted why — leave the dialog open so
+      // the manager can adjust and retry instead of losing their input.
+    } finally {
+      setSuspending(false)
+    }
+  }
+
+  const handleLift = async (row: Row) => {
+    if (!row.restriction?._id) return
+    setLiftingKey(row.key)
+    await liftRestriction(row.restriction._id)
+    setLiftingKey(null)
+  }
+
+  const handleRespondToAppeal = async (status: 'accepted' | 'rejected', response: string) => {
+    if (!appealTarget?.restriction?._id) return
+    setRespondingToAppeal(true)
+    const ok = await respondToRestrictionAppeal(appealTarget.restriction._id, status, response)
+    setRespondingToAppeal(false)
+    // An accepted appeal also lifts the restriction server-side — either
+    // way there's nothing left to review, so the dialog closes on success.
+    if (ok) setAppealTarget(null)
   }
 
   const isEmpty = rows.length === 0
@@ -743,7 +903,7 @@ export function Team() {
                       </div>
                     </td>
                     <td className="px-5 py-4"><RoleBadge role={m.role} /></td>
-                    <td className="px-5 py-4"><StatusBadge status={m.status} sentDate={m.invitedAt} /></td>
+                    <td className="px-5 py-4"><StatusBadge status={m.status} sentDate={m.invitedAt} restriction={m.restriction} /></td>
                     <td className="px-5 py-4">
                       <span className="text-sm text-slate-500">
                         {m.status === 'pending'
@@ -753,9 +913,9 @@ export function Team() {
                       </span>
                     </td>
                     <td className="px-3 py-4">
-                      {resendLoading === m.invitationId
+                      {resendLoading === m.invitationId || liftingKey === m.key
                         ? <span className="w-5 h-5 border-2 border-[#1E3A5F] border-t-transparent rounded-full animate-spin block mx-auto" />
-                        : <ActionsMenu row={m} onResend={handleResend} onRevoke={setRevokeTarget} />
+                        : <ActionsMenu row={m} onResend={handleResend} onRevoke={setRevokeTarget} onSuspend={setSuspendTarget} onLift={handleLift} onReviewAppeal={setAppealTarget} liftLoading={liftingKey === m.key} />
                       }
                     </td>
                   </tr>
@@ -774,12 +934,12 @@ export function Team() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2 mb-0.5">
                     <p className="text-sm font-semibold text-slate-900 truncate">{m.fullname ?? m.email}</p>
-                    <ActionsMenu row={m} onResend={handleResend} onRevoke={setRevokeTarget} />
+                    <ActionsMenu row={m} onResend={handleResend} onRevoke={setRevokeTarget} onSuspend={setSuspendTarget} onLift={handleLift} onReviewAppeal={setAppealTarget} liftLoading={liftingKey === m.key} />
                   </div>
                   {m.fullname && <p className="text-xs text-slate-400 mb-2">{m.email}</p>}
                   <div className="flex flex-wrap items-center gap-1.5">
                     <RoleBadge role={m.role} />
-                    <StatusBadge status={m.status} sentDate={m.invitedAt} />
+                    <StatusBadge status={m.status} sentDate={m.invitedAt} restriction={m.restriction} />
                     {m.lastActive && <span className="text-xs text-slate-400 flex items-center gap-1"><Clock size={10} />{m.lastActive}</span>}
                   </div>
                 </div>
@@ -804,6 +964,21 @@ export function Team() {
             onConfirm={handleRevoke}
             onCancel={() => setRevokeTarget(null)}
             loading={revokeLoading}
+          />
+        )}
+        {suspendTarget && (
+          <RestrictUserDialog
+            workerName={suspendTarget.fullname ?? suspendTarget.email}
+            onApply={handleApplyRestriction}
+            onClose={() => { if (!suspending) setSuspendTarget(null) }}
+          />
+        )}
+        {appealTarget && (
+          <ReviewAppealDialog
+            row={appealTarget}
+            onRespond={handleRespondToAppeal}
+            onCancel={() => { if (!respondingToAppeal) setAppealTarget(null) }}
+            loading={respondingToAppeal}
           />
         )}
       </AnimatePresence>

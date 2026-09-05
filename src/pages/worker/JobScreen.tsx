@@ -1,6 +1,5 @@
 import CompletedJobCard from "@/components/CompletedJobCard"
 import JobCard from "@/components/JobCard"
-import OpenShiftCard from "@/components/OpenShiftCard"
 import SearchComponent from "@/components/Search"
 import { EmptyState } from "@/components/empty-state"
 import FilterButton from "@/components/ui/FilterButton"
@@ -16,16 +15,6 @@ import { useMemo, useState } from "react"
 import { useLoaderData, useSearchParams, type LoaderFunctionArgs, type Params } from "react-router"
 import { DAY_LABELS, startOfWeek } from "./ScheduleScreen"
 
-// TODO(backend): implement GET /workers/open-shifts — published jobs with no worker
-// assigned yet, returned as { jobs: CreateJobForm[] }. Any worker can then claim one via
-// POST /workers/open-shifts/:jobId/claim (see claimOpenShift in utils/api-request-functions.ts).
-const openShiftsQuery = {
-    queryKey: ['open-shifts'],
-    queryFn: async () => {
-        const { data } = await customFetch.get<{ jobs: CreateJobForm[] }>('/workers/open-shifts')
-        return data
-    },
-}
 const jobsQuery = (params: Params) => {
 
     const { search,
@@ -70,7 +59,6 @@ export default function JobsScreen() {
     const [searchParams] = useSearchParams()
     const activeSlide = searchParams.get("status")
     const [tab, setTab] = useState<any>(activeSlide ?? 'pending')
-    const [view, setView] = useState<'my-jobs' | 'open-shifts'>('my-jobs')
     const { searchValues } = useLoaderData() as {
         searchValues: Params
     }
@@ -99,12 +87,6 @@ export default function JobsScreen() {
         totalPages: number
     }
 
-    const {
-        data: openShiftsData,
-        isPending: isOpenShiftsLoading,
-        isError: isOpenShiftsError,
-    } = useQuery({ ...openShiftsQuery, enabled: view === 'open-shifts' })
-    const openShifts = openShiftsData?.jobs ?? []
     const tabs: { id: CreateJobForm["status"] | "all"; label: string; count: number }[] = [
         { id: 'all', label: 'All', count: jobs.length },
         { id: 'accepted', label: 'Accepted', count: jobs.filter(job => job.status == "accepted").length },
@@ -116,12 +98,8 @@ export default function JobsScreen() {
     return (
         <div className="flex flex-col gap-4 pb-4">
             <div>
-                <h2 className="text-lg font-bold text-slate-900">
-                    {view === 'my-jobs' ? 'My Jobs' : 'Open Shifts'}
-                </h2>
-                <p className="text-xs text-slate-400 mt-0.5">
-                    {view === 'my-jobs' ? 'All your assignments in one place' : 'Unassigned shifts you can pick up'}
-                </p>
+                <h2 className="text-lg font-bold text-slate-900">My Jobs</h2>
+                <p className="text-xs text-slate-400 mt-0.5">All your assignments in one place</p>
             </div>
 
 

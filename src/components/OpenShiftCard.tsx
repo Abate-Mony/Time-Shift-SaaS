@@ -24,7 +24,7 @@ export default function OpenShiftCard({
         <div className="flex items-start justify-between gap-2 mb-3">
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-slate-900 leading-snug">{shift.title}</p>
-            <p className="text-xs text-slate-400 mt-0.5 font-medium">{shift.client}</p>
+            <p className="text-xs text-slate-400 mt-0.5 font-medium">{shift.client?.name}</p>
           </div>
           <span className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-blue-600 shrink-0">
             Open

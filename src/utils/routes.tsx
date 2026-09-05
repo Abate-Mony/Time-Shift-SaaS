@@ -18,6 +18,7 @@ import ClockScreen from "@/pages/worker/ClockScreenPage";
 import EditProfileScreen from "@/pages/worker/EditProfile";
 import JobDetailScreen from "@/pages/worker/JobDetailspage";
 import JobsScreen from "@/pages/worker/JobScreen";
+import OpenShiftsPage from "@/pages/worker/OpenShiftsPage";
 import NotificationPreferencesScreen, { loader as notificationPreferencesLoader } from "@/pages/worker/NotificationPreferences";
 import ScheduleScreen from "@/pages/worker/ScheduleScreen";
 import HomeScreen from "@/pages/worker/WorkerDashboard";
@@ -35,7 +36,7 @@ import NewUserInvitePage from "@/pages/acceptInvites/NewUserInvitePage";
 import RecurringAssignmentPage, { loader as recurringAssignmentsLoader } from "@/pages/worker/RecurringAssignmentPage";
 import { createBrowserRouter, Navigate } from "react-router";
 import DashboardLayout from "../layouts/dashboardlayout";
-import { Analytics, Calendar, calendarLoader, clockLoader, CreateJob, createjobAction, Dashboard, dashboardLoader, DownloadTimesheetScreen, EditJob, editJobAction, InvoiceDetail, invoiceDetailLoader, InvoiceForm, invoiceFormLoader, Invoices, invoicesLoader, JobDetail, Jobs, jobsLoader, Locations, loginAction, ProfileScreen, RecurringJobDetail, recurringJobDetailLoader, RecurringJobs, recurringJobsLoader, Reports, Settings, settingsLoader, signupAction, singleJobLoader, singleWorkerJobLoader, Team, teamLoader, workerLoader, WorkerProfile, workerProfileLoader, Workers, workersLoader } from "../pages";
+import { Analytics, analyticsLoader, Calendar, calendarLoader, ClentBillingPage, ClientDetail, clientDetailLoader, ClientDetailsaJobsPage, ClientDetailsContactsPage, ClientDetailsOverviewPage, Clients, clientsLoader, clockLoader, CreateClientPage, CreateJob, createjobAction, Dashboard, dashboardLoader, DownloadTimesheetScreen, EditJob, editJobAction, InvoiceDetail, invoiceDetailLoader, InvoiceForm, invoiceFormLoader, Invoices, invoicesLoader, JobDetail, Jobs, jobsLoader, Locations, loginAction, openShiftsLoader, ProfileScreen, RecurringJobDetail, recurringJobDetailLoader, RecurringJobs, recurringJobsLoader, ReportLayout, ReportsOverviewPage, ReportsPayrollPage, ReportsTimesheetsPage, ReportsPerformancePage, Settings, settingsLoader, signupAction, singleJobLoader, singleWorkerJobLoader, SuspendedAccountPage, Team, teamLoader, workerLoader, WorkerProfile, workerProfileLoader, workerStatsLoader, Workers, workersLoader } from "../pages";
 
 export const router = createBrowserRouter([
     {
@@ -65,6 +66,44 @@ export const router = createBrowserRouter([
                         element: <CreateJob />,
                         loader: workersLoader(queryClient),
                         action: createjobAction
+                    },
+                    {
+                        path: "clients",
+                        element: <Clients />,
+                        loader: clientsLoader(queryClient)
+                    },
+                    {
+                        path: "clients/create",
+                        element: <CreateClientPage />,
+                    },
+                    {
+                        path: "clients/:id",
+                        element: <ClientDetail />,
+                        loader: clientDetailLoader(queryClient),
+                        children: [
+                            {
+                                index: true,
+                                element: <Navigate to="overview" replace />
+                            },
+                            {
+                                path: "overview",
+                                element: <ClientDetailsOverviewPage />
+                            },
+                            {
+                                path: "contacts",
+                                element: <ClientDetailsContactsPage />
+                            },
+                            {
+                                path: "jobs",
+                                element: <ClientDetailsaJobsPage />
+                            },
+                            {
+                                path: "billing",
+                                // No props passed — it reads the client from
+                                // ClientDetail's context, same as the other tabs.
+                                element: <ClentBillingPage />
+                            }
+                        ]
                     },
                     {
                         path: "jobs",
@@ -143,19 +182,33 @@ export const router = createBrowserRouter([
                     },
                     {
                         path: "reports",
-                        element: <Reports />,
+                        element: <ReportLayout />,
+                        children: [
+                            { index: true, element: <ReportsOverviewPage /> },
+                            { path: "payroll", element: <ReportsPayrollPage /> },
+                            { path: "timesheets", element: <ReportsTimesheetsPage /> },
+                            { path: "performance", element: <ReportsPerformancePage /> },
+                        ],
                     },
                     {
+                        // Pre-existing standalone sidebar link — used to render the
+                        // same Reports component defaulted to its Overview tab, so
+                        // it never actually reached Timesheets. Now that Timesheets
+                        // is a real route, send it there directly.
                         path: "timesheets",
-                        element: <Reports />,
+                        element: <Navigate to="/reports/timesheets" replace />,
                     },
                     {
                         path: "analytics",
                         element: <Analytics />,
+                        loader: analyticsLoader(queryClient),
+                        errorElement: <ErrorElement />,
                     },
                     {
                         path: "workers/:id/worker-profile",
                         element: <WorkerProfile />,
+                        loader: workerStatsLoader(queryClient),
+                        errorElement: <ErrorElement />,
                     },
                     {
                         // Kept pointing at the real Company Settings page rather
@@ -297,9 +350,13 @@ export const router = createBrowserRouter([
                                 element: <JobsScreen />
                             }, {
 
-                                path:"recurring-jobs",
+                                path: "recurring-jobs",
                                 element: <RecurringAssignmentPage />,
                                 loader: recurringAssignmentsLoader(queryClient)
+                            }, {
+                                path: "open-shifts",
+                                element: <OpenShiftsPage />,
+                                loader: openShiftsLoader(queryClient)
                             }
                         ]
                     }, {
@@ -347,6 +404,11 @@ export const router = createBrowserRouter([
                     }
                 ]
             },
+            {
+                path: "account/suspended",
+                element: <SuspendedAccountPage />
+            },
+            
             {
                 path: "*",
                 element: <NotFound />

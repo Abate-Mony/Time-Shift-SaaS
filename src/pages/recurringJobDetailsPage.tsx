@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
     ChevronLeft, Edit2, StopCircle, PlayCircle,
@@ -14,6 +14,7 @@ import customFetch from '@/utils/customFetch'
 import { queryClient } from '@/lib/queryClient'
 import toast from 'react-hot-toast'
 import { StatusBadge as JobStatusBadge } from '@/components/ui'
+import { shiftHoursFrom, formatHours } from '@/components/create-job/wizardConfig'
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
@@ -249,6 +250,8 @@ export interface EditPatternForm {
     endDate: string
     maxOccurrences: string
     defaultWorkerIds: string[]
+    startTime: string
+    endTime: string
 }
 
 function EditPatternDialog({
@@ -266,14 +269,21 @@ function EditPatternDialog({
     onSubmit: (form: EditPatternForm) => void
     loading: boolean
 }) {
-    const [form, setForm] = useState<EditPatternForm>({
-        frequency: detail.frequency,
-        interval: detail.interval,
-        daysOfWeek: detail.daysOfWeek ?? [],
-        endDate: detail.endDate ? detail.endDate.slice(0, 10) : '',
-        maxOccurrences: detail.maxOccurrences ? String(detail.maxOccurrences) : '',
-        defaultWorkerIds: detail.defaultWorkers.map(w => w._id),
+    const buildFormFromDetail = (d: RecurringDetail): EditPatternForm => ({
+        frequency: d.frequency,
+        interval: d.interval,
+        daysOfWeek: d.daysOfWeek ?? [],
+        endDate: d.endDate ? d.endDate.slice(0, 10) : '',
+        maxOccurrences: d.maxOccurrences ? String(d.maxOccurrences) : '',
+        defaultWorkerIds: d.defaultWorkers.map(w => w._id),
+        startTime: d.templateJob.startTime,
+        endTime: d.templateJob.endTime,
     })
+
+    const [form, setForm] = useState<EditPatternForm>(() => buildFormFromDetail(detail))
+    // Never updated after mount — the baseline the Save button compares
+    // against to know whether anything has actually changed.
+    const initialFormRef = useRef(buildFormFromDetail(detail))
 
     const toggleDay = (d: number) => setForm(f => ({
         ...f,
@@ -285,7 +295,29 @@ function EditPatternDialog({
     }))
 
     const daysMissing = form.frequency === 'weekly' && form.daysOfWeek.length === 0
-    const canSubmit = !daysMissing && form.interval >= 1
+    const timeMissing = !form.startTime || !form.endTime
+
+    // Order doesn't carry meaning for either array (days get re-sorted on
+    // toggle; worker selection order isn't a thing a manager would notice
+    // or intend to change), so compare them as sets, not sequences.
+    const sameMembers = (a: (string | number)[], b: (string | number)[]) =>
+        a.length === b.length && [...a].sort().every((v, i) => v === [...b].sort()[i])
+
+    const initial = initialFormRef.current
+    const isDirty =
+        form.frequency !== initial.frequency ||
+        form.interval !== initial.interval ||
+        !sameMembers(form.daysOfWeek, initial.daysOfWeek) ||
+        form.endDate !== initial.endDate ||
+        form.maxOccurrences !== initial.maxOccurrences ||
+        !sameMembers(form.defaultWorkerIds, initial.defaultWorkerIds) ||
+        form.startTime !== initial.startTime ||
+        form.endTime !== initial.endTime
+
+    const canSubmit = !daysMissing && !timeMissing && form.interval >= 1 && isDirty
+
+    const shiftHours = shiftHoursFrom(form.startTime, form.endTime)
+    const isOvernight = !!form.startTime && !!form.endTime && form.endTime < form.startTime
 
     return (
         <Backdrop onClose={onClose}>
@@ -336,6 +368,47 @@ function EditPatternDialog({
                         <span className="text-sm text-slate-500">
                             {form.frequency === 'weekly' ? (form.interval === 1 ? 'week' : 'weeks') : form.frequency === 'monthly' ? (form.interval === 1 ? 'month' : 'months') : (form.interval === 1 ? 'day' : 'days')}
                         </span>
+                    </div>
+
+                    {/* Shift time */}
+                    <div className="flex flex-col gap-2">
+                        <label className="text-sm font-semibold text-slate-700">Shift time</label>
+                        <p className="text-xs text-slate-400 -mt-1">
+                            Applies to future shifts only — already-generated shifts, and any a worker has already accepted, keep their current time.
+                        </p>
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="flex flex-col gap-1.5">
+                                <label className="text-xs text-slate-500">Start time</label>
+                                <input
+                                    type="time"
+                                    value={form.startTime}
+                                    onChange={e => setForm(v => ({ ...v, startTime: e.target.value }))}
+                                    className="h-9 px-3 border border-slate-200 rounded-lg text-sm text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/15 focus:border-[#1E3A5F]/40 transition-all"
+                                />
+                            </div>
+                            <div className="flex flex-col gap-1.5">
+                                <label className="text-xs text-slate-500">End time</label>
+                                <input
+                                    type="time"
+                                    value={form.endTime}
+                                    onChange={e => setForm(v => ({ ...v, endTime: e.target.value }))}
+                                    className="h-9 px-3 border border-slate-200 rounded-lg text-sm text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/15 focus:border-[#1E3A5F]/40 transition-all"
+                                />
+                            </div>
+                        </div>
+                        {timeMissing ? (
+                            <p className="text-xs text-amber-600 flex items-center gap-1">
+                                <Info size={11} /> Start and end time are both required
+                            </p>
+                        ) : (
+                            <div className="bg-blue-50 border border-blue-100 rounded-lg px-3.5 py-2 flex items-center gap-2">
+                                <Clock size={13} className="text-blue-500 shrink-0" />
+                                <p className="text-sm text-blue-700">
+                                    <span className="font-semibold">{formatHours(shiftHours)}</span> shift duration
+                                    {isOvernight && <span className="text-blue-500"> · overnight</span>}
+                                </p>
+                            </div>
+                        )}
                     </div>
 
                     {/* Days of week */}
@@ -693,6 +766,8 @@ export function RecurringJobDetail() {
                 // send it when set, leave the existing value alone otherwise.
                 maxOccurrences: form.maxOccurrences ? Number(form.maxOccurrences) : undefined,
                 defaultWorkers: form.defaultWorkerIds,
+                startTime: form.startTime,
+                endTime: form.endTime,
             }),
         onSuccess: ({ data }) => {
             setShowEdit(false)

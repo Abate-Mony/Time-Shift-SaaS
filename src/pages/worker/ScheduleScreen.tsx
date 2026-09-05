@@ -44,7 +44,7 @@ function ShiftRow({ job }: { job: CreateJobForm }) {
       <div className="w-px self-stretch bg-[#F1F5F9]" />
       <div className="flex-1 min-w-0">
         <p className="text-sm font-semibold text-slate-900 truncate">{job.title}</p>
-        <p className="text-xs text-slate-400 truncate">{job.location || job.client}</p>
+        <p className="text-xs text-slate-400 truncate">{job.location || job.client?.name}</p>
       </div>
       <StatusBadge status={job.status!} />
     </button>

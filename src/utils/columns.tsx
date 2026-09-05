@@ -22,6 +22,7 @@ import { formatDate, formatDuration } from "./date"
 import { deleteJob, duplicateJob } from "./api-request-functions"
 import { useMutation } from "@tanstack/react-query"
 import dayjs from "dayjs"
+import { isJobLocked } from "./jobLock"
 
 const STATUS_STYLES: Record<string, string> = {
   draft: "bg-slate-100 text-slate-600",
@@ -105,7 +106,7 @@ export const jobsColumns: ColumnDef<CreateJobForm>[] = [
       return (
         <div className="min-w-45">
           <p className="font-medium text-slate-900 line-clamp-1 max-w-sm">{title}</p>
-          <p className="text-xs text-slate-500 mt-0.5">{client}</p>
+          <p className="text-xs text-slate-500 mt-0.5">{client?.name}</p>
         </div>
       )
     },
@@ -257,8 +258,17 @@ export const jobsColumns: ColumnDef<CreateJobForm>[] = [
               <Link to={`/jobs/${job._id}`}>View Details</Link>
             </DropdownMenuItem>
 
-            <DropdownMenuItem asChild>
-              <Link to={`/jobs/${job._id}/edit`}>Edit Job</Link>
+            <DropdownMenuItem asChild disabled={isJobLocked(job)}>
+              {isJobLocked(job) ? (
+                <span
+                  className="opacity-50 cursor-not-allowed"
+                  title="This job has already happened and can no longer be edited"
+                >
+                  Edit Job
+                </span>
+              ) : (
+                <Link to={`/jobs/${job._id}/edit`}>Edit Job</Link>
+              )}
             </DropdownMenuItem>
 
             <DropdownMenuItem>

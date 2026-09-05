@@ -2,7 +2,7 @@ import customFetch from '@/utils/customFetch'
 import { formatCurrency } from '@/utils/format'
 import { formatDate, formatDuration } from '@/utils/date'
 import { queryClient } from '@/lib/queryClient'
-import { deleteJob, duplicateJob, updateJobWorkers } from '@/utils/api-request-functions'
+import { deleteJob, duplicateJob, reviewOpenShiftClaim, updateJobWorkers } from '@/utils/api-request-functions'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import dayjs from 'dayjs'
 import toast from 'react-hot-toast'
@@ -58,6 +58,7 @@ import type { LucideIcon } from "lucide-react"
 import type { ActivityType, CreateJobForm } from '@/utils/types'
 import { cn } from '@/lib/utils'
 import { getInitials } from '@/utils/getInitials'
+import { isJobLocked } from '@/utils/jobLock'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { Separator } from '@radix-ui/react-separator'
 
@@ -278,6 +279,14 @@ export function JobDetail() {
             ),
     })
 
+    // Approve/decline a self-claimed open shift that's waiting on this
+    // manager's sign-off (job.requiresApproval) — distinct from removing a
+    // worker outright, and only ever offered for pendingApproval rows.
+    const reviewClaimMutation = useMutation({
+        mutationFn: ({ assignmentId, approve }: { assignmentId: string; approve: boolean }) =>
+            reviewOpenShiftClaim(assignmentId, approve),
+    })
+
     // Geofence inline editor — seeded from `job` fresh every time it opens
     // (not just on mount), so it can't go stale after other edits refetch
     // the job in the background.
@@ -425,14 +434,16 @@ export function JobDetail() {
                                 <PriorityBadge priority={job.priority} />
                             </div>
                             <h1 className="text-xl font-bold text-white leading-snug mb-1">{job.title}</h1>
-                            <p className="text-sm text-white/60">{job.client}</p>
+                            <p className="text-sm text-white/60">{job.client?.name}</p>
                         </div>
 
                         {/* Hero actions */}
                         <div className="flex items-center gap-2 shrink-0">
                             <button
-                                onClick={() => onNavigate(`/jobs/${id}/edit`)}
-                                className="h-9 px-3.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors backdrop-blur-sm"
+                                onClick={() => !isJobLocked(job) && onNavigate(`/jobs/${id}/edit`)}
+                                disabled={isJobLocked(job)}
+                                title={isJobLocked(job) ? "This job has already happened and can no longer be edited" : undefined}
+                                className="h-9 px-3.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors backdrop-blur-sm disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white/10"
                             >
                                 <Edit size={13} /> Edit
                             </button>
@@ -501,7 +512,7 @@ export function JobDetail() {
                                 { icon: Clock, label: 'Start Time', value: job.startTime },
                                 { icon: Clock, label: 'Finish Time', value: job.endTime },
                                 { icon: Timer, label: 'Shift Duration', value: `${formatDuration(job.minutes)} per worker` },
-                                { icon: Briefcase, label: 'Client / Company', value: job.client },
+                                { icon: Briefcase, label: 'Client / Company', value: job.client?.name ?? 'No client' },
                                 { icon: Flag, label: 'Priority', value: <PriorityBadge priority={job.priority} /> },
                             ].map((row, i) => (
                                 <div key={i} className="flex items-center gap-4 px-5 py-3.5">
@@ -736,8 +747,10 @@ export function JobDetail() {
                                 </PopoverContent>
                             </Popover>
                             <button
-                                onClick={() => onNavigate(`/jobs/${id}/edit`)}
-                                className="w-full h-10 rounded-xl border border-[#E2E8F0] text-sm font-semibold text-slate-600 hover:bg-slate-50 flex items-center justify-center gap-2 transition-colors"
+                                onClick={() => !isJobLocked(job) && onNavigate(`/jobs/${id}/edit`)}
+                                disabled={isJobLocked(job)}
+                                title={isJobLocked(job) ? "This job has already happened and can no longer be edited" : undefined}
+                                className="w-full h-10 rounded-xl border border-[#E2E8F0] text-sm font-semibold text-slate-600 hover:bg-slate-50 flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white"
                             >
                                 <Edit size={13} className="text-slate-400" /> Edit Job
                             </button>
@@ -790,35 +803,73 @@ export function JobDetail() {
                                         onClick={() => onNavigate(`/workers/${w.worker}/worker-profile`)}
                                     >
 
-                                        <Tooltip>
-                                            <TooltipTrigger asChild
-                                                onClick={e => {
-                                                    e.stopPropagation()
-                                                    removeWorkerMutation.mutate(w)
-                                                }}
-                                            >
-                                                <button
-                                                    disabled={removeWorkerMutation.isPending}
-                                                    className="p-1 cursor-pointer rounded-full hover:bg-slate-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                                        {w.pendingApproval ? (
+                                            <Tooltip>
+                                                <TooltipContent className='bg-black'>
+                                                    Self-claimed — waiting on your approval
+                                                </TooltipContent>
+                                                <TooltipTrigger asChild>
+                                                    <div className="p-1 rounded-full bg-amber-50">
+                                                        <AlertCircle size={18} className='text-amber-500' />
+                                                    </div>
+                                                </TooltipTrigger>
+                                            </Tooltip>
+                                        ) : (
+                                            <Tooltip>
+                                                <TooltipTrigger asChild
+                                                    onClick={e => {
+                                                        e.stopPropagation()
+                                                        removeWorkerMutation.mutate(w)
+                                                    }}
                                                 >
-                                                    <X size={20} className='text-rose-400' />
-                                                </button>
-                                            </TooltipTrigger>
-                                            <TooltipContent className='bg-black'>
-                                                Remove <span className='font-black '>{w.fullname}</span>  <br />
-                                                from this job
-                                            </TooltipContent>
-                                        </Tooltip>
+                                                    <button
+                                                        disabled={removeWorkerMutation.isPending}
+                                                        className="p-1 cursor-pointer rounded-full hover:bg-slate-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                                                    >
+                                                        <X size={20} className='text-rose-400' />
+                                                    </button>
+                                                </TooltipTrigger>
+                                                <TooltipContent className='bg-black'>
+                                                    Remove <span className='font-black '>{w.fullname}</span>  <br />
+                                                    from this job
+                                                </TooltipContent>
+                                            </Tooltip>
+                                        )}
 
                                         <Avatar initials={w.fullname?.slice(0, 2)} size="sm" index={i} />
                                         <div className="flex-1 min-w-0">
                                             <p className="text-sm font-medium text-slate-800 group-hover:text-blue-700 transition-colors">{w.fullname}</p>
                                             <p className="text-[10px] text-slate-400">{w.email}</p>
                                         </div>
-                                        <div className="flex items-center gap-2">
-                                            <StatusBadge status={w.status} />
-                                            <ChevronLeft size={12} className="text-slate-300 rotate-180" />
-                                        </div>
+                                        {w.pendingApproval ? (
+                                            <div className="flex items-center gap-1.5">
+                                                <button
+                                                    onClick={e => {
+                                                        e.stopPropagation()
+                                                        reviewClaimMutation.mutate({ assignmentId: w._id!, approve: true })
+                                                    }}
+                                                    disabled={reviewClaimMutation.isPending}
+                                                    className="h-7 px-2.5 rounded-lg bg-emerald-50 text-emerald-600 text-xs font-semibold hover:bg-emerald-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                                                >
+                                                    Approve
+                                                </button>
+                                                <button
+                                                    onClick={e => {
+                                                        e.stopPropagation()
+                                                        reviewClaimMutation.mutate({ assignmentId: w._id!, approve: false })
+                                                    }}
+                                                    disabled={reviewClaimMutation.isPending}
+                                                    className="h-7 px-2.5 rounded-lg bg-rose-50 text-rose-500 text-xs font-semibold hover:bg-rose-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                                                >
+                                                    Decline
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <div className="flex items-center gap-2">
+                                                <StatusBadge status={w.status} />
+                                                <ChevronLeft size={12} className="text-slate-300 rotate-180" />
+                                            </div>
+                                        )}
                                     </div>
                                 ))}
                             </div>

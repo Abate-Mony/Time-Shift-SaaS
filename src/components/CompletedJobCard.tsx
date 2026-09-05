@@ -20,7 +20,7 @@ export default function CompletedJobCard({ job }: { job: CreateJobForm }) {
                         </div>
                         <div className="min-w-0">
                             <p className="text-sm font-semibold text-slate-900 leading-snug truncate">{job.title}</p>
-                            <p className="text-xs text-slate-400 mt-0.5 font-medium truncate">{job.client}</p>
+                            <p className="text-xs text-slate-400 mt-0.5 font-medium truncate">{job.client?.name}</p>
                         </div>
                     </div>
 

@@ -77,7 +77,7 @@ export default function JobCard({
                 <div className="flex items-start justify-between gap-2 mb-3">
                     <div className="flex-1 min-w-0">
                         <p className="text-sm font-semibold text-slate-900 leading-snug">{job.title}</p>
-                        <p className="text-xs text-slate-400 mt-0.5 font-medium">{job.client}</p>
+                        <p className="text-xs text-slate-400 mt-0.5 font-medium">{job.client?.name}</p>
                     </div>
                     <StatusBadge status={job.status!} />
                 </div>

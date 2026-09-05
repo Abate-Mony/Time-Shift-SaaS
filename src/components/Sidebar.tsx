@@ -1,7 +1,7 @@
+import type { iUser } from '@/layouts/dashboardlayout'
 import { cn } from '@/lib/utils'
 import { getInitials } from '@/utils/getInitials'
 import { logoutUser } from '@/utils/logout'
-import type { User } from '@/utils/types'
 import {
   BarChart3,
   Bell,
@@ -9,7 +9,6 @@ import {
   Building2,
   Calendar,
   ChevronDown,
-  CreditCard,
   FileText,
   HelpCircle,
   LayoutDashboard,
@@ -17,17 +16,18 @@ import {
   MapPin,
   Receipt,
   Settings,
+  SquareUser,
   Users,
   Zap
 } from 'lucide-react'
 import { Avatar } from './ui'
 import CustomNavLink from './ui/link'
-import type { iUser } from '@/layouts/dashboardlayout'
 
 const navItems = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'jobs', label: 'Jobs', icon: Briefcase, badge: 3 },
   { id: 'workers', label: 'Workers', icon: Users },
+  { id: 'clients', label: 'Client', icon: SquareUser },
   { id: 'team', label: 'Teams', icon: MapPin },
   { id: 'calendar', label: 'Calendar', icon: Calendar },
   { id: 'locations', label: 'Locations', icon: MapPin },
@@ -39,7 +39,7 @@ const secondaryItems = [
   { id: 'invoices', label: 'Invoices', icon: Receipt },
   { id: 'timesheets', label: 'Timesheets', icon: FileText },
   { id: 'analytics', label: 'Analytics', icon: Zap },
-  { id: 'billing', label: 'Billing', icon: CreditCard },
+  // { id: 'billing', label: 'Billing', icon: CreditCard },
 ]
 
 const bottomItems = [
@@ -114,16 +114,16 @@ export function Sidebar({ active, collapsed, onToggleSidebar, user }: SidebarPro
               className={`w-full  text-white/50 hover:text-white/75 px-2.5 hover:bg-white/3  justify-center  h-auto items-center gap-2.5  py-2 rounded-lg text-sm transition-colors relative group`}
 
             >
-          <div className='w-full flex items-center  space-x-1.5 h-full justify-between '>
+              <div className='w-full flex items-center  space-x-1.5 h-full justify-between '>
                 <item.icon size={16} className={cn('text-blue-400 group-[.slide-active]:text-current')} />
-              {!collapsed && <span className="flex-1 text-left font-medium">{item.label}</span>}
-              {!collapsed && item.badge !== undefined && (
-                <span className="bg-blue-500 text-white text-[10px] font-bold w-4 h-4 rounded-sm flex items-center justify-center">{item.badge}</span>
-              )}
-              {collapsed && item.badge !== undefined && (
-                <span className="absolute top-1 right-1 w-2 h-2 bg-blue-500 rounded-full" />
-              )}
-          </div>
+                {!collapsed && <span className="flex-1 text-left font-medium">{item.label}</span>}
+                {!collapsed && item.badge !== undefined && (
+                  <span className="bg-blue-500 text-white text-[10px] font-bold w-4 h-4 rounded-sm flex items-center justify-center">{item.badge}</span>
+                )}
+                {collapsed && item.badge !== undefined && (
+                  <span className="absolute top-1 right-1 w-2 h-2 bg-blue-500 rounded-full" />
+                )}
+              </div>
             </CustomNavLink>
           ))}
 
@@ -143,8 +143,8 @@ export function Sidebar({ active, collapsed, onToggleSidebar, user }: SidebarPro
             >
               <div className='flex items-center  space-x-1.5'>
 
-              <item.icon size={16} className={cn('text-blue-400 group-[.slide-active]:text-current')} />
-              {!collapsed && <span className="flex-1 text-left font-medium">{item.label}</span>}
+                <item.icon size={16} className={cn('text-blue-400 group-[.slide-active]:text-current')} />
+                {!collapsed && <span className="flex-1 text-left font-medium">{item.label}</span>}
               </div>
 
 
@@ -155,7 +155,7 @@ export function Sidebar({ active, collapsed, onToggleSidebar, user }: SidebarPro
         {/* Bottom nav */}
         <div className="border-t border-white/6 px-3 py-3 flex- flex-col gap-0.5 ">
           {bottomItems.map(item => (
-               <CustomNavLink
+            <CustomNavLink
               to={item.id}
               show
               layoutId='side-bar-items'
@@ -164,16 +164,16 @@ export function Sidebar({ active, collapsed, onToggleSidebar, user }: SidebarPro
               className={`w-full  text-white/50 hover:text-white/75 px-2.5 hover:bg-white/3  justify-center  h-auto items-center gap-2.5  py-2 rounded-lg text-sm transition-colors relative group`}
 
             >
-          <div className='w-full flex items-center  space-x-1.5 h-full justify-between '>
+              <div className='w-full flex items-center  space-x-1.5 h-full justify-between '>
                 <item.icon size={16} className={cn('text-blue-400 group-[.slide-active]:text-current')} />
-              {!collapsed && <span className="flex-1 text-left font-medium">{item.label}</span>}
-              {!collapsed && item.badge !== undefined && (
-                <span className="bg-blue-500 text-white text-[10px] font-bold w-4 h-4 rounded-sm flex items-center justify-center">{item.badge}</span>
-              )}
-              {collapsed && item.badge !== undefined && (
-                <span className="absolute top-1 right-1 w-2 h-2 bg-blue-500 rounded-full" />
-              )}
-          </div>
+                {!collapsed && <span className="flex-1 text-left font-medium">{item.label}</span>}
+                {!collapsed && item.badge !== undefined && (
+                  <span className="bg-blue-500 text-white text-[10px] font-bold w-4 h-4 rounded-sm flex items-center justify-center">{item.badge}</span>
+                )}
+                {collapsed && item.badge !== undefined && (
+                  <span className="absolute top-1 right-1 w-2 h-2 bg-blue-500 rounded-full" />
+                )}
+              </div>
             </CustomNavLink>
           ))}
         </div>

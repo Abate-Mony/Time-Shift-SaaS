@@ -1,5 +1,22 @@
 import type z from "zod";
 import type { createJobSchema, editProfileSchema, invoiceLineItemSchema, invoiceSchema } from "./schemas";
+import type { ClientAddress, ClientContact, ClientStatus, ChargeType } from "./types/client";
+
+// A Job's `client` field: `createJobSchema.client` (below) is the plain
+// string _id a form submits, but a job read back from the API carries a
+// populated reference — list responses just {_id, name}, detail responses
+// the fuller shape. This is the read-side shape.
+export interface JobClientRef {
+  _id: string;
+  name: string;
+  status?: ClientStatus;
+  contacts?: ClientContact[];
+  phone?: string;
+  billingEmail?: string;
+  address?: ClientAddress;
+  defaultChargeType?: ChargeType;
+  defaultChargeRate?: number;
+}
 
 export type UserRole = "admin" | "manager" | "worker";
 
@@ -41,8 +58,9 @@ export type User = {
 //   push: true,
 //   sms: false,
 // };
-export type CreateJobForm = z.infer<typeof createJobSchema> & {
-
+export type CreateJobForm = Omit<z.infer<typeof createJobSchema>, "client"> & {
+  // Overrides the schema's plain-string form value — see JobClientRef above.
+  client?: JobClientRef | null;
 };
 // Payload shape sent to the API (post-transform: no empty-string gender).
 export type EditProfileForm = z.output<typeof editProfileSchema>;
@@ -68,7 +86,7 @@ export type WeekStartsOn = "monday" | "sunday";
 
 // Company-wide policy — durations are stored as integer minutes throughout.
 export interface CompanySettings {
-  clockInGraceMinutes: number;
+  clockInGraceMinutes?: number;
   lateThresholdMinutes: number;
   autoClockOutEnabled: boolean;
   payFromScheduledStart: boolean;

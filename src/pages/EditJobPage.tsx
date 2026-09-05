@@ -17,14 +17,19 @@ import { QueryClient, useQuery } from '@tanstack/react-query'
 import { isAxiosError } from 'axios'
 import { AnimatePresence, motion } from 'framer-motion'
 import dayjs from "dayjs"
-import { Calendar, Check, ChevronDown, ChevronLeft, Clock, MapPin, Paperclip, Settings2, Users, X } from 'lucide-react'
-import { useState } from 'react'
+import { Calendar, Check, ChevronDown, ChevronLeft, Clock, Loader2, MapPin, Paperclip, Save, Settings2, Users, X } from 'lucide-react'
+import { useRef, useState } from 'react'
 import { useForm } from "react-hook-form"
 import toast from 'react-hot-toast'
-import { Form, redirect, useLoaderData, useNavigate, useParams, useSearchParams, type ActionFunctionArgs, type LoaderFunctionArgs, type Params } from 'react-router'
+import { Form, redirect, useLoaderData, useNavigate, useNavigation, useParams, useSearchParams, useSubmit, type ActionFunctionArgs, type LoaderFunctionArgs, type Params } from 'react-router'
 import { Avatar, Input } from '../components/ui'
+import { ApplyRatePrompt, ClientCombobox, type ComboboxClient } from '@/components/client/ClientCombobox'
 
 type AssignedWorker = CreateJobForm["workers"][number]
+
+// Same minimal bar as the create wizard's DRAFT_REQUIRED_FIELDS — enough to
+// be worth calling a saved draft, without demanding the whole form.
+const DRAFT_REQUIRED_FIELDS = ["title", "date", "startTime", "endTime"] as const
 
 // Small reusable error renderer so we don't repeat the same JSX everywhere
 const FieldError = ({ message }: { message?: string }) => {
@@ -135,6 +140,12 @@ export function EditJob() {
     const [saved, setSaved] = useState(false)
     const navigate = useNavigate()
     const onNavigate = (path: string) => navigate(path)
+    const navigation = useNavigation()
+    const submit = useSubmit()
+    const formRef = useRef<HTMLFormElement>(null)
+    const [submittingAs, setSubmittingAs] = useState<"draft" | "published" | null>(null)
+    const submitGuardRef = useRef(false)
+    const isFormSubmitting = navigation.state === "submitting" || navigation.state === "loading"
 
     const { searchValues } = useLoaderData() as any
     const id = useParams().id
@@ -143,6 +154,7 @@ export function EditJob() {
         job?.workers ? job.workers : []
 
     )
+    const [selectedClient, setSelectedClient] = useState<ComboboxClient | null>(job?.client ?? null)
     const { users } = useQuery<{ users: User[] }>(workersQuery(searchValues))?.data || {
         users: []
     } as {
@@ -152,12 +164,11 @@ export function EditJob() {
 
     const {
         register,
-        handleSubmit,
         setValue,
         watch,
+        trigger,
         formState: {
             errors,
-            isSubmitting,
         },
     } = useForm<CreateJobForm>({
         resolver: zodResolver(createJobSchema as any),
@@ -216,10 +227,41 @@ export function EditJob() {
         setSelectedWorkers(next);
         setValue("workers", next, { shouldValidate: true });
     };
-    // Runs only when validation passes; React Router's <Form> then submits
-    // to the `action` above as normal.
-    const onValid = () => {
-        // Nothing extra to do here — RHF has already confirmed the data is valid.
+    /**
+     * Submits programmatically rather than letting <Form> handle it.
+     *
+     * The previous version did `await handleSubmit(onValid)(); e.preventDefault()`
+     * — preventDefault() called after an await is too late to stop React
+     * Router's own synchronous submit-interception, so the form submitted
+     * regardless of whether RHF validation actually passed. Nothing submits
+     * here until `trigger()` has resolved and confirmed validity.
+     */
+    const doSubmit = async (status: "draft" | "published") => {
+        if (submitGuardRef.current) return
+        submitGuardRef.current = true
+
+        try {
+            const fields = status === "draft" ? DRAFT_REQUIRED_FIELDS : undefined
+            const valid = await trigger(fields as any)
+
+            if (!valid) {
+                toast.error(
+                    status === "draft"
+                        ? "Please fix the highlighted fields before saving."
+                        : "Please fix the highlighted fields before saving changes."
+                )
+                return
+            }
+
+            if (!formRef.current) return
+
+            const fd = new FormData(formRef.current)
+            fd.set("status", status)
+            setSubmittingAs(status)
+            submit(fd, { method: "post" })
+        } finally {
+            submitGuardRef.current = false
+        }
     }
 
     const jobDuration = (startTime: string, endTime: string) => {
@@ -265,10 +307,8 @@ export function EditJob() {
             </div>
 
             <Form
-                onSubmit={async (e) => {
-                    await handleSubmit(onValid)();
-                    e.preventDefault();
-                }}
+                ref={formRef}
+                onSubmit={(e) => e.preventDefault()}
                 className="flex flex-col gap-5"
                 method="post"
             >
@@ -300,12 +340,14 @@ export function EditJob() {
 
                         <div className="grid sm:grid-cols-2 gap-4">
                             <div>
-                                <Input
-                                    label="client / Client"
-                                    placeholder="e.g. SecureGuard Ltd"
-                                    {...register("client")}
-                                    className={cn(errors.client && "border-red-500!")}
+                                <label className="text-sm font-medium text-slate-700 mb-1.5 block">Client</label>
+                                <ClientCombobox
+                                    value={selectedClient}
+                                    onChange={setSelectedClient}
                                 />
+                                {/* RHF doesn't track this field as a real input — this is
+                                    what actually reaches the <Form>'s FormData on submit. */}
+                                <Input type="hidden" name="client" value={selectedClient?._id ?? ''} />
                                 <FieldError message={errors.client?.message} />
                             </div>
 
@@ -826,14 +868,28 @@ export function EditJob() {
 
                 {/* Actions */}
                 <div className="flex items-center gap-3 justify-end pt-2 pb-6">
-                    <Button type="button" variant="outline" onClick={() => onNavigate('/jobs')}>
+                    <Button type="button" variant="outline" onClick={() => onNavigate('/jobs')} disabled={isFormSubmitting}>
                         Cancel
                     </Button>
-                    {/* <Button type="submit" name="status-" value="draft" variant="secondary" disabled={isSubmitting}>
-                        Save as Draft
-                    </Button> */}
-                    <Button type="submit" name="status-" value="published" disabled={isSubmitting}>
-                        Edit Job
+                    <Button type="button" variant="secondary" onClick={() => doSubmit("draft")} disabled={isFormSubmitting}>
+                        {submittingAs === "draft" ? (
+                            <>
+                                <Loader2 size={15} className="animate-spin" /> Saving…
+                            </>
+                        ) : (
+                            <>
+                                <Save size={15} /> Save as Draft
+                            </>
+                        )}
+                    </Button>
+                    <Button type="button" onClick={() => doSubmit("published")} disabled={isFormSubmitting}>
+                        {submittingAs === "published" ? (
+                            <>
+                                <Loader2 size={15} className="animate-spin" /> Saving…
+                            </>
+                        ) : (
+                            "Save changes"
+                        )}
                     </Button>
                 </div>
             </Form>

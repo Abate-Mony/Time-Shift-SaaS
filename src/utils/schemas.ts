@@ -4,6 +4,10 @@ const breakSchema = z.object({
     endedAt: z.coerce.date().optional(),
 });
 export const workerSchema = z.object({
+    // The JobAssignment's own id — not known client-side until the backend
+    // returns it, hence optional (mirrors createJobSchema's own `_id`).
+    _id: z.string().optional(),
+
     breaks: z.array(breakSchema).default([]).optional(),
 
     worker: z.string().min(1, "workter id required"),
@@ -20,13 +24,16 @@ export const workerSchema = z.object({
         .string()
         .default(""),
 
+    // Not known client-side at job-creation time (the job doesn't have an id
+    // yet, and createdBy comes from the authenticated session) — the backend
+    // fills these in on save, so the client must be allowed to omit them.
     job: z
         .string()
-        .min(1, "Job is required"),
+        .optional(),
 
     createdBy: z
         .string()
-        .min(1, "Created by is required"),
+        .optional(),
 
     status: z.enum([
         "pending",
@@ -36,6 +43,10 @@ export const workerSchema = z.object({
         "completed",
         "cancelled",
     ]).default("pending"),
+
+    // True only for a self-claimed open shift on a job with requiresApproval —
+    // status stays "pending" either way, this is what tells the two apart.
+    pendingApproval: z.boolean().optional(),
 
     acceptedAt: z.date().optional(),
 
@@ -86,7 +97,9 @@ export const createJobSchema = z
 
         description: z.string().min(5, "Description is required"),
 
-        client: z.string().min(2, "Client is required"),
+        // A real Client _id (or omitted/empty — no client is legitimate,
+        // e.g. internal/training work). No longer free text.
+        client: z.string().optional(),
 
         createdBy: z.string().optional(),
 

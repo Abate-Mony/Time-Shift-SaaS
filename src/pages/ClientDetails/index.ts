@@ -1,0 +1,5 @@
+export { ClientDetail } from "./ClientDetails"
+export { default as ClentBillingPage } from "./ClientDetailsBillingPage"
+export { ClientDetailsContactsPage } from "./ClientDetailsContactsPage"
+export { ClientDetailsaJobsPage } from "./ClientDetailsJobsPage"
+export { ClientDetailsOverviewPage } from "./ClientDetailsOverViewPage"

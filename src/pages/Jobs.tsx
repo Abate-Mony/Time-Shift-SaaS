@@ -10,10 +10,11 @@ import { useFilter } from '@/hooks/CustomLinkFilterHook'
 import { queryClient } from '@/lib/queryClient'
 import { cn } from '@/lib/utils'
 import { jobsColumns } from '@/utils/columns'
+import { clientsQuery } from '@/utils/clients'
 import customFetch from '@/utils/customFetch'
 import type { CreateJobForm } from '@/utils/types'
 import { useQuery, type QueryClient } from '@tanstack/react-query'
-import { Filter } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Filter } from 'lucide-react'
 import { useState } from 'react'
 import toast from 'react-hot-toast'
 import { useLoaderData, useNavigate, type LoaderFunctionArgs, type Params } from 'react-router'
@@ -24,7 +25,7 @@ const jobsQuery = (params: Params) => {
   const { search,
     sort, page,
     status, date,
-    client, priority, unassigned, start, end } = params;
+    client, priority, unassigned, start, end, limit } = params;
   return (
     {
 
@@ -42,6 +43,7 @@ const jobsQuery = (params: Params) => {
           unassigned: unassigned ?? '',
           start: start ?? '',
           end: end ?? '',
+          limit: limit ?? '',
         }
       ],
       // queryFn forwards every URL param as-is, so a new filter just needs a
@@ -73,8 +75,9 @@ export function Jobs() {
   }
   const navigate = useNavigate()
   const onNavigate = (path: string) => navigate(path)
-  const { jobs, totalPages, currentPage } = useQuery(jobsQuery(searchValues)).data as {
+  const { jobs, totalJobs, totalPages, currentPage } = useQuery(jobsQuery(searchValues)).data as {
     jobs: CreateJobForm[],
+    totalJobs: number,
     totalPages: number,
     currentPage: number
   }
@@ -97,9 +100,31 @@ const [hoverIndex,setHoverIndex]=useState<number | null>(0)
   const startFilter = searchQuery.get('start') ?? ''
   const endFilter = searchQuery.get('end') ?? ''
   const sortValue = searchQuery.get('sort') ?? 'date_desc'
+  // Matches the backend's own default (jobController.ts's getAllJobs) when
+  // nothing is set, so this control reflects what's actually being applied.
+  const limitValue = searchQuery.get('limit') ?? '100'
 
   const activeFilterCount = [clientFilter, priorityFilter, startFilter, endFilter, unassignedOnly ? 'x' : '']
     .filter(Boolean).length
+
+  // Lazy — only fetched once the filter panel is actually opened, same
+  // pattern as other on-demand option lists in this app.
+  const { data: filterClients } = useQuery({ ...clientsQuery(), enabled: filterOpen })
+
+  // Omitting the key entirely for page 1 (rather than writing "1") keeps the
+  // URL clean for the common case and matches every other filter here, which
+  // also omits its key at its default value.
+  const goToPage = (p: number) => {
+    handleFilterChange({ key: 'page', value: p > 1 ? String(p) : null })
+  }
+
+  // Changing how many jobs load per page changes what "page 2" even means,
+  // so the current page number is dropped rather than carried forward —
+  // otherwise a manager on page 4 of 10-per-page could land on an empty
+  // page 4 of 2 after switching to 100-per-page.
+  const handleLimitChange = (value: string) => {
+    handleFiltersChange({ limit: value === '100' ? null : value, page: null })
+  }
 
   const deleteSelectedJobs = async (selectedJobs: CreateJobForm[]) => {
     try {
@@ -112,7 +137,7 @@ const [hoverIndex,setHoverIndex]=useState<number | null>(0)
   }
 
   return (
-    <div className="p-6 animate-fade-in">
+    <div className=" animate-fade-in">
     
 
 
@@ -170,12 +195,22 @@ const [hoverIndex,setHoverIndex]=useState<number | null>(0)
             <div className="absolute z-20 top-full mt-2 left-0 w-72 bg-white border border-[#E2E8F0] rounded-xl shadow-lg p-4 flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">
                 <Label className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Client</Label>
-                <Input
-                  value={clientFilter}
-                  onChange={e => handleFilterChange({ key: 'client', value: e.target.value })}
-                  placeholder="Filter by client..."
-                  className="h-9"
-                />
+                {/* The backend now expects a real Client _id here, not a
+                    name substring — filtering by free text would just 400. */}
+                <Select
+                  value={clientFilter || 'all'}
+                  onValueChange={v => handleFilterChange({ key: 'client', value: v === 'all' ? null : v })}
+                >
+                  <SelectTrigger className="h-9 w-full">
+                    <SelectValue placeholder="Any client" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Any client</SelectItem>
+                    {filterClients?.clients.map(c => (
+                      <SelectItem key={c._id} value={c._id}>{c.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="flex flex-col gap-1.5">
@@ -252,6 +287,19 @@ const [hoverIndex,setHoverIndex]=useState<number | null>(0)
             <SelectItem value="status_asc">Sort: Status</SelectItem>
           </SelectContent>
         </Select>
+
+        <Select value={limitValue} onValueChange={handleLimitChange}>
+          <SelectTrigger className="h-9 w-auto text-sm text-slate-600">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="10">10 per page</SelectItem>
+            <SelectItem value="25">25 per page</SelectItem>
+            <SelectItem value="50">50 per page</SelectItem>
+            <SelectItem value="100">100 per page</SelectItem>
+            <SelectItem value="200">200 per page</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <DataTable
@@ -265,10 +313,30 @@ const [hoverIndex,setHoverIndex]=useState<number | null>(0)
 
       {/* Pagination */}
       <div className="flex items-center justify-between mt-4 text-xs text-slate-500">
-        <p>Showing {jobs.length} of {jobs.length} jobs</p>
-        <div className="flex items-center gap-1">
-
-        </div>
+        <p>Showing {jobs.length} of {totalJobs} job{totalJobs === 1 ? '' : 's'}</p>
+        {totalPages > 1 && (
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => goToPage(currentPage - 1)}
+              disabled={currentPage <= 1}
+              className="h-7 px-2.5 rounded-lg border border-[#E2E8F0] text-slate-600 hover:bg-slate-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white flex items-center gap-1"
+            >
+              <ChevronLeft size={12} /> Previous
+            </button>
+            <span className="px-2 font-medium text-slate-600">
+              Page {currentPage} of {totalPages}
+            </span>
+            <button
+              type="button"
+              onClick={() => goToPage(currentPage + 1)}
+              disabled={currentPage >= totalPages}
+              className="h-7 px-2.5 rounded-lg border border-[#E2E8F0] text-slate-600 hover:bg-slate-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white flex items-center gap-1"
+            >
+              Next <ChevronRight size={12} />
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )
