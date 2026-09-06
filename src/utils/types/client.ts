@@ -1,5 +1,6 @@
 export type ClientStatus = 'active' | 'inactive'
 export type ChargeType = 'hourly' | 'fixed'
+export type BillingFrequency = 'per_job' | 'weekly' | 'fortnightly' | 'monthly' | 'manual'
 
 export interface ClientContact {
   name?: string
@@ -31,6 +32,11 @@ export interface Client {
   defaultChargeType: ChargeType
   defaultChargeRate: number
   paymentTermsDays: number
+  // Default cadence for the eligible-work invoice picker — a preference,
+  // not a restriction; manual one-off invoices stay possible regardless.
+  billingFrequency?: BillingFrequency
+  billingDayOfWeek?: number
+  billingDayOfMonth?: number
   status: ClientStatus
   notes?: string
   createdAt: string

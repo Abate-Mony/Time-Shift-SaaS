@@ -234,5 +234,6 @@ export const invoiceSchema = z.object({
         "sent",
         "paid",
         "overdue",
+        "cancelled",
     ]).optional(),
 });

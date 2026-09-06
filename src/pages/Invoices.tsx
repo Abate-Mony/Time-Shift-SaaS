@@ -73,9 +73,14 @@ export function Invoices() {
               : 'Bill clients for completed jobs'}
           </p>
         </div>
-        <Button onClick={() => navigate('/jobs?status=completed')}>
-          <Plus size={14} /> New Invoice
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => navigate('/jobs?status=completed')}>
+            Bill a single job
+          </Button>
+          <Button onClick={() => navigate('/invoices/create')}>
+            <Plus size={14} /> New Invoice
+          </Button>
+        </div>
       </div>
 
       <div className="flex items-center gap-1 gap-x-0 border-b flex-wrap border-[#E2E8F0]">

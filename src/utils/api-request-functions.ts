@@ -2,7 +2,7 @@ import { queryClient } from "@/lib/queryClient";
 import { isAxiosError } from "axios";
 import toast from "react-hot-toast";
 import customFetch from "./customFetch";
-import type { CreateJobForm, EditProfileForm, EventNotificationPreference, InvoiceStatus, NotificationEvent, NotificationPreferences, TimesheetSummaryResponse } from "./types";
+import type { CreateJobForm, EditProfileForm, EligibleWorkResponse, EventNotificationPreference, Invoice, InvoiceStatus, NotificationEvent, NotificationPreferences, TimesheetSummaryResponse } from "./types";
 import type {
     AccessLevel,
     AccountRestriction,
@@ -183,6 +183,134 @@ export const updateInvoiceStatus = async (invoiceId: string, status: InvoiceStat
                     : "Something went wrong.";
 
         toast.error(message);
+    }
+};
+
+export const deleteInvoice = async (invoiceId: string): Promise<boolean> => {
+    try {
+        await customFetch.delete(`/invoices/${invoiceId}`);
+
+        toast.success("Invoice deleted");
+
+        await queryClient.invalidateQueries({ queryKey: ["invoices"] });
+        return true;
+    } catch (err) {
+        const message =
+            isAxiosError(err)
+                ? err.response?.data?.msg ??
+                err.response?.data?.message ??
+                "Something went wrong."
+                : err instanceof Error
+                    ? err.message
+                    : "Something went wrong.";
+
+        toast.error(message);
+        return false;
+    }
+};
+
+export const sendInvoice = async (invoiceId: string): Promise<boolean> => {
+    try {
+        await customFetch.post(`/invoices/${invoiceId}/send`);
+
+        toast.success("Invoice sent to client");
+
+        await queryClient.invalidateQueries({ queryKey: ["invoices"] });
+        await queryClient.invalidateQueries({ queryKey: ["invoice", invoiceId] });
+        return true;
+    } catch (err) {
+        const message =
+            isAxiosError(err)
+                ? err.response?.data?.msg ??
+                err.response?.data?.message ??
+                "Something went wrong."
+                : err instanceof Error
+                    ? err.message
+                    : "Something went wrong.";
+
+        toast.error(message);
+        return false;
+    }
+};
+
+// GET /invoices/eligible-work?client=&start=&end= — powers the create-invoice
+// picker. Backend recalculates everything server-side; this is read-only.
+export const getEligibleWork = async ({
+    client,
+    start,
+    end,
+}: {
+    client: string;
+    start: string;
+    end: string;
+}): Promise<EligibleWorkResponse> => {
+    const { data } = await customFetch.get<EligibleWorkResponse>("/invoices/eligible-work", {
+        params: { client, start, end },
+    });
+    return data;
+};
+
+// POST /invoices/draft — creates a draft from selected eligible-work items.
+// The backend re-queries and recalculates from the ids alone; amounts are
+// never sent from here.
+export const createInvoiceDraft = async ({
+    client,
+    servicePeriod,
+    jobIds,
+    assignmentIds,
+    issueDate,
+    dueDate,
+    notes,
+    purchaseOrderNumber,
+}: {
+    client: string;
+    servicePeriod: { start: string; end: string };
+    jobIds?: string[];
+    assignmentIds?: string[];
+    issueDate?: string;
+    dueDate?: string;
+    notes?: string;
+    purchaseOrderNumber?: string;
+}): Promise<Invoice> => {
+    const { data } = await customFetch.post("/invoices/draft", {
+        client,
+        servicePeriod,
+        jobIds,
+        assignmentIds,
+        issueDate,
+        dueDate,
+        notes,
+        purchaseOrderNumber,
+    });
+    return data.invoice as Invoice;
+};
+
+export const markInvoicePaid = async (
+    invoiceId: string,
+    payload?: { amountPaid?: number; paymentReference?: string; paymentMethod?: string; paymentNotes?: string }
+): Promise<boolean> => {
+    try {
+        await customFetch.patch(`/invoices/${invoiceId}/mark-paid`, payload ?? {});
+        toast.success("Invoice marked as paid");
+        await queryClient.invalidateQueries({ queryKey: ["invoices"] });
+        await queryClient.invalidateQueries({ queryKey: ["invoice", invoiceId] });
+        return true;
+    } catch (err) {
+        toast.error(getApiErrorMessage(err));
+        return false;
+    }
+};
+
+export const cancelInvoice = async (invoiceId: string, cancellationReason?: string): Promise<boolean> => {
+    try {
+        await customFetch.patch(`/invoices/${invoiceId}/cancel`, { cancellationReason });
+        toast.success("Invoice cancelled");
+        await queryClient.invalidateQueries({ queryKey: ["invoices"] });
+        await queryClient.invalidateQueries({ queryKey: ["invoice", invoiceId] });
+        return true;
+    } catch (err) {
+        toast.error(getApiErrorMessage(err));
+        return false;
     }
 };
 

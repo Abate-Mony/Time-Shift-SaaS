@@ -1,12 +1,13 @@
 import { Button } from '@/components/ui/button'
 import { queryClient } from '@/lib/queryClient'
 import customFetch from '@/utils/customFetch'
-import { updateInvoiceStatus } from '@/utils/api-request-functions'
+import { cancelInvoice, deleteInvoice, markInvoicePaid, sendInvoice } from '@/utils/api-request-functions'
 import { formatCurrency } from '@/utils/format'
 import type { Invoice } from '@/utils/types'
 import { useQuery, type QueryClient } from '@tanstack/react-query'
 import dayjs from 'dayjs'
-import { ChevronLeft, Printer } from 'lucide-react'
+import { ChevronLeft, Mail, Pencil, Printer, Trash2 } from 'lucide-react'
+import { useState } from 'react'
 import { useNavigate, useParams, type LoaderFunctionArgs } from 'react-router'
 
 const STATUS_STYLES: Record<string, string> = {
@@ -14,9 +15,12 @@ const STATUS_STYLES: Record<string, string> = {
     sent: 'bg-blue-100 text-blue-700',
     paid: 'bg-emerald-100 text-emerald-700',
     overdue: 'bg-red-100 text-red-600',
+    cancelled: 'bg-amber-100 text-amber-700',
 }
 
-const singleInvoice = (id: string | undefined) => ({
+// Exported so InvoiceForm can reuse the exact same query when editing —
+// same precedent as InvoiceForm importing `singleJob` from EditJobPage.
+export const singleInvoice = (id: string | undefined) => ({
     queryKey: ['invoice', id],
     queryFn: async (): Promise<{ invoice: Invoice }> => {
         const { data } = await customFetch.get(`/invoices/${id}`)
@@ -33,8 +37,44 @@ export function InvoiceDetail() {
     const navigate = useNavigate()
     const id = useParams().id
     const invoice = useQuery(singleInvoice(id)).data?.invoice
+    const [deleting, setDeleting] = useState(false)
+    const [sending, setSending] = useState(false)
+    const [markingPaid, setMarkingPaid] = useState(false)
+    const [cancelling, setCancelling] = useState(false)
 
     if (!invoice) return null
+
+    const handleDelete = async () => {
+        if (!window.confirm(`Delete invoice ${invoice.invoiceNumber}? This can't be undone.`)) return
+        setDeleting(true)
+        const ok = await deleteInvoice(invoice._id)
+        setDeleting(false)
+        if (ok) navigate('/invoices')
+    }
+
+    const handleSend = async () => {
+        setSending(true)
+        await sendInvoice(invoice._id)
+        setSending(false)
+    }
+
+    const handleMarkPaid = async () => {
+        setMarkingPaid(true)
+        await markInvoicePaid(invoice._id)
+        setMarkingPaid(false)
+    }
+
+    const handleCancel = async () => {
+        const reason = window.prompt(
+            invoice.status === 'draft'
+                ? `Cancel draft ${invoice.invoiceNumber}? Its work goes back to eligible-to-invoice. Reason (optional):`
+                : `Cancel invoice ${invoice.invoiceNumber}? It was already sent — its billed work stays locked (no auto-rebilling). Reason (optional):`
+        )
+        if (reason === null) return
+        setCancelling(true)
+        await cancelInvoice(invoice._id, reason || undefined)
+        setCancelling(false)
+    }
 
     return (
         <div className="p-6 max-w-3xl mx-auto animate-fade-in">
@@ -57,17 +97,47 @@ export function InvoiceDetail() {
                 </button>
                 <div className="flex items-center gap-2">
                     {invoice.status === 'draft' && (
-                        <Button variant="outline" size="sm" onClick={() => updateInvoiceStatus(invoice._id, 'sent')}>
-                            Mark as Sent
+                        <Button variant="outline" size="sm" disabled={sending} onClick={handleSend}>
+                            <Mail size={13} /> {sending ? 'Sending…' : 'Send Invoice'}
                         </Button>
                     )}
                     {(invoice.status === 'sent' || invoice.status === 'overdue') && (
-                        <Button size="sm" onClick={() => updateInvoiceStatus(invoice._id, 'paid')}>
-                            Mark as Paid
+                        <>
+                            <Button variant="outline" size="sm" disabled={sending} onClick={handleSend}>
+                                <Mail size={13} /> {sending ? 'Sending…' : 'Resend'}
+                            </Button>
+                            <Button size="sm" disabled={markingPaid} onClick={handleMarkPaid}>
+                                {markingPaid ? 'Marking…' : 'Mark as Paid'}
+                            </Button>
+                        </>
+                    )}
+                    {invoice.status === 'draft' && (
+                        <Button variant="outline" size="sm" onClick={() => navigate(`/invoices/${invoice._id}/edit`)}>
+                            <Pencil size={13} /> Edit
                         </Button>
                     )}
                     <Button variant="outline" size="sm" onClick={() => window.print()}>
                         <Printer size={13} /> Print / Download
+                    </Button>
+                    {(invoice.status === 'draft' || invoice.status === 'sent' || invoice.status === 'overdue') && (
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={cancelling}
+                            className="text-amber-600 hover:text-amber-600 hover:bg-amber-50"
+                            onClick={handleCancel}
+                        >
+                            {cancelling ? 'Cancelling…' : 'Cancel'}
+                        </Button>
+                    )}
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={deleting}
+                        className="text-red-600 hover:text-red-600 hover:bg-red-50"
+                        onClick={handleDelete}
+                    >
+                        <Trash2 size={13} /> {deleting ? 'Deleting…' : 'Delete'}
                     </Button>
                 </div>
             </div>
@@ -100,9 +170,13 @@ export function InvoiceDetail() {
                     {invoice.lineItems.map((li, i) => (
                         <div key={i} className="grid grid-cols-[2fr_1fr_1fr_1fr] gap-4 px-5 py-3 border-t border-[#F1F5F9] text-sm">
                             <span className="text-slate-800">{li.description}</span>
-                            <span className="text-right text-slate-600">{li.hours}</span>
-                            <span className="text-right text-slate-600">{formatCurrency(li.rate)}</span>
-                            <span className="text-right font-medium text-slate-900">{formatCurrency(li.hours * li.rate)}</span>
+                            <span className="text-right text-slate-600">{li.type === 'fixed' ? '—' : li.hours}</span>
+                            <span className="text-right text-slate-600">
+                                {formatCurrency(li.rate)}{li.type === 'fixed' ? '' : '/hr'}
+                            </span>
+                            <span className="text-right font-medium text-slate-900">
+                                {formatCurrency(li.amount ?? li.hours * li.rate)}
+                            </span>
                         </div>
                     ))}
                 </div>
@@ -113,12 +187,40 @@ export function InvoiceDetail() {
                             <span>Subtotal</span>
                             <span>{formatCurrency(invoice.subtotal)}</span>
                         </div>
+                        {!!invoice.vatRate && (
+                            <div className="flex justify-between text-sm text-slate-500">
+                                <span>VAT ({invoice.vatRate}%)</span>
+                                <span>{formatCurrency(invoice.vatAmount ?? 0)}</span>
+                            </div>
+                        )}
                         <div className="flex justify-between text-base font-bold text-slate-900 pt-1.5 border-t border-[#F1F5F9]">
                             <span>Total</span>
                             <span>{formatCurrency(invoice.total)}</span>
                         </div>
+                        {!!invoice.amountPaid && invoice.status !== 'paid' && (
+                            <div className="flex justify-between text-xs text-emerald-600">
+                                <span>Paid</span>
+                                <span>{formatCurrency(invoice.amountPaid)}</span>
+                            </div>
+                        )}
                     </div>
                 </div>
+
+                {invoice.servicePeriod?.start && invoice.servicePeriod?.end && (
+                    <div className="mb-6">
+                        <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1">Service Period</p>
+                        <p className="text-sm text-slate-600">
+                            {dayjs(invoice.servicePeriod.start).format('D MMM YYYY')} – {dayjs(invoice.servicePeriod.end).format('D MMM YYYY')}
+                        </p>
+                    </div>
+                )}
+
+                {invoice.status === 'cancelled' && invoice.cancellationReason && (
+                    <div className="mb-6">
+                        <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1">Cancellation Reason</p>
+                        <p className="text-sm text-slate-600">{invoice.cancellationReason}</p>
+                    </div>
+                )}
 
                 {invoice.notes && (
                     <div>

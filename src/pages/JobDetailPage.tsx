@@ -61,6 +61,8 @@ import { getInitials } from '@/utils/getInitials'
 import { isJobLocked } from '@/utils/jobLock'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { Separator } from '@radix-ui/react-separator'
+import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter,  DrawerHeader, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer'
+import { Button } from '@/components/ui/button'
 
 export const recordFormatUI: Record<ActivityType, { icon: LucideIcon; className: string; label: string }> = {
     // ── Job lifecycle ──────────────────────────────────────────────
@@ -337,7 +339,7 @@ export function JobDetail() {
     const JOB_STATUSES: { value: "draft" | "published" | "completed" | "cancelled"; label: string }[] = [
         { value: "draft", label: "Draft" },
         { value: "published", label: "Published" },
-        { value: "completed", label: "Completed" },
+        // { value: "completed", label: "Completed" },
         { value: "cancelled", label: "Cancelled" },
     ]
 
@@ -439,6 +441,7 @@ export function JobDetail() {
 
                         {/* Hero actions */}
                         <div className="flex items-center gap-2 shrink-0">
+
                             <button
                                 onClick={() => !isJobLocked(job) && onNavigate(`/jobs/${id}/edit`)}
                                 disabled={isJobLocked(job)}
@@ -712,20 +715,52 @@ export function JobDetail() {
                             {(job?.status === 'assigned' || job?.status === 'accepted' || job.status === 'draft') && (
                                 <button
                                     onClick={() => onNavigate(`/jobs/${id}/edit?edit=assigned-workers#assigned-worker`)}
-                                    className="w-full h-11 rounded-xl bg-[#1E3A5F] text-white text-sm font-bold hover:bg-[#162D4A] transition-colors flex items-center justify-center gap-2 shadow-sm shadow-[#1E3A5F]/20"
+                                    className="w-full h-11 rounded-xl bg-[#1E3A5F] text-white text-sm font-bold  transition-colors flex items-center justify-center gap-2 shadow-sm shadow-[#1E3A5F]/20"
                                 >
                                     <Users size={14} /> Assign Workers
                                 </button>
                             )}
+                            <Drawer direction='right'>
+                                <DrawerTrigger asChild>
+                                    <Button variant="secondary">Open Left Drawer</Button>
+                                </DrawerTrigger>
+                                <DrawerContent>
+                                    <DrawerHeader>
+                                        <DrawerTitle>Move Goal</DrawerTitle>
+                                        <DrawerDescription>Set your daily activity goal.</DrawerDescription>
+                                    </DrawerHeader>
+                                    <div className="flex-1 p-4">
+                                        <div className="size-full rounded-2xl bg-muted" />
+                                    </div>
+                                    <DrawerFooter>
+                                        <DrawerClose asChild>
+                                            <Button>Close</Button>
+                                        </DrawerClose>
+                                    </DrawerFooter>
+                                </DrawerContent>
+                            </Drawer>
+                            
+
+                            <button
+                                // onClick={() => deleteJob(job!._id as string).then(undefined => {
+                                //     navigate("/jobs")
+                                // })}
+                                className="w-full h-10 rounded-xl border border-green-100 bg-green-400 text-sm font-semibold text-white/90 hover:bg-green-500 flex items-center justify-center gap-2 transition-colors mt-1">
+                                <CheckCircle2 size={15} /> Approve & Complete
+                            </button>
                             <Popover open={statusEditOpenActions} onOpenChange={setStatusEditOpenActions}>
-                                <PopoverTrigger asChild>
+                                <PopoverTrigger asChild disabled={job?.status === 'completed' || job?.status === 'cancelled'}>
                                     <button
-                                        className="w-full h-10 rounded-xl border border-[#E2E8F0] text-sm font-semibold text-slate-600 hover:bg-slate-50 flex items-center justify-center gap-2 transition-colors"
+                                        title={job?.status === 'completed' || job?.status === 'cancelled' ? "Cannot change status of a completed or cancelled job" : undefined}
+                                        disabled={job?.status === 'completed' || job?.status === 'cancelled'}
+                                        className={cn("w-full h-10 rounded-xl border border-[#E2E8F0] text-sm font-semibold text-slate-600 hover:bg-slate-50 flex items-center justify-center gap-2 transition-colors bg-muted",
+                                            (job?.status === 'completed' || job?.status === 'cancelled') && "opacity-50 cursor-not-allowed"
+                                        )}
                                     >
                                         <Flag size={13} className="text-slate-400" /> Change Status
                                     </button>
                                 </PopoverTrigger>
-                                <PopoverContent align="start" className="w-56 flex flex-col gap-1">
+                                <PopoverContent align="start" className=" w-56 flex flex-col gap-1">
                                     <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide px-1 pb-1">Job status</p>
                                     {JOB_STATUSES.map(opt => (
                                         <button
@@ -766,7 +801,7 @@ export function JobDetail() {
                                     navigate("/jobs")
                                 })}
                                 className="w-full h-10 rounded-xl border border-red-100 bg-red-50 text-sm font-semibold text-red-500 hover:bg-red-100 flex items-center justify-center gap-2 transition-colors mt-1">
-                                <Trash2 size={13} /> Cancel Job
+                                <Trash2 size={13} /> Delete Job
                             </button>
                         </div>
                     </Card>

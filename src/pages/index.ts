@@ -21,6 +21,7 @@ export { EditJob, loader as singleJobLoader, action as editJobAction } from './E
 export { Invoices, loader as invoicesLoader } from './Invoices'
 export { InvoiceForm, loader as invoiceFormLoader } from './InvoiceForm'
 export { InvoiceDetail, loader as invoiceDetailLoader } from './InvoiceDetail'
+export { CreateInvoicePage, loader as createInvoiceLoader } from './CreateInvoicePage'
 export { Messages } from './Messages'
 export { loader as workerLoader } from "./worker/JobScreen"
 export { loader as openShiftsLoader } from "./worker/OpenShiftsPage"

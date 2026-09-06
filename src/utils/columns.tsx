@@ -19,7 +19,7 @@ import { AnimatedTooltip } from "@/components/ui/animated-tooltip"
 import { Checkbox } from "@/components/ui/checkbox"
 import { formatCurrency } from "./format"
 import { formatDate, formatDuration } from "./date"
-import { deleteJob, duplicateJob } from "./api-request-functions"
+import { deleteInvoice, deleteJob, duplicateJob } from "./api-request-functions"
 import { useMutation } from "@tanstack/react-query"
 import dayjs from "dayjs"
 import { isJobLocked } from "./jobLock"
@@ -393,6 +393,15 @@ export const invoiceColumns: ColumnDef<Invoice>[] = [
         <DropdownMenuContent align="end" className="w-40">
           <DropdownMenuItem asChild>
             <Link to={`/invoices/${row.original._id}`}>View Invoice</Link>
+          </DropdownMenuItem>
+
+          <DropdownMenuSeparator />
+
+          <DropdownMenuItem
+            className="text-red-600 focus:text-red-600 focus:bg-red-50"
+            onClick={() => deleteInvoice(row.original._id)}
+          >
+            Delete Invoice
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

@@ -13,18 +13,21 @@ import dayjs from 'dayjs'
 import { ChevronLeft, Plus, Trash2 } from 'lucide-react'
 import { useFieldArray, useForm } from 'react-hook-form'
 import toast from 'react-hot-toast'
-import { useNavigate, useSearchParams, type LoaderFunctionArgs } from 'react-router'
+import { useNavigate, useParams, useSearchParams, type LoaderFunctionArgs } from 'react-router'
 import { Input } from '../components/ui'
 import { singleJob } from './EditJobPage'
+import { singleInvoice } from './InvoiceDetail'
 
 const FieldError = ({ message }: { message?: string }) => {
     if (!message) return null
     return <p className="text-sm text-red-500 mt-1">{message}</p>
 }
 
-export const loader = (queryClient: QueryClient) => async ({ request }: LoaderFunctionArgs) => {
+export const loader = (queryClient: QueryClient) => async ({ request, params }: LoaderFunctionArgs) => {
     const jobId = new URL(request.url).searchParams.get('jobId')
-    if (jobId) {
+    if (params.id) {
+        await queryClient.ensureQueryData(singleInvoice(params.id))
+    } else if (jobId) {
         await queryClient.ensureQueryData(singleJob(jobId))
     }
     return { jobId }
@@ -33,8 +36,12 @@ export const loader = (queryClient: QueryClient) => async ({ request }: LoaderFu
 export function InvoiceForm() {
     const navigate = useNavigate()
     const [searchParams] = useSearchParams()
+    const invoiceId = useParams().id
+    const isEditing = !!invoiceId
+
     const jobId = searchParams.get('jobId') ?? ''
     const job = useQuery(singleJob(jobId))?.data?.job
+    const invoice = useQuery(singleInvoice(invoiceId)).data?.invoice
 
     const {
         register,
@@ -44,24 +51,35 @@ export function InvoiceForm() {
         formState: { errors, isSubmitting },
     } = useForm<InvoiceFormValues>({
         resolver: zodResolver(invoiceSchema),
-        defaultValues: {
-            job: jobId,
-            // job.client is now a populated Client ref, not free text — the
-            // invoice's own `client` field is still a plain string pending
-            // its own Client-picker integration (out of scope here), so
-            // just prefill the name rather than passing the object through.
-            client: job?.client?.name ?? '',
-            issueDate: dayjs().format('YYYY-MM-DD'),
-            dueDate: dayjs().add(14, 'day').format('YYYY-MM-DD'),
-            notes: '',
-            lineItems: job?.workers?.length
-                ? job.workers.map(w => ({
-                    description: w.fullname,
-                    hours: w.hoursWorked || 0,
-                    rate: w.payRate || 0,
-                }))
-                : [{ description: job?.title ?? '', hours: 0, rate: 0 }],
-        },
+        defaultValues: isEditing
+            ? {
+                job: invoice?.job ?? '',
+                client: invoice?.client ?? '',
+                issueDate: invoice?.issueDate ? dayjs(invoice.issueDate).format('YYYY-MM-DD') : '',
+                dueDate: invoice?.dueDate ? dayjs(invoice.dueDate).format('YYYY-MM-DD') : '',
+                notes: invoice?.notes ?? '',
+                lineItems: invoice?.lineItems?.length
+                    ? invoice.lineItems
+                    : [{ description: '', hours: 0, rate: 0 }],
+            }
+            : {
+                job: jobId,
+                // job.client is now a populated Client ref, not free text — the
+                // invoice's own `client` field is still a plain string pending
+                // its own Client-picker integration (out of scope here), so
+                // just prefill the name rather than passing the object through.
+                client: job?.client?.name ?? '',
+                issueDate: dayjs().format('YYYY-MM-DD'),
+                dueDate: dayjs().add(14, 'day').format('YYYY-MM-DD'),
+                notes: '',
+                lineItems: job?.workers?.length
+                    ? job.workers.map(w => ({
+                        description: w.fullname,
+                        hours: w.hoursWorked || 0,
+                        rate: w.payRate || 0,
+                    }))
+                    : [{ description: job?.title ?? '', hours: 0, rate: 0 }],
+            },
     })
 
     const { fields, append, remove } = useFieldArray({ control, name: 'lineItems' })
@@ -70,10 +88,18 @@ export function InvoiceForm() {
 
     const onSubmit = async (data: InvoiceFormValues) => {
         try {
-            const { data: created } = await customFetch.post('/invoices', data)
-            toast.success('Invoice created successfully')
-            await queryClient.invalidateQueries({ queryKey: ['invoices'] })
-            navigate(`/invoices/${created?.invoice?._id ?? created?._id}`)
+            if (isEditing) {
+                await customFetch.patch(`/invoices/${invoiceId}`, data)
+                toast.success('Invoice updated successfully')
+                await queryClient.invalidateQueries({ queryKey: ['invoices'] })
+                await queryClient.invalidateQueries({ queryKey: ['invoice', invoiceId] })
+                navigate(`/invoices/${invoiceId}`)
+            } else {
+                const { data: created } = await customFetch.post('/invoices', data)
+                toast.success('Invoice created successfully')
+                await queryClient.invalidateQueries({ queryKey: ['invoices'] })
+                navigate(`/invoices/${created?.invoice?._id ?? created?._id}`)
+            }
         } catch (err) {
             const message =
                 isAxiosError(err)
@@ -85,6 +111,24 @@ export function InvoiceForm() {
         }
     }
 
+    // The backend only allows editing a draft — once sent/paid, rewriting it
+    // silently would break the audit trail an invoice is supposed to provide.
+    if (isEditing && invoice && invoice.status !== 'draft') {
+        return (
+            <div className="px-2 pt-2.5 lg:p-6 max-w-3xl mx-auto animate-fade-in">
+                <div className="bg-white rounded-xl border border-[#E2E8F0] p-8 text-center">
+                    <p className="text-sm font-semibold text-slate-700 mb-1">This invoice can no longer be edited</p>
+                    <p className="text-xs text-slate-400 mb-4">
+                        Only draft invoices can be edited — it's already been {invoice.status}.
+                    </p>
+                    <Button variant="outline" size="sm" onClick={() => navigate(`/invoices/${invoiceId}`)}>
+                        Back to Invoice
+                    </Button>
+                </div>
+            </div>
+        )
+    }
+
     return (
         <div className="px-2 pt-2.5 lg:p-6 max-w-3xl mx-auto animate-fade-in">
             {/* Header */}
@@ -93,9 +137,15 @@ export function InvoiceForm() {
                     <ChevronLeft size={16} />
                 </button>
                 <div>
-                    <h1 className="text-xl font-semibold text-slate-900 tracking-tight">New Invoice</h1>
+                    <h1 className="text-xl font-semibold text-slate-900 tracking-tight">
+                        {isEditing ? `Edit Invoice ${invoice?.invoiceNumber ?? ''}` : 'New Invoice'}
+                    </h1>
                     <p className="text-sm text-slate-500 mt-0.5">
-                        {job?.title ? `For ${job.title}` : 'Bill a client for a completed job'}
+                        {isEditing
+                            ? 'Update the details below'
+                            : job?.title
+                                ? `For ${job.title}`
+                                : 'Bill a client for a completed job'}
                     </p>
                 </div>
             </div>
@@ -213,7 +263,9 @@ export function InvoiceForm() {
                         Cancel
                     </Button>
                     <Button type="submit" disabled={isSubmitting}>
-                        {isSubmitting ? 'Creating…' : 'Create Invoice'}
+                        {isSubmitting
+                            ? isEditing ? 'Saving…' : 'Creating…'
+                            : isEditing ? 'Save Changes' : 'Create Invoice'}
                     </Button>
                 </div>
             </form>

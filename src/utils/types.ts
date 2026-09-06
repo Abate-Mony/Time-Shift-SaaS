@@ -70,8 +70,37 @@ export type EditProfileFormInput = z.input<typeof editProfileSchema>;
 export type InvoiceLineItem = z.infer<typeof invoiceLineItemSchema>;
 export type InvoiceForm = z.infer<typeof invoiceSchema>;
 export type InvoiceStatus = NonNullable<InvoiceForm["status"]>;
+
+// A line item as the server actually returns it — richer than the manual
+// form's {description, hours, rate}: `type` distinguishes fixed line items
+// (no meaningful "hours") from hourly ones, and job/assignment trace back
+// to the source work.
+export type InvoiceLineItemDisplay = InvoiceLineItem & {
+  type?: "hourly" | "fixed" | "adjustment";
+  quantity?: number;
+  amount?: number;
+  job?: string | null;
+  assignment?: string | null;
+};
+
+export interface ClientSnapshot {
+  name: string;
+  billingEmail?: string;
+  vatNumber?: string;
+  phone?: string;
+  contactName?: string;
+  address?: {
+    line1?: string;
+    line2?: string;
+    city?: string;
+    county?: string;
+    postcode?: string;
+    country?: string;
+  };
+}
+
 // Server-side invoice: the form payload plus computed/derived fields.
-export type Invoice = InvoiceForm & {
+export type Invoice = Omit<InvoiceForm, "lineItems"> & {
   _id: string;
   invoiceNumber: string;
   status: InvoiceStatus;
@@ -79,7 +108,54 @@ export type Invoice = InvoiceForm & {
   total: number;
   createdAt: string;
   updatedAt: string;
+  lineItems: InvoiceLineItemDisplay[];
+  // Present on invoices created from the eligible-work flow — absent (or
+  // empty) on ones from the older single-job manual form.
+  jobs?: string[];
+  assignments?: string[];
+  clientSnapshot?: ClientSnapshot;
+  servicePeriod?: { start: string; end: string };
+  vatRate?: number;
+  vatAmount?: number;
+  amountPaid?: number;
+  purchaseOrderNumber?: string;
+  paymentReference?: string;
+  paymentMethod?: "bank_transfer" | "card" | "cash" | "direct_debit" | "other";
+  paymentNotes?: string;
+  cancellationReason?: string;
 };
+
+export type BillingFrequency = "per_job" | "weekly" | "fortnightly" | "monthly" | "manual";
+
+export interface EligibleWorkItem {
+  jobId: string;
+  assignmentId?: string;
+  title: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  chargeType: "hourly" | "fixed";
+  workerName?: string;
+  approvedMinutes?: number;
+  quantity: number;
+  rate: number;
+  amount: number;
+}
+
+export interface EligibleWorkResponse {
+  success: boolean;
+  client: {
+    _id: string;
+    name: string;
+    defaultChargeType: "hourly" | "fixed";
+    defaultChargeRate: number;
+    paymentTermsDays: number;
+    billingEmail?: string;
+  };
+  period: { start: string; end: string };
+  items: EligibleWorkItem[];
+  summary: { jobs: number; assignments: number; totalMinutes: number; subtotal: number };
+}
 export type GeofenceMode = "off" | "warn" | "enforce";
 export type Currency = "GBP" | "USD" | "EUR";
 export type WeekStartsOn = "monday" | "sunday";
