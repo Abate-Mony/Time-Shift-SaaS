@@ -61,7 +61,7 @@ import { getInitials } from '@/utils/getInitials'
 import { isJobLocked } from '@/utils/jobLock'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { Separator } from '@radix-ui/react-separator'
-import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter,  DrawerHeader, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer'
+import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer'
 import { Button } from '@/components/ui/button'
 
 export const recordFormatUI: Record<ActivityType, { icon: LucideIcon; className: string; label: string }> = {
@@ -720,10 +720,8 @@ export function JobDetail() {
                                     <Users size={14} /> Assign Workers
                                 </button>
                             )}
-                            <Drawer direction='right'>
-                                <DrawerTrigger asChild>
-                                    <Button variant="secondary">Open Left Drawer</Button>
-                                </DrawerTrigger>
+                            <Drawer swipeDirection="left">
+                                <DrawerTrigger render={<Button variant="secondary">Open Left Drawer</Button>} />
                                 <DrawerContent>
                                     <DrawerHeader>
                                         <DrawerTitle>Move Goal</DrawerTitle>
@@ -733,13 +731,11 @@ export function JobDetail() {
                                         <div className="size-full rounded-2xl bg-muted" />
                                     </div>
                                     <DrawerFooter>
-                                        <DrawerClose asChild>
-                                            <Button>Close</Button>
-                                        </DrawerClose>
+                                        <DrawerClose render={<Button>Close</Button>} />
                                     </DrawerFooter>
                                 </DrawerContent>
                             </Drawer>
-                            
+
 
                             <button
                                 // onClick={() => deleteJob(job!._id as string).then(undefined => {
