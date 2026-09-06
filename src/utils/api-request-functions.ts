@@ -136,6 +136,44 @@ export const claimOpenShift = async (jobId: string): Promise<boolean> => {
     }
 };
 
+export type OvertimeDecision = "approve" | "reject" | "adjust"
+
+// Resolves a shift whose worked time overran its schedule by more than the
+// company's threshold (see workerController.ts's clock-out handler) — only
+// ever callable while the assignment's overtimeStatus is "pending".
+// "approve" pays the full actual time, "reject" caps pay back to the
+// scheduled amount, "adjust" sets a manager-chosen figure in between.
+export const reviewAssignmentOvertime = async (
+    assignmentId: string,
+    decision: OvertimeDecision,
+    opts?: { approvedMinutes?: number; managerNotes?: string }
+): Promise<boolean> => {
+    try {
+        await customFetch.patch(`/workers/assignments/${assignmentId}/overtime`, { decision, ...opts });
+
+        toast.success(
+            decision === "approve" ? "Overtime approved" :
+                decision === "reject" ? "Capped back to the scheduled time" :
+                    "Approved hours adjusted"
+        );
+
+        await queryClient.invalidateQueries({ queryKey: ["job"] });
+        return true;
+    } catch (err) {
+        const message =
+            isAxiosError(err)
+                ? err.response?.data?.msg ??
+                err.response?.data?.message ??
+                "Something went wrong."
+                : err instanceof Error
+                    ? err.message
+                    : "Something went wrong.";
+
+        toast.error(message);
+        return false;
+    }
+};
+
 export const reviewOpenShiftClaim = async (assignmentId: string, approve: boolean): Promise<boolean> => {
     try {
         await customFetch.patch(`/workers/assignments/${assignmentId}/claim-review`, { approve });

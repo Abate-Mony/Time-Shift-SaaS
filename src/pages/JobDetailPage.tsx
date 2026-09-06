@@ -2,7 +2,7 @@ import customFetch from '@/utils/customFetch'
 import { formatCurrency } from '@/utils/format'
 import { formatDate, formatDuration } from '@/utils/date'
 import { queryClient } from '@/lib/queryClient'
-import { deleteJob, duplicateJob, reviewOpenShiftClaim, updateJobWorkers } from '@/utils/api-request-functions'
+import { deleteJob, duplicateJob, reviewAssignmentOvertime, reviewOpenShiftClaim, updateJobWorkers } from '@/utils/api-request-functions'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import dayjs from 'dayjs'
 import toast from 'react-hot-toast'
@@ -63,6 +63,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { Separator } from '@radix-ui/react-separator'
 import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer'
 import { Button } from '@/components/ui/button'
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 
 export const recordFormatUI: Record<ActivityType, { icon: LucideIcon; className: string; label: string }> = {
     // ── Job lifecycle ──────────────────────────────────────────────
@@ -289,6 +290,22 @@ export function JobDetail() {
             reviewOpenShiftClaim(assignmentId, approve),
     })
 
+    // Overtime review — a worker who clocked more time than the job's
+    // schedule allows sits at overtimeStatus "pending" until a manager
+    // approves the extra time, rejects it (caps pay back to schedule), or
+    // sets a specific adjusted figure. Independent per worker, so one
+    // flagged assignment never blocks resolving (or approving) another.
+    const overtimeMutation = useMutation({
+        mutationFn: ({ assignmentId, decision, approvedMinutes }: {
+            assignmentId: string
+            decision: "approve" | "reject" | "adjust"
+            approvedMinutes?: number
+        }) => reviewAssignmentOvertime(assignmentId, decision, { approvedMinutes }),
+        onSuccess: () => setAdjustingId(null),
+    })
+    const [adjustingId, setAdjustingId] = useState<string | null>(null)
+    const [adjustHours, setAdjustHours] = useState("")
+
     // Geofence inline editor — seeded from `job` fresh every time it opens
     // (not just on mount), so it can't go stale after other edits refetch
     // the job in the background.
@@ -324,6 +341,17 @@ export function JobDetail() {
         off: "No location check",
         warn: "Record and flag",
         enforce: "Require them on site",
+    }
+
+    // Falls back to this when the worker picked a reason but left the free-text
+    // note blank — a plain enum value like "job_took_longer" isn't fit to show.
+    const CLOCK_OUT_REASON_LABELS: Record<string, string> = {
+        on_time: "Clocked out on time",
+        job_took_longer: "Job took longer than expected",
+        manager_asked_to_stay: "Asked by a manager to stay",
+        forgot_to_clock_out: "Forgot to clock out",
+        auto_closed: "Auto-closed by the system",
+        other: "Other",
     }
 
     // Job-level status only (draft/published/completed/cancelled) — distinct
@@ -376,6 +404,11 @@ export function JobDetail() {
     const overtimeWorkersCount = job?.minutes
         ? assignedWorkers.filter(w => !!w.checkedInAt && getWorkerMinutes(w) > job.minutes!).length
         : 0
+
+    // Real backend flag (assignment.overtimeStatus), not just the client-side
+    // "worked longer than scheduled" heuristic above — this is what actually
+    // gates payroll, and what a manager needs to resolve before approving.
+    const pendingOvertimeWorkers = assignedWorkers.filter(w => w.overtimeStatus === "pending")
 
     return (
         <div className="p-6 animate-fade-in">
@@ -698,7 +731,7 @@ export function JobDetail() {
                                     <CheckCircle2 size={15} /> Approve & Complete
                                 </button>
                             )}
-                            {job?.status === 'completed' && (
+                            {job?.status === 'completed' ? (
                                 <>
                                     <div className="w-full h-11 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center gap-2">
                                         <CheckCircle2 size={14} className="text-emerald-600" />
@@ -711,7 +744,215 @@ export function JobDetail() {
                                         <Receipt size={13} /> Generate Invoice
                                     </button>
                                 </>
-                            )}
+                            ) :
+                                <>
+                                    <Sheet>
+                                        <SheetTrigger
+                                            className={
+                                                cn(
+                                                    (job.status === 'cancelled') && "opacity-50 cursor-not-allowed bg-muted"
+                                                )
+                                            }
+                                            disabled={job.status === 'cancelled' || updateStatusMutation.isPending}
+                                        >
+                                            <button
+                                                // onClick={() => deleteJob(job!._id as string).then(undefined => {
+                                                //     navigate("/jobs")
+                                                // })}
+                                                className={
+                                                    cn("w-full h-10 rounded-xl border border-green-100 bg-green-400 text-sm font-semibold text-white/90 hover:bg-green-500 flex items-center justify-center gap-2 transition-colors mt-1",
+                                                        (job.status === 'cancelled') && "cursor-not-allowed  rounded-full"
+                                                    )
+                                                }>
+                                                <CheckCircle2 size={15} /> Approve & Complete
+                                            </button>
+                                        </SheetTrigger>
+                                        <SheetContent className="sm:max-w-[405px] rounded-2xl shadow-2xl max-h-fit top-[calc(20%-8rem)] p-o right-10 rounded-sm" side="right">
+
+
+                                            <div className="bg-white=  w-full max-w-md p-6 animate-fade-in bg-transparent">
+                                                <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4">
+                                                    <CheckCircle2 size={24} className="text-emerald-600" />
+                                                </div>
+                                                <h3 className="text-base font-bold text-slate-900 text-center mb-1">Approve this job?</h3>
+                                                <p className="text-sm text-slate-500 text-center mb-6">This will mark the job as completed and notify all workers. Hours will be submitted for payroll.</p>
+
+                                                {/* Overtime review — each flagged worker is resolved independently,
+                                                    so a clean worker never has to wait on a flagged one. */}
+                                                {pendingOvertimeWorkers.length > 0 && (
+                                                    <div className="mb-5 flex flex-col gap-3">
+                                                        <div className="flex items-center gap-1.5">
+                                                            <Flag size={12} className="text-amber-600" />
+                                                            <p className="text-xs font-bold text-amber-700 uppercase tracking-wide">
+                                                                {pendingOvertimeWorkers.length} worker{pendingOvertimeWorkers.length > 1 ? 's' : ''} over time — needs review
+                                                            </p>
+                                                        </div>
+                                                        {pendingOvertimeWorkers.map(w => {
+                                                            const scheduledMinutes = job?.minutes ?? 0
+                                                            const actual = w.actualMinutes ?? getWorkerMinutes(w)
+                                                            const over = w.overtimeMinutes || Math.max(0, actual - scheduledMinutes)
+                                                            const isAdjusting = adjustingId === w._id
+                                                            return (
+                                                                <div key={w._id} className="bg-amber-50 border border-amber-200 rounded-xl p-3.5 flex flex-col gap-2.5">
+                                                                    <div className="flex items-center gap-2 min-w-0">
+                                                                        <Avatar initials={getInitials(w.fullname)} size="sm" index={0} />
+                                                                        <div className="min-w-0">
+                                                                            <p className="text-sm font-semibold text-slate-800 truncate">{w.fullname}</p>
+                                                                            <p className="text-[11px] text-amber-700">
+                                                                                Worked {formatDuration(actual)} · scheduled {formatDuration(scheduledMinutes)} · +{formatDuration(over)} over
+                                                                            </p>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    {(w.clockOutNote || w.clockOutReason) && (
+                                                                        <p className="text-[11px] text-slate-600 bg-white/70 border border-amber-100 rounded-lg px-2.5 py-1.5">
+                                                                            <span className="font-semibold">Worker's note: </span>
+                                                                            {w.clockOutNote || CLOCK_OUT_REASON_LABELS[w.clockOutReason ?? ''] || w.clockOutReason}
+                                                                        </p>
+                                                                    )}
+
+                                                                    {isAdjusting ? (
+                                                                        <div className="flex items-center gap-2">
+                                                                            <input
+                                                                                type="number"
+                                                                                step="0.25"
+                                                                                min="0"
+                                                                                autoFocus
+                                                                                value={adjustHours}
+                                                                                onChange={e => setAdjustHours(e.target.value)}
+                                                                                placeholder="Hours to pay"
+                                                                                className="h-8 flex-1 min-w-0 px-2.5 border border-amber-300 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-amber-300"
+                                                                            />
+                                                                            <button
+                                                                                onClick={() => {
+                                                                                    const hrs = parseFloat(adjustHours)
+                                                                                    if (!Number.isFinite(hrs) || hrs < 0) return
+                                                                                    overtimeMutation.mutate({ assignmentId: w._id!, decision: "adjust", approvedMinutes: Math.round(hrs * 60) })
+                                                                                }}
+                                                                                disabled={overtimeMutation.isPending || !adjustHours}
+                                                                                className="h-8 px-3 rounded-lg bg-amber-600 text-white text-xs font-semibold hover:bg-amber-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0"
+                                                                            >
+                                                                                Save
+                                                                            </button>
+                                                                            <button
+                                                                                onClick={() => setAdjustingId(null)}
+                                                                                className="h-8 px-2 text-xs text-slate-500 hover:text-slate-700 shrink-0"
+                                                                            >
+                                                                                Cancel
+                                                                            </button>
+                                                                        </div>
+                                                                    ) : (
+                                                                        <div className="flex items-center gap-2">
+                                                                            <button
+                                                                                onClick={() => overtimeMutation.mutate({ assignmentId: w._id!, decision: "approve" })}
+                                                                                disabled={overtimeMutation.isPending}
+                                                                                className="flex-1 h-8 rounded-lg bg-emerald-500 text-white text-xs font-semibold hover:bg-emerald-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                                                                            >
+                                                                                Approve overtime
+                                                                            </button>
+                                                                            <button
+                                                                                onClick={() => { setAdjustingId(w._id!); setAdjustHours((scheduledMinutes / 60).toFixed(2)) }}
+                                                                                disabled={overtimeMutation.isPending}
+                                                                                className="h-8 px-3 rounded-lg border border-amber-300 text-amber-700 text-xs font-semibold hover:bg-amber-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0"
+                                                                            >
+                                                                                Adjust
+                                                                            </button>
+                                                                            <button
+                                                                                onClick={() => overtimeMutation.mutate({ assignmentId: w._id!, decision: "reject" })}
+                                                                                disabled={overtimeMutation.isPending}
+                                                                                className="h-8 px-3 rounded-lg border border-rose-200 text-rose-500 text-xs font-semibold hover:bg-rose-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0"
+                                                                            >
+                                                                                Reject
+                                                                            </button>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            )
+                                                        })}
+                                                        <div className="h-px bg-slate-100" />
+                                                    </div>
+                                                )}
+
+                                                <div className="bg-slate-50 rounded-xl p-4 mb-5 flex flex-col gap-2">
+                                                    {[
+                                                        { label: 'Job', value: job?.title.split('—')[0].trim() },
+                                                        { label: 'Workers', value: `${assignedWorkers.length} workers` },
+                                                        { label: 'Total Hours', value: `${formatDuration(totalMinutes)}` },
+                                                        { label: 'Est. Cost', value: `${formatCurrency(estimatedCost)}` },
+                                                    ].map(r => (
+                                                        <div key={r.label} className="flex items-center justify-between">
+                                                            <p className="text-xs text-slate-500">{r.label}</p>
+                                                            <p className="text-xs font-semibold text-slate-800">{r.value}</p>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                                <div className="flex gap-3">
+                                                    {/* <button
+                                                        onClick={() => setShowApproveModal(false)}
+                                                        className="flex-1 h-11 rounded-xl border border-[#E2E8F0] text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
+                                                    >
+                                                        Cancel
+                                                    </button> */}
+                                                    <button
+                                                        onClick={() => updateStatusMutation.mutate("completed", { onSuccess: () => setStatusEditOpenActions(false) })}
+                                                        disabled={pendingOvertimeWorkers.length > 0 || updateStatusMutation.isPending}
+                                                        title={pendingOvertimeWorkers.length > 0 ? "Resolve the overtime above before approving" : undefined}
+                                                        className="flex-1 h-11 rounded-xl bg-emerald-500 text-white text-sm font-bold hover:bg-emerald-600 transition-colors shadow-sm shadow-emerald-500/25 disabled:opacity-40 disabled:cursor-not-allowed"
+                                                    >
+                                                        Approve Job
+                                                    </button>
+                                                </div>
+                                                {pendingOvertimeWorkers.length > 0 && (
+                                                    <p className="text-[11px] text-amber-600 text-center mt-2.5">
+                                                        Resolve the overtime above before approving this job.
+                                                    </p>
+                                                )}
+                                            </div>
+
+                                        </SheetContent>
+                                    </Sheet>
+                                    <Popover open={statusEditOpenActions} onOpenChange={setStatusEditOpenActions}>
+                                        <PopoverTrigger asChild disabled={job?.status === 'cancelled'}>
+                                            <button
+                                                title={job?.status === 'cancelled' ? "Cannot change status of a cancelled job" : undefined}
+                                                disabled={job?.status === 'cancelled'}
+                                                className={cn("w-full h-10 rounded-xl border border-[#E2E8F0] text-sm font-semibold text-slate-600 hover:bg-slate-50 flex items-center justify-center gap-2 transition-colors bg-muted",
+                                                    job?.status === 'cancelled' && "opacity-50 cursor-not-allowed"
+                                                )}
+                                            >
+                                                <Flag size={13} className="text-slate-400" /> Change Status
+                                            </button>
+                                        </PopoverTrigger>
+                                        <PopoverContent align="start" className=" w-56 flex flex-col gap-1">
+                                            <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide px-1 pb-1">Job status</p>
+                                            {JOB_STATUSES.map(opt => (
+                                                <button
+                                                    key={opt.value}
+                                                    type="button"
+                                                    disabled={updateStatusMutation.isPending}
+                                                    onClick={() => updateStatusMutation.mutate(opt.value, { onSuccess: () => setStatusEditOpenActions(false) })}
+                                                    className={cn(
+                                                        "flex items-center justify-between px-3 py-2 rounded-lg text-sm text-left transition-colors disabled:opacity-60 disabled:cursor-not-allowed",
+                                                        job?.status === opt.value
+                                                            ? "bg-[#1E3A5F]/[0.06] text-[#1E3A5F] font-semibold"
+                                                            : "text-slate-600 hover:bg-slate-50"
+                                                    )}
+                                                >
+                                                    {opt.label}
+                                                    {job?.status === opt.value && <Check size={13} />}
+                                                </button>
+                                            ))}
+                                        </PopoverContent>
+                                    </Popover>
+                                    <button
+                                        onClick={() => deleteJob(job!._id as string).then(undefined => {
+                                            navigate("/jobs")
+                                        })}
+                                        className="w-full h-10 rounded-xl border border-red-100 bg-red-50 text-sm font-semibold text-red-500 hover:bg-red-100 flex items-center justify-center gap-2 transition-colors mt-1">
+                                        <Trash2 size={13} /> Delete Job
+                                    </button>
+                                </>
+                            }
                             {(job?.status === 'assigned' || job?.status === 'accepted' || job.status === 'draft') && (
                                 <button
                                     onClick={() => onNavigate(`/jobs/${id}/edit?edit=assigned-workers#assigned-worker`)}
@@ -720,63 +961,10 @@ export function JobDetail() {
                                     <Users size={14} /> Assign Workers
                                 </button>
                             )}
-                            <Drawer swipeDirection="left">
-                                <DrawerTrigger render={<Button variant="secondary">Open Left Drawer</Button>} />
-                                <DrawerContent>
-                                    <DrawerHeader>
-                                        <DrawerTitle>Move Goal</DrawerTitle>
-                                        <DrawerDescription>Set your daily activity goal.</DrawerDescription>
-                                    </DrawerHeader>
-                                    <div className="flex-1 p-4">
-                                        <div className="size-full rounded-2xl bg-muted" />
-                                    </div>
-                                    <DrawerFooter>
-                                        <DrawerClose render={<Button>Close</Button>} />
-                                    </DrawerFooter>
-                                </DrawerContent>
-                            </Drawer>
 
 
-                            <button
-                                // onClick={() => deleteJob(job!._id as string).then(undefined => {
-                                //     navigate("/jobs")
-                                // })}
-                                className="w-full h-10 rounded-xl border border-green-100 bg-green-400 text-sm font-semibold text-white/90 hover:bg-green-500 flex items-center justify-center gap-2 transition-colors mt-1">
-                                <CheckCircle2 size={15} /> Approve & Complete
-                            </button>
-                            <Popover open={statusEditOpenActions} onOpenChange={setStatusEditOpenActions}>
-                                <PopoverTrigger asChild disabled={job?.status === 'completed' || job?.status === 'cancelled'}>
-                                    <button
-                                        title={job?.status === 'completed' || job?.status === 'cancelled' ? "Cannot change status of a completed or cancelled job" : undefined}
-                                        disabled={job?.status === 'completed' || job?.status === 'cancelled'}
-                                        className={cn("w-full h-10 rounded-xl border border-[#E2E8F0] text-sm font-semibold text-slate-600 hover:bg-slate-50 flex items-center justify-center gap-2 transition-colors bg-muted",
-                                            (job?.status === 'completed' || job?.status === 'cancelled') && "opacity-50 cursor-not-allowed"
-                                        )}
-                                    >
-                                        <Flag size={13} className="text-slate-400" /> Change Status
-                                    </button>
-                                </PopoverTrigger>
-                                <PopoverContent align="start" className=" w-56 flex flex-col gap-1">
-                                    <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide px-1 pb-1">Job status</p>
-                                    {JOB_STATUSES.map(opt => (
-                                        <button
-                                            key={opt.value}
-                                            type="button"
-                                            disabled={updateStatusMutation.isPending}
-                                            onClick={() => updateStatusMutation.mutate(opt.value, { onSuccess: () => setStatusEditOpenActions(false) })}
-                                            className={cn(
-                                                "flex items-center justify-between px-3 py-2 rounded-lg text-sm text-left transition-colors disabled:opacity-60 disabled:cursor-not-allowed",
-                                                job?.status === opt.value
-                                                    ? "bg-[#1E3A5F]/[0.06] text-[#1E3A5F] font-semibold"
-                                                    : "text-slate-600 hover:bg-slate-50"
-                                            )}
-                                        >
-                                            {opt.label}
-                                            {job?.status === opt.value && <Check size={13} />}
-                                        </button>
-                                    ))}
-                                </PopoverContent>
-                            </Popover>
+
+
                             <button
                                 onClick={() => !isJobLocked(job) && onNavigate(`/jobs/${id}/edit`)}
                                 disabled={isJobLocked(job)}
@@ -792,13 +980,7 @@ export function JobDetail() {
                             >
                                 <Copy size={13} className="text-slate-400" /> {duplicateJobMutation.isPending ? "Duplicating..." : "Duplicate"}
                             </button>
-                            <button
-                                onClick={() => deleteJob(job!._id as string).then(undefined => {
-                                    navigate("/jobs")
-                                })}
-                                className="w-full h-10 rounded-xl border border-red-100 bg-red-50 text-sm font-semibold text-red-500 hover:bg-red-100 flex items-center justify-center gap-2 transition-colors mt-1">
-                                <Trash2 size={13} /> Delete Job
-                            </button>
+
                         </div>
                     </Card>
 

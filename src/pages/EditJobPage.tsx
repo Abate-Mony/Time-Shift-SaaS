@@ -174,6 +174,13 @@ export function EditJob() {
         resolver: zodResolver(createJobSchema as any),
         defaultValues: {
             ...job,
+            // job.client is a populated { _id, name, ... } object (or null when
+            // the job has none) — createJobSchema.client is a plain id string,
+            // never null/an object (same TS-type-vs-runtime-schema mismatch the
+            // resolver above already casts around). The actual submitted value
+            // always comes from the hidden input driven by `selectedClient`
+            // state below, so this is purely to keep RHF's own validation happy.
+            client: (job?.client?._id ?? undefined) as any,
             date: dayjs(job?.date).format("YYYY-MM-DD")
         },
         mode: "onSubmit",
@@ -700,9 +707,6 @@ export function EditJob() {
                                                 </motion.div>
                                             )}
                                         </AnimatePresence>
-
-                                        <input type="hidden" name="openToClaims" value={String(openToClaims)} />
-                                        <input type="hidden" name="requiresApproval" value={String(requiresApproval)} />
                                     </div>
 
                                     {/* Clock-in grace override */}
@@ -839,11 +843,17 @@ export function EditJob() {
                     </AnimatePresence>
                 </div>
 
-                {/* Hidden inputs for geofence — <Form> submits from the DOM, not RHF state */}
+                {/* Hidden inputs for geofence and open-shift toggles — rendered here,
+                    outside the collapsible Advanced panel, since <Form> submits from
+                    the DOM: living inside `{advancedOpen && ...}` meant these were
+                    silently absent (and openToClaims/requiresApproval silently reset
+                    to false) on any save made without opening Advanced options. */}
                 {geofenceMode && <input type="hidden" name="geofenceMode" value={geofenceMode} />}
                 {geofenceMode && geofenceMode !== "off" && geofenceRadius && (
                     <input type="hidden" name="geofenceRadiusMeters" value={String(geofenceRadius)} />
                 )}
+                <input type="hidden" name="openToClaims" value={String(openToClaims)} />
+                <input type="hidden" name="requiresApproval" value={String(requiresApproval)} />
 
                 {/* Instructions & Attachments */}
                 <div className="bg-white rounded-xl border border-[#E2E8F0] p-6">

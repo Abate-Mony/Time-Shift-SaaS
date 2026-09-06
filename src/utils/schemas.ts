@@ -48,6 +48,20 @@ export const workerSchema = z.object({
     // status stays "pending" either way, this is what tells the two apart.
     pendingApproval: z.boolean().optional(),
 
+    // Set on clock-out when worked time overran the job's scheduled duration
+    // by more than the company's threshold. "pending" means a manager needs
+    // to approve/adjust/reject it (see reviewAssignmentOvertime) before the
+    // extra time counts toward payroll — approvedMinutes stays capped at the
+    // scheduled amount until then.
+    actualMinutes: z.number().nullable().optional(),
+    approvedMinutes: z.number().nullable().optional(),
+    overtimeMinutes: z.number().default(0),
+    overtimeStatus: z.enum(["none", "pending", "approved", "rejected"]).default("none"),
+    clockOutReason: z.enum([
+        "on_time", "job_took_longer", "manager_asked_to_stay", "forgot_to_clock_out", "auto_closed", "other",
+    ]).optional(),
+    clockOutNote: z.string().optional(),
+
     acceptedAt: z.date().optional(),
 
     declinedAt: z.date().optional(),
