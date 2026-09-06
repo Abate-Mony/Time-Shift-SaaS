@@ -2,7 +2,7 @@ import { PriorityBadge, StatusBadge } from "@/components/ui"
 import { queryClient } from "@/lib/queryClient"
 import { changeWorkerJobStaus } from "@/utils/api-request-functions"
 import customFetch from "@/utils/customFetch"
-import { formatDate, formatDuration } from "@/utils/date"
+import { formatDate, formatDuration, formatTimeUntil } from "@/utils/date"
 import { useShiftStartGate } from "@/hooks/useShiftStartGate"
 import { ensureNotificationPermission } from "@/utils/notifications"
 import { ensurePushSubscription } from "@/utils/pushSubscription"
@@ -231,7 +231,7 @@ export default function JobDetailScreen() {
                 ) : (
                     <div className="w-full h-11 rounded-xl bg-slate-100 text-slate-500 text-sm font-semibold flex items-center justify-center gap-2 cursor-not-allowed">
                         <Timer size={14} className="text-slate-400" />
-                        {hasExpired ? "Shift window missed" : `Starts in ${formatDuration(minutesUntilStart ?? 0)}`}
+                        {hasExpired ? "Shift window missed" : `Starts in ${formatTimeUntil(minutesUntilStart ?? 0)}`}
                     </div>
                 )
             )}
