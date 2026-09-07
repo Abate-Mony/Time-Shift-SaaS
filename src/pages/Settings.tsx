@@ -43,6 +43,7 @@ const FieldError = ({ message }: { message?: string }) => {
 const settingsFormSchema = z.object({
     clockInGraceMinutes: z.coerce.number({ invalid_type_error: 'Enter a number' }).int('Whole minutes only').min(0, "Can't be negative").max(120, 'Max 120 minutes'),
     lateThresholdMinutes: z.coerce.number({ invalid_type_error: 'Enter a number' }).int('Whole minutes only').min(0, "Can't be negative").max(120, 'Max 120 minutes'),
+    lateClockOutThresholdMinutes: z.coerce.number({ invalid_type_error: 'Enter a number' }).int('Whole minutes only').min(0, "Can't be negative").max(240, 'Max 240 minutes'),
     autoClockOutEnabled: z.boolean(),
     payFromScheduledStart: z.boolean(),
 
@@ -71,6 +72,7 @@ type FormValues = z.infer<typeof settingsFormSchema>
 const DEFAULT_FORM_VALUES: FormValues = {
     clockInGraceMinutes: 15,
     lateThresholdMinutes: 10,
+    lateClockOutThresholdMinutes: 15,
     autoClockOutEnabled: true,
     payFromScheduledStart: true,
     geofenceMode: 'warn',
@@ -98,6 +100,7 @@ function toFormValues(s: CompanySettings): FormValues {
         // setting has no value stored yet) — the form always needs a real
         // number, so fall back to the same default a brand-new company gets.
         clockInGraceMinutes: rest.clockInGraceMinutes ?? DEFAULT_FORM_VALUES.clockInGraceMinutes,
+        lateClockOutThresholdMinutes: rest.lateClockOutThresholdMinutes ?? DEFAULT_FORM_VALUES.lateClockOutThresholdMinutes,
         overtimeThresholdHours: overtimeThresholdMinutes / 60,
     }
 }
@@ -419,6 +422,14 @@ export function Settings() {
                             disabled={disabled}
                             error={errors.lateThresholdMinutes?.message}
                             {...register('lateThresholdMinutes')}
+                        />
+                        <NumberField
+                            label="Overtime review threshold"
+                            description="How far past the scheduled end a clock-out can run before it's flagged for your review. Set to 0 to flag any overrun."
+                            suffix="min"
+                            disabled={disabled}
+                            error={errors.lateClockOutThresholdMinutes?.message}
+                            {...register('lateClockOutThresholdMinutes')}
                         />
                     </div>
                     <Controller

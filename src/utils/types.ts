@@ -229,6 +229,11 @@ export type WeekStartsOn = "monday" | "sunday";
 export interface CompanySettings {
   clockInGraceMinutes?: number;
   lateThresholdMinutes: number;
+  // How many minutes past the scheduled end a clock-out can run before it's
+  // flagged for manager review (see workerController's overtime check on
+  // clock-out) — separate from lateThresholdMinutes, which flags a late
+  // clock-IN instead.
+  lateClockOutThresholdMinutes?: number;
   autoClockOutEnabled: boolean;
   payFromScheduledStart: boolean;
 

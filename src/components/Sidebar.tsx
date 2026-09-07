@@ -25,7 +25,7 @@ import CustomNavLink from './ui/link'
 
 const navItems = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { id: 'jobs', label: 'Jobs', icon: Briefcase, badge: 3 },
+  { id: 'jobs', label: 'Jobs', icon: Briefcase },
   { id: 'workers', label: 'Workers', icon: Users },
   { id: 'clients', label: 'Client', icon: SquareUser },
   { id: 'team', label: 'Teams', icon: MapPin },
@@ -43,7 +43,7 @@ const secondaryItems = [
 ]
 
 const bottomItems = [
-  { id: 'notifications', label: 'Notifications', icon: Bell, badge: 2 },
+  { id: 'notifications', label: 'Notifications', icon: Bell },
   { id: 'settings', label: 'Settings', icon: Settings },
   { id: 'help', label: 'Help Centre', icon: HelpCircle },
 ]
@@ -117,12 +117,6 @@ export function Sidebar({ active, collapsed, onToggleSidebar, user }: SidebarPro
               <div className='w-full flex items-center  space-x-1.5 h-full justify-between '>
                 <item.icon size={16} className={cn('text-blue-400 group-[.slide-active]:text-current')} />
                 {!collapsed && <span className="flex-1 text-left font-medium">{item.label}</span>}
-                {!collapsed && item.badge !== undefined && (
-                  <span className="bg-blue-500 text-white text-[10px] font-bold w-4 h-4 rounded-sm flex items-center justify-center">{item.badge}</span>
-                )}
-                {collapsed && item.badge !== undefined && (
-                  <span className="absolute top-1 right-1 w-2 h-2 bg-blue-500 rounded-full" />
-                )}
               </div>
             </CustomNavLink>
           ))}
@@ -167,12 +161,6 @@ export function Sidebar({ active, collapsed, onToggleSidebar, user }: SidebarPro
               <div className='w-full flex items-center  space-x-1.5 h-full justify-between '>
                 <item.icon size={16} className={cn('text-blue-400 group-[.slide-active]:text-current')} />
                 {!collapsed && <span className="flex-1 text-left font-medium">{item.label}</span>}
-                {!collapsed && item.badge !== undefined && (
-                  <span className="bg-blue-500 text-white text-[10px] font-bold w-4 h-4 rounded-sm flex items-center justify-center">{item.badge}</span>
-                )}
-                {collapsed && item.badge !== undefined && (
-                  <span className="absolute top-1 right-1 w-2 h-2 bg-blue-500 rounded-full" />
-                )}
               </div>
             </CustomNavLink>
           ))}

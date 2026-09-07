@@ -36,7 +36,7 @@ import NewUserInvitePage from "@/pages/acceptInvites/NewUserInvitePage";
 import RecurringAssignmentPage, { loader as recurringAssignmentsLoader } from "@/pages/worker/RecurringAssignmentPage";
 import { createBrowserRouter, Navigate } from "react-router";
 import DashboardLayout from "../layouts/dashboardlayout";
-import { Analytics, analyticsLoader, Calendar, calendarLoader, ClentBillingPage, ClientDetail, clientDetailLoader, ClientDetailsaJobsPage, ClientDetailsContactsPage, ClientDetailsOverviewPage, Clients, clientsLoader, clockLoader, CreateClientPage, CreateInvoicePage, createInvoiceLoader, CreateJob, createjobAction, Dashboard, dashboardLoader, DownloadTimesheetScreen, EditJob, editJobAction, InvoiceDetail, invoiceDetailLoader, InvoiceForm, invoiceFormLoader, Invoices, invoicesLoader, JobDetail, Jobs, jobsLoader, Locations, loginAction, openShiftsLoader, ProfileScreen, RecurringJobDetail, recurringJobDetailLoader, RecurringJobs, recurringJobsLoader, ReportLayout, ReportsOverviewPage, ReportsPayrollPage, ReportsTimesheetsPage, ReportsPerformancePage, Settings, settingsLoader, signupAction, singleJobLoader, singleWorkerJobLoader, SuspendedAccountPage, Team, teamLoader, workerLoader, WorkerProfile, workerProfileLoader, workerStatsLoader, Workers, workersLoader, CheckOutSettings, ChangePlanSettings } from "../pages";
+import { Analytics, analyticsLoader, Calendar, calendarLoader, ClentBillingPage, ClientDetail, clientDetailLoader, ClientDetailsaJobsPage, ClientDetailsContactsPage, ClientDetailsOverviewPage, Clients, clientsLoader, clockLoader, CreateClientPage, CreateInvoicePage, createInvoiceLoader, CreateJob, createjobAction, Dashboard, dashboardLoader, DownloadTimesheetScreen, EditJob, editJobAction, InvoiceDetail, invoiceDetailLoader, InvoiceForm, invoiceFormLoader, Invoices, invoicesLoader, JobDetail, Jobs, jobsLoader, Locations, loginAction, openShiftsLoader, ProfileScreen, RecurringJobDetail, recurringJobDetailLoader, RecurringJobs, recurringJobsLoader, ReportLayout, ReportsOverviewPage, ReportsPayrollPage, ReportsTimesheetsPage, ReportsPerformancePage, Settings, settingsLoader, signupAction, singleJobLoader, singleWorkerJobLoader, SuspendedAccountPage, Team, teamLoader, workerLoader, WorkerProfile, workerProfileLoader, workerStatsLoader, Workers, workersLoader, CheckOutSettings, ChangePlanSettings, Notifications } from "../pages";
 
 export const router = createBrowserRouter([
     {
@@ -60,6 +60,9 @@ export const router = createBrowserRouter([
                     {
                         path: "dashboard",
                         element: <Navigate to="/" replace />,
+                    }, {
+                        path: "notifications",
+                        element: <Notifications />
                     },
                     {
                         path: "create-job",

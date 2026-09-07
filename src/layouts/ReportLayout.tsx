@@ -12,7 +12,10 @@ export interface DateRange {
 
 // Placeholder until a real "reports summary" endpoint exists — shape is a
 // guess at what several report pages might all want (e.g. total hours,
-// jobs completed), not a contract anything currently relies on.
+// jobs completed), not a contract anything currently relies on. Each report
+// page already fetches its own real data from /reports/* individually
+// (see utils/reports.ts); this would only matter if a shared summary ever
+// got pulled up into this layout instead.
 export interface ReportsSummary {
   totalHours?: number
   jobsCompleted?: number
@@ -23,18 +26,20 @@ export interface ReportsOutletContext {
   dateRange: DateRange
   setDateRange: React.Dispatch<React.SetStateAction<DateRange>>
   // Intentionally always undefined/false for now — there's no shared
-  // summary endpoint yet (every report page still reads from mockData).
-  // Wiring one in later only means filling these in here; child pages
-  // that already destructure them need no changes.
+  // summary endpoint yet. Wiring one in later only means filling these in
+  // here; child pages that already destructure them need no changes.
   sharedSummary?: ReportsSummary
   isSummaryLoading: boolean
 }
 
-const MONTH_OPTIONS = [
-  { label: 'July 2025', month: '2025-07' },
-  { label: 'June 2025', month: '2025-06' },
-  { label: 'May 2025', month: '2025-05' },
-] as const
+// Last 6 months, current month first — was a hardcoded July/June/May 2025
+// list left over from when this page read from mockData, so it silently
+// pointed at an empty window (and every stat showed 0) the moment "now"
+// moved past July 2025.
+const MONTH_OPTIONS = Array.from({ length: 6 }, (_, i) => {
+  const m = dayjs().subtract(i, 'month')
+  return { label: m.format('MMMM YYYY'), month: m.format('YYYY-MM') }
+})
 
 const monthToRange = (month: string): DateRange => ({
   start: dayjs(month, 'YYYY-MM').startOf('month').format('YYYY-MM-DD'),

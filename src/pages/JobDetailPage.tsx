@@ -549,6 +549,111 @@ export function JobDetail() {
                 {/* Left — 2 cols */}
                 <div className="lg:col-span-2 flex flex-col gap-5">
 
+                    {/* Overtime review — surfaced here unconditionally (not gated behind
+                        the "Approve & Complete" sheet below) because most jobs now
+                        auto-complete the instant every worker clocks out, regardless of
+                        overtimeStatus. Without this, a flagged shift on an already-
+                        "completed" job had no reachable UI to approve/adjust/reject it. */}
+                    {pendingOvertimeWorkers.length > 0 && (
+                        <Card className="border-amber-200 bg-amber-50/60">
+                            <div className="px-5 pt-5 pb-4 border-b border-amber-200/70 flex items-center gap-2.5">
+                                <Flag size={14} className="text-amber-600 shrink-0" />
+                                <div>
+                                    <h3 className="text-sm font-semibold text-amber-800">
+                                        {pendingOvertimeWorkers.length} worker{pendingOvertimeWorkers.length > 1 ? 's' : ''} need overtime review
+                                    </h3>
+                                    <p className="text-xs text-amber-700/80 mt-0.5">
+                                        Clocked time ran past the scheduled shift — approve, adjust, or reject the extra time below.
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="p-5 flex flex-col gap-3">
+                                {pendingOvertimeWorkers.map(w => {
+                                    const scheduledMinutes = job?.minutes ?? 0
+                                    const actual = w.actualMinutes ?? getWorkerMinutes(w)
+                                    const over = w.overtimeMinutes || Math.max(0, actual - scheduledMinutes)
+                                    const isAdjusting = adjustingId === w._id
+                                    return (
+                                        <div key={w._id} className="bg-white border border-amber-200 rounded-xl p-3.5 flex flex-col gap-2.5">
+                                            <div className="flex items-center gap-2 min-w-0">
+                                                <Avatar initials={getInitials(w.fullname)} size="sm" index={0} />
+                                                <div className="min-w-0">
+                                                    <p className="text-sm font-semibold text-slate-800 truncate">{w.fullname}</p>
+                                                    <p className="text-[11px] text-amber-700">
+                                                        Worked {formatDuration(actual)} · scheduled {formatDuration(scheduledMinutes)} · +{formatDuration(over)} over
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            {(w.clockOutNote || w.clockOutReason) && (
+                                                <p className="text-[11px] text-slate-600 bg-amber-50 border border-amber-100 rounded-lg px-2.5 py-1.5">
+                                                    <span className="font-semibold">Worker's note: </span>
+                                                    {w.clockOutNote || CLOCK_OUT_REASON_LABELS[w.clockOutReason ?? ''] || w.clockOutReason}
+                                                </p>
+                                            )}
+
+                                            {isAdjusting ? (
+                                                <div className="flex items-center gap-2">
+                                                    <input
+                                                        type="number"
+                                                        step="0.25"
+                                                        min="0"
+                                                        autoFocus
+                                                        value={adjustHours}
+                                                        onChange={e => setAdjustHours(e.target.value)}
+                                                        placeholder="Hours to pay"
+                                                        className="h-8 flex-1 min-w-0 px-2.5 border border-amber-300 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-amber-300"
+                                                    />
+                                                    <button
+                                                        onClick={() => {
+                                                            const hrs = parseFloat(adjustHours)
+                                                            if (!Number.isFinite(hrs) || hrs < 0) return
+                                                            overtimeMutation.mutate({ assignmentId: w._id!, decision: "adjust", approvedMinutes: Math.round(hrs * 60) })
+                                                        }}
+                                                        disabled={overtimeMutation.isPending || !adjustHours}
+                                                        className="h-8 px-3 rounded-lg bg-amber-600 text-white text-xs font-semibold hover:bg-amber-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0"
+                                                    >
+                                                        Save
+                                                    </button>
+                                                    <button
+                                                        onClick={() => setAdjustingId(null)}
+                                                        className="h-8 px-2 text-xs text-slate-500 hover:text-slate-700 shrink-0"
+                                                    >
+                                                        Cancel
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <div className="flex items-center gap-2">
+                                                    <button
+                                                        onClick={() => overtimeMutation.mutate({ assignmentId: w._id!, decision: "approve" })}
+                                                        disabled={overtimeMutation.isPending}
+                                                        className="flex-1 h-8 rounded-lg bg-emerald-500 text-white text-xs font-semibold hover:bg-emerald-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                                                    >
+                                                        Approve overtime
+                                                    </button>
+                                                    <button
+                                                        onClick={() => { setAdjustingId(w._id!); setAdjustHours((scheduledMinutes / 60).toFixed(2)) }}
+                                                        disabled={overtimeMutation.isPending}
+                                                        className="h-8 px-3 rounded-lg border border-amber-300 text-amber-700 text-xs font-semibold hover:bg-amber-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0"
+                                                    >
+                                                        Adjust
+                                                    </button>
+                                                    <button
+                                                        onClick={() => overtimeMutation.mutate({ assignmentId: w._id!, decision: "reject" })}
+                                                        disabled={overtimeMutation.isPending}
+                                                        className="h-8 px-3 rounded-lg border border-rose-200 text-rose-500 text-xs font-semibold hover:bg-rose-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0"
+                                                    >
+                                                        Reject
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                        </Card>
+                    )}
+
                     {/* Job info */}
                     <Card>
                         <div className="px-5 pt-5 pb-4 border-b border-[#E2E8F0]">
@@ -816,99 +921,16 @@ export function JobDetail() {
                                                 <h3 className="text-base font-bold text-slate-900 text-center mb-1">Approve this job?</h3>
                                                 <p className="text-sm text-slate-500 text-center mb-6">This will mark the job as completed and notify all workers. Hours will be submitted for payroll.</p>
 
-                                                {/* Overtime review — each flagged worker is resolved independently,
-                                                    so a clean worker never has to wait on a flagged one. */}
+                                                {/* The interactive approve/adjust/reject controls live in the
+                                                    always-visible card at the top of the page (reachable whether
+                                                    or not this job is already completed) — this just explains
+                                                    why the button below is disabled. */}
                                                 {pendingOvertimeWorkers.length > 0 && (
-                                                    <div className="mb-5 flex flex-col gap-3">
-                                                        <div className="flex items-center gap-1.5">
-                                                            <Flag size={12} className="text-amber-600" />
-                                                            <p className="text-xs font-bold text-amber-700 uppercase tracking-wide">
-                                                                {pendingOvertimeWorkers.length} worker{pendingOvertimeWorkers.length > 1 ? 's' : ''} over time — needs review
-                                                            </p>
-                                                        </div>
-                                                        {pendingOvertimeWorkers.map(w => {
-                                                            const scheduledMinutes = job?.minutes ?? 0
-                                                            const actual = w.actualMinutes ?? getWorkerMinutes(w)
-                                                            const over = w.overtimeMinutes || Math.max(0, actual - scheduledMinutes)
-                                                            const isAdjusting = adjustingId === w._id
-                                                            return (
-                                                                <div key={w._id} className="bg-amber-50 border border-amber-200 rounded-xl p-3.5 flex flex-col gap-2.5">
-                                                                    <div className="flex items-center gap-2 min-w-0">
-                                                                        <Avatar initials={getInitials(w.fullname)} size="sm" index={0} />
-                                                                        <div className="min-w-0">
-                                                                            <p className="text-sm font-semibold text-slate-800 truncate">{w.fullname}</p>
-                                                                            <p className="text-[11px] text-amber-700">
-                                                                                Worked {formatDuration(actual)} · scheduled {formatDuration(scheduledMinutes)} · +{formatDuration(over)} over
-                                                                            </p>
-                                                                        </div>
-                                                                    </div>
-
-                                                                    {(w.clockOutNote || w.clockOutReason) && (
-                                                                        <p className="text-[11px] text-slate-600 bg-white/70 border border-amber-100 rounded-lg px-2.5 py-1.5">
-                                                                            <span className="font-semibold">Worker's note: </span>
-                                                                            {w.clockOutNote || CLOCK_OUT_REASON_LABELS[w.clockOutReason ?? ''] || w.clockOutReason}
-                                                                        </p>
-                                                                    )}
-
-                                                                    {isAdjusting ? (
-                                                                        <div className="flex items-center gap-2">
-                                                                            <input
-                                                                                type="number"
-                                                                                step="0.25"
-                                                                                min="0"
-                                                                                autoFocus
-                                                                                value={adjustHours}
-                                                                                onChange={e => setAdjustHours(e.target.value)}
-                                                                                placeholder="Hours to pay"
-                                                                                className="h-8 flex-1 min-w-0 px-2.5 border border-amber-300 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-amber-300"
-                                                                            />
-                                                                            <button
-                                                                                onClick={() => {
-                                                                                    const hrs = parseFloat(adjustHours)
-                                                                                    if (!Number.isFinite(hrs) || hrs < 0) return
-                                                                                    overtimeMutation.mutate({ assignmentId: w._id!, decision: "adjust", approvedMinutes: Math.round(hrs * 60) })
-                                                                                }}
-                                                                                disabled={overtimeMutation.isPending || !adjustHours}
-                                                                                className="h-8 px-3 rounded-lg bg-amber-600 text-white text-xs font-semibold hover:bg-amber-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0"
-                                                                            >
-                                                                                Save
-                                                                            </button>
-                                                                            <button
-                                                                                onClick={() => setAdjustingId(null)}
-                                                                                className="h-8 px-2 text-xs text-slate-500 hover:text-slate-700 shrink-0"
-                                                                            >
-                                                                                Cancel
-                                                                            </button>
-                                                                        </div>
-                                                                    ) : (
-                                                                        <div className="flex items-center gap-2">
-                                                                            <button
-                                                                                onClick={() => overtimeMutation.mutate({ assignmentId: w._id!, decision: "approve" })}
-                                                                                disabled={overtimeMutation.isPending}
-                                                                                className="flex-1 h-8 rounded-lg bg-emerald-500 text-white text-xs font-semibold hover:bg-emerald-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                                                                            >
-                                                                                Approve overtime
-                                                                            </button>
-                                                                            <button
-                                                                                onClick={() => { setAdjustingId(w._id!); setAdjustHours((scheduledMinutes / 60).toFixed(2)) }}
-                                                                                disabled={overtimeMutation.isPending}
-                                                                                className="h-8 px-3 rounded-lg border border-amber-300 text-amber-700 text-xs font-semibold hover:bg-amber-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0"
-                                                                            >
-                                                                                Adjust
-                                                                            </button>
-                                                                            <button
-                                                                                onClick={() => overtimeMutation.mutate({ assignmentId: w._id!, decision: "reject" })}
-                                                                                disabled={overtimeMutation.isPending}
-                                                                                className="h-8 px-3 rounded-lg border border-rose-200 text-rose-500 text-xs font-semibold hover:bg-rose-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0"
-                                                                            >
-                                                                                Reject
-                                                                            </button>
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                            )
-                                                        })}
-                                                        <div className="h-px bg-slate-100" />
+                                                    <div className="mb-5 flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl px-3.5 py-3">
+                                                        <Flag size={13} className="text-amber-600 shrink-0" />
+                                                        <p className="text-xs text-amber-800">
+                                                            {pendingOvertimeWorkers.length} worker{pendingOvertimeWorkers.length > 1 ? 's' : ''} still need overtime review — resolve the flagged card{pendingOvertimeWorkers.length > 1 ? 's' : ''} above before approving.
+                                                        </p>
                                                     </div>
                                                 )}
 

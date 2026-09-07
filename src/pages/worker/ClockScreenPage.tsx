@@ -128,6 +128,9 @@ export default function ClockScreen() {
     Math.max((elapsedSeconds / totalSeconds) * 100, 0),
     100
   );
+  // Scheduled shift duration is a target, not a cap — once actual elapsed
+  // time runs past it, flip the ring to rose so it's obvious at a glance.
+  const isOverTime = totalSeconds > 0 && elapsedSeconds > totalSeconds
   const clockState: ClockState = doneSnapshot ? 'done' : openBreak ? 'break' : 'working'
 
   const startBreak = async () => {
@@ -239,7 +242,7 @@ export default function ClockScreen() {
       <GradientBorder
         className=" w-full h-full bg-transparent py-0.5 "
         percentage={progress}
-        colors={['#0066ff', '#0066ff', '#0066ff']}
+        colors={isOverTime ? ['#fb7185', '#e11d48', '#fb7185'] : ['#0066ff', '#0066ff', '#0066ff']}
         animate={false}
         borderRadius={20}
         strokeWidth={2.5}
@@ -249,9 +252,12 @@ export default function ClockScreen() {
         lineCapStart="round"
         startPosition={0.0}
         antsDashWidth={1}
+        ants={isOverTime}
+        antsGapWidth={10}
+        antsSpeed={450}
       >
         <div className={`rounded-3xl p-7 text-center relative overflow-hidden transition-colors duration-500
-        ${clockState === 'working' ? 'bg-[#0F172A]' : clockState === 'break' ? 'bg-amber-900' : 'bg-[#0F172A]'}`}>
+        ${clockState === 'working' && isOverTime ? 'bg-gradient-to-b from-rose-950 to-[#0F172A]' : clockState === 'working' ? 'bg-[#0F172A]' : clockState === 'break' ? 'bg-amber-900' : 'bg-[#0F172A]'}`}>
           {/* Pattern */}
           <div className="absolute inset-0 opacity-[0.03]"
             style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1.5px, transparent 0)', backgroundSize: '22px 22px' }} />
@@ -261,8 +267,10 @@ export default function ClockScreen() {
             <div className="flex items-center justify-center gap-2 mb-4">
               {clockState === 'working' && (
                 <>
-                  <span className="w-2 h-2 bg-emerald-400 rounded-full pulse-dot" />
-                  <p className="text-xs font-semibold text-white/50 uppercase tracking-widest">Recording Hours</p>
+                  <span className={`w-2 h-2 rounded-full pulse-dot ${isOverTime ? 'bg-rose-400' : 'bg-emerald-400'}`} />
+                  <p className={`text-xs font-semibold uppercase tracking-widest ${isOverTime ? 'text-rose-400/90' : 'text-white/50'}`}>
+                    {isOverTime ? 'Over Scheduled Time' : 'Recording Hours'}
+                  </p>
                 </>
               )}
               {clockState === 'break' && (

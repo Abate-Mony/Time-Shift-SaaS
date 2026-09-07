@@ -778,3 +778,94 @@ export const getAnalytics = async (range: AnalyticsRange): Promise<AnalyticsResp
     const { data } = await customFetch.get<AnalyticsResponse>("/analytics", { params: { range } })
     return data
 }
+
+// ─────────────────────────────────────────────
+// Admin/manager dashboard
+// ─────────────────────────────────────────────
+
+export interface DashboardStatsJob {
+    _id: string
+    title: string
+    location: string
+    startTime: string
+    endTime: string
+    status: string
+    priority?: string
+    requiredWorkers?: number
+}
+
+export interface DashboardStatsActivity {
+    _id: string
+    type: string
+    actor?: { _id: string; fullname: string } | null
+    job?: { _id: string; title: string } | null
+    createdAt: string
+}
+
+export interface DashboardStatsResponse {
+    stats: {
+        todaysJobs: { count: number; inProgress: number; deltaFromYesterday: number }
+        workersActive: { active: number; total: number }
+        hoursThisWeek: { total: number; target: number }
+        jobsCompleted: { thisMonth: number; deltaPercent: number | null }
+    }
+    hoursByDay: { day: string; hours: number }[]
+    workingNow: {
+        assignmentId: string
+        worker: { _id: string; fullname: string } | null
+        job: { _id: string; title: string; location: string; startTime: string; endTime: string } | null
+        checkedInAt: string
+    }[]
+    todaysJobs: DashboardStatsJob[]
+    recentActivity: DashboardStatsActivity[]
+    attentionNeeded: { jobId: string; title: string } | null
+    pendingOvertime: {
+        count: number
+        items: {
+            assignmentId: string
+            jobId?: string
+            jobTitle?: string
+            workerName?: string
+            overtimeMinutes?: number
+        }[]
+    }
+}
+
+export const getDashboardStats = async (): Promise<DashboardStatsResponse> => {
+    const { data } = await customFetch.get<DashboardStatsResponse>("/users/dashboardstats")
+    return data
+}
+
+// ─────────────────────────────────────────────
+// Notifications
+// ─────────────────────────────────────────────
+
+export interface NotificationItem {
+    _id: string
+    type: string
+    title: string
+    body: string
+    link: string | null
+    isRead: boolean
+    createdAt: string
+}
+
+export interface NotificationsResponse {
+    notifications: NotificationItem[]
+    page: number
+    totalPages: number
+    total: number
+}
+
+export const getNotifications = async (page: number): Promise<NotificationsResponse> => {
+    const { data } = await customFetch.get<NotificationsResponse>("/notifications", { params: { page, limit: 20 } })
+    return data
+}
+
+export const markNotificationRead = async (id: string): Promise<void> => {
+    await customFetch.patch(`/notifications/${id}/read`)
+}
+
+export const markAllNotificationsRead = async (): Promise<void> => {
+    await customFetch.patch("/notifications/read-all")
+}

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Sidebar } from '../components/Sidebar'
 import { TopBar } from '../components/TopBar'
 import { WorkerApp } from '../pages/WorkerApp'
@@ -8,6 +8,8 @@ import customFetch from '@/utils/customFetch'
 import { useQuery, type InfiniteQueryObserverBaseResult, type QueryClient } from '@tanstack/react-query'
 import ScrollToTop from '@/utils/scroll-to-top'
 import type { User } from '@/utils/types'
+import { ensureNotificationPermission } from '@/utils/notifications'
+import { ensurePushSubscription } from '@/utils/pushSubscription'
 export interface iUser extends User {
     company: {
         plan: string,
@@ -77,6 +79,19 @@ export default function DashboardLayout() {
     });
     const { data } = useQuery(userQuery)
     const user = data?.user as iUser
+
+    // Best-effort top-up, same as the worker app: covers accounts that
+    // never subscribed (this admin/manager side never asked before), and
+    // subscriptions that silently dropped (cleared site data, reinstall).
+    // ensureNotificationPermission only actually shows the native prompt
+    // once per origin — a silent no-op on every load after that, granted or
+    // denied — so this is safe to run unconditionally on mount.
+    useEffect(() => {
+        ensureNotificationPermission().then(permission => {
+            if (permission === "granted") ensurePushSubscription().catch(() => { })
+        })
+    }, [])
+
     return (
         <>
             <ScrollToTop />
