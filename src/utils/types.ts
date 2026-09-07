@@ -1,6 +1,11 @@
 import type z from "zod";
-import type { createJobSchema, editProfileSchema, invoiceLineItemSchema, invoiceSchema } from "./schemas";
+import type { createJobSchema, editProfileSchema, invoiceLineItemSchema, invoiceSchema, Worker } from "./schemas";
 import type { ClientAddress, ClientContact, ClientStatus, ChargeType } from "./types/client";
+
+// A job/assignment's billable-unit state — fixed-price jobs track this on
+// the Job itself, hourly jobs track it per JobAssignment instead (see the
+// backend note on Job.billingStatus for why they're split).
+export type BillingStatus = "not_billable" | "pending" | "ready" | "invoiced";
 
 // A Job's `client` field: `createJobSchema.client` (below) is the plain
 // string _id a form submits, but a job read back from the API carries a
@@ -58,9 +63,14 @@ export type User = {
 //   push: true,
 //   sms: false,
 // };
-export type CreateJobForm = Omit<z.infer<typeof createJobSchema>, "client"> & {
+export type CreateJobForm = Omit<z.infer<typeof createJobSchema>, "client" | "workers"> & {
   // Overrides the schema's plain-string form value — see JobClientRef above.
   client?: JobClientRef | null;
+  // billingStatus/invoice aren't form fields — they're read-only state the
+  // API attaches to a saved job/assignment once invoicing has touched it.
+  workers: (Worker & { billingStatus?: BillingStatus; invoice?: string | null })[];
+  billingStatus?: BillingStatus;
+  invoice?: string | null;
 };
 // Payload shape sent to the API (post-transform: no empty-string gender).
 export type EditProfileForm = z.output<typeof editProfileSchema>;
@@ -74,13 +84,20 @@ export type InvoiceStatus = NonNullable<InvoiceForm["status"]>;
 // A line item as the server actually returns it — richer than the manual
 // form's {description, hours, rate}: `type` distinguishes fixed line items
 // (no meaningful "hours") from hourly ones, and job/assignment trace back
-// to the source work.
+// to the source work. date/startTime/endTime/location are a snapshot taken
+// at invoice creation — absent on adjustment lines and on legacy items
+// created before this shape existed (those render as a generic charge).
 export type InvoiceLineItemDisplay = InvoiceLineItem & {
   type?: "hourly" | "fixed" | "adjustment";
   quantity?: number;
   amount?: number;
   job?: string | null;
   assignment?: string | null;
+  date?: string | null;
+  startTime?: string | null;
+  endTime?: string | null;
+  location?: string | null;
+  workerName?: string | null;
 };
 
 export interface ClientSnapshot {
@@ -134,12 +151,24 @@ export interface EligibleWorkItem {
   date: string;
   startTime: string;
   endTime: string;
+  location: string;
   chargeType: "hourly" | "fixed";
   workerName?: string;
   approvedMinutes?: number;
   quantity: number;
   rate: number;
   amount: number;
+}
+
+// A completed shift held out of `items` because its overtime hasn't been
+// reviewed yet — no safe "approved" figure exists to bill until then.
+export interface PendingReviewItem {
+  jobId: string;
+  assignmentId: string;
+  title: string;
+  date: string;
+  workerName: string;
+  reason: "overtime_pending";
 }
 
 export interface EligibleWorkResponse {
@@ -154,7 +183,43 @@ export interface EligibleWorkResponse {
   };
   period: { start: string; end: string };
   items: EligibleWorkItem[];
+  pendingReview: PendingReviewItem[];
   summary: { jobs: number; assignments: number; totalMinutes: number; subtotal: number };
+}
+
+export interface BillingPeriodRange {
+  start: string;
+  end: string;
+}
+
+// Powers the "Billing schedule" panel on the create-invoice page — the
+// client's cadence, the period currently open for it (null for
+// per_job/manual clients, which have no fixed grouping window), and what
+// the last real invoice covered.
+export interface ClientBillingInfo {
+  success: boolean;
+  billingFrequency?: BillingFrequency;
+  billingDayOfWeek?: number;
+  billingDayOfMonth?: number;
+  paymentTermsDays: number;
+  currentPeriod: BillingPeriodRange | null;
+  lastInvoice: { invoiceNumber: string; issueDate: string; servicePeriod?: BillingPeriodRange } | null;
+}
+
+export interface InvoiceAdjustmentInput {
+  description: string;
+  type: "charge" | "discount";
+  amount: number;
+}
+
+// Live-joined onto GET /invoices/:id, not stored on the Invoice itself —
+// see the backend note on why company details aren't snapshotted the way
+// clientSnapshot is.
+export interface InvoiceCompanyInfo {
+  name: string;
+  phone?: string;
+  country?: string;
+  website?: string;
 }
 export type GeofenceMode = "off" | "warn" | "enforce";
 export type Currency = "GBP" | "USD" | "EUR";
@@ -231,6 +296,9 @@ export const ACTIVITY_TYPES = [
   "job_published",
   "job_cancelled",
   "workers_assigned",       // batch event — one entry even if multiple workers assigned at once
+  "assignment_claimed",
+  "assignment_claim_approved",
+  "assignment_claim_declined",
   "assignment_accepted",
   "assignment_declined",
   "assignment_checked_in",
@@ -238,6 +306,8 @@ export const ACTIVITY_TYPES = [
   "assignment_completed",
   "assignment_cancelled",
   "assignment_in_progress",
+  "assignment_overtime_flagged",
+  "assignment_overtime_reviewed",
   "note_added",
   "job_deleted",
   "job_completed",

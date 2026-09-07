@@ -88,23 +88,7 @@ export default function DashboardLayout() {
                     className="flex-1 flex flex-col min-w-0 transition-all duration-200"
                     style={{ marginLeft: isDesktop ? sidebarWidth : 0 }}
                 >
-                    {/* Mode switcher pill */}
-                    {/* <div className="fixed top-3 right-3 z-40">
-                    <div className="flex items-center gap-1 bg-white border border-[#E2E8F0] rounded-xl p-1 shadow-sm">
-                        <button
-                            onClick={() => setPage('dashboard')}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${page !== 'worker-app' ? 'bg-[#1E3A5F] text-white' : 'text-slate-500 hover:text-slate-700'}`}
-                        >
-                            Manager
-                        </button>
-                        <button
-                            onClick={() => setPage('worker-app')}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${page === 'worker-app' ? 'bg-[#1E3A5F] text-white' : 'text-slate-500 hover:text-slate-700'}`}
-                        >
-                            Worker
-                        </button>
-                    </div>
-                </div> */}
+                 
 
                     {page === 'worker-app' ? (
                         <div className="flex-1 overflow-y-auto">
@@ -113,7 +97,7 @@ export default function DashboardLayout() {
                     ) : (
                         <>
                             <TopBar
-                                onNewJob={() => navigate('create-job')}
+                                onNewJob={() => navigate('/create-job')}
                                 onToggleSidebar={() => setSidebarCollapsed(c => !c)}
                                 onNavigate={navigate}
                             />

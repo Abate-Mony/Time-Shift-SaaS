@@ -148,7 +148,7 @@ export const jobsColumns: ColumnDef<CreateJobForm>[] = [
           onClick={(e) => e.stopPropagation()}
         >
           <p className="text-sm font-medium text-slate-800">
-            {formatDate(date, "dd MMMM")}
+            {formatDate(date, 'dddd D MMMM YYYY')}
           </p>
           <div className="flex items-center gap-1 text-xs text-slate-500 mt-0.5">
             <Clock className="h-3 w-3" />
@@ -345,7 +345,7 @@ export const invoiceColumns: ColumnDef<Invoice>[] = [
     accessorKey: "issueDate",
     header: "Issue Date",
     cell: ({ row }) => (
-      <span className="text-sm text-slate-600">{formatDate(row.original.issueDate, "dd MMMM yyyy")}</span>
+      <span className="text-sm text-slate-600">{formatDate(row.original.issueDate, "dddd D MMMM YYYY")}</span>
     ),
   },
 
@@ -353,7 +353,7 @@ export const invoiceColumns: ColumnDef<Invoice>[] = [
     accessorKey: "dueDate",
     header: "Due Date",
     cell: ({ row }) => (
-      <span className="text-sm text-slate-600">{formatDate(row.original.dueDate, "dd MMMM yyyy")}</span>
+      <span className="text-sm text-slate-600">{formatDate(row.original.dueDate, "dddd D MMMM YYYY")}</span>
     ),
   },
 

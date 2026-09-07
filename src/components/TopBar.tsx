@@ -1,6 +1,7 @@
 import { Search, Bell, Plus, PanelLeft, Menu } from 'lucide-react'
 import { Button } from './ui/button'
 import { Link } from 'react-router'
+import SearchComponent from './Search'
 
 interface TopBarProps {
   onNewJob: () => void
@@ -19,20 +20,15 @@ export function TopBar({ onNewJob, onToggleSidebar, onNavigate }: TopBarProps) {
       </button>
 
       {/* Search */}
-      <div className="relative flex-1 max-w-md">
-        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-        <input
-          type="text"
-          placeholder="Search jobs, workers, locations..."
-          className="w-full h-9 pl-9 pr-4 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all"
-        />
-        <kbd className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-mono bg-white border border-slate-200 rounded px-1.5 py-0.5">⌘K</kbd>
+      <div className="relative flex-1 max-w-md items-center item-center flex">
+       
+        <SearchComponent placeholder='search jobs,workers,invoices,location,users ' containerClassName='my-2'/>
       </div>
 
       <div className="flex items-center gap-2 ml-auto">
 
         <button
-          onClick={() => onNavigate('notifications')}
+          onClick={() => onNavigate('/notifications')}
           className="relative w-9 h-9 rounded-lg flex items-center justify-center text-slate-500 hover:bg-slate-100 transition-colors"
         >
           <Bell size={16} />

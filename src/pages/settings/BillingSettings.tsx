@@ -1,11 +1,13 @@
 import { Button } from '@/components/ui/button'
 import type { iUser } from '@/layouts/dashboardlayout'
+import { CURRENT_PLAN_ID, PLANS } from '@/utils/constants/plant'
 import { Check, Lock } from 'lucide-react'
-import { useOutletContext } from 'react-router'
+import { useNavigate, useOutletContext } from 'react-router'
 
 export default function BillingSettings() {
     const { user } = useOutletContext<{ user: iUser }>()
     const isAdmin = user?.role === 'admin'
+    const navigate = useNavigate()
 
     if (!isAdmin) {
         return (
@@ -18,6 +20,10 @@ export default function BillingSettings() {
         )
     }
 
+    // Same source of truth the plan picker (ChangePlanSettings) uses, so this
+    // badge and "your current plan" over there can't silently disagree.
+    const currentPlan = PLANS.find(p => p.id === CURRENT_PLAN_ID)
+
     return (
         <div className="p-6 max-w-3xl mx-auto animate-fade-in flex flex-col gap-4">
             <div className="bg-white rounded-xl border border-[#E2E8F0] p-6 min-w-0">
@@ -26,9 +32,14 @@ export default function BillingSettings() {
                         <h3 className="text-sm font-semibold text-slate-800">Current Plan</h3>
                         <p className="text-xs text-slate-500 mt-0.5">Billed monthly</p>
                     </div>
-                    <span className="bg-[#1E3A5F] text-white text-xs font-semibold px-3 py-1 rounded-full shrink-0">Enterprise</span>
+                    <span className="bg-[#1E3A5F] text-white text-xs font-semibold px-3 py-1 rounded-full shrink-0">
+                        {currentPlan?.name ?? 'Enterprise'}
+                    </span>
                 </div>
                 <div className="flex items-end gap-1 mb-4">
+                    {/* This company's actual negotiated rate — Enterprise itself is
+                        "Custom" pricing in PLANS, so this number is deliberately its
+                        own thing, not derived from that tier's public price. */}
                     <span className="text-3xl font-bold text-slate-900">£149</span>
                     <span className="text-slate-500 text-sm mb-1">/month</span>
                 </div>
@@ -41,7 +52,9 @@ export default function BillingSettings() {
                     ))}
                 </div>
                 <div className="flex gap-3">
-                    <Button variant="outline" size="sm">Change Plan</Button>
+                    <Button variant="outline" size="sm" onClick={() => navigate('/settings/billing/plans')}>
+                        Change Plan
+                    </Button>
                     <Button variant="destructive" size="sm">Cancel Subscription</Button>
                 </div>
             </div>

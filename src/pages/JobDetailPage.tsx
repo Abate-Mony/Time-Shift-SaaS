@@ -78,6 +78,11 @@ export const recordFormatUI: Record<ActivityType, { icon: LucideIcon; className:
     workers_assigned: { icon: Users, className: "bg-violet-500", label: "assigned workers" },
     worker_unassigned: { icon: UserMinus, className: "bg-orange-500", label: "removed a worker" },
 
+    // ── Open shifts ────────────────────────────────────────────────
+    assignment_claimed: { icon: Users, className: "bg-violet-400", label: "claimed this shift" },
+    assignment_claim_approved: { icon: CheckCircle2, className: "bg-emerald-500", label: "approved the claim" },
+    assignment_claim_declined: { icon: XOctagon, className: "bg-red-400", label: "declined the claim" },
+
     // ── Worker responses ───────────────────────────────────────────
     assignment_accepted: { icon: CheckCircle2, className: "bg-emerald-500", label: "accepted" },
     assignment_declined: { icon: XOctagon, className: "bg-red-400", label: "declined" },
@@ -91,6 +96,8 @@ export const recordFormatUI: Record<ActivityType, { icon: LucideIcon; className:
     assignment_completed: { icon: CheckCircle2, className: "bg-emerald-600", label: "completed the shift" },
     assignment_cancelled: { icon: Ban, className: "bg-slate-500", label: "assignment cancelled" },
     assignment_auto_completed: { icon: Bot, className: "bg-slate-400", label: "auto-completed by system" },
+    assignment_overtime_flagged: { icon: TriangleAlert, className: "bg-orange-500", label: "flagged overtime for review" },
+    assignment_overtime_reviewed: { icon: Flag, className: "bg-slate-500", label: "reviewed overtime" },
 
     // ── Misc ───────────────────────────────────────────────────────
     note_added: { icon: StickyNote, className: "bg-sky-500", label: "added a note" },
@@ -235,6 +242,26 @@ export function JobDetail() {
     const navigate = useNavigate()
     const onNavigate = (path: string) => navigate(path)
     const job = useQuery(singleJob(id))?.data?.job!
+
+    // Which invoice(s), if any, already cover this job's billable work.
+    // Fixed-price jobs track billing on the Job itself; hourly jobs track it
+    // per-worker on their JobAssignment instead (two workers' hours can even
+    // end up on different invoices), so those are grouped by invoice id and
+    // labelled with whichever worker(s) they cover.
+    const invoiceLinks = job?.chargeType === 'fixed'
+        ? (job.billingStatus === 'invoiced' && job.invoice ? [{ invoiceId: job.invoice, label: 'View Invoice' }] : [])
+        : (() => {
+            const byInvoice = new Map<string, string[]>()
+            for (const w of job?.workers ?? []) {
+                if (w.billingStatus === 'invoiced' && w.invoice) {
+                    byInvoice.set(w.invoice, [...(byInvoice.get(w.invoice) ?? []), w.fullname])
+                }
+            }
+            return Array.from(byInvoice.entries()).map(([invoiceId, names]) => ({
+                invoiceId,
+                label: byInvoice.size > 1 ? `View Invoice — ${names.join(', ')}` : 'View Invoice',
+            }))
+        })()
     const { data, isLoading } = useQuery({
         queryKey: ["activity", id],
         queryFn: async (): Promise<any> => {
@@ -737,12 +764,24 @@ export function JobDetail() {
                                         <CheckCircle2 size={14} className="text-emerald-600" />
                                         <span className="text-sm font-semibold text-emerald-700">Job Approved</span>
                                     </div>
-                                    <button
-                                        onClick={() => onNavigate(`/invoices/new?jobId=${id}`)}
-                                        className="w-full h-10 rounded-xl bg-[#1E3A5F] text-white text-sm font-semibold hover:bg-[#162D4A] transition-colors flex items-center justify-center gap-2 shadow-sm shadow-[#1E3A5F]/20"
-                                    >
-                                        <Receipt size={13} /> Generate Invoice
-                                    </button>
+                                    {invoiceLinks.length > 0 ? (
+                                        invoiceLinks.map(({ invoiceId, label }) => (
+                                            <button
+                                                key={invoiceId}
+                                                onClick={() => onNavigate(`/invoices/${invoiceId}`)}
+                                                className="w-full h-10 rounded-xl bg-white border border-[#1E3A5F]/20 text-[#1E3A5F] text-sm font-semibold hover:bg-[#1E3A5F]/5 transition-colors flex items-center justify-center gap-2"
+                                            >
+                                                <Receipt size={13} /> {label}
+                                            </button>
+                                        ))
+                                    ) : (
+                                        <button
+                                            onClick={() => onNavigate(`/invoices/new?jobId=${id}`)}
+                                            className="w-full h-10 rounded-xl bg-[#1E3A5F] text-white text-sm font-semibold hover:bg-[#162D4A] transition-colors flex items-center justify-center gap-2 shadow-sm shadow-[#1E3A5F]/20"
+                                        >
+                                            <Receipt size={13} /> Generate Invoice
+                                        </button>
+                                    )}
                                 </>
                             ) :
                                 <>

@@ -1,20 +1,24 @@
 import AnimatedHeadLessUi from '@/components/animated-headless-ui'
 import DataTable from '@/components/JobsTable'
-import SearchComponent from '@/components/Search'
+import { ActiveFiltersBar } from '@/components/ui/ActiveFiltersBar'
+import { Button } from '@/components/ui/button'
+import { Calendar } from '@/components/ui/calendar'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Field, FieldLabel } from '@/components/ui/field'
 import FilterButton from '@/components/ui/FilterButton'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useFilter } from '@/hooks/CustomLinkFilterHook'
 import { queryClient } from '@/lib/queryClient'
 import { cn } from '@/lib/utils'
-import { jobsColumns } from '@/utils/columns'
 import { clientsQuery } from '@/utils/clients'
+import { jobsColumns } from '@/utils/columns'
 import customFetch from '@/utils/customFetch'
+import { formatDate } from '@/utils/date'
 import type { CreateJobForm } from '@/utils/types'
 import { useQuery, type QueryClient } from '@tanstack/react-query'
-import { ChevronLeft, ChevronRight, Filter } from 'lucide-react'
+import { CalendarIcon, ChevronLeft, ChevronRight, Filter } from 'lucide-react'
 import { useState } from 'react'
 import toast from 'react-hot-toast'
 import { useLoaderData, useNavigate, type LoaderFunctionArgs, type Params } from 'react-router'
@@ -89,7 +93,7 @@ export function Jobs() {
     { id: 'draft', label: 'Draft', },
   ]
   // console.log("jobs obj : ", jobs)
-const [hoverIndex,setHoverIndex]=useState<number | null>(0)
+  const [hoverIndex, setHoverIndex] = useState<number | null>(0)
 
   const [filterOpen, setFilterOpen] = useState(false)
   const { handleFilterChange, handleFiltersChange, searchQuery } = useFilter()
@@ -107,9 +111,10 @@ const [hoverIndex,setHoverIndex]=useState<number | null>(0)
   const activeFilterCount = [clientFilter, priorityFilter, startFilter, endFilter, unassignedOnly ? 'x' : '']
     .filter(Boolean).length
 
-  // Lazy — only fetched once the filter panel is actually opened, same
-  // pattern as other on-demand option lists in this app.
-  const { data: filterClients } = useQuery({ ...clientsQuery(), enabled: filterOpen })
+  // Lazy — only fetched once the filter panel is actually opened, or if a
+  // client filter is already active on load (the ActiveFiltersBar below
+  // needs the name to show something better than a raw id).
+  const { data: filterClients } = useQuery({ ...clientsQuery(), enabled: filterOpen || !!clientFilter })
 
   // Omitting the key entirely for page 1 (rather than writing "1") keeps the
   // URL clean for the common case and matches every other filter here, which
@@ -138,17 +143,17 @@ const [hoverIndex,setHoverIndex]=useState<number | null>(0)
 
   return (
     <div className=" animate-fade-in">
-    
+
 
 
       <div className="flex items-center gap-1 gap-x-0 border-b flex-wrap border-[#E2E8F0]">
         {tabs.map((tab, idx) => (
           <AnimatedHeadLessUi
-          animatedClassName='bg-black/5 p-0 rounded-sm'
-          className='flex items-center'
-          hoverIndex={hoverIndex}
-          setHoverIndex={setHoverIndex}
-              layoutId='animated-job-filter-button'
+            animatedClassName='bg-black/5 p-0 rounded-sm'
+            className='flex items-center'
+            hoverIndex={hoverIndex}
+            setHoverIndex={setHoverIndex}
+            layoutId='animated-job-filter-button'
             index={idx} >
             <FilterButton
               className=' mx-0 rounded-none flex justify-between'
@@ -158,13 +163,13 @@ const [hoverIndex,setHoverIndex]=useState<number | null>(0)
               layoutId='job-filter-button'
               show
             >
-            <span className='flex items-center justify-center'>
+              <span className='flex items-center justify-center'>
                 {tab.label}
-              <span className='ml-0.5
+                {/* <span className='ml-0.5
              rounded-full bg-black/5 p-2 text-xs size-2.5 flex items-center justify-center'>
-                {tab?.count ?? 0}
+                  {tab?.count ?? 0}
+                </span> */}
               </span>
-            </span>
 
             </FilterButton>
           </AnimatedHeadLessUi>
@@ -172,7 +177,7 @@ const [hoverIndex,setHoverIndex]=useState<number | null>(0)
       </div>
       {/* Filters row */}
       <div className="flex items-center gap-3 mt-4 mb-5 relative">
-        <SearchComponent />
+
 
         <div className="relative">
           <button
@@ -232,25 +237,6 @@ const [hoverIndex,setHoverIndex]=useState<number | null>(0)
                 </Select>
               </div>
 
-              <div className="flex flex-col gap-1.5">
-                <Label className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Date range</Label>
-                <div className="flex items-center gap-2">
-                  <Input
-                    type="date"
-                    value={startFilter}
-                    onChange={e => handleFilterChange({ key: 'start', value: e.target.value })}
-                    className="h-9"
-                  />
-                  <span className="text-slate-400 text-xs shrink-0">to</span>
-                  <Input
-                    type="date"
-                    value={endFilter}
-                    onChange={e => handleFilterChange({ key: 'end', value: e.target.value })}
-                    className="h-9"
-                  />
-                </div>
-              </div>
-
               <Label className="flex items-center gap-2 cursor-pointer font-normal">
                 <Checkbox
                   checked={unassignedOnly}
@@ -300,7 +286,80 @@ const [hoverIndex,setHoverIndex]=useState<number | null>(0)
             <SelectItem value="200">200 per page</SelectItem>
           </SelectContent>
         </Select>
+        <Field className="w-auto">
+          <FieldLabel htmlFor="date-picker-range" className="sr-only">Date range</FieldLabel>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                id="date-picker-range"
+                className="h-9 justify-start px-2.5 font-normal text-sm text-slate-600"
+              >
+                <CalendarIcon size={14} />
+                {startFilter ? (
+                  endFilter && endFilter !== startFilter ? (
+                    <>
+                      {formatDate(startFilter, "DD/MM/YYYY")} – {formatDate(endFilter, "DD/MM/YYYY")}
+                    </>
+                  ) : (
+                    formatDate(startFilter, "DD/MM/YYYY")
+                  )
+                ) : (
+                  <span>Date range</span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+              className="rounded-md border w-[min(400px,calc(100vw-2rem))] sm:w-[min(800px,calc(100vw-4rem))]"
+                mode="range"
+                defaultMonth={startFilter ? new Date(startFilter) : undefined}
+                selected={startFilter ? { from: new Date(startFilter), to: new Date(endFilter || startFilter) } : undefined}
+                onSelect={(range) => handleFiltersChange({
+                  // ISO (hyphens), not the DD/MM/YYYY shown in the trigger
+                  // button above — this is the wire value the backend's
+                  // toUtcDay() parses (jobController.ts's getAllJobs), which
+                  // builds `${value}T00:00:00.000Z` and needs real ISO.
+                  start: range?.from ? formatDate(range.from, "YYYY-MM-DD") : null,
+                  end: range?.to ? formatDate(range.to, "YYYY-MM-DD") : null,
+                })}
+                numberOfMonths={2}
+              />
+            </PopoverContent>
+          </Popover>
+        </Field>
       </div>
+
+      <ActiveFiltersBar
+        className="mb-4"
+        filters={[
+          {
+            // The "All Jobs" tab writes status=all itself (see FilterButton),
+            // so that value is a real, present param but isn't actually a
+            // filter — must not show a "Status: All" chip that can never be
+            // cleared back to a state the tab bar would recognize as "All".
+            keys: 'status',
+            isActive: ([s]) => !!s && s !== 'all',
+            format: ([s]) => (s ?? '').replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+          },
+          {
+            keys: 'client',
+            format: ([id]) => filterClients?.clients.find(c => c._id === id)?.name ?? id ?? '',
+          },
+          'priority',
+          'limit',
+          'sort',
+          {
+            keys: ['start', 'end'],
+            label: 'Date range',
+            format: ([start, end]) =>
+              start && end && end !== start
+                ? `${formatDate(start, 'D MMM')} – ${formatDate(end, 'D MMM')}`
+                : formatDate(start ?? end ?? undefined, 'D MMM YYYY'),
+          },
+          { keys: 'unassigned', label: 'Staffing', format: () => 'No workers assigned' },
+        ]}
+      />
 
       <DataTable
         columns={jobsColumns}

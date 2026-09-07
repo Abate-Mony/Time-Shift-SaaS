@@ -72,13 +72,17 @@ export function InvoiceForm() {
                 issueDate: dayjs().format('YYYY-MM-DD'),
                 dueDate: dayjs().add(14, 'day').format('YYYY-MM-DD'),
                 notes: '',
-                lineItems: job?.workers?.length
-                    ? job.workers.map(w => ({
-                        description: w.fullname,
-                        hours: w.hoursWorked || 0,
-                        rate: w.payRate || 0,
-                    }))
-                    : [{ description: job?.title ?? '', hours: 0, rate: 0 }],
+                // One line for the job's client-facing charge — never the
+                // worker's name or internal pay rate, which is what this
+                // used to prefill here and would leak payroll data onto a
+                // client-facing invoice.
+                lineItems: job?.chargeType === 'fixed'
+                    ? [{ description: job.title ?? '', hours: 1, rate: job.chargeAmount || 0 }]
+                    : [{
+                        description: job?.title ?? '',
+                        hours: job?.workers?.reduce((sum, w) => sum + (w.hoursWorked || 0), 0) || 0,
+                        rate: job?.chargeRate || 0,
+                    }],
             },
     })
 
@@ -196,26 +200,56 @@ export function InvoiceForm() {
                         </Button>
                     </div>
 
+                    <div className="grid grid-cols-[2fr_1fr_1fr_1fr_auto] gap-3 px-0.5 mb-1">
+                        <span className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Job</span>
+                        <span className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Hours</span>
+                        <span className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Client rate</span>
+                        <span className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Amount</span>
+                        <span />
+                    </div>
                     <div className="flex flex-col gap-3">
                         {fields.map((field, index) => {
                             const hours = Number(lineItems?.[index]?.hours) || 0
                             const rate = Number(lineItems?.[index]?.rate) || 0
+                            // The first line reflects the job being invoiced — its
+                            // description is the job's own title (not free text)
+                            // and, for a fixed-price job, hours is locked at 1 (no
+                            // meaningful hourly figure to enter). Extra manually
+                            // added lines below it stay fully free-form.
+                            const isJobRow = !isEditing && !!job && index === 0
+                            const isFixedJobRow = isJobRow && job?.chargeType === 'fixed'
                             return (
                                 <div key={field.id} className="grid grid-cols-[2fr_1fr_1fr_1fr_auto] gap-3 items-start">
                                     <div>
-                                        <Input
-                                            placeholder="Description"
-                                            {...register(`lineItems.${index}.description` as const)}
-                                            className={cn(errors.lineItems?.[index]?.description && 'border-red-500!')}
-                                        />
+                                        {isJobRow ? (
+                                            <>
+                                                <p className="h-9 flex items-center px-3 text-sm text-slate-700 bg-slate-50 border border-[#E2E8F0] rounded-lg truncate">
+                                                    {job?.title}
+                                                </p>
+                                                <input type="hidden" {...register(`lineItems.${index}.description` as const)} />
+                                            </>
+                                        ) : (
+                                            <Input
+                                                placeholder="Description"
+                                                {...register(`lineItems.${index}.description` as const)}
+                                                className={cn(errors.lineItems?.[index]?.description && 'border-red-500!')}
+                                            />
+                                        )}
                                         <FieldError message={errors.lineItems?.[index]?.description?.message} />
                                     </div>
-                                    <Input
-                                        type="number"
-                                        step="0.5"
-                                        placeholder="Hours"
-                                        {...register(`lineItems.${index}.hours` as const, { valueAsNumber: true })}
-                                    />
+                                    {isFixedJobRow ? (
+                                        <>
+                                            <p className="h-9 flex items-center px-3 text-sm text-slate-500 bg-slate-50 border border-[#E2E8F0] rounded-lg">Fixed</p>
+                                            <input type="hidden" {...register(`lineItems.${index}.hours` as const, { valueAsNumber: true })} />
+                                        </>
+                                    ) : (
+                                        <Input
+                                            type="number"
+                                            step="0.5"
+                                            placeholder="Hours"
+                                            {...register(`lineItems.${index}.hours` as const, { valueAsNumber: true })}
+                                        />
+                                    )}
                                     <Input
                                         type="number"
                                         step="0.01"

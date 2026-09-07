@@ -2,7 +2,7 @@ import { queryClient } from "@/lib/queryClient";
 import { isAxiosError } from "axios";
 import toast from "react-hot-toast";
 import customFetch from "./customFetch";
-import type { CreateJobForm, EditProfileForm, EligibleWorkResponse, EventNotificationPreference, Invoice, InvoiceStatus, NotificationEvent, NotificationPreferences, TimesheetSummaryResponse } from "./types";
+import type { ClientBillingInfo, CreateJobForm, EditProfileForm, EligibleWorkResponse, EventNotificationPreference, Invoice, InvoiceAdjustmentInput, InvoiceCompanyInfo, InvoiceStatus, NotificationEvent, NotificationPreferences, TimesheetSummaryResponse } from "./types";
 import type {
     AccessLevel,
     AccountRestriction,
@@ -288,6 +288,15 @@ export const getEligibleWork = async ({
     return data;
 };
 
+// GET /invoices/billing-info?client= — the client's billing cadence, the
+// period currently open for it, and what the last invoice covered.
+export const getClientBillingInfo = async (client: string): Promise<ClientBillingInfo> => {
+    const { data } = await customFetch.get<ClientBillingInfo>("/invoices/billing-info", {
+        params: { client },
+    });
+    return data;
+};
+
 // POST /invoices/draft — creates a draft from selected eligible-work items.
 // The backend re-queries and recalculates from the ids alone; amounts are
 // never sent from here.
@@ -296,6 +305,7 @@ export const createInvoiceDraft = async ({
     servicePeriod,
     jobIds,
     assignmentIds,
+    adjustments,
     issueDate,
     dueDate,
     notes,
@@ -305,6 +315,7 @@ export const createInvoiceDraft = async ({
     servicePeriod: { start: string; end: string };
     jobIds?: string[];
     assignmentIds?: string[];
+    adjustments?: InvoiceAdjustmentInput[];
     issueDate?: string;
     dueDate?: string;
     notes?: string;
@@ -315,6 +326,7 @@ export const createInvoiceDraft = async ({
         servicePeriod,
         jobIds,
         assignmentIds,
+        adjustments,
         issueDate,
         dueDate,
         notes,

@@ -46,3 +46,5 @@ export { ClientDetailsContactsPage } from "./ClientDetails/ClientDetailsContacts
 export { ClientDetailsaJobsPage } from "./ClientDetails/ClientDetailsJobsPage"
 export { default as ClentBillingPage } from "./ClientDetails/ClientDetailsBillingPage"
 export { SuspendedAccountPage } from "./SuspendedAccountPage"
+export { default as CheckOutSettings } from "./settings/CheckOutSettings"
+export { default as ChangePlanSettings } from "./settings/ChangePlanSettings"
