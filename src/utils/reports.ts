@@ -84,3 +84,36 @@ export const reportsPerformanceQuery = (range: DateRange) => ({
     return data
   },
 })
+
+export type RevenueBasis = "invoiced" | "collected"
+
+export interface ReportsProfitabilityClientRow {
+  clientId: string
+  clientName: string
+  revenue: number
+  labourCost: number
+  profit: number
+  marginPercent: number
+}
+
+export interface ReportsProfitabilityResponse {
+  basis: RevenueBasis
+  summary: {
+    revenue: number
+    labourCost: number
+    grossProfit: number
+    marginPercent: number
+  }
+  trend: { label: string; revenue: number; profit: number }[]
+  byClient: ReportsProfitabilityClientRow[]
+}
+
+export const reportsProfitabilityQuery = (range: DateRange, basis: RevenueBasis, clientId?: string) => ({
+  queryKey: ["reports", "profitability", range, basis, clientId ?? "all"],
+  queryFn: async (): Promise<ReportsProfitabilityResponse> => {
+    const { data } = await customFetch.get("/reports/profitability", {
+      params: { ...range, basis, ...(clientId ? { clientId } : {}) },
+    })
+    return data
+  },
+})

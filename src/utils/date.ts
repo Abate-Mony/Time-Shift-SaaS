@@ -39,6 +39,26 @@ export function formatSecondsAsDuration(seconds: number): string {
     return formatDuration(seconds / 60)
 }
 
+// Pure schedule math — how far through its scheduled window a shift is right
+// now, based on the job's own date/startTime/endTime, not any one worker's
+// clock-in. Callers decide whether a bar should even render (only while at
+// least one assignment is actually "in-progress" — a shift scheduled for
+// later shouldn't show 0%, and one where everyone's clocked out shouldn't
+// keep animating).
+export function getShiftProgress(date: string | Date, startTime: string, endTime: string): { percent: number; isOverTime: boolean } {
+    const day = dayjs(date).format('YYYY-MM-DD')
+    const scheduledStart = dayjs(`${day} ${startTime}`)
+    let scheduledEnd = dayjs(`${day} ${endTime}`)
+    if (scheduledEnd.isBefore(scheduledStart)) scheduledEnd = scheduledEnd.add(1, 'day')
+
+    const totalSeconds = scheduledEnd.diff(scheduledStart, 'second')
+    const elapsedSeconds = Math.max(dayjs().diff(scheduledStart, 'second'), 0)
+    const percent = totalSeconds > 0 ? Math.min(100, Math.max(0, (elapsedSeconds / totalSeconds) * 100)) : 0
+    const isOverTime = totalSeconds > 0 && elapsedSeconds > totalSeconds
+
+    return { percent, isOverTime }
+}
+
 export function formatDate(date: string | Date | undefined, pattern = "ddd, D MMM"): string {
     if (!date) return "Date TBC"
     return dayjs(date).format(pattern)

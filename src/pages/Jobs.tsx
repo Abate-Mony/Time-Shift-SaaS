@@ -39,7 +39,7 @@ const jobsQuery = (params: Params) => {
         {
           search: search ?? '',
           status: status ?? 'all',
-          sort: sort ?? 'asc',
+          sort: sort ?? 'date_asc',
           page: page ?? 1,
           date: date ?? '',
           client: client ?? '',
@@ -87,9 +87,9 @@ export function Jobs() {
   }
   const tabs = [
     { id: 'all', label: 'All Jobs', count: jobs.length },
-    { id: 'in-progress', label: 'In Progress', count: jobs.filter(job => job.priority == "high").length },
-    { id: 'assigned', label: 'Assigned', },
+    { id: 'cancelled', label: 'Cancelled', },
     { id: 'completed', label: 'Completed', },
+    { id: 'published', label: 'Published', },
     { id: 'draft', label: 'Draft', },
   ]
   // console.log("jobs obj : ", jobs)
@@ -103,9 +103,9 @@ export function Jobs() {
   const unassignedOnly = searchQuery.get('unassigned') === 'true'
   const startFilter = searchQuery.get('start') ?? ''
   const endFilter = searchQuery.get('end') ?? ''
-  const sortValue = searchQuery.get('sort') ?? 'date_desc'
-  // Matches the backend's own default (jobController.ts's getAllJobs) when
-  // nothing is set, so this control reflects what's actually being applied.
+  // Both match the backend's own defaults (jobController.ts's getAllJobs)
+  // when nothing is set, so these controls reflect what's actually applied.
+  const sortValue = searchQuery.get('sort') ?? 'date_asc'
   const limitValue = searchQuery.get('limit') ?? '100'
 
   const activeFilterCount = [clientFilter, priorityFilter, startFilter, endFilter, unassignedOnly ? 'x' : '']

@@ -13,6 +13,7 @@ export { ReportsOverviewPage } from "./reports/ReportsOverviewPage"
 export { ReportsPayrollPage } from "./reports/ReportsPayrollPage"
 export { ReportsTimesheetsPage } from "./reports/ReportsTimesheetsPage"
 export { ReportsPerformancePage } from "./reports/ReportsPerformancePage"
+export { ReportsProfitabilityPage } from "./reports/ReportsProfitabilityPage"
 export { Notifications } from './Notifications'
 export { Settings, loader as settingsLoader } from './Settings'
 export { WorkerApp } from './WorkerApp'

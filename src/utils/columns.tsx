@@ -18,7 +18,7 @@ import toast from "react-hot-toast"
 import { AnimatedTooltip } from "@/components/ui/animated-tooltip"
 import { Checkbox } from "@/components/ui/checkbox"
 import { formatCurrency } from "./format"
-import { formatDate, formatDuration } from "./date"
+import { formatDate, formatDuration, getShiftProgress } from "./date"
 import { deleteInvoice, deleteJob, duplicateJob } from "./api-request-functions"
 import { useMutation } from "@tanstack/react-query"
 import dayjs from "dayjs"
@@ -200,6 +200,32 @@ export const jobsColumns: ColumnDef<CreateJobForm>[] = [
               </div>
             )}
           </div>
+        </div>
+      )
+    },
+  },
+
+  {
+    id: "progress",
+    header: "Progress",
+    enableSorting: false,
+    cell: ({ row }) => {
+      const { date, startTime, endTime, workers } = row.original
+      const isInProgress = workers?.some(w => w.status === "in-progress")
+      if (!isInProgress) return <span className="text-xs text-slate-300">—</span>
+
+      const { percent, isOverTime } = getShiftProgress(date, startTime!, endTime!)
+      return (
+        <div className="flex items-center gap-2 min-w-25">
+          <div className="flex-1 h-1.5 rounded-full bg-slate-100 overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-colors ${isOverTime ? "bg-rose-500" : "bg-blue-500"}`}
+              style={{ width: `${percent}%` }}
+            />
+          </div>
+          <span className={`text-[10px] font-semibold tabular-nums ${isOverTime ? "text-rose-600" : "text-slate-500"}`}>
+            {Math.round(percent)}%
+          </span>
         </div>
       )
     },

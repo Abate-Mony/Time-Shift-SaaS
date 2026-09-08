@@ -51,6 +51,7 @@ const NAV_LINKS = [
   { to: '/reports/payroll', label: 'Payroll' },
   { to: '/reports/timesheets', label: 'Timesheets' },
   { to: '/reports/performance', label: 'Performance' },
+  { to: '/reports/profitability', label: 'Profitability' },
 ]
 
 export default function ReportLayout() {

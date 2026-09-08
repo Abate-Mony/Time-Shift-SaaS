@@ -1,6 +1,6 @@
 import customFetch from '@/utils/customFetch'
 import { formatCurrency } from '@/utils/format'
-import { formatDate, formatDuration } from '@/utils/date'
+import { formatDate, formatDuration, getShiftProgress } from '@/utils/date'
 import { queryClient } from '@/lib/queryClient'
 import { deleteJob, duplicateJob, reviewAssignmentOvertime, reviewOpenShiftClaim, updateJobWorkers } from '@/utils/api-request-functions'
 import { useMutation, useQuery } from '@tanstack/react-query'
@@ -41,7 +41,7 @@ import {
     LogIn, LogOut, Coffee,
     Ban, Bot, StickyNote, CircleCheck,
 } from "lucide-react"
-import { useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import AssignWorkersModal from '@/components/AssignWorkersModal'
 import { Input } from '@/components/ui/input'
@@ -271,6 +271,17 @@ export function JobDetail() {
     })
     const assignedWorkers = job?.workers ?? []
     console.log("assign workers :", assignedWorkers)
+
+    const anyWorkerInProgress = assignedWorkers.some(w => w.status === "in-progress")
+
+    // Ticks the shift-progress bar below forward every 30s while someone's
+    // actually clocked in — no point re-rendering once everyone's finished.
+    const [, forceProgressTick] = useState(0)
+    useEffect(() => {
+        if (!anyWorkerInProgress) return
+        const id = setInterval(() => forceProgressTick(t => t + 1), 30_000)
+        return () => clearInterval(id)
+    }, [anyWorkerInProgress])
 
     const [preferredMap, setPreferredMap] = useState<MapService>(
         () => (localStorage.getItem(PREFERRED_MAP_STORAGE_KEY) as MapService | null) ?? "google"
@@ -540,6 +551,32 @@ export function JobDetail() {
                             </div>
                         ))}
                     </div>
+
+                    {/* Shift progress — how far through the scheduled window this job
+                        is right now, while anyone's actually clocked in. Based on the
+                        job's own schedule, not any one worker's clock-in time, since a
+                        job can have several workers on slightly different clocks. */}
+                    {anyWorkerInProgress && (() => {
+                        const { percent, isOverTime } = getShiftProgress(job.date, job.startTime, job.endTime)
+                        return (
+                            <div className="mt-3">
+                                <div className="flex items-center justify-between mb-1.5">
+                                    <p className="text-[10px] font-semibold text-white/50 uppercase tracking-wide">
+                                        Shift progress
+                                    </p>
+                                    <p className={`text-[10px] font-bold ${isOverTime ? 'text-rose-300' : 'text-white/70'}`}>
+                                        {isOverTime ? 'Over scheduled time' : `${Math.round(percent)}%`}
+                                    </p>
+                                </div>
+                                <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
+                                    <div
+                                        className={`h-full rounded-full transition-all duration-500 ${isOverTime ? 'bg-rose-400' : 'bg-blue-400'}`}
+                                        style={{ width: `${percent}%` }}
+                                    />
+                                </div>
+                            </div>
+                        )
+                    })()}
                 </div>
             </div>
 
