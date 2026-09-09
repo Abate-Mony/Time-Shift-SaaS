@@ -284,17 +284,13 @@ export const jobsColumns: ColumnDef<CreateJobForm>[] = [
               <Link to={`/jobs/${job._id}`}>View Details</Link>
             </DropdownMenuItem>
 
-            <DropdownMenuItem asChild disabled={isJobLocked(job)}>
-              {isJobLocked(job) ? (
-                <span
-                  className="opacity-50 cursor-not-allowed"
-                  title="This job has already happened and can no longer be edited"
-                >
-                  Edit Job
-                </span>
-              ) : (
-                <Link to={`/jobs/${job._id}/edit`}>Edit Job</Link>
-              )}
+            <DropdownMenuItem asChild>
+              <Link
+                to={`/jobs/${job._id}/edit`}
+                title={isJobLocked(job) ? "This job has already happened — its date, time and rates are locked, but everything else can still be edited" : undefined}
+              >
+                Edit Job
+              </Link>
             </DropdownMenuItem>
 
             <DropdownMenuItem>

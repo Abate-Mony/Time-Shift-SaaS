@@ -29,6 +29,7 @@ import {
     Plus,
     Receipt,
     ShieldCheck,
+    SquareX,
     Timer,
     Trash2,
     TriangleAlert,
@@ -406,7 +407,7 @@ export function JobDetail() {
         { value: "draft", label: "Draft" },
         { value: "published", label: "Published" },
         // { value: "completed", label: "Completed" },
-        { value: "cancelled", label: "Cancelled" },
+        // { value: "cancelled", label: "Cancelled" },
     ]
 
     const updateStatusMutation = useMutation({
@@ -514,10 +515,9 @@ export function JobDetail() {
                         <div className="flex items-center gap-2 shrink-0">
 
                             <button
-                                onClick={() => !isJobLocked(job) && onNavigate(`/jobs/${id}/edit`)}
-                                disabled={isJobLocked(job)}
-                                title={isJobLocked(job) ? "This job has already happened and can no longer be edited" : undefined}
-                                className="h-9 px-3.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors backdrop-blur-sm disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white/10"
+                                onClick={() => onNavigate(`/jobs/${id}/edit`)}
+                                title={isJobLocked(job) ? "This job has already happened — its date, time and rates are locked, but everything else (title, notes, workers, etc.) can still be edited" : undefined}
+                                className="h-9 px-3.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors backdrop-blur-sm"
                             >
                                 <Edit size={13} /> Edit
                             </button>
@@ -1042,13 +1042,45 @@ export function JobDetail() {
                                             ))}
                                         </PopoverContent>
                                     </Popover>
-                                    <button
-                                        onClick={() => deleteJob(job!._id as string).then(undefined => {
-                                            navigate("/jobs")
-                                        })}
-                                        className="w-full h-10 rounded-xl border border-red-100 bg-red-50 text-sm font-semibold text-red-500 hover:bg-red-100 flex items-center justify-center gap-2 transition-colors mt-1">
-                                        <Trash2 size={13} /> Delete Job
-                                    </button>
+                                    <div className="flex gap-2.5 mt-2">
+                                        {job.status !== "cancelled" && (
+                                            <Button
+                                                onClick={() => updateStatusMutation.mutate("cancelled")}
+                                                className="
+        flex-1 h-10 rounded-xl
+        border border-amber-200
+        bg-amber-50
+        text-sm font-semibold text-amber-700
+        hover:bg-amber-100
+        flex items-center justify-center gap-2
+        transition-colors cursor-pointer mt-1
+      "
+                                            >
+                                                <SquareX size={13} />
+                                                Cancel Job
+                                            </Button>
+                                        )}
+
+                                        <button
+                                            onClick={() =>
+                                                deleteJob(job!._id as string).then(() => {
+                                                    navigate("/jobs");
+                                                })
+                                            }
+                                            className="
+      flex-1 h-10 rounded-xl
+      border border-red-200
+      bg-red-50
+      text-sm font-semibold text-red-600
+      hover:bg-red-100
+      flex items-center justify-center gap-2
+      transition-colors cursor-pointer mt-1
+    "
+                                        >
+                                            <Trash2 size={13} />
+                                            Delete Job
+                                        </button>
+                                    </div>
                                 </>
                             }
                             {(job?.status === 'assigned' || job?.status === 'accepted' || job.status === 'draft') && (
@@ -1064,10 +1096,9 @@ export function JobDetail() {
 
 
                             <button
-                                onClick={() => !isJobLocked(job) && onNavigate(`/jobs/${id}/edit`)}
-                                disabled={isJobLocked(job)}
-                                title={isJobLocked(job) ? "This job has already happened and can no longer be edited" : undefined}
-                                className="w-full h-10 rounded-xl border border-[#E2E8F0] text-sm font-semibold text-slate-600 hover:bg-slate-50 flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white"
+                                onClick={() => onNavigate(`/jobs/${id}/edit`)}
+                                title={isJobLocked(job) ? "This job has already happened — its date, time and rates are locked, but everything else (title, notes, workers, etc.) can still be edited" : undefined}
+                                className="w-full h-10 rounded-xl border border-[#E2E8F0] text-sm font-semibold text-slate-600 hover:bg-slate-50 flex items-center justify-center gap-2 transition-colors"
                             >
                                 <Edit size={13} className="text-slate-400" /> Edit Job
                             </button>

@@ -17,13 +17,14 @@ import { QueryClient, useQuery } from '@tanstack/react-query'
 import { isAxiosError } from 'axios'
 import { AnimatePresence, motion } from 'framer-motion'
 import dayjs from "dayjs"
-import { Calendar, Check, ChevronDown, ChevronLeft, Clock, Loader2, MapPin, Paperclip, Save, Settings2, Users, X } from 'lucide-react'
+import { Calendar, Check, ChevronDown, ChevronLeft, Clock, Loader2, Lock, MapPin, Paperclip, Save, Settings2, Users, X } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { useForm } from "react-hook-form"
 import toast from 'react-hot-toast'
 import { Form, redirect, useLoaderData, useNavigate, useNavigation, useParams, useSearchParams, useSubmit, type ActionFunctionArgs, type LoaderFunctionArgs, type Params } from 'react-router'
 import { Avatar, Input } from '../components/ui'
 import { ApplyRatePrompt, ClientCombobox, type ComboboxClient } from '@/components/client/ClientCombobox'
+import { isJobLocked } from '@/utils/jobLock'
 
 type AssignedWorker = CreateJobForm["workers"][number]
 
@@ -150,6 +151,11 @@ export function EditJob() {
     const { searchValues } = useLoaderData() as any
     const id = useParams().id
     const job = useQuery(singleJob(id))?.data?.job
+    // Mirrors the backend's own rule (jobController.ts's updateJob): only
+    // date/time/pay/charge are locked once a job has already happened —
+    // everything else (title, notes, workers, etc.) stays editable, so this
+    // page itself must always be reachable rather than gated behind it.
+    const locked = job ? isJobLocked(job) : false
     const [selectedWorkers, setSelectedWorkers] = useState<CreateJobForm["workers"]>(
         job?.workers ? job.workers : []
 
@@ -167,6 +173,7 @@ export function EditJob() {
         setValue,
         watch,
         trigger,
+        getValues,
         formState: {
             errors,
         },
@@ -252,10 +259,23 @@ export function EditJob() {
             const valid = await trigger(fields as any)
 
             if (!valid) {
+                // RHF's own `errors` (from formState) reflects the render this
+                // closure was created in, not the one `trigger()` just produced
+                // — re-parsing directly against the live values sidesteps that
+                // staleness and lets the toast name the actual failing field(s)
+                // instead of a generic "something's wrong somewhere".
+                const parsed = createJobSchema.safeParse(getValues())
+                const fieldNames = !parsed.success
+                    ? [...new Set(parsed.error.issues.map(i => i.path.join(".") || "form"))]
+                    : []
+                console.error("Edit job validation failed:", !parsed.success ? parsed.error.issues : null)
+
                 toast.error(
-                    status === "draft"
-                        ? "Please fix the highlighted fields before saving."
-                        : "Please fix the highlighted fields before saving changes."
+                    fieldNames.length
+                        ? `Please fix: ${fieldNames.join(", ")}`
+                        : status === "draft"
+                            ? "Please fix the highlighted fields before saving."
+                            : "Please fix the highlighted fields before saving changes."
                 )
                 return
             }
@@ -441,15 +461,25 @@ export function EditJob() {
                         <span className="w-5 h-5 rounded-full bg-[#1E3A5F] text-white flex items-center justify-center text-[10px] font-bold">3</span>
                         Date & Time
                     </h2>
+                    {locked && (
+                        <div className="mb-4 flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3.5 py-2.5">
+                            <Lock size={13} className="text-amber-600 shrink-0" />
+                            <p className="text-xs text-amber-800">
+                                This shift has already happened, so its date and time are locked — everything else on this page can still be changed.
+                            </p>
+                        </div>
+                    )}
                     <div className="grid sm:grid-cols-3 gap-4">
                         <div>
                             <Input
                                 label="Date"
                                 type="date"
                                 icon={<Calendar size={14} />}
+                                readOnly={locked}
                                 {...register("date")}
                                 className={cn(errors.date && "border-red-500!",
-                                    "max-w-fit w-full"
+                                    "max-w-fit w-full",
+                                    locked && "opacity-60 cursor-not-allowed pointer-events-none bg-slate-50"
                                 )}
                             />
                             <FieldError message={errors.date?.message} />
@@ -460,9 +490,11 @@ export function EditJob() {
                                 label="Start Time"
                                 type="time"
                                 icon={<Clock size={14} />}
+                                readOnly={locked}
                                 {...register("startTime")}
                                 className={cn(errors.startTime && "border-red-500!",
-                                    "max-w-fit w-full"
+                                    "max-w-fit w-full",
+                                    locked && "opacity-60 cursor-not-allowed pointer-events-none bg-slate-50"
 
                                 )}
                             />
@@ -474,9 +506,11 @@ export function EditJob() {
                                 label="End Time"
                                 type="time"
                                 icon={<Clock size={14} />}
+                                readOnly={locked}
                                 {...register("endTime")}
                                 className={cn(errors.endTime && "border-red-500!",
-                                    "max-w-fit w-full"
+                                    "max-w-fit w-full",
+                                    locked && "opacity-60 cursor-not-allowed pointer-events-none bg-slate-50"
                                 )}
                             />
                             <FieldError message={errors.endTime?.message} />

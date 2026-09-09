@@ -15,7 +15,7 @@ import { getCurrentPosition } from "./getPosition";
 
 export const changeWorkerJobStaus = async (
     jobId: string,
-    status: "accepted" | "declined" | "in-progress" | "completed",
+    status: "accepted" | "declined" | "in-progress" | "completed" | "cancelled",
     opts?: { reason?: string }
 ): Promise<{ success: boolean; message?: string }> => {
     try {

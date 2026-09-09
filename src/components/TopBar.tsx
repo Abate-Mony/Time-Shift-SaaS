@@ -22,7 +22,9 @@ export function TopBar({ onNewJob, onToggleSidebar, onNavigate }: TopBarProps) {
       {/* Search */}
       <div className="relative flex-1 max-w-md items-center item-center flex">
        
-        <SearchComponent placeholder='search jobs,workers,invoices,location,users ' containerClassName='my-2'/>
+        <SearchComponent
+        type='search'
+        placeholder='search jobs,workers,invoices,location,users ' containerClassName='my-2'/>
       </div>
 
       <div className="flex items-center gap-2 ml-auto">

@@ -143,7 +143,12 @@ export const createJobSchema = z
                 lng: z.number(),
             })
             .optional(),
-        geofenceRadiusMeters: z.number().int().min(25).max(5000).optional(),
+        // Blank via register(..., { valueAsNumber: true }) reads as NaN, not
+        // undefined — strip that here rather than at every registration site.
+        geofenceRadiusMeters: z.preprocess(
+            v => (typeof v === "number" && Number.isNaN(v) ? undefined : v),
+            z.number().int().min(25).max(5000).optional()
+        ),
 
         // ── Staffing ──────────────────────────────────────────────────────
         requiredWorkers: z.number().int().min(1, "At least one worker").default(1),
@@ -156,8 +161,10 @@ export const createJobSchema = z
         chargeType: z.enum(["hourly", "fixed"]).default("hourly"),
         chargeRate: z.number().min(0, "Charge rate can't be negative").default(0),
         chargeAmount: z.number().min(0, "Amount can't be negative").default(0),
-        geofenceMode: z.enum(["off", "warn", "enforce"]).optional(),
-        // geofenceRadiusMeters: z.number().int().min(25).max(5000).optional(),
+        // Job.geofenceMode's own DB default is `null` ("inherit the company
+        // setting" — see jobModel.ts), not just "absent" — an edit form
+        // loading a real job needs to accept that, not only undefined.
+        geofenceMode: z.enum(["off", "warn", "enforce"]).nullable().optional(),
         additional_notes: z.string().optional(),
 
         // ── Advanced options ─────────────────────────────────────────────
@@ -166,7 +173,11 @@ export const createJobSchema = z
         notes: z.string().optional(),
         openToClaims: z.boolean().default(false),
         requiresApproval: z.boolean().default(true),
-        clockInGraceMinutes: z.number().int().min(0).max(240).optional(),
+        // Same NaN-from-blank-input issue as geofenceRadiusMeters above.
+        clockInGraceMinutes: z.preprocess(
+            v => (typeof v === "number" && Number.isNaN(v) ? undefined : v),
+            z.number().int().min(0).max(240).optional()
+        ),
     })
     .refine(d => d.chargeType !== "fixed" || d.chargeAmount > 0, {
         message: "Enter a price for fixed-price jobs",

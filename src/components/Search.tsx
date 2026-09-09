@@ -9,11 +9,8 @@ interface iSearch
     containerClassName?: string
 
 }
-// interface iSearch {
-//     className?: string,
 
 
-// }
 function SearchComponent({
     containerClassName, placeholder,
     ...props

@@ -9,10 +9,21 @@ import { ensurePushSubscription } from "@/utils/pushSubscription"
 import { buildMapUrl, MAP_SERVICES, type MapService } from "@/utils/mapLinks"
 import type { CreateJobForm } from "@/utils/types"
 import { useQuery } from "@tanstack/react-query"
-import { AlertCircle, Briefcase, CalendarDays, Check, CheckCircle2, ChevronLeft, Clock, Dot, Loader2, MapPin, Navigation, Timer, X } from "lucide-react"
+import { AlertCircle, AlertTriangle, Briefcase, CalendarDays, Check, CheckCircle2, ChevronLeft, Clock, Dot, Loader2, MapPin, Navigation, Timer, X } from "lucide-react"
 import { useNavigate, useParams, type LoaderFunctionArgs } from "react-router"
 import { useState } from "react"
-
+import {
+    Drawer,
+    DrawerClose,
+    DrawerContent,
+    DrawerDescription,
+    DrawerFooter,
+    DrawerHeader,
+    DrawerTrigger
+} from "@/components/ui/drawer"
+import { Button } from "@/components/ui/button"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 const PREFERRED_MAP_STORAGE_KEY = "preferredMapService"
 const singleWorkerJob = (id: string | undefined) => {
     return ({
@@ -67,6 +78,19 @@ export default function JobDetailScreen() {
         setLoadingAction(null)
     }
 
+    const [cancellationReason, setCancellationReason] = useState('')
+    const [isCancelling, setIsCancelling] = useState(false)
+
+    const handleCancelShift = async () => {
+        setIsCancelling(true)
+        const result = await changeWorkerJobStaus(job!._id!, "cancelled", { reason: cancellationReason.trim() || undefined })
+        setIsCancelling(false)
+        if (result.success) {
+            setCancellationReason('')
+            setOpen(false)
+        }
+    }
+
     // Shift time and client are already shown in the hero card above — no need to repeat them here
     const infoRows = [
         { icon: Timer, label: 'Duration', value: formatDuration(job?.minutes) },
@@ -86,6 +110,7 @@ export default function JobDetailScreen() {
         lng: job?.coordinates?.lng,
         address: job?.address || job?.location,
     })
+    const [open, setOpen] = useState(false)
 
     // The job's over either way — no reason to keep offering directions to it.
     const showDirections = directionsHref && job?.status !== 'completed' && job?.status !== 'declined'
@@ -183,6 +208,18 @@ export default function JobDetailScreen() {
                 </div>
             )}
 
+            {job?.status === 'cancelled' && (
+                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
+                        <X size={16} className="text-slate-500" />
+                    </div>
+                    <div>
+                        <p className="text-sm font-bold text-slate-700">You cancelled this shift</p>
+                        <p className="text-xs text-slate-500 mt-0.5">This job is no longer assigned to you.</p>
+                    </div>
+                </div>
+            )}
+
             {/* Primary CTA — the actual decision/action for this job, shown before secondary actions */}
             {job?.status === 'pending' && (
                 <div className="grid grid-cols-2 gap-2.5" onClick={e => e.stopPropagation()}>
@@ -234,6 +271,125 @@ export default function JobDetailScreen() {
                         {hasExpired ? "Shift window missed" : `Starts in ${formatTimeUntil(minutesUntilStart ?? 0)}`}
                     </div>
                 )
+            )}
+            {job?.status === 'accepted' && !hasExpired && (
+                <>
+                    <Drawer open={open} onOpenChange={o => { setOpen(o); if (!o) setCancellationReason('') }}>
+                        <DrawerTrigger asChild className="hidden">
+                            <Button variant="outline">Open</Button>
+                        </DrawerTrigger>
+                        <DrawerContent className="max-w-md mx-auto">
+                            <DrawerHeader className="text-left">
+                                <DrawerDescription />
+                            </DrawerHeader>
+                            <div className="px-4">
+                                <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                                    <div className="mb-4">
+                                        <h3 className="text-sm font-bold text-slate-900">
+                                            Cancel shift
+                                        </h3>
+                                        <p className="mt-1 text-xs leading-relaxed text-slate-500">
+                                            If you can no longer work this shift, you can cancel it here.
+                                            Your manager will be notified.
+                                        </p>
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="cancellationReason">
+                                                Reason
+                                                <span className="ml-1 font-normal text-slate-400">
+                                                    optional
+                                                </span>
+                                            </Label>
+
+                                            <Textarea
+                                                id="cancellationReason"
+                                                value={cancellationReason}
+                                                onChange={(e) => setCancellationReason(e.target.value)}
+                                                placeholder="e.g. I'm unwell, transport issue, personal emergency..."
+                                                className="min-h-[100px] resize-none"
+                                                maxLength={300}
+                                            />
+
+                                            <div className="flex justify-end">
+                                                <span className="text-[11px] text-slate-400">
+                                                    {cancellationReason.length}/300
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <div className="rounded-xl border border-amber-200 bg-amber-50 p-3">
+                                            <div className="flex items-start gap-2">
+                                                <AlertTriangle
+                                                    size={16}
+                                                    className="mt-0.5 shrink-0 text-amber-600"
+                                                />
+
+                                                <p className="text-xs leading-relaxed text-amber-800">
+                                                    Cancelling this shift will remove you from the assignment.
+                                                    Your manager will be notified and may need to find a replacement.
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex gap-2">
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                className="flex-1"
+                                                disabled={isCancelling}
+                                                onClick={() => setOpen(false)}
+                                            >
+                                                Keep shift
+                                            </Button>
+
+                                            <Button
+                                                type="button"
+                                                variant="destructive"
+                                                className="flex-1"
+                                                disabled={isCancelling}
+                                                onClick={handleCancelShift}
+                                            >
+                                                {isCancelling ? (
+                                                    <>
+                                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                        Cancelling...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <X className="mr-2 h-4 w-4" />
+                                                        Cancel shift
+                                                    </>
+                                                )}
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <DrawerFooter className="pt-2">
+                                <DrawerClose asChild>
+                                    <Button variant="outline">Close</Button>
+                                </DrawerClose>
+                            </DrawerFooter>
+                        </DrawerContent>
+                    </Drawer>
+                    <button
+                        type="button"
+                        onClick={() => setOpen(o => !o)}
+                        className="
+        w-full h-10 rounded-xl
+        border border-amber-200
+        bg-amber-50
+        text-amber-700
+        text-sm font-semibold
+        hover:bg-amber-100
+        transition-colors
+      "
+                    >
+                        Cancel Shift
+                    </button>
+                </>
             )}
 
             {/* Secondary action — directions to the actual job site */}
