@@ -48,7 +48,7 @@ function AccessLevelOption({
     none: {
       icon: Ban,
       label: 'Suspended',
-      desc: 'The worker cannot access the normal TimeShift app.',
+      desc: 'The worker cannot access the normal INPRN app.',
       danger: true,
     },
   }
@@ -140,7 +140,7 @@ function SuspendConfirm({
         <h3 className="text-base font-bold text-slate-900">Suspend {workerName}?</h3>
       </div>
       <p className="text-sm text-slate-600 leading-relaxed">
-        {workerName} will lose access to the normal TimeShift app immediately.
+        {workerName} will lose access to the normal INPRN app immediately.
       </p>
       <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5">
         <p className="text-xs font-semibold text-slate-600 mb-2">They can still:</p>

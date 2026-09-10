@@ -7,6 +7,7 @@ import { Scrollable } from "@/components/ui/scrollable"
 import { useFilter } from "@/hooks/CustomLinkFilterHook"
 import { cn } from "@/lib/utils"
 import customFetch from "@/utils/customFetch"
+import { formatDate } from "@/utils/date"
 import type { CreateJobForm } from "@/utils/types"
 import { useQuery, type QueryClient } from "@tanstack/react-query"
 import dayjs from "dayjs"
@@ -14,6 +15,7 @@ import { AlertCircle, Briefcase, ChevronLeft, ChevronRight, Loader2, X } from "l
 import { useMemo, useState } from "react"
 import { useLoaderData, useSearchParams, type LoaderFunctionArgs, type Params } from "react-router"
 import { DAY_LABELS, startOfWeek } from "./ScheduleScreen"
+import { ActiveFiltersBar } from "@/components/ui/ActiveFiltersBar"
 
 const jobsQuery = (params: Params) => {
 
@@ -198,6 +200,29 @@ export default function JobsScreen() {
                         ))}
                     </Scrollable>
 
+                    <ActiveFiltersBar
+                        className="mb-1"
+                        filters={[
+                            {
+                                // The "All" tab writes status=all itself (see FilterButton
+                                // above), so that value is a real, present param but isn't
+                                // actually a filter — must not show a "Status: All" chip that
+                                // can never be cleared back to a state the tab bar would
+                                // recognize as "All".
+                                keys: 'status',
+                                isActive: ([s]) => !!s && s !== 'all',
+                                format: ([s]) => (s ?? '').replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+                            },
+                            {
+                                keys: ['start', 'end'],
+                                label: 'Date range',
+                                format: ([start, end]) =>
+                                    start && end && end !== start
+                                        ? `${formatDate(start, 'D MMM')} – ${formatDate(end, 'D MMM')}`
+                                        : formatDate(start ?? end ?? undefined, 'D MMM YYYY'),
+                            },
+                        ]}
+                    />
                     {/* Job list */}
                     <div className="flex flex-col gap-3">
 

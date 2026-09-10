@@ -207,7 +207,7 @@ export default function InvitationLayout() {
                 <p className="text-xs text-slate-400 text-center mt-6">
                     Powered by{" "}
                     <span className="font-semibold text-slate-600">
-                        work.wrk
+                        INPRN
                     </span>
                 </p>
             </div>

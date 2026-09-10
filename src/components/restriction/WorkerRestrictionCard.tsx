@@ -44,7 +44,7 @@ function LiftRestrictionDialog({
           </div>
           <h3 className="text-base font-bold text-slate-900 mb-1.5">Restore full access?</h3>
           <p className="text-sm text-slate-500 mb-4 leading-relaxed">
-            {workerName} will regain normal access to TimeShift.
+            {workerName} will regain normal access to INPRN.
           </p>
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1.5">Optional reason</label>

@@ -33,8 +33,8 @@ export default defineConfig({
         type: "module",
       },
       manifest: {
-        name: "work.wrk",
-        short_name: "work.wrk",
+        name: "INPRN",
+        short_name: "INPRN",
         start_url: "/",
         display: "standalone",
         background_color: "#ffffff",

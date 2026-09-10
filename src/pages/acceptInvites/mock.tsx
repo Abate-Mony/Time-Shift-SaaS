@@ -505,7 +505,7 @@ export function AcceptInvite({ onDone }: { onDone: () => void }) {
 
         <p className="text-xs text-slate-400 text-center mt-6">
           Powered by{' '}
-          <span className="font-semibold text-slate-600">work.wrk</span>
+          <span className="font-semibold text-slate-600">INPRN</span>
         </p>
       </div>
     </div>

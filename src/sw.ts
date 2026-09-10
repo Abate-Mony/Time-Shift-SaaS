@@ -12,13 +12,13 @@ self.addEventListener("push", (event) => {
   try {
     data = event.data ? event.data.json() : {}
   } catch {
-    data = { title: "TimeShift", body: event.data ? event.data.text() : "" }
+    data = { title: "INPRN", body: event.data ? event.data.text() : "" }
   }
 
-  const title = data.title || "TimeShift"
+  const title = data.title || "INPRN"
   const options: NotificationOptions = {
     body: data.body || "",
-    tag: data.tag || "timeshift-notification",
+    tag: data.tag || "inprn-notification",
     silent: !!data.silent,
     data: { url: data.url || "/worker/clock" },
   }
