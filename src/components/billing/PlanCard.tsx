@@ -1,9 +1,10 @@
-import { ArrowRight, Check, CheckCircle } from 'lucide-react'
+import { ArrowRight, Check, CheckCircle, Sparkles } from 'lucide-react'
 import { motion } from 'framer-motion'
-import { getPrice, type Billing, type Plan } from '@/utils/constants/plant'
+import { getPrice, type Billing } from '@/utils/constants/plant'
+import type { PlanCatalogEntry } from '@/utils/types'
 
 interface PlanCardProps {
-  plan: Plan
+  plan: PlanCatalogEntry
   billing: Billing
   isCurrent?: boolean
   onSelect: () => void
@@ -50,7 +51,7 @@ export function PlanCard({ plan, billing, isCurrent, onSelect }: PlanCardProps) 
           <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${
             !isCurrent && plan.highlighted ? 'bg-white/15 text-white' : 'bg-[#1E3A5F]/8 text-[#1E3A5F]'
           }`}>
-            {plan.icon}
+            <Sparkles size={14} />
           </div>
           <h3 className={`text-lg font-bold ${!isCurrent && plan.highlighted ? 'text-white' : 'text-slate-900'}`}>
             {plan.name}
@@ -116,13 +117,13 @@ export function PlanCard({ plan, billing, isCurrent, onSelect }: PlanCardProps) 
             className={`w-full h-11 rounded-xl text-sm font-bold transition-all active:scale-[0.98] mb-7 flex items-center justify-center gap-2 ${
               plan.highlighted
                 ? 'bg-white text-[#1E3A5F] hover:bg-white/90'
-                : plan.id === 'starter'
+                : plan.id === 'free'
                   ? 'border border-slate-200 text-slate-600 hover:bg-slate-50'
                   : 'bg-[#1E3A5F] text-white hover:bg-[#162D4A]'
             }`}
           >
             {plan.ctaLabel}
-            {plan.id !== 'starter' && <ArrowRight size={14} />}
+            {plan.id !== 'free' && <ArrowRight size={14} />}
           </button>
         )}
 

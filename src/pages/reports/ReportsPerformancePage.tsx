@@ -4,11 +4,16 @@ import { Card } from '@/components/ui'
 import { CustomTooltip } from './shared'
 import { useReportsContext } from '@/layouts/ReportLayout'
 import { reportsPerformanceQuery } from '@/utils/reports'
+import { useCompanyPlan } from '@/hooks/useCompanyPlan'
+import { PlanUpgradeNotice } from '@/components/billing/PlanUpgradeNotice'
 
 export function ReportsPerformancePage() {
   const { dateRange } = useReportsContext()
-  const { data, isPending, isError } = useQuery(reportsPerformanceQuery(dateRange))
+  const { hasFeature } = useCompanyPlan()
+  const canView = hasFeature('advancedReports')
+  const { data, isPending, isError } = useQuery({ ...reportsPerformanceQuery(dateRange), enabled: canView })
 
+  if (!canView) return <PlanUpgradeNotice feature="Performance reports" />
   if (isPending) return <p className="text-sm text-slate-400">Loading performance…</p>
   if (isError) return <p className="text-sm text-red-500">Failed to load the performance report.</p>
 

@@ -167,7 +167,7 @@ export function Sidebar({ active, collapsed, onToggleSidebar, user }: SidebarPro
         </div>
         {/* User */}
 
-        <div className="border-t border-white/6 p-3 flex-none">
+        {/* <div className="border-t border-white/6 p-3 flex-none">
           <button className="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-white/5 transition-colors group">
             <Avatar initials={getInitials(fullname)} size="sm" index={0} />
             {!collapsed && (
@@ -183,7 +183,7 @@ export function Sidebar({ active, collapsed, onToggleSidebar, user }: SidebarPro
               </>
             )}
           </button>
-        </div>
+        </div> */}
       </aside></>
   )
 }

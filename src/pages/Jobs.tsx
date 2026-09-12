@@ -22,6 +22,7 @@ import { CalendarIcon, ChevronLeft, ChevronRight, Filter } from 'lucide-react'
 import { useState } from 'react'
 import toast from 'react-hot-toast'
 import { useLoaderData, useNavigate, type LoaderFunctionArgs, type Params } from 'react-router'
+import { backLinkState } from '@/hooks/useBackLink'
 
 
 const jobsQuery = (params: Params) => {
@@ -74,11 +75,12 @@ export const loader = (queryClient: QueryClient) => async ({ request }: LoaderFu
 
 }
 export function Jobs() {
+
   const { searchValues } = useLoaderData() as {
     searchValues: Params
   }
   const navigate = useNavigate()
-  const onNavigate = (path: string) => navigate(path)
+  const onNavigate = (path: string, state?: object) => navigate(path, { state: state ?? backLinkState('Jobs') })
   const { jobs, totalJobs, totalPages, currentPage } = useQuery(jobsQuery(searchValues)).data as {
     jobs: CreateJobForm[],
     totalJobs: number,
@@ -311,7 +313,7 @@ export function Jobs() {
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
               <Calendar
-              className="rounded-md border w-[min(400px,calc(100vw-2rem))] sm:w-[min(800px,calc(100vw-4rem))]"
+                className="rounded-md border w-[min(400px,calc(100vw-2rem))] sm:w-[min(800px,calc(100vw-4rem))]"
                 mode="range"
                 defaultMonth={startFilter ? new Date(startFilter) : undefined}
                 selected={startFilter ? { from: new Date(startFilter), to: new Date(endFilter || startFilter) } : undefined}

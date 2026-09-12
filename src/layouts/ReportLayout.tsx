@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { Outlet, useOutletContext } from 'react-router'
 import dayjs from 'dayjs'
-import { Download, FileText } from 'lucide-react'
+import { Download, FileText, Lock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import CustomNavLink from '@/components/ui/link'
+import { useCompanyPlan } from '@/hooks/useCompanyPlan'
 
 export interface DateRange {
   start: string
@@ -50,12 +51,15 @@ const NAV_LINKS = [
   { to: '/reports', label: 'Overview', end: true },
   { to: '/reports/payroll', label: 'Payroll' },
   { to: '/reports/timesheets', label: 'Timesheets' },
-  { to: '/reports/performance', label: 'Performance' },
-  { to: '/reports/profitability', label: 'Profitability' },
+  // Locked below Professional — see the "advancedReports" gate.
+  { to: '/reports/performance', label: 'Performance', gated: true },
+  { to: '/reports/profitability', label: 'Profitability', gated: true },
 ]
 
 export default function ReportLayout() {
   const [dateRange, setDateRange] = useState<DateRange>(() => monthToRange(MONTH_OPTIONS[0].month))
+  const { hasFeature } = useCompanyPlan()
+  const canViewAdvancedReports = hasFeature('advancedReports')
 
   const selectedMonth =
     MONTH_OPTIONS.find(m => monthToRange(m.month).start === dateRange.start)?.month
@@ -96,18 +100,31 @@ export default function ReportLayout() {
 
       <div className="flex items-center gap-1.5 border-b border-[#E2E8F0]">
         {NAV_LINKS.map(link => (
-          <CustomNavLink
-            key={link.to}
-            to={link.to}
-            end={link.end}
-            layoutId="report-layout-tabs"
-            animateClassName="inset-x-0 bottom-0 h-0.5 bg-[#1E3A5F]"
-            show
-            className="w-fit! px-4 py-2.5 text-sm font-medium text-slate-500 hover:text-slate-700 transition-colors"
-            selectedClassName="text-[#1E3A5F]! font-semibold"
-          >
-            {link.label}
-          </CustomNavLink>
+          link.gated && !canViewAdvancedReports ? (
+            // Not a real link — clicking would just land on a locked page
+            // (the page itself also checks the plan). The backend rejects
+            // /reports/performance & /profitability independently either way.
+            <span
+              key={link.to}
+              title="Upgrade your plan to unlock this"
+              className="w-fit px-4 py-2.5 text-sm font-medium text-slate-300 cursor-not-allowed flex items-center gap-1.5"
+            >
+              {link.label} <Lock size={11} />
+            </span>
+          ) : (
+            <CustomNavLink
+              key={link.to}
+              to={link.to}
+              end={link.end}
+              layoutId="report-layout-tabs"
+              animateClassName="inset-x-0 bottom-0 h-0.5 bg-[#1E3A5F]"
+              show
+              className="w-fit! px-4 py-2.5 text-sm font-medium text-slate-500 hover:text-slate-700 transition-colors"
+              selectedClassName="text-[#1E3A5F]! font-semibold"
+            >
+              {link.label}
+            </CustomNavLink>
+          )
         ))}
       </div>
 

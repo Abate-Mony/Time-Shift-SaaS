@@ -19,6 +19,7 @@ import {
 import { useState } from 'react'
 import toast from 'react-hot-toast'
 import { useNavigate } from 'react-router'
+import { backLinkState } from '@/hooks/useBackLink'
 import { useQuery, type QueryClient } from '@tanstack/react-query'
 import customFetch from '@/utils/customFetch'
 import { queryClient } from '@/lib/queryClient'
@@ -615,7 +616,7 @@ function DialogBackdrop({ children, onClose }: { children: React.ReactNode; onCl
 
 export function Clients() {
     const navigate = useNavigate()
-    const onNavigate = (path: string) => navigate(path)
+    const onNavigate = (path: string, state?: object) => navigate(path, { state: state ?? backLinkState('Clients') })
     const { clients } = useQuery(clientsQuery()).data as { clients: Client[] }
     const [filter, setFilter] = useState<FilterType>('all')
     const [search, setSearch] = useState('')

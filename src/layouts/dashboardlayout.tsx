@@ -37,9 +37,9 @@ type Page =
 
 export const loader = (queryClient: QueryClient) => async ({ request: _request }: LoaderFunctionArgs) => {
     try {
-        const { user } = await queryClient.ensureQueryData(userQuery) ;
+        const { user } = await queryClient.ensureQueryData(userQuery);
         // alert(user.role)
-        console.log("user role :",user.role)
+        console.log("user role :", user.role)
         if (user.role == "worker") {
             return redirect("/worker")
         }
@@ -103,7 +103,7 @@ export default function DashboardLayout() {
                     className="flex-1 flex flex-col min-w-0 transition-all duration-200"
                     style={{ marginLeft: isDesktop ? sidebarWidth : 0 }}
                 >
-                 
+
 
                     {page === 'worker-app' ? (
                         <div className="flex-1 overflow-y-auto">
@@ -112,6 +112,7 @@ export default function DashboardLayout() {
                     ) : (
                         <>
                             <TopBar
+                                user={user}
                                 onNewJob={() => navigate('/create-job')}
                                 onToggleSidebar={() => setSidebarCollapsed(c => !c)}
                                 onNavigate={navigate}

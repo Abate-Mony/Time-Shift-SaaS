@@ -12,9 +12,12 @@ import {
   ShieldCheck,
 } from 'lucide-react'
 import type { iUser } from '@/layouts/dashboardlayout'
-import { PLANS, getPrice, type Billing } from '@/utils/constants/plant'
+import { getPrice, type Billing } from '@/utils/constants/plant'
 import { Button } from '@/components/ui/button'
 import { BillingToggle } from '@/components/billing/BillingToggle'
+import { getPlanCatalog, updateCompanyPlan } from '@/utils/api-request-functions'
+import { queryClient } from '@/lib/queryClient'
+import { useQuery } from '@tanstack/react-query'
 
 const CheckOutSettings = () => {
   const { user } = useOutletContext<{ user: iUser }>()
@@ -25,7 +28,8 @@ const CheckOutSettings = () => {
 
   const planId = searchParams.get('plan')
   const billing = (searchParams.get('billing') === 'annual' ? 'annual' : 'monthly') as Billing
-  const plan = PLANS.find(p => p.id === planId)
+  const { data: plans, isLoading } = useQuery({ queryKey: ['plan-catalog'], queryFn: getPlanCatalog, enabled: isAdmin })
+  const plan = plans?.find(p => p.id === planId)
 
   if (!isAdmin) {
     return (
@@ -34,6 +38,14 @@ const CheckOutSettings = () => {
           <Lock size={16} className="text-amber-600 shrink-0" />
           <p className="text-sm text-slate-600">You don't have access to this.</p>
         </div>
+      </div>
+    )
+  }
+
+  if (isLoading) {
+    return (
+      <div className="max-w-2xl mx-auto animate-fade-in flex justify-center py-16 text-slate-400">
+        <Loader2 size={22} className="animate-spin" />
       </div>
     )
   }
@@ -60,7 +72,7 @@ const CheckOutSettings = () => {
     )
   }
 
-  const isFree = plan.id === 'starter'
+  const isFree = plan.id === 'free'
   const price = getPrice(plan, billing)
 
   const setBilling = (b: Billing) => {
@@ -70,15 +82,22 @@ const CheckOutSettings = () => {
     })
   }
 
-  // No real payment processor behind this — everything on this page is the
-  // same mock billing data BillingSettings already shows (Enterprise/£149/
-  // Visa •••• 4242). Confirming just simulates the round trip.
+  // No real payment processor behind this yet — the payment method below is
+  // still the same mock Visa •••• 4242 BillingSettings shows. But the plan
+  // change itself is real: confirming actually sets Company.plan, which is
+  // what every limit check (worker cap, job cap, feature gates) reads.
   const handleConfirm = async () => {
     setConfirming(true)
-    await new Promise(resolve => setTimeout(resolve, 900))
-    setConfirming(false)
-    toast.success(isFree ? `You're on the ${plan.name} plan` : `Subscribed to ${plan.name}`)
-    navigate('/settings/billing')
+    try {
+      await updateCompanyPlan(plan.id)
+      await queryClient.invalidateQueries({ queryKey: ['company-plan'] })
+      toast.success(isFree ? `You're on the ${plan.name} plan` : `Subscribed to ${plan.name}`)
+      navigate('/settings/billing')
+    } catch {
+      toast.error("Couldn't update your plan. Try again.")
+    } finally {
+      setConfirming(false)
+    }
   }
 
   return (
@@ -93,7 +112,7 @@ const CheckOutSettings = () => {
 
       <div>
         <h1 className="text-xl font-semibold text-slate-900 tracking-tight">
-          {isFree ? 'Continue with Starter' : `Subscribe to ${plan.name}`}
+          {isFree ? `Continue with ${plan.name}` : `Subscribe to ${plan.name}`}
         </h1>
         <p className="text-sm text-slate-500 mt-0.5">
           {isFree
@@ -178,7 +197,7 @@ const CheckOutSettings = () => {
             </>
           ) : isFree ? (
             <>
-              <CheckCircle2 size={15} /> Continue on Starter
+              <CheckCircle2 size={15} /> Continue on {plan.name}
             </>
           ) : (
             <>

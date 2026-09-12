@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button'
 import { AlertCircle, ArrowRight, Briefcase, CheckCircle2, Clock, Flag, MapPin, Timer, Users } from 'lucide-react'
 import { useNavigate, useOutletContext } from 'react-router'
+import { backLinkState } from '@/hooks/useBackLink'
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { useQuery } from '@tanstack/react-query'
 import dayjs from 'dayjs'
@@ -75,7 +76,7 @@ function greeting(): string {
 
 export function Dashboard() {
   const navigate = useNavigate()
-  const onNavigate = (path: string) => navigate(path)
+  const onNavigate = (path: string, state?: object) => navigate(path, { state: state ?? backLinkState('Dashboard') })
   const { user } = useOutletContext() as {
     user: any
   } || {}

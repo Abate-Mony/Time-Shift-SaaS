@@ -22,6 +22,7 @@ import { ChevronLeft, ChevronRight, Clock, Luggage, MapPin } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useMediaQuery } from 'react-responsive'
 import { Link, type LoaderFunctionArgs } from 'react-router'
+import { backLinkState } from '@/hooks/useBackLink'
 import { Avatar, EmptyState, StatusBadge } from '../components/ui'
 import AnimatedHeadLessUi from '@/components/animated-headless-ui'
 dayjs.extend(utc)
@@ -137,7 +138,12 @@ const DisplayCalendar = ({
             {selectedJobs?.map((job) => {
               const assignedWorkers = job?.workers ?? []
               return (
-                <Link to={`/jobs/${job._id}`} key={job._id} className="border border-[#E2E8F0] rounded-xl p-3.5">
+                <Link
+                  state={backLinkState('Calendar')}
+                  to={`/jobs/${job._id}`}
+                  key={job._id}
+                  className="border border-[#E2E8F0] rounded-xl p-3.5"
+                >
                   <div className="flex items-start justify-between gap-2 mb-2">
                     <p className="text-xs font-semibold text-slate-800 leading-snug">
                       {job?.title}
@@ -198,7 +204,7 @@ const DisplayCalendar = ({
           ))}
         </div>
       </div>
-    </motion.div>
+    </motion.div >
   )
 }
 
@@ -386,7 +392,7 @@ export function Calendar() {
 
                   return (
                     <AnimatedHeadLessUi
-                    animatedClassName='bg-black top-auto bottom-0 h-[2px]!'
+                      animatedClassName='bg-black top-auto bottom-0 h-[2px]!'
                       index={i}
                       hoverIndex={hoverIndex}
                       setHoverIndex={setHoverIndex}
@@ -510,10 +516,12 @@ export function Calendar() {
                   {selectedJobs.map((job: any) => {
                     const assignedWorkers = job?.workers ?? []
                     return (
-                      <Link to={`/jobs/${job._id}`} key={job._id} className="border border-[#E2E8F0] rounded-xl p-3.5 block">
+                      <Link to={`/jobs/${job._id}`}
+                        state={backLinkState('Calendar')}
+                        key={job._id} className="border border-[#E2E8F0] rounded-xl p-3.5 block">
                         <div className="flex items-start justify-between gap-2 mb-2">
                           <p className="text-xs font-semibold text-slate-800 leading-snug">
-                            {job?.title}
+                            {job?.title} 
                           </p>
                           <StatusBadge status={job?.status || ''} />
                         </div>

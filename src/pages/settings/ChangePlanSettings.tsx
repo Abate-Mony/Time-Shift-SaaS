@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { useNavigate, useOutletContext } from 'react-router'
-import { ArrowLeft, Lock } from 'lucide-react'
+import { ArrowLeft, Loader2, Lock } from 'lucide-react'
 import type { iUser } from '@/layouts/dashboardlayout'
-import { CURRENT_PLAN_ID, PLANS, type Billing } from '@/utils/constants/plant'
+import { getCompanyPlan, getPlanCatalog } from '@/utils/api-request-functions'
+import type { Billing } from '@/utils/constants/plant'
+import { useQuery } from '@tanstack/react-query'
 import { BillingToggle } from '@/components/billing/BillingToggle'
 import { PlanCard } from '@/components/billing/PlanCard'
 
@@ -11,6 +13,8 @@ export default function ChangePlanSettings() {
   const isAdmin = user?.role === 'admin'
   const navigate = useNavigate()
   const [billing, setBilling] = useState<Billing>('annual')
+  const { data } = useQuery({ queryKey: ['company-plan'], queryFn: getCompanyPlan, enabled: isAdmin })
+  const { data: plans, isLoading } = useQuery({ queryKey: ['plan-catalog'], queryFn: getPlanCatalog, enabled: isAdmin })
 
   if (!isAdmin) {
     return (
@@ -43,23 +47,29 @@ export default function ChangePlanSettings() {
         <BillingToggle billing={billing} onChange={setBilling} />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
-        {PLANS.map(plan => (
-          <PlanCard
-            key={plan.id}
-            plan={plan}
-            billing={billing}
-            isCurrent={plan.id === CURRENT_PLAN_ID}
-            onSelect={() => {
-              if (plan.id === 'enterprise') {
-                // Contact sales — no self-serve checkout for Enterprise.
-                return
-              }
-              onSelectPlan(plan.id, billing)
-            }}
-          />
-        ))}
-      </div>
+      {isLoading ? (
+        <div className="flex justify-center py-16 text-slate-400">
+          <Loader2 size={22} className="animate-spin" />
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-start">
+          {plans?.map(plan => (
+            <PlanCard
+              key={plan.id}
+              plan={plan}
+              billing={billing}
+              isCurrent={plan.id === data?.plan}
+              onSelect={() => {
+                if (plan.id === 'enterprise') {
+                  // Contact sales — no self-serve checkout for Enterprise.
+                  return
+                }
+                onSelectPlan(plan.id, billing)
+              }}
+            />
+          ))}
+        </div>
+      )}
     </div>
   )
 }

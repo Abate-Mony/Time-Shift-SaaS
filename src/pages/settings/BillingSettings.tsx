@@ -1,13 +1,27 @@
 import { Button } from '@/components/ui/button'
 import type { iUser } from '@/layouts/dashboardlayout'
-import { CURRENT_PLAN_ID, PLANS } from '@/utils/constants/plant'
+import { getCompanyPlan, getPlanCatalog } from '@/utils/api-request-functions'
+import { useQuery } from '@tanstack/react-query'
 import { Check, Lock } from 'lucide-react'
 import { useNavigate, useOutletContext } from 'react-router'
+
+const FEATURE_LABEL = {
+    gpsVerification: 'GPS clock-in verification',
+    recurringJobs: 'Recurring job templates',
+    openShifts: 'Open shifts & approval workflows',
+    advancedReports: 'Advanced reports & analytics',
+} as const
 
 export default function BillingSettings() {
     const { user } = useOutletContext<{ user: iUser }>()
     const isAdmin = user?.role === 'admin'
     const navigate = useNavigate()
+
+    // Same source of truth the plan picker (ChangePlanSettings) uses, so this
+    // badge and "your current plan" over there can't silently disagree.
+    const { data } = useQuery({ queryKey: ['company-plan'], queryFn: getCompanyPlan, enabled: isAdmin })
+    const { data: plans } = useQuery({ queryKey: ['plan-catalog'], queryFn: getPlanCatalog, enabled: isAdmin })
+    const currentPlan = plans?.find(p => p.id === data?.plan)
 
     if (!isAdmin) {
         return (
@@ -20,9 +34,17 @@ export default function BillingSettings() {
         )
     }
 
-    // Same source of truth the plan picker (ChangePlanSettings) uses, so this
-    // badge and "your current plan" over there can't silently disagree.
-    const currentPlan = PLANS.find(p => p.id === CURRENT_PLAN_ID)
+    const enabledFeatures = data
+        ? (Object.entries(data.limits.features) as [keyof typeof FEATURE_LABEL, boolean][])
+            .filter(([, enabled]) => enabled)
+            .map(([key]) => FEATURE_LABEL[key])
+        : []
+    const workerLimitLabel = data
+        ? data.maxWorkers === -1 ? 'Unlimited workers' : `Up to ${data.maxWorkers} workers`
+        : null
+    const jobLimitLabel = data
+        ? data.limits.maxJobsPerMonth === -1 ? 'Unlimited jobs' : `Up to ${data.limits.maxJobsPerMonth} jobs per month`
+        : null
 
     return (
         <div className="p-6 max-w-3xl mx-auto animate-fade-in flex flex-col gap-4">
@@ -33,18 +55,17 @@ export default function BillingSettings() {
                         <p className="text-xs text-slate-500 mt-0.5">Billed monthly</p>
                     </div>
                     <span className="bg-[#1E3A5F] text-white text-xs font-semibold px-3 py-1 rounded-full shrink-0">
-                        {currentPlan?.name ?? 'Enterprise'}
+                        {currentPlan?.name ?? '—'}
                     </span>
                 </div>
-                <div className="flex items-end gap-1 mb-4">
-                    {/* This company's actual negotiated rate — Enterprise itself is
-                        "Custom" pricing in PLANS, so this number is deliberately its
-                        own thing, not derived from that tier's public price. */}
-                    <span className="text-3xl font-bold text-slate-900">£149</span>
-                    <span className="text-slate-500 text-sm mb-1">/month</span>
-                </div>
+                {currentPlan?.monthlyPrice != null && (
+                    <div className="flex items-end gap-1 mb-4">
+                        <span className="text-3xl font-bold text-slate-900">£{currentPlan.monthlyPrice}</span>
+                        <span className="text-slate-500 text-sm mb-1">/month</span>
+                    </div>
+                )}
                 <div className="flex flex-col gap-2 mb-5">
-                    {['Unlimited jobs', 'Up to 50 workers', 'Advanced analytics', 'Payroll export', 'Priority support', 'GPS tracking'].map(f => (
+                    {[jobLimitLabel, workerLimitLabel, ...enabledFeatures].filter((f): f is string => !!f).map(f => (
                         <div key={f} className="flex items-center gap-2">
                             <Check size={14} className="text-emerald-500 shrink-0" />
                             <span className="text-sm text-slate-700">{f}</span>
@@ -55,7 +76,7 @@ export default function BillingSettings() {
                     <Button variant="outline" size="sm" onClick={() => navigate('/settings/billing/plans')}>
                         Change Plan
                     </Button>
-                    <Button variant="destructive" size="sm">Cancel Subscription</Button>
+                    {currentPlan?.id !== 'free' && <Button variant="destructive" size="sm">Cancel Subscription</Button>}
                 </div>
             </div>
 

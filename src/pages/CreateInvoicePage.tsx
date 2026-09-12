@@ -12,6 +12,7 @@ import { AlertTriangle, ChevronLeft, FileQuestion, Loader2, Plus, X } from 'luci
 import { useEffect, useMemo, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
 import { useNavigate } from 'react-router'
+import { backLinkState } from '@/hooks/useBackLink'
 
 export const loader = (queryClient: QueryClient) => async () => {
     await queryClient.ensureQueryData(clientsQuery())
@@ -477,7 +478,7 @@ export function CreateInvoicePage() {
                                     <span className="truncate">{p.title} · {dayjs(p.date).format('D MMM')} · {p.workerName}</span>
                                     <button
                                         type="button"
-                                        onClick={() => navigate(`/jobs/${p.jobId}`)}
+                                        onClick={() => navigate(`/jobs/${p.jobId}`, { state: backLinkState('New Invoice') })}
                                         className="font-semibold underline shrink-0"
                                     >
                                         View job

@@ -9,6 +9,7 @@ import dayjs from 'dayjs'
 import { ChevronLeft, Mail, Pencil, Printer, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate, useParams, type LoaderFunctionArgs } from 'react-router'
+import { useBackLink } from '@/hooks/useBackLink'
 
 const STATUS_STYLES: Record<string, string> = {
     draft: 'bg-slate-100 text-slate-600',
@@ -41,6 +42,7 @@ export const loader = (queryClient: QueryClient) => async ({ params }: LoaderFun
 
 export function InvoiceDetail() {
     const navigate = useNavigate()
+    const back = useBackLink({ to: '/invoices', label: 'Invoices' })
     const id = useParams().id
     const data = useQuery(singleInvoice(id)).data
     const invoice = data?.invoice
@@ -115,10 +117,10 @@ export function InvoiceDetail() {
 
             <div id="invoice-no-print" className="flex items-center justify-between mb-6">
                 <button
-                    onClick={() => navigate('/invoices')}
+                    onClick={() => navigate(back.to)}
                     className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition-colors"
                 >
-                    <ChevronLeft size={16} /> Back to Invoices
+                    <ChevronLeft size={16} /> Back to {back.label}
                 </button>
                 <div className="flex items-center gap-2">
                     {invoice.status === 'draft' && (

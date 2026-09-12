@@ -49,3 +49,4 @@ export { default as ClentBillingPage } from "./ClientDetails/ClientDetailsBillin
 export { SuspendedAccountPage } from "./SuspendedAccountPage"
 export { default as CheckOutSettings } from "./settings/CheckOutSettings"
 export { default as ChangePlanSettings } from "./settings/ChangePlanSettings"
+export { default as TeamsCreatepage, loader as teamsCreateLoader } from "./teams/teamsCreatepage"

@@ -24,6 +24,7 @@ import {
     type TimesheetPeriodType,
 } from '@/utils/api-request-functions'
 import dayjs from 'dayjs'
+import { useBackLink } from '@/hooks/useBackLink'
 
 // ─── API shape ──────────────────────────────────────────────────────────────
 
@@ -141,6 +142,7 @@ export function WorkerProfile() {
     const onNavigate = (path: string) => navigate(path)
     const { id } = useParams<{ id: string }>()
     const workerId = id as string
+    const back = useBackLink({ to: "/workers", label: "Workers" })
 
     const { data } = useQuery(workerStatsQuery(workerId))
     const restrictions = useQuery(restrictionsQuery()).data ?? []
@@ -208,11 +210,11 @@ export function WorkerProfile() {
 
             {/* Breadcrumb */}
             <button
-                onClick={() => onNavigate('/workers')}
+                onClick={() => onNavigate(back.to)}
                 className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition-colors mb-5 group"
             >
                 <ChevronLeft size={15} className="group-hover:-translate-x-0.5 transition-transform" />
-                Back to Workers
+                Back to {back.label}
             </button>
 
             {/* ── Hero banner ──────────────────────────────────────────────────── */}

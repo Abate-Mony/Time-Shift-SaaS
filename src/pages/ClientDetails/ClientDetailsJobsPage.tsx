@@ -6,6 +6,7 @@ import { Briefcase, Calendar, ExternalLink, MapPin, Plus } from "lucide-react"
 import { useState } from "react"
 import { Link } from "react-router"
 import { useClientDetail } from "./ClientDetailContext"
+import { backLinkState } from "@/hooks/useBackLink"
 
 function jobStatusStyle(status?: string) {
     if (status === 'published') return 'bg-blue-50 text-blue-700'
@@ -66,6 +67,7 @@ export function ClientDetailsaJobsPage() {
                 <div className="bg-white border border-[#E2E8F0] rounded-xl overflow-hidden">
                     {filtered.map((job, i) => (
                         <Link to={`/jobs/${job._id}`}
+                            state={backLinkState(client.name)}
                             key={job._id}
                             className={`w-full flex items-center justify-between gap-4 px-5 py-3.5 hover:bg-slate-50/70 transition-colors text-left ${i > 0 ? 'border-t border-[#E2E8F0]' : ''}`}
                         >

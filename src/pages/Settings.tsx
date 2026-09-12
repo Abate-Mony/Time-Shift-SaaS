@@ -30,6 +30,8 @@ import {
     SelectValue,
 } from '@/components/ui/select'
 import { Input } from '@/components/ui'
+import { PlanLockBadge } from '@/components/billing/PlanLockBadge'
+import { useCompanyPlan } from '@/hooks/useCompanyPlan'
 
 // ── Same pattern as CreateJob.tsx — a plain message under the field ─────────
 const FieldError = ({ message }: { message?: string }) => {
@@ -201,17 +203,25 @@ function NumberField({ label, description, error, suffix, className, ...props }:
     )
 }
 
-function ToggleField({ label, description, checked, onChange, disabled }: {
+function ToggleField({ label, description, checked, onChange, disabled, lockedLabel }: {
     label: string
     description: string
     checked: boolean
     onChange: (v: boolean) => void
     disabled?: boolean
+    // Set when `disabled` is specifically because the plan doesn't include
+    // this — shows a badge instead of just quietly greying out, so it's
+    // clear this isn't a permissions thing. Backend rejects it independently
+    // either way (see server's planLimits.ts).
+    lockedLabel?: string
 }) {
     return (
         <div className="flex items-center justify-between gap-4 min-w-0">
             <div className="min-w-0">
-                <p className="text-sm font-medium text-slate-800">{label}</p>
+                <div className="flex items-center gap-2 flex-wrap">
+                    <p className="text-sm font-medium text-slate-800">{label}</p>
+                    {lockedLabel && !checked && <PlanLockBadge label={lockedLabel} />}
+                </div>
                 <p className="text-xs text-slate-500 mt-0.5">{description}</p>
             </div>
             <button
@@ -219,6 +229,7 @@ function ToggleField({ label, description, checked, onChange, disabled }: {
                 role="switch"
                 aria-checked={checked}
                 disabled={disabled}
+                title={lockedLabel && !checked ? 'Upgrade your plan to use this' : undefined}
                 onClick={() => onChange(!checked)}
                 className={cn(
                     'w-10 h-6 rounded-full transition-colors relative shrink-0 disabled:opacity-60 disabled:cursor-not-allowed',
@@ -231,24 +242,31 @@ function ToggleField({ label, description, checked, onChange, disabled }: {
     )
 }
 
-function SegmentedControl<T extends string>({ label, description, options, value, onChange, disabled }: {
+function SegmentedControl<T extends string>({ label, description, options, value, onChange, disabled, lockedLabel }: {
     label: string
     description: string
-    options: { value: T; label: string }[]
+    // Per-option disabling — e.g. geofence "Off" always stays pickable, but
+    // "Warn"/"Enforce" are muted below the plan that includes GPS verification.
+    options: { value: T; label: string; disabled?: boolean }[]
     value: T
     onChange: (v: T) => void
     disabled?: boolean
+    lockedLabel?: string
 }) {
     return (
         <div className="flex flex-col gap-1 min-w-0">
-            <label className="text-sm font-medium text-slate-800">{label}</label>
+            <div className="flex items-center gap-2 flex-wrap">
+                <label className="text-sm font-medium text-slate-800">{label}</label>
+                {lockedLabel && <PlanLockBadge label={lockedLabel} />}
+            </div>
             <p className="text-xs text-slate-500">{description}</p>
             <div className="inline-flex w-fit p-1 bg-slate-100 rounded-xl gap-1 mt-1 min-w-0 max-w-full overflow-x-auto">
                 {options.map(opt => (
                     <button
                         key={opt.value}
                         type="button"
-                        disabled={disabled}
+                        disabled={disabled || opt.disabled}
+                        title={opt.disabled ? 'Upgrade your plan to use this' : undefined}
                         onClick={() => onChange(opt.value)}
                         className={cn(
                             'px-3.5 h-8 rounded-lg text-xs font-semibold transition-all whitespace-nowrap disabled:opacity-60 disabled:cursor-not-allowed',
@@ -343,6 +361,9 @@ const CURRENCY_SYMBOLS: Record<Currency, string> = { GBP: '£', USD: '$', EUR: '
 export function Settings() {
     const { user } = useOutletContext<{ user: iUser }>()
     const isAdmin = user?.role === 'admin'
+    const { hasFeature } = useCompanyPlan()
+    const canGps = hasFeature('gpsVerification')
+    const canOpenShifts = hasFeature('openShifts')
 
     const { data } = useQuery(companySettingsQuery)
     const settings = data?.settings
@@ -471,10 +492,11 @@ export function Settings() {
                                 value={field.value}
                                 onChange={field.onChange}
                                 disabled={disabled}
+                                lockedLabel={!canGps ? 'Upgrade for GPS verification' : undefined}
                                 options={[
                                     { value: 'off', label: 'Off' },
-                                    { value: 'warn', label: 'Warn' },
-                                    { value: 'enforce', label: 'Enforce' },
+                                    { value: 'warn', label: 'Warn', disabled: !canGps },
+                                    { value: 'enforce', label: 'Enforce', disabled: !canGps },
                                 ]}
                             />
                         )}
@@ -633,7 +655,8 @@ export function Settings() {
                                 description="Lets workers browse and claim unfilled shifts themselves."
                                 checked={field.value}
                                 onChange={field.onChange}
-                                disabled={disabled}
+                                disabled={disabled || !canOpenShifts}
+                                lockedLabel={!canOpenShifts ? 'Upgrade for open shifts' : undefined}
                             />
                         )}
                     />

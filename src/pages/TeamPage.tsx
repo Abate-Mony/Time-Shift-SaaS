@@ -2,11 +2,12 @@ import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   UserPlus, Search, Mail, Users, ShieldCheck, Clock, MoreHorizontal,
-  RefreshCw, Ban, X, ChevronDown, ShieldAlert, Scale, Check,
+  RefreshCw, Ban, ChevronDown, ShieldAlert, Scale, Check,
   Briefcase, User,
 } from 'lucide-react'
 import { useQuery, type QueryClient } from '@tanstack/react-query'
-import { Link } from 'react-router'
+import { Link, useNavigate } from 'react-router'
+import { backLinkState } from '@/hooks/useBackLink'
 import toast from 'react-hot-toast'
 import customFetch from '@/utils/customFetch'
 import { queryClient } from '@/lib/queryClient'
@@ -23,7 +24,7 @@ import {
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type TeamRole = 'worker' | 'manager'
+export type TeamRole = 'worker' | 'manager' | 'admin'
 type RowStatus = 'active' | 'suspended' | 'pending'
 
 interface TeamUser extends AppUser {
@@ -31,7 +32,7 @@ interface TeamUser extends AppUser {
   hoursThisWeek: number
 }
 
-interface InvitationListItem {
+export interface InvitationListItem {
   _id: string
   email: string
   fullname?: string
@@ -65,7 +66,7 @@ const restrictionsQuery = () => ({
   queryFn: getActiveRestrictions,
 })
 
-const teamQuery = () => ({
+export const teamQuery = () => ({
   queryKey: ['team'],
   queryFn: async () => {
     // No `role` param — the backend already scopes an admin's /users/users
@@ -76,7 +77,7 @@ const teamQuery = () => ({
   },
 })
 
-const invitationsQuery = () => ({
+export const invitationsQuery = () => ({
   queryKey: ['invitations', 'pending'],
   queryFn: async () => {
     const { data } = await customFetch.get<{ invitations: InvitationListItem[]; totalInvitations: number }>(
@@ -141,9 +142,8 @@ function StatusBadge({ status, sentDate, restriction }: { status: RowStatus; sen
   // into the same "Suspended" label.
   const label = restriction ? ACCESS_LEVEL_LABELS[restriction.accessLevel] : 'Suspended'
   return (
-    <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${
-      restriction && restriction.accessLevel !== 'none' ? 'text-amber-700 bg-amber-50' : 'text-red-600 bg-red-50'
-    }`}>
+    <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${restriction && restriction.accessLevel !== 'none' ? 'text-amber-700 bg-amber-50' : 'text-red-600 bg-red-50'
+      }`}>
       <span className={`w-1.5 h-1.5 rounded-full ${restriction && restriction.accessLevel !== 'none' ? 'bg-amber-400' : 'bg-red-500'}`} />
       {label}
     </span>
@@ -152,11 +152,10 @@ function StatusBadge({ status, sentDate, restriction }: { status: RowStatus; sen
 
 function RoleBadge({ role }: { role: TeamRole }) {
   return (
-    <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${
-      role === 'manager'
-        ? 'bg-[#1E3A5F]/8 text-[#1E3A5F]'
-        : 'bg-slate-100 text-slate-600'
-    }`}>
+    <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${role === 'manager'
+      ? 'bg-[#1E3A5F]/8 text-[#1E3A5F]'
+      : 'bg-slate-100 text-slate-600'
+      }`}>
       {role === 'manager' ? <ShieldCheck size={10} /> : <Briefcase size={10} />}
       {role === 'manager' ? 'Manager' : 'Worker'}
     </span>
@@ -220,6 +219,7 @@ function ActionsMenu({
                 {row.role === 'worker' && (
                   <Link
                     to={`/workers/${row.key}/worker-profile`}
+                    state={backLinkState('Team')}
                     onClick={() => setOpen(false)}
                     className="w-full flex items-center gap-2.5 px-3.5 py-2 text-sm transition-colors text-left text-slate-700 hover:bg-slate-50"
                   >
@@ -256,9 +256,8 @@ function MenuButton({ icon, label, onClick, destructive }: { icon: React.ReactNo
   return (
     <button
       onClick={onClick}
-      className={`w-full flex items-center gap-2.5 px-3.5 py-2 text-sm transition-colors text-left ${
-        destructive ? 'text-red-600 hover:bg-red-50' : 'text-slate-700 hover:bg-slate-50'
-      }`}
+      className={`w-full flex items-center gap-2.5 px-3.5 py-2 text-sm transition-colors text-left ${destructive ? 'text-red-600 hover:bg-red-50' : 'text-slate-700 hover:bg-slate-50'
+        }`}
     >
       <span className="shrink-0">{icon}</span>
       {label}
@@ -363,266 +362,6 @@ function ReviewAppealDialog({ row, onRespond, onCancel, loading }: {
   )
 }
 
-// ─── Invite dialog ────────────────────────────────────────────────────────────
-
-type InviteFormError = Partial<Record<'email', string>>
-type ApiState = 'idle' | 'submitting' | 'duplicate'
-
-interface InviteForm {
-  email: string
-  role: TeamRole
-  fullname: string
-  phone: string
-  payRate: string
-  employeeId: string
-}
-
-function RoleCard({ role, selected, onSelect }: { role: TeamRole; selected: boolean; onSelect: () => void }) {
-  const isWorker = role === 'worker'
-  return (
-    <button
-      type="button"
-      onClick={onSelect}
-      className={`w-full text-left p-4 rounded-xl border-2 transition-all ${
-        selected
-          ? 'border-[#1E3A5F] bg-[#1E3A5F]/[0.03]'
-          : 'border-slate-200 hover:border-slate-300 bg-white'
-      }`}
-    >
-      <div className="flex items-start gap-3">
-        <div className={`w-4 h-4 rounded-full border-2 mt-0.5 flex items-center justify-center shrink-0 transition-all ${
-          selected ? 'border-[#1E3A5F]' : 'border-slate-300'
-        }`}>
-          {selected && <div className="w-2 h-2 rounded-full bg-[#1E3A5F]" />}
-        </div>
-        <div>
-          <div className="flex items-center gap-1.5 mb-0.5">
-            {isWorker ? <Briefcase size={13} className={selected ? 'text-[#1E3A5F]' : 'text-slate-400'} /> : <ShieldCheck size={13} className={selected ? 'text-[#1E3A5F]' : 'text-slate-400'} />}
-            <span className={`text-sm font-bold ${selected ? 'text-[#1E3A5F]' : 'text-slate-700'}`}>
-              {isWorker ? 'Worker' : 'Manager'}
-            </span>
-          </div>
-          <p className="text-xs text-slate-500 leading-relaxed">
-            {isWorker
-              ? 'Can view assigned jobs, accept shifts, clock in/out and access timesheets.'
-              : 'Can manage jobs, workers and operational activity based on permissions.'}
-          </p>
-        </div>
-      </div>
-    </button>
-  )
-}
-
-function InviteDialog({ onClose, onSuccess, existingEmails }: {
-  onClose: () => void
-  onSuccess: (invitation: InvitationListItem) => void
-  existingEmails: string[]
-}) {
-  const [form, setForm] = useState<InviteForm>({
-    email: '', role: 'worker', fullname: '', phone: '', payRate: '', employeeId: '',
-  })
-  const [errors, setErrors] = useState<InviteFormError>({})
-  const [apiState, setApiState] = useState<ApiState>('idle')
-  const [duplicateMessage, setDuplicateMessage] = useState('')
-  const [permissionError, setPermissionError] = useState('')
-  const emailRef = useRef<HTMLInputElement>(null)
-
-  useEffect(() => { emailRef.current?.focus() }, [])
-
-  const validate = () => {
-    const errs: InviteFormError = {}
-    const email = form.email.trim().toLowerCase()
-    if (!email) errs.email = 'Enter an email address.'
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errs.email = 'Enter a valid email address.'
-    setErrors(errs)
-    return Object.keys(errs).length === 0
-  }
-
-  const handleSubmit = async () => {
-    if (!validate()) return
-    const email = form.email.trim().toLowerCase()
-
-    // Fast client-side pre-check for UX — the backend re-checks
-    // authoritatively regardless (someone else could invite the same
-    // email between this render and the submit).
-    if (existingEmails.includes(email)) {
-      setDuplicateMessage(`An invitation or account already exists for ${email}.`)
-      setApiState('duplicate')
-      return
-    }
-
-    setPermissionError('')
-    setApiState('submitting')
-    try {
-      const payRate = form.payRate.trim() ? Number(form.payRate) : undefined
-      const { data } = await customFetch.post<{ invitation: InvitationListItem }>('/invitations', {
-        email,
-        role: form.role,
-        fullname: form.fullname.trim() || undefined,
-        phone: form.phone.trim() || undefined,
-        employeeId: form.employeeId.trim() || undefined,
-        payRate,
-      })
-      onSuccess(data.invitation)
-    } catch (err: any) {
-      const code: string | undefined = err.response?.data?.code
-      const message: string | undefined = err.response?.data?.msg
-
-      if (code === 'ALREADY_MEMBER' || code === 'INVITATION_PENDING') {
-        setDuplicateMessage(message ?? 'This email already has a pending invitation or account.')
-        setApiState('duplicate')
-      } else if (code === 'INSUFFICIENT_PERMISSION') {
-        setPermissionError(message ?? 'Only admins can invite managers.')
-        setApiState('idle')
-      } else {
-        toast.error(message ?? 'Failed to send the invitation, try again.')
-        setApiState('idle')
-      }
-    }
-  }
-
-  // Duplicate state
-  if (apiState === 'duplicate') {
-    return (
-      <DialogBackdrop onClose={onClose}>
-        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-7">
-          <div className="w-10 h-10 rounded-full bg-amber-50 flex items-center justify-center mb-4">
-            <Mail size={18} className="text-amber-500" />
-          </div>
-          <h3 className="text-base font-bold text-slate-900 mb-1">Can't send this invitation</h3>
-          <p className="text-sm text-slate-500 leading-relaxed mb-6">{duplicateMessage}</p>
-          <p className="text-xs text-slate-400 leading-relaxed mb-6">
-            If an invitation is already pending, use "Resend invitation" from their row in the team list instead.
-          </p>
-          <div className="flex gap-3 justify-end">
-            <button onClick={onClose} className="h-9 px-4 text-sm font-semibold text-slate-600 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors">
-              Close
-            </button>
-            <button
-              onClick={() => setApiState('idle')}
-              className="h-9 px-4 text-sm font-semibold text-white bg-[#1E3A5F] rounded-xl hover:bg-[#162D4A] transition-colors"
-            >
-              Edit details
-            </button>
-          </div>
-        </div>
-      </DialogBackdrop>
-    )
-  }
-
-  const ifl = (err?: string) =>
-    `w-full h-10 px-3.5 border rounded-xl text-sm text-slate-800 bg-white placeholder:text-slate-400
-     focus:outline-none focus:ring-2 transition-all ${
-       err ? 'border-red-400 focus:ring-red-100 focus:border-red-400' : 'border-slate-200 focus:ring-[#1E3A5F]/15 focus:border-[#1E3A5F]/40'
-     }`
-
-  return (
-    <DialogBackdrop onClose={onClose}>
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
-        {/* Header */}
-        <div className="px-6 pt-6 pb-5 border-b border-slate-100 flex items-start justify-between shrink-0">
-          <div>
-            <h2 className="text-base font-bold text-slate-900">Invite team member</h2>
-            <p className="text-sm text-slate-500 mt-0.5">
-              {"Send an invitation to join your company. They'll create their own password when they accept."}
-            </p>
-          </div>
-          <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors ml-4 shrink-0">
-            <X size={16} />
-          </button>
-        </div>
-
-        {/* Body */}
-        <div className="px-6 py-5 flex flex-col gap-5 overflow-y-auto">
-          {/* Email */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-semibold text-slate-700">Work email <span className="text-red-400">*</span></label>
-            <input
-              ref={emailRef}
-              type="email"
-              className={ifl(errors.email)}
-              placeholder="john@example.com"
-              value={form.email}
-              onChange={e => { setForm(f => ({ ...f, email: e.target.value })); if (errors.email) setErrors(er => ({ ...er, email: undefined })) }}
-            />
-            {errors.email
-              ? <p className="text-xs text-red-500">{errors.email}</p>
-              : <p className="text-xs text-slate-400">{"We'll send the invitation to this address."}</p>
-            }
-          </div>
-
-          {/* Role */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-semibold text-slate-700">Role <span className="text-red-400">*</span></label>
-            <div className="flex flex-col gap-2">
-              <RoleCard role="worker" selected={form.role === 'worker'} onSelect={() => { setForm(f => ({ ...f, role: 'worker' })); setPermissionError('') }} />
-              <RoleCard role="manager" selected={form.role === 'manager'} onSelect={() => setForm(f => ({ ...f, role: 'manager' }))} />
-            </div>
-            {permissionError && <p className="text-xs text-red-500">{permissionError}</p>}
-          </div>
-
-          {/* Name + Phone */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-semibold text-slate-700">Full name <span className="text-slate-400 font-normal">(optional)</span></label>
-              <input className={ifl()} placeholder="John Smith" value={form.fullname} onChange={e => setForm(f => ({ ...f, fullname: e.target.value }))} />
-              <p className="text-xs text-slate-400">The team member can complete this later.</p>
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-semibold text-slate-700">Phone <span className="text-slate-400 font-normal">(optional)</span></label>
-              <input type="tel" className={ifl()} placeholder="+44 7700 900000" value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} />
-            </div>
-          </div>
-
-          {/* Pay rate (workers only) */}
-          {form.role === 'worker' && (
-            <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-semibold text-slate-700">Default pay rate <span className="text-slate-400 font-normal">(optional)</span></label>
-              <div className="flex items-center gap-0 border border-slate-200 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-[#1E3A5F]/15 focus-within:border-[#1E3A5F]/40 transition-all">
-                <span className="px-3 bg-slate-50 border-r border-slate-200 text-sm text-slate-500 h-10 flex items-center">£</span>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  className="flex-1 h-10 px-3 text-sm text-slate-800 bg-white outline-none"
-                  placeholder="13.50"
-                  value={form.payRate}
-                  onChange={e => setForm(f => ({ ...f, payRate: e.target.value }))}
-                />
-                <span className="px-3 bg-slate-50 border-l border-slate-200 text-sm text-slate-500 h-10 flex items-center">/ hour</span>
-              </div>
-              <p className="text-xs text-slate-400">This can be changed later and individual jobs may override it.</p>
-            </div>
-          )}
-
-          {/* Employee ID */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-semibold text-slate-700">Employee ID <span className="text-slate-400 font-normal">(optional)</span></label>
-            <input className={ifl()} placeholder="CLN-104" value={form.employeeId} onChange={e => setForm(f => ({ ...f, employeeId: e.target.value }))} />
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="px-6 py-4 border-t border-slate-100 flex items-center justify-end gap-3 shrink-0 bg-white">
-          <button onClick={onClose} className="h-9 px-4 text-sm font-semibold text-slate-600 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors">
-            Cancel
-          </button>
-          <button
-            onClick={handleSubmit}
-            disabled={apiState === 'submitting'}
-            className="h-9 px-5 text-sm font-bold text-white bg-[#1E3A5F] rounded-xl hover:bg-[#162D4A] transition-colors disabled:opacity-70 flex items-center gap-2"
-          >
-            {apiState === 'submitting'
-              ? <><span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" /> Sending invitation…</>
-              : <><UserPlus size={14} /> Send invitation</>
-            }
-          </button>
-        </div>
-      </div>
-    </DialogBackdrop>
-  )
-}
-
 // ─── Dialog backdrop ──────────────────────────────────────────────────────────
 
 function DialogBackdrop({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
@@ -658,6 +397,7 @@ type FilterRole = 'all' | 'worker' | 'manager'
 type FilterStatus = 'all' | 'active' | 'pending' | 'suspended'
 
 export function Team() {
+  const navigate = useNavigate()
   const { users } = useQuery(teamQuery()).data as { users: TeamUser[]; nHits: number }
   const { invitations } = useQuery(invitationsQuery()).data as { invitations: InvitationListItem[]; totalInvitations: number }
   const restrictions = useQuery(restrictionsQuery()).data ?? []
@@ -665,7 +405,6 @@ export function Team() {
   const [search, setSearch] = useState('')
   const [filterRole, setFilterRole] = useState<FilterRole>('all')
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('all')
-  const [showInvite, setShowInvite] = useState(false)
   const [revokeTarget, setRevokeTarget] = useState<Row | null>(null)
   const [revokeLoading, setRevokeLoading] = useState(false)
   const [resendLoading, setResendLoading] = useState<string | null>(null)
@@ -718,12 +457,6 @@ export function Team() {
     workers: users.filter(m => m.role === 'worker' && m.isActive).length,
     managers: users.filter(m => m.role === 'manager' && m.isActive).length,
     pending: invitations.length,
-  }
-
-  const handleInviteSuccess = (invitation: InvitationListItem) => {
-    setShowInvite(false)
-    toast.success(`Invitation sent to ${invitation.email}`)
-    queryClient.invalidateQueries({ queryKey: ['invitations'] })
   }
 
   const handleRevoke = async () => {
@@ -796,13 +529,14 @@ export function Team() {
           <h1 className="text-xl font-bold text-slate-900 tracking-tight">Team</h1>
           <p className="text-sm text-slate-500 mt-0.5">Manage the people who work across your company.</p>
         </div>
-        <button
-          onClick={() => setShowInvite(true)}
-          className="h-9 px-4 bg-[#1E3A5F] text-white text-sm font-bold rounded-xl hover:bg-[#162D4A] transition-colors flex items-center gap-2 shadow-sm"
-        >
-          <UserPlus size={14} />
-          Invite team member
-        </button>
+        <Link to="/team/invite" className="shrink-0">
+          <button
+            className="h-9 px-4 bg-[#1E3A5F] text-white text-sm font-bold rounded-xl hover:bg-[#162D4A] transition-colors flex items-center gap-2 shadow-sm"
+          >
+            <UserPlus size={14} />
+            Invite team member
+          </button>
+        </Link>
       </div>
 
       {/* Stats */}
@@ -833,7 +567,7 @@ export function Team() {
             Invite workers and managers so you can assign jobs, manage schedules and track work.
           </p>
           <button
-            onClick={() => setShowInvite(true)}
+            onClick={() => navigate('/team/invite')}
             className="h-10 px-5 bg-[#1E3A5F] text-white text-sm font-bold rounded-xl hover:bg-[#162D4A] transition-colors flex items-center gap-2"
           >
             <UserPlus size={14} />
@@ -951,13 +685,6 @@ export function Team() {
 
       {/* Dialogs */}
       <AnimatePresence>
-        {showInvite && (
-          <InviteDialog
-            onClose={() => setShowInvite(false)}
-            onSuccess={handleInviteSuccess}
-            existingEmails={rows.map(m => m.email)}
-          />
-        )}
         {revokeTarget && (
           <RevokeDialog
             row={revokeTarget}

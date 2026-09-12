@@ -2,7 +2,7 @@ import { queryClient } from "@/lib/queryClient";
 import { isAxiosError } from "axios";
 import toast from "react-hot-toast";
 import customFetch from "./customFetch";
-import type { ClientBillingInfo, CreateJobForm, EditProfileForm, EligibleWorkResponse, EventNotificationPreference, Invoice, InvoiceAdjustmentInput, InvoiceCompanyInfo, InvoiceStatus, NotificationEvent, NotificationPreferences, TimesheetSummaryResponse } from "./types";
+import type { ClientBillingInfo, CompanyPlanId, CompanyPlanInfo, CreateJobForm, EditProfileForm, EligibleWorkResponse, EventNotificationPreference, Invoice, InvoiceAdjustmentInput, InvoiceCompanyInfo, InvoiceStatus, NotificationEvent, NotificationPreferences, PlanCatalogEntry, PlanCatalogResponse, TimesheetSummaryResponse } from "./types";
 import type {
     AccessLevel,
     AccountRestriction,
@@ -855,6 +855,7 @@ export interface NotificationsResponse {
     page: number
     totalPages: number
     total: number
+    unreadCount: number
 }
 
 export const getNotifications = async (page: number): Promise<NotificationsResponse> => {
@@ -868,4 +869,28 @@ export const markNotificationRead = async (id: string): Promise<void> => {
 
 export const markAllNotificationsRead = async (): Promise<void> => {
     await customFetch.patch("/notifications/read-all")
+}
+
+// GET /companies/plans — the full pricing-page catalog (all four tiers).
+// Replaces the old hand-maintained PLANS array in utils/constants/plant.ts,
+// which had already drifted out of sync with the backend's real limits once.
+export const getPlanCatalog = async (): Promise<PlanCatalogEntry[]> => {
+    const { data } = await customFetch.get<PlanCatalogResponse>("/companies/plans")
+    return data.plans
+}
+
+// GET /companies/plan — the company's actual plan and what it unlocks.
+// Source of truth for the billing pages instead of the old hardcoded
+// CURRENT_PLAN_ID mock.
+export const getCompanyPlan = async (): Promise<CompanyPlanInfo> => {
+    const { data } = await customFetch.get<CompanyPlanInfo>("/companies/plan")
+    return data
+}
+
+// PATCH /companies/plan — no payment processing behind this yet (see the
+// backend note on updateCompanyPlan); this just sets the field for real,
+// replacing the checkout page's simulated round trip.
+export const updateCompanyPlan = async (plan: CompanyPlanId): Promise<CompanyPlanId> => {
+    const { data } = await customFetch.patch<{ plan: CompanyPlanId }>("/companies/plan", { plan })
+    return data.plan
 }

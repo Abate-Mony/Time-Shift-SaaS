@@ -44,6 +44,7 @@ import {
 } from "lucide-react"
 import { useEffect, useState, type ReactNode } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
+import { useBackLink, backLinkState } from '@/hooks/useBackLink'
 import AssignWorkersModal from '@/components/AssignWorkersModal'
 import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -241,7 +242,7 @@ function describeActivity(entry: ActivityLogEntry): React.ReactNode {
 export function JobDetail() {
     const id = useParams().id
     const navigate = useNavigate()
-    const onNavigate = (path: string) => navigate(path)
+    const onNavigate = (path: string, state?: object) => navigate(path, state ? { state } : undefined)
     const job = useQuery(singleJob(id))?.data?.job!
 
     // Which invoice(s), if any, already cover this job's billable work.
@@ -448,17 +449,17 @@ export function JobDetail() {
     // "worked longer than scheduled" heuristic above — this is what actually
     // gates payroll, and what a manager needs to resolve before approving.
     const pendingOvertimeWorkers = assignedWorkers.filter(w => w.overtimeStatus === "pending")
-
+    const back = useBackLink({ to: "/jobs", label: "Jobs" })
     return (
         <div className="p-6 animate-fade-in">
             {/* Breadcrumb */}
             <div className="flex items-center gap-2 mb-5">
                 <button
-                    onClick={() => onNavigate('/jobs')}
-                    className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition-colors group"
+                    onClick={() => onNavigate(back.to)}
+                    className="flex  cursor-pointer items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition-colors group"
                 >
                     <ChevronLeft size={15} className="group-hover:-translate-x-0.5 transition-transform" />
-                    Jobs
+                    Back to {back.label}
                 </button>
                 <span className="text-slate-300">/</span>
                 <span className="text-sm text-slate-800 font-medium truncate max-w-xs">{job.title}</span>
@@ -812,7 +813,7 @@ export function JobDetail() {
                                                 "grid grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-4 px-5 py-3.5 items-center hover:bg-slate-50/50 transition-colors cursor-pointer",
                                                 isOvertime && "bg-amber-50/40"
                                             )}
-                                            onClick={() => onNavigate(`/workers/${w.worker}/worker-profile`)}
+                                            onClick={() => onNavigate(`/workers/${w.worker}/worker-profile`, backLinkState(job.title))}
                                         >
                                             <div className="flex items-center gap-2.5">
                                                 <Avatar initials={getInitials(w.fullname)} size="sm" index={i} />
@@ -910,7 +911,7 @@ export function JobDetail() {
                                         invoiceLinks.map(({ invoiceId, label }) => (
                                             <button
                                                 key={invoiceId}
-                                                onClick={() => onNavigate(`/invoices/${invoiceId}`)}
+                                                onClick={() => onNavigate(`/invoices/${invoiceId}`, backLinkState(job.title))}
                                                 className="w-full h-10 rounded-xl bg-white border border-[#1E3A5F]/20 text-[#1E3A5F] text-sm font-semibold hover:bg-[#1E3A5F]/5 transition-colors flex items-center justify-center gap-2"
                                             >
                                                 <Receipt size={13} /> {label}
@@ -1142,7 +1143,7 @@ export function JobDetail() {
                                     <div
                                         key={w.email}
                                         className="flex items-center gap-3 px-5 py-3.5 hover:bg-slate-50/60 transition-colors cursor-pointer group"
-                                        onClick={() => onNavigate(`/workers/${w.worker}/worker-profile`)}
+                                        onClick={() => onNavigate(`/workers/${w.worker}/worker-profile`, backLinkState(job.title))}
                                     >
 
                                         {w.pendingApproval ? (

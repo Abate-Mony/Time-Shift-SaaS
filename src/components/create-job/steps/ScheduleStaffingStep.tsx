@@ -3,6 +3,8 @@ import { AnimatePresence, motion } from "framer-motion"
 import { Avatar, Input } from "@/components/ui"
 import { cn } from "@/lib/utils"
 import { RecurringJobSection } from "@/components/RecurringJobSection"
+import { PlanLockBadge } from "@/components/billing/PlanLockBadge"
+import { useCompanyPlan } from "@/hooks/useCompanyPlan"
 import { useCreateJob } from "../CreateJobContext"
 import { FieldError } from "../FieldError"
 
@@ -18,6 +20,10 @@ export function ScheduleStaffingStep() {
     setRecurring,
   } = useCreateJob()
 
+  const { hasFeature } = useCompanyPlan()
+  const canRecurring = hasFeature("recurringJobs")
+  const canOpenShifts = hasFeature("openShifts")
+
   const { register, setValue, watch, formState: { errors } } = form
 
   const date = watch("date")
@@ -29,7 +35,7 @@ export function ScheduleStaffingStep() {
   return (
     <div className="flex flex-col gap-5 min-w-0">
       {/* Recurrence */}
-      <RecurringJobSection value={recurring} onChange={setRecurring} startDate={date} sectionIndex={1} />
+      <RecurringJobSection value={recurring} onChange={setRecurring} startDate={date} sectionIndex={1} disabled={!canRecurring} />
 
       {/* Staffing */}
       <div className="bg-white rounded-xl border border-[#E2E8F0] p-6 min-w-0">
@@ -170,10 +176,14 @@ export function ScheduleStaffingStep() {
                 Lets any worker claim an unfilled slot on this shift.
               </p>
             </div>
-            <Switch
-              on={openToClaims}
-              onToggle={() => setValue("openToClaims", !openToClaims, { shouldValidate: true })}
-            />
+            <div className="flex items-center gap-2.5 shrink-0">
+              {!canOpenShifts && !openToClaims && <PlanLockBadge label="Upgrade for open shifts" />}
+              <Switch
+                on={openToClaims}
+                disabled={!canOpenShifts}
+                onToggle={() => setValue("openToClaims", !openToClaims, { shouldValidate: true })}
+              />
+            </div>
           </div>
 
           <AnimatePresence initial={false}>
@@ -209,15 +219,18 @@ export function ScheduleStaffingStep() {
   )
 }
 
-function Switch({ on, onToggle }: { on: boolean; onToggle: () => void }) {
+function Switch({ on, onToggle, disabled }: { on: boolean; onToggle: () => void; disabled?: boolean }) {
   return (
     <button
       type="button"
       role="switch"
       aria-checked={on}
+      disabled={disabled}
+      title={disabled ? "Upgrade your plan to use this" : undefined}
       onClick={onToggle}
       className={cn(
         "relative w-11 h-6 rounded-full transition-colors duration-200 shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#3B82F6] focus-visible:ring-offset-1",
+        disabled && "opacity-40 cursor-not-allowed",
         on ? "bg-[#1E3A5F]" : "bg-slate-200"
       )}
     >

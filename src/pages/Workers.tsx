@@ -14,6 +14,7 @@ import { useQuery, type QueryClient } from '@tanstack/react-query'
 import { Briefcase, ChevronRight, Clock, Mail, Phone, Star, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useLoaderData, useNavigation, type LoaderFunctionArgs, type Params } from 'react-router'
+import { backLinkState } from '@/hooks/useBackLink'
 import { Avatar, Card, StatusBadge } from '../components/ui'
 import { jobs } from '../data/mockData'
 
@@ -170,7 +171,7 @@ const SelectedWorkerCard = ({ selectedWorker, setSelected, users, scope, workerJ
           </div>
 
           <div className="mt-4 flex flex-row sm:flex-col gap-2">
-            <Link to={`/workers/${selectedWorker._id}/worker-profile`} className='w-full'>
+            <Link to={`/workers/${selectedWorker._id}/worker-profile`} state={backLinkState('Workers')} className='w-full'>
               <Button size="sm" className="w-full"
               >View Full Profile</Button>
             </Link>

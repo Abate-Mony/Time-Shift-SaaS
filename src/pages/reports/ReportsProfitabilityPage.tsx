@@ -10,6 +10,9 @@ import { reportsProfitabilityQuery, type RevenueBasis } from '@/utils/reports'
 import { clientsQuery } from '@/utils/clients'
 import { formatCurrency } from '@/utils/format'
 import { Link } from 'react-router'
+import { backLinkState } from '@/hooks/useBackLink'
+import { useCompanyPlan } from '@/hooks/useCompanyPlan'
+import { PlanUpgradeNotice } from '@/components/billing/PlanUpgradeNotice'
 
 const BASIS_OPTIONS: { id: RevenueBasis; label: string; hint: string }[] = [
   { id: 'invoiced', label: 'Invoiced', hint: 'Work billed in the period, whether or not it has been paid yet.' },
@@ -22,10 +25,18 @@ export function ReportsProfitabilityPage() {
   const [basis, setBasis] = useState<RevenueBasis>('invoiced')
   const [clientId, setClientId] = useState<string>('')
 
+  const { hasFeature } = useCompanyPlan()
+  const canView = hasFeature('advancedReports')
+
   const { data: clientsData } = useQuery(clientsQuery())
-  const { data, isPending, isError } = useQuery(reportsProfitabilityQuery(dateRange, basis, clientId || undefined))
+  const { data, isPending, isError } = useQuery({
+    ...reportsProfitabilityQuery(dateRange, basis, clientId || undefined),
+    enabled: canView,
+  })
 
   const clients = clientsData?.clients ?? []
+
+  if (!canView) return <PlanUpgradeNotice feature="Profitability reports" />
 
   return (
     <div className="flex flex-col gap-5">
@@ -133,7 +144,7 @@ export function ReportsProfitabilityPage() {
               <p className="px-5 py-8 text-sm text-slate-400 text-center">No {basis} revenue in {monthLabel}.</p>
             ) : (
               data.byClient.map(row => (
-                <Link to={`/clients/${row.clientId}`} key={row.clientId} className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-4 px-5 py-3.5 border-b border-[#F8FAFC] items-center hover:bg-slate-50/50 transition-colors">
+                <Link to={`/clients/${row.clientId}`} state={backLinkState('Reports')} key={row.clientId} className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-4 px-5 py-3.5 border-b border-[#F8FAFC] items-center hover:bg-slate-50/50 transition-colors">
                   <p className="text-sm font-medium text-slate-800 truncate">{row.clientName}</p>
                   <p className="text-sm text-slate-700 font-mono">{formatCurrency(row.revenue)}</p>
                   <p className="text-sm text-slate-700 font-mono">{formatCurrency(row.labourCost)}</p>

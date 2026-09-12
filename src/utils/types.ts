@@ -187,6 +187,53 @@ export interface EligibleWorkResponse {
   summary: { jobs: number; assignments: number; totalMinutes: number; subtotal: number };
 }
 
+// Mirrors the server's PLAN_LIMITS shape (src/utils/constant.ts) — the
+// server is the source of truth for what each tier actually gets; this is
+// only the wire shape of GET/PATCH /companies/plan's response.
+export type CompanyPlanId = "free" | "starter" | "professional" | "enterprise";
+
+export interface PlanLimits {
+  maxWorkers: number; // -1 = unlimited
+  maxJobsPerMonth: number; // -1 = unlimited
+  features: {
+    gpsVerification: boolean;
+    recurringJobs: boolean;
+    openShifts: boolean;
+    advancedReports: boolean;
+  };
+}
+
+export interface CompanyPlanInfo {
+  success: boolean;
+  plan: CompanyPlanId;
+  maxWorkers: number;
+  limits: PlanLimits;
+}
+
+// GET /companies/plans — the pricing-page catalog for all four tiers.
+// Every number/feature bullet here is composed server-side from the same
+// PLAN_LIMITS that actually gets enforced, so this can't drift from what a
+// company can really do the way a hand-maintained frontend copy already did
+// once. Only `name`/`tagline`/pricing/`ctaLabel`/`highlighted` are pure
+// marketing copy with no enforcement meaning.
+export interface PlanCatalogEntry {
+  id: CompanyPlanId;
+  name: string;
+  tagline: string;
+  monthlyPrice: number | null; // null = custom/contact sales
+  annualPrice: number | null;
+  annualMonthly: number | null;
+  ctaLabel: string;
+  highlighted: boolean;
+  features: string[];
+  notIncluded?: string[];
+}
+
+export interface PlanCatalogResponse {
+  success: boolean;
+  plans: PlanCatalogEntry[];
+}
+
 export interface BillingPeriodRange {
   start: string;
   end: string;

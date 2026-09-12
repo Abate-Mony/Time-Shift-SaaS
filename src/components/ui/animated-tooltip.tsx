@@ -10,6 +10,7 @@ import {
 import { useRef, useState } from "react";
 import { Avatar } from "../ui";
 import { Link } from "react-router";
+import { backLinkState } from "@/hooks/useBackLink";
 
 export const AnimatedTooltip = ({
   items,
@@ -51,6 +52,9 @@ export const AnimatedTooltip = ({
     <>
       {items.map((item) => (
         <div
+          onClick={e => {
+            e.stopPropagation()
+          }}
           className="group relative -mr-4"
           key={item.name}
           onMouseEnter={() => setHoveredIndex(item.id)}
@@ -80,7 +84,7 @@ export const AnimatedTooltip = ({
               >
                 <div className="absolute inset-x-10 -bottom-px z-30 h-px w-[20%] bg-gradient-to-r from-transparent via-emerald-500 to-transparent" />
                 <div className="absolute -bottom-px left-10 z-30 h-px w-[40%] bg-gradient-to-r from-transparent via-sky-500 to-transparent" />
-                <Link to={`/workers/${item.user_id}/worker-profile`}>
+                <Link to={`/workers/${item.user_id}/worker-profile`} state={backLinkState('Back')}>
                   <div className="relative z-30 text-base font-bold text-white">
                     {item.name}
                   </div>

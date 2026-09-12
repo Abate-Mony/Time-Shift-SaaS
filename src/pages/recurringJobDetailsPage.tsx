@@ -9,6 +9,7 @@ import {
     type Frequency, type RecurringDetail, type RecurringOccurrence,
 } from '@/utils/recurring'
 import { useNavigate, useParams, type LoaderFunctionArgs } from 'react-router'
+import { backLinkState } from '@/hooks/useBackLink'
 import { useMutation, useQuery, type QueryClient } from '@tanstack/react-query'
 import customFetch from '@/utils/customFetch'
 import { queryClient } from '@/lib/queryClient'
@@ -640,7 +641,7 @@ function OccurrencesTabs({
 }: {
     detail: RecurringDetail
     active: boolean
-    onNavigate: (path: string) => void
+    onNavigate: (path: string, state?: object) => void
 }) {
     const [tab, setTab] = useState<'upcoming' | 'past'>('upcoming')
     const upcoming = detail.occurrences.upcoming
@@ -690,7 +691,11 @@ function OccurrencesTabs({
                         </div>
                     ) : (
                         list.map(occ => (
-                            <OccurrenceRow key={occ._id} occ={occ} onNavigate={onNavigate} />
+                            <OccurrenceRow
+                                key={occ._id}
+                                occ={occ}
+                                onNavigate={path => onNavigate(path, backLinkState(detail.templateJob.title))}
+                            />
                         ))
                     )}
                 </motion.div>
@@ -704,7 +709,7 @@ function OccurrencesTabs({
 export function RecurringJobDetail() {
     const { id } = useParams() as { id: string }
     const navigate = useNavigate()
-    const onNavigate = (path: string) => navigate(path)
+    const onNavigate = (path: string, state?: object) => navigate(path, state ? { state } : undefined)
 
     const { schedule, occurrences } = useQuery(recurringJobDetailQuery(id)).data as {
         schedule: ScheduleDoc

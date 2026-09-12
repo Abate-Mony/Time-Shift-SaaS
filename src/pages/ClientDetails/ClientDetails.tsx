@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import { DialogBackdrop, ClientStatusBadge, type ClientFormData } from '../Clients'
 import { Link, NavLink, Outlet, useNavigate, useParams, type LoaderFunctionArgs } from 'react-router'
+import { useBackLink } from '@/hooks/useBackLink'
 import { useQuery, type QueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import customFetch from '@/utils/customFetch'
@@ -582,11 +583,12 @@ export function ClientDetail() {
     const initials = client.name.split(' ').map(w => w[0]).slice(0, 2).join('')
     const navigate = useNavigate()
     const onNavigate = (path: string) => navigate(path)
+    const back = useBackLink({ to: '/clients', label: 'Clients' })
     return (
         <div className="p-6 max-w-8xl">
             {/* Back */}
-            <Link to={"/clients"} onClick={() => onNavigate('clients')} className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition-colors mb-5">
-                <ChevronLeft size={14} /> Back to Clients
+            <Link to={back.to} className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition-colors mb-5">
+                <ChevronLeft size={14} /> Back to {back.label}
             </Link>
 
             {/* Header */}

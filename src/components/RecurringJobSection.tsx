@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { RefreshCw, ChevronDown, Info } from 'lucide-react'
 import { Input } from './ui'
+import { PlanLockBadge } from './billing/PlanLockBadge'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -140,11 +141,16 @@ interface Props {
   onChange: (next: RecurringState) => void
   startDate?: string
   sectionIndex: number
+  // Muted (not hidden) when the company's plan doesn't include recurring
+  // jobs — the toggle can't be flipped on, with a small badge saying why.
+  // The backend rejects `isRecurring: true` independently regardless of
+  // this prop (see server's planLimits.ts), this is just the UI hint.
+  disabled?: boolean
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export function RecurringJobSection({ value: r, onChange, startDate = '', sectionIndex }: Props) {
+export function RecurringJobSection({ value: r, onChange, startDate = '', sectionIndex, disabled = false }: Props) {
   const set = (partial: Partial<RecurringState>) => onChange({ ...r, ...partial })
 
   const summary = buildSummary(r, startDate)
@@ -173,15 +179,21 @@ export function RecurringJobSection({ value: r, onChange, startDate = '', sectio
         </h2>
 
         <div className="flex items-center gap-2.5 shrink-0">
-          <span className="text-xs text-slate-500 font-medium">
-            {r.enabled ? 'Enabled' : 'Off'}
-          </span>
+          {disabled && !r.enabled ? (
+            <PlanLockBadge label="Upgrade for recurring jobs" />
+          ) : (
+            <span className="text-xs text-slate-500 font-medium">
+              {r.enabled ? 'Enabled' : 'Off'}
+            </span>
+          )}
           <button
             type="button"
             role="switch"
             aria-checked={r.enabled}
+            disabled={disabled}
+            title={disabled ? 'Upgrade your plan to use recurring jobs' : undefined}
             onClick={() => set({ enabled: !r.enabled })}
-            className={`relative w-11 h-6 rounded-full transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#3B82F6] focus-visible:ring-offset-1 shrink-0 ${r.enabled ? 'bg-[#1E3A5F]' : 'bg-slate-200'}`}
+            className={`relative w-11 h-6 rounded-full transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#3B82F6] focus-visible:ring-offset-1 shrink-0 ${disabled ? 'opacity-40 cursor-not-allowed' : ''} ${r.enabled ? 'bg-[#1E3A5F]' : 'bg-slate-200'}`}
           >
             <motion.span
               layout

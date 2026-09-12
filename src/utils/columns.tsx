@@ -1,6 +1,7 @@
 import type { ColumnDef } from "@tanstack/react-table"
 import { ArrowUpDown, Clock, MapPin, MoreHorizontal, Users } from "lucide-react"
 import { Link } from "react-router"
+import { backLinkState } from "@/hooks/useBackLink"
 
 import type { CreateJobForm, Invoice } from "./types"
 
@@ -281,7 +282,7 @@ export const jobsColumns: ColumnDef<CreateJobForm>[] = [
 
           <DropdownMenuContent align="end" className="w-40">
             <DropdownMenuItem asChild>
-              <Link to={`/jobs/${job._id}`}>View Details</Link>
+              <Link to={`/jobs/${job._id}`} state={backLinkState('Jobs')}>View Details</Link>
             </DropdownMenuItem>
 
             <DropdownMenuItem asChild>
@@ -351,7 +352,7 @@ export const invoiceColumns: ColumnDef<Invoice>[] = [
       </Button>
     ),
     cell: ({ row }) => (
-      <Link to={`/invoices/${row.original._id}`} className="font-medium text-slate-900 hover:underline">
+      <Link to={`/invoices/${row.original._id}`} state={backLinkState('Invoices')} className="font-medium text-slate-900 hover:underline">
         {row.original.invoiceNumber}
       </Link>
     ),
@@ -414,7 +415,7 @@ export const invoiceColumns: ColumnDef<Invoice>[] = [
 
         <DropdownMenuContent align="end" className="w-40">
           <DropdownMenuItem asChild>
-            <Link to={`/invoices/${row.original._id}`}>View Invoice</Link>
+            <Link to={`/invoices/${row.original._id}`} state={backLinkState('Invoices')}>View Invoice</Link>
           </DropdownMenuItem>
 
           <DropdownMenuSeparator />
