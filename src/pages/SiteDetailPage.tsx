@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Link, useNavigate, useParams, type LoaderFunctionArgs, type QueryClient } from 'react-router'
-import { useQuery } from '@tanstack/react-query'
+import { Link, useNavigate, useParams, type LoaderFunctionArgs } from 'react-router'
+import { useQuery, type QueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import {
     ChevronLeft, Pencil, Archive, RefreshCw, MapPin, Building2, Phone, Mail,
