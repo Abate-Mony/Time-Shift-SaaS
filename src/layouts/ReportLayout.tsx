@@ -77,8 +77,8 @@ export default function ReportLayout() {
     <div className="p-6 animate-fade-in">
       <div className="flex items-start justify-between mb-6 flex-wrap gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-slate-900 tracking-tight">Reports</h1>
-          <p className="text-sm text-slate-500 mt-0.5">Workforce analytics and payroll data</p>
+          <h1 className="text-xl font-semibold text-foreground tracking-tight">Reports</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">Workforce analytics and payroll data</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm">
@@ -90,7 +90,7 @@ export default function ReportLayout() {
           <select
             value={selectedMonth}
             onChange={e => setDateRange(monthToRange(e.target.value))}
-            className="h-9 px-3 border border-[#E2E8F0] rounded-lg text-sm text-slate-600 bg-white focus:outline-none appearance-none cursor-pointer"
+            className="h-9 px-3 border border-[var(--border)] rounded-lg text-sm text-muted-foreground bg-card focus:outline-none appearance-none cursor-pointer"
           >
             {MONTH_OPTIONS.map(m => (
               <option key={m.month} value={m.month}>{m.label}</option>
@@ -99,7 +99,7 @@ export default function ReportLayout() {
         </div>
       </div>
 
-      <Scrollable direction='row' className="flex items-center gap-1.5 border-b border-[#E2E8F0]">
+      <Scrollable direction='row' className="flex items-center gap-1.5 border-b border-[var(--border)]">
         {NAV_LINKS.map(link => (
           link.gated && !canViewAdvancedReports ? (
             // Not a real link — clicking would just land on a locked page
@@ -118,10 +118,10 @@ export default function ReportLayout() {
               to={link.to}
               end={link.end}
               layoutId="report-layout-tabs"
-              animateClassName="inset-x-0 bottom-0 h-0.5 bg-[#1E3A5F]"
+              animateClassName="inset-x-0 bottom-0 h-0.5 bg-[var(--primary)]"
               show
-              className="w-fit! px-4 py-2.5 text-sm font-medium text-slate-500 hover:text-slate-700 transition-colors"
-              selectedClassName="text-[#1E3A5F]! font-semibold"
+              className="w-fit! px-4 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              selectedClassName="text-[var(--primary)]! font-semibold"
             >
               {link.label}
             </CustomNavLink>

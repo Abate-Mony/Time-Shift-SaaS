@@ -32,6 +32,7 @@ import {
 import { Input } from '@/components/ui'
 import { PlanLockBadge } from '@/components/billing/PlanLockBadge'
 import { useCompanyPlan } from '@/hooks/useCompanyPlan'
+import { isAdminRole } from '@/utils/roles'
 
 // ── Same pattern as CreateJob.tsx — a plain message under the field ─────────
 const FieldError = ({ message }: { message?: string }) => {
@@ -153,14 +154,14 @@ function SectionCard({ icon: Icon, title, description, children }: {
     children: React.ReactNode
 }) {
     return (
-        <div className="bg-white rounded-xl border border-[#E2E8F0] overflow-hidden min-w-0">
-            <div className="flex items-start gap-3 px-6 pt-5 pb-4 border-b border-[#F1F5F9] min-w-0">
-                <div className="w-9 h-9 rounded-xl bg-[#1E3A5F]/10 flex items-center justify-center shrink-0">
-                    <Icon size={16} className="text-[#1E3A5F]" />
+        <div className="bg-card rounded-xl border border-[var(--border)] overflow-hidden min-w-0">
+            <div className="flex items-start gap-3 px-6 pt-5 pb-4 border-b border-[var(--border)] min-w-0">
+                <div className="w-9 h-9 rounded-xl bg-[var(--primary)]/10 flex items-center justify-center shrink-0">
+                    <Icon size={16} className="text-[var(--primary)]" />
                 </div>
                 <div className="min-w-0">
-                    <h2 className="text-sm font-semibold text-slate-900">{title}</h2>
-                    <p className="text-xs text-slate-500 mt-0.5">{description}</p>
+                    <h2 className="text-sm font-semibold text-foreground">{title}</h2>
+                    <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
                 </div>
             </div>
             <div className="p-6 flex flex-col gap-6 min-w-0">
@@ -179,13 +180,13 @@ function NumberField({ label, description, error, suffix, className, ...props }:
 } & React.InputHTMLAttributes<HTMLInputElement>) {
     return (
         <div className="flex flex-col gap-1 min-w-0">
-            <label className="text-sm font-medium text-slate-800">{label}</label>
-            <p className="text-xs text-slate-500">{description}</p>
+            <label className="text-sm font-medium text-foreground">{label}</label>
+            <p className="text-xs text-muted-foreground">{description}</p>
             <div className="relative max-w-[220px] mt-1">
                 <Input
                     type="number"
                     className={cn(
-                        'w-full h-9 pl-3 pr-3 border border-[#E2E8F0] rounded-lg text-sm text-slate-800 bg-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#3B82F6]/30 focus:border-[#3B82F6] transition-all disabled:opacity-60 disabled:cursor-not-allowed',
+                        'w-full h-9 pl-3 pr-3 border border-[var(--border)] rounded-lg text-sm text-foreground bg-card placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#3B82F6]/30 focus:border-[#3B82F6] transition-all disabled:opacity-60 disabled:cursor-not-allowed',
                         suffix && 'pr-14',
                         error && 'border-red-400 focus:ring-red-200',
                         className
@@ -193,7 +194,7 @@ function NumberField({ label, description, error, suffix, className, ...props }:
                     {...props}
                 />
                 {suffix && (
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 pointer-events-none">
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground pointer-events-none">
                         {suffix}
                     </span>
                 )}
@@ -219,10 +220,10 @@ function ToggleField({ label, description, checked, onChange, disabled, lockedLa
         <div className="flex items-center justify-between gap-4 min-w-0">
             <div className="min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                    <p className="text-sm font-medium text-slate-800">{label}</p>
+                    <p className="text-sm font-medium text-foreground">{label}</p>
                     {lockedLabel && !checked && <PlanLockBadge label={lockedLabel} />}
                 </div>
-                <p className="text-xs text-slate-500 mt-0.5">{description}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
             </div>
             <button
                 type="button"
@@ -233,7 +234,7 @@ function ToggleField({ label, description, checked, onChange, disabled, lockedLa
                 onClick={() => onChange(!checked)}
                 className={cn(
                     'w-10 h-6 rounded-full transition-colors relative shrink-0 disabled:opacity-60 disabled:cursor-not-allowed',
-                    checked ? 'bg-[#1E3A5F]' : 'bg-slate-200'
+                    checked ? 'bg-[var(--primary)]' : 'bg-muted'
                 )}
             >
                 <span className={cn('absolute top-1 w-4 h-4 rounded-full bg-white shadow-sm transition-all', checked ? 'left-5' : 'left-1')} />
@@ -256,11 +257,11 @@ function SegmentedControl<T extends string>({ label, description, options, value
     return (
         <div className="flex flex-col gap-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-                <label className="text-sm font-medium text-slate-800">{label}</label>
+                <label className="text-sm font-medium text-foreground">{label}</label>
                 {lockedLabel && <PlanLockBadge label={lockedLabel} />}
             </div>
-            <p className="text-xs text-slate-500">{description}</p>
-            <div className="inline-flex w-fit p-1 bg-slate-100 rounded-xl gap-1 mt-1 min-w-0 max-w-full overflow-x-auto">
+            <p className="text-xs text-muted-foreground">{description}</p>
+            <div className="inline-flex w-fit p-1 bg-muted rounded-xl gap-1 mt-1 min-w-0 max-w-full overflow-x-auto">
                 {options.map(opt => (
                     <button
                         key={opt.value}
@@ -270,7 +271,7 @@ function SegmentedControl<T extends string>({ label, description, options, value
                         onClick={() => onChange(opt.value)}
                         className={cn(
                             'px-3.5 h-8 rounded-lg text-xs font-semibold transition-all whitespace-nowrap disabled:opacity-60 disabled:cursor-not-allowed',
-                            value === opt.value ? 'bg-white text-[#1E3A5F] shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                            value === opt.value ? 'bg-card text-[var(--primary)] shadow-sm' : 'text-muted-foreground hover:text-foreground'
                         )}
                     >
                         {opt.label}
@@ -315,8 +316,8 @@ function TimezoneSelect({ value, onChange, disabled, error }: {
 
     return (
         <div className="flex flex-col gap-1 min-w-0">
-            <label className="text-sm font-medium text-slate-800">Timezone</label>
-            <p className="text-xs text-slate-500">Used to schedule shifts and generate recurring occurrences.</p>
+            <label className="text-sm font-medium text-foreground">Timezone</label>
+            <p className="text-xs text-muted-foreground">Used to schedule shifts and generate recurring occurrences.</p>
             <div className="relative max-w-xs mt-1 min-w-0">
                 <Input
                     value={query}
@@ -326,12 +327,12 @@ function TimezoneSelect({ value, onChange, disabled, error }: {
                     onBlur={() => setTimeout(() => setOpen(false), 150)}
                     placeholder="Search timezone..."
                     className={cn(
-                        'w-full h-9 px-3 border border-[#E2E8F0] rounded-lg text-sm text-slate-800 bg-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#3B82F6]/30 focus:border-[#3B82F6] transition-all disabled:opacity-60 disabled:cursor-not-allowed',
+                        'w-full h-9 px-3 border border-[var(--border)] rounded-lg text-sm text-foreground bg-card placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#3B82F6]/30 focus:border-[#3B82F6] transition-all disabled:opacity-60 disabled:cursor-not-allowed',
                         error && 'border-red-400 focus:ring-red-200'
                     )}
                 />
                 {open && filtered.length > 0 && (
-                    <div className="absolute z-20 mt-1 w-full max-h-64 overflow-auto rounded-lg border border-[#E2E8F0] bg-white shadow-lg">
+                    <div className="absolute z-20 mt-1 w-full max-h-64 overflow-auto rounded-lg border border-[var(--border)] bg-card shadow-lg">
                         {filtered.map(z => (
                             <button
                                 key={z}
@@ -339,8 +340,8 @@ function TimezoneSelect({ value, onChange, disabled, error }: {
                                 onMouseDown={e => e.preventDefault()}
                                 onClick={() => { onChange(z); setQuery(z); setOpen(false) }}
                                 className={cn(
-                                    'flex items-center justify-between gap-2 w-full text-left px-3 py-2 text-sm hover:bg-slate-50 transition-colors',
-                                    z === value && 'bg-[#1E3A5F]/5 text-[#1E3A5F] font-medium'
+                                    'flex items-center justify-between gap-2 w-full text-left px-3 py-2 text-sm hover:bg-muted transition-colors',
+                                    z === value && 'bg-[var(--primary)]/5 text-[var(--primary)] font-medium'
                                 )}
                             >
                                 <span className="truncate">{z.replace(/_/g, ' ')}</span>
@@ -360,7 +361,7 @@ const CURRENCY_SYMBOLS: Record<Currency, string> = { GBP: '£', USD: '$', EUR: '
 // ─── Page ────────────────────────────────────────────────────────────────
 export function Settings() {
     const { user } = useOutletContext<{ user: iUser }>()
-    const isAdmin = user?.role === 'admin'
+    const isAdmin = isAdminRole(user?.role)
     const { hasFeature } = useCompanyPlan()
     const canGps = hasFeature('gpsVerification')
     const canOpenShifts = hasFeature('openShifts')
@@ -574,15 +575,15 @@ export function Settings() {
                             {...register('weeklyHoursTarget')}
                         />
                         <div className="flex flex-col gap-1 min-w-0">
-                            <label className="text-sm font-medium text-slate-800">Currency</label>
-                            <p className="text-xs text-slate-500">Currency used across invoices and pay rates.</p>
+                            <label className="text-sm font-medium text-foreground">Currency</label>
+                            <p className="text-xs text-muted-foreground">Currency used across invoices and pay rates.</p>
                             <div className="mt-1">
                                 <Controller
                                     control={control}
                                     name="currency"
                                     render={({ field }) => (
                                         <Select value={field.value} onValueChange={field.onChange} disabled={disabled}>
-                                            <SelectTrigger className="w-32 h-9 border-[#E2E8F0]">
+                                            <SelectTrigger className="w-32 h-9 border-[var(--border)]">
                                                 <SelectValue />
                                             </SelectTrigger>
                                             <SelectContent>
@@ -679,14 +680,14 @@ export function Settings() {
 
                 {isAdmin && (
                     <div className="sticky bottom-4 flex justify-end">
-                        <div className="bg-white border border-[#E2E8F0] rounded-xl shadow-lg shadow-slate-900/5 px-4 py-3 flex items-center gap-3">
-                            <p className="text-xs text-slate-500">
+                        <div className="bg-card border border-[var(--border)] rounded-xl shadow-lg shadow-slate-900/5 px-4 py-3 flex items-center gap-3">
+                            <p className="text-xs text-muted-foreground">
                                 {isDirty ? 'You have unsaved changes' : 'All changes saved'}
                             </p>
                             <button
                                 type="submit"
                                 disabled={!isDirty || isSubmitting}
-                                className="h-9 px-4 rounded-lg bg-[#1E3A5F] text-white text-sm font-semibold hover:bg-[#162D4A] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="h-9 px-4 rounded-lg bg-[var(--primary)] text-white text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {isSubmitting ? 'Saving...' : 'Save Changes'}
                             </button>

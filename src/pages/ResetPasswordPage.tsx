@@ -13,7 +13,7 @@ function PasswordField({
 }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide">{label}</label>
+      <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{label}</label>
       <div className="relative">
         <input
           type={show ? "text" : "password"}
@@ -22,16 +22,16 @@ function PasswordField({
           placeholder="••••••••"
           autoComplete={autoComplete}
           disabled={disabled}
-          className={`w-full h-11 px-3.5 pr-11 rounded-xl border text-sm text-slate-800 bg-white placeholder:text-slate-400 transition-all outline-none
+          className={`w-full h-11 px-3.5 pr-11 rounded-xl border text-sm text-foreground bg-card placeholder:text-muted-foreground transition-all outline-none
             focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500
             disabled:opacity-60 disabled:cursor-not-allowed
-            ${error ? "border-red-400 bg-red-50/30 focus:ring-red-400/20 focus:border-red-400" : "border-slate-200 hover:border-slate-300"}`}
+            ${error ? "border-red-400 bg-red-50/30 focus:ring-red-400/20 focus:border-red-400" : "border-border hover:border-slate-300"}`}
         />
         <button
           type="button"
           onClick={onToggleShow}
           tabIndex={-1}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground transition-colors"
         >
           {show ? <EyeOff size={16} /> : <Eye size={16} />}
         </button>
@@ -52,12 +52,12 @@ function InvalidLinkState() {
         <AlertCircle size={28} className="text-red-500" />
       </div>
       <div>
-        <h2 className="text-xl font-bold text-slate-900 mb-1">Invalid reset link</h2>
-        <p className="text-sm text-slate-500">This password reset link is missing or malformed.</p>
+        <h2 className="text-xl font-bold text-foreground mb-1">Invalid reset link</h2>
+        <p className="text-sm text-muted-foreground">This password reset link is missing or malformed.</p>
       </div>
       <Link
         to="/auth/forgot-password"
-        className="w-full h-11 rounded-xl bg-[#1E3A5F] text-white text-sm font-bold flex items-center justify-center hover:bg-[#162D4A] transition-colors"
+        className="w-full h-11 rounded-xl bg-[var(--primary)] text-white text-sm font-bold flex items-center justify-center hover:bg-primary/90 transition-colors"
       >
         Request a new link
       </Link>
@@ -84,7 +84,7 @@ export default function ResetPasswordPage() {
   if (!token) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 flex items-center justify-center px-4">
-        <div className="w-full max-w-[440px] bg-white rounded-3xl border border-[#E2E8F0] shadow-xl shadow-slate-200/60 p-7 sm:p-8">
+        <div className="w-full max-w-[440px] bg-card rounded-3xl border border-[var(--border)] shadow-xl shadow-slate-200/60 p-7 sm:p-8">
           <InvalidLinkState />
         </div>
       </div>
@@ -125,7 +125,7 @@ export default function ResetPasswordPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 flex items-center justify-center px-4">
-      <div className="w-full max-w-[440px] bg-white rounded-3xl border border-[#E2E8F0] shadow-xl shadow-slate-200/60 p-7 sm:p-8">
+      <div className="w-full max-w-[440px] bg-card rounded-3xl border border-[var(--border)] shadow-xl shadow-slate-200/60 p-7 sm:p-8">
         {done ? (
           <div className="flex flex-col items-center text-center gap-4 py-2">
             <motion.div
@@ -137,12 +137,12 @@ export default function ResetPasswordPage() {
               <CheckCircle2 size={28} className="text-emerald-600" />
             </motion.div>
             <div>
-              <h2 className="text-xl font-bold text-slate-900 mb-1">Password reset</h2>
-              <p className="text-sm text-slate-500">Please log in with your new password.</p>
+              <h2 className="text-xl font-bold text-foreground mb-1">Password reset</h2>
+              <p className="text-sm text-muted-foreground">Please log in with your new password.</p>
             </div>
             <button
               onClick={() => navigate("/auth")}
-              className="w-full h-11 rounded-xl bg-[#1E3A5F] text-white text-sm font-bold flex items-center justify-center hover:bg-[#162D4A] transition-colors"
+              className="w-full h-11 rounded-xl bg-[var(--primary)] text-white text-sm font-bold flex items-center justify-center hover:bg-primary/90 transition-colors"
             >
               Continue to login
             </button>
@@ -154,8 +154,8 @@ export default function ResetPasswordPage() {
                 <Lock size={18} className="text-blue-600" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-slate-900 tracking-tight">Set a new password</h1>
-                <p className="text-sm text-slate-500">Choose something you haven't used before</p>
+                <h1 className="text-xl font-bold text-foreground tracking-tight">Set a new password</h1>
+                <p className="text-sm text-muted-foreground">Choose something you haven't used before</p>
               </div>
             </div>
 
@@ -193,7 +193,7 @@ export default function ResetPasswordPage() {
                 disabled={submitting}
                 whileHover={{ scale: submitting ? 1 : 1.01 }}
                 whileTap={{ scale: submitting ? 1 : 0.98 }}
-                className="w-full h-11 rounded-xl bg-[#1E3A5F] text-white text-sm font-bold flex items-center justify-center gap-2 shadow-lg shadow-[#1E3A5F]/20 hover:bg-[#162D4A] transition-colors disabled:opacity-70 disabled:cursor-not-allowed mt-1"
+                className="w-full h-11 rounded-xl bg-[var(--primary)] text-white text-sm font-bold flex items-center justify-center gap-2 shadow-lg shadow-[var(--primary)]/20 hover:bg-primary/90 transition-colors disabled:opacity-70 disabled:cursor-not-allowed mt-1"
               >
                 {submitting ? (
                   <><Loader2 size={16} className="animate-spin" />Resetting…</>
@@ -205,7 +205,7 @@ export default function ResetPasswordPage() {
 
             {/* Always available, not just on error — no need to guess whether
                 a given 400 was a bad/expired token vs. a validation issue. */}
-            <p className="text-center text-xs text-slate-400 mt-6">
+            <p className="text-center text-xs text-muted-foreground mt-6">
               Trouble with this link?{" "}
               <Link to="/auth/forgot-password" className="font-semibold text-blue-600 hover:text-blue-800 transition-colors">
                 Request a new one

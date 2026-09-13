@@ -47,9 +47,9 @@ export default function ExistingUserInvitePage() {
     if (isLoading) {
         return (
             <div className="animate-pulse space-y-4">
-                <div className="h-20 rounded-xl bg-slate-100" />
-                <div className="h-11 rounded-xl bg-slate-200" />
-                <div className="h-11 rounded-xl bg-slate-200" />
+                <div className="h-20 rounded-xl bg-muted" />
+                <div className="h-11 rounded-xl bg-muted" />
+                <div className="h-11 rounded-xl bg-muted" />
             </div>
         );
     }
@@ -215,13 +215,13 @@ export default function ExistingUserInvitePage() {
 
     return (
         <div className="flex flex-col gap-5">
-            <div className="bg-slate-50 border border-slate-200 rounded-xl px-5 py-4">
-                <div className="flex justify-between py-2 border-b border-slate-100">
-                    <span className="text-sm text-slate-500">
+            <div className="bg-muted border border-border rounded-xl px-5 py-4">
+                <div className="flex justify-between py-2 border-b border-border">
+                    <span className="text-sm text-muted-foreground">
                         Company
                     </span>
 
-                    <span className="text-sm font-semibold text-slate-800">
+                    <span className="text-sm font-semibold text-foreground">
                         {
                             invite.company
                                 .name
@@ -229,12 +229,12 @@ export default function ExistingUserInvitePage() {
                     </span>
                 </div>
 
-                <div className="flex justify-between py-2 border-b border-slate-100">
-                    <span className="text-sm text-slate-500">
+                <div className="flex justify-between py-2 border-b border-border">
+                    <span className="text-sm text-muted-foreground">
                         Role
                     </span>
 
-                    <span className="text-sm font-semibold text-slate-800">
+                    <span className="text-sm font-semibold text-foreground">
                         {invite.role ===
                         "worker"
                             ? "Worker"
@@ -243,11 +243,11 @@ export default function ExistingUserInvitePage() {
                 </div>
 
                 <div className="flex justify-between py-2">
-                    <span className="text-sm text-slate-500">
+                    <span className="text-sm text-muted-foreground">
                         Email
                     </span>
 
-                    <span className="text-sm font-semibold text-slate-800">
+                    <span className="text-sm font-semibold text-foreground">
                         {
                             invite.email
                         }
@@ -256,15 +256,15 @@ export default function ExistingUserInvitePage() {
             </div>
 
             <div>
-                <h3 className="text-sm font-bold text-slate-900 mb-1">
+                <h3 className="text-sm font-bold text-foreground mb-1">
                     You already have an
                     account
                 </h3>
 
-                <p className="text-sm text-slate-500 mb-4">
+                <p className="text-sm text-muted-foreground mb-4">
                     Sign in to accept your
                     invitation to{" "}
-                    <strong className="text-slate-700">
+                    <strong className="text-foreground">
                         {
                             invite.company
                                 .name
@@ -273,17 +273,17 @@ export default function ExistingUserInvitePage() {
                     .
                 </p>
 
-                <label className="text-sm font-semibold text-slate-700 block mb-1.5">
+                <label className="text-sm font-semibold text-foreground block mb-1.5">
                     Email address
                 </label>
 
                 <input
                     value={invite.email}
                     readOnly
-                    className="w-full h-11 px-4 border border-slate-200 rounded-xl bg-slate-50 text-sm text-slate-500 mb-4"
+                    className="w-full h-11 px-4 border border-border rounded-xl bg-muted text-sm text-muted-foreground mb-4"
                 />
 
-                <label className="text-sm font-semibold text-slate-700 block mb-1.5">
+                <label className="text-sm font-semibold text-foreground block mb-1.5">
                     Password
                 </label>
 
@@ -301,7 +301,7 @@ export default function ExistingUserInvitePage() {
                                     .value
                             )
                         }
-                        className="w-full h-11 px-4 pr-11 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/15"
+                        className="w-full h-11 px-4 pr-11 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/15"
                     />
 
                     <button
@@ -312,7 +312,7 @@ export default function ExistingUserInvitePage() {
                                     !value
                             )
                         }
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
                     >
                         {showPassword ? (
                             <EyeOff
@@ -339,7 +339,7 @@ export default function ExistingUserInvitePage() {
                             "/forgot-password"
                         )
                     }
-                    className="text-xs text-[#1E3A5F] font-semibold mt-2 hover:underline"
+                    className="text-xs text-[var(--primary)] font-semibold mt-2 hover:underline"
                 >
                     Forgot password?
                 </button> */}
@@ -349,7 +349,7 @@ export default function ExistingUserInvitePage() {
                 type="button"
                 onClick={submit}
                 disabled={loading}
-                className="w-full h-11 bg-[#1E3A5F] text-white text-sm font-bold rounded-xl hover:bg-[#162D4A] disabled:opacity-60"
+                className="w-full h-11 bg-[var(--primary)] text-white text-sm font-bold rounded-xl hover:bg-primary/90 disabled:opacity-60"
             >
                 {loading
                     ? "Signing in..."

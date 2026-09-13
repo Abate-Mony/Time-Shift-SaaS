@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   UserPlus, Search, Mail, Users, ShieldCheck, Clock, MoreHorizontal,
   RefreshCw, Ban, ChevronDown, ShieldAlert, Scale, Check,
-  Briefcase, User,
+  Briefcase, User, Shield, Crown,
 } from 'lucide-react'
 import { useQuery, type QueryClient } from '@tanstack/react-query'
 import { Link, useNavigate } from 'react-router'
@@ -24,7 +24,7 @@ import {
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-export type TeamRole = 'worker' | 'manager' | 'admin'
+export type TeamRole = 'worker' | 'manager' | 'admin' | 'owner'
 type RowStatus = 'active' | 'suspended' | 'pending'
 
 interface TeamUser extends AppUser {
@@ -102,13 +102,13 @@ const formatDate = (iso: string) => new Date(iso).toLocaleDateString('en-GB', { 
 
 // ─── Avatar ────────────────────────────────────────────────────────────────────
 
-const AVATAR_COLORS = ['#1E3A5F', '#0D9488', '#7C3AED', '#B45309', '#DC2626', '#0369A1']
+const AVATAR_COLORS = ['var(--primary)', '#0D9488', '#7C3AED', '#B45309', '#DC2626', '#0369A1']
 function MemberAvatar({ row, size = 'md' }: { row: Row; size?: 'sm' | 'md' | 'lg' }) {
   const sz = size === 'sm' ? 'w-7 h-7 text-[10px]' : size === 'lg' ? 'w-10 h-10 text-sm' : 'w-9 h-9 text-xs'
   if (row.status === 'pending') {
     return (
-      <div className={`${sz} rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center`}>
-        <Mail size={size === 'sm' ? 10 : 13} className="text-slate-400" />
+      <div className={`${sz} rounded-full bg-muted border-2 border-dashed border-slate-300 flex items-center justify-center`}>
+        <Mail size={size === 'sm' ? 10 : 13} className="text-muted-foreground" />
       </div>
     )
   }
@@ -138,7 +138,7 @@ function StatusBadge({ status, sentDate, restriction }: { status: RowStatus; sen
         <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
         Invitation pending
       </span>
-      {sentDate && <span className="text-[11px] text-slate-400 pl-1">Sent {sentDate}</span>}
+      {sentDate && <span className="text-[11px] text-muted-foreground pl-1">Sent {sentDate}</span>}
     </div>
   )
   // A restriction can be a full suspension or something lighter (read-only /
@@ -154,14 +154,20 @@ function StatusBadge({ status, sentDate, restriction }: { status: RowStatus; sen
   )
 }
 
+const ROLE_BADGE_CONFIG: Record<TeamRole, { label: string; icon: React.ElementType; className: string }> = {
+  owner: { label: 'Owner', icon: Crown, className: 'bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400' },
+  admin: { label: 'Admin', icon: Shield, className: 'bg-[var(--primary)]/8 text-[var(--primary)]' },
+  manager: { label: 'Manager', icon: ShieldCheck, className: 'bg-[var(--primary)]/8 text-[var(--primary)]' },
+  worker: { label: 'Worker', icon: Briefcase, className: 'bg-muted text-muted-foreground' },
+}
+
 function RoleBadge({ role }: { role: TeamRole }) {
+  const config = ROLE_BADGE_CONFIG[role] ?? ROLE_BADGE_CONFIG.worker
+  const Icon = config.icon
   return (
-    <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${role === 'manager'
-      ? 'bg-[#1E3A5F]/8 text-[#1E3A5F]'
-      : 'bg-slate-100 text-slate-600'
-      }`}>
-      {role === 'manager' ? <ShieldCheck size={10} /> : <Briefcase size={10} />}
-      {role === 'manager' ? 'Manager' : 'Worker'}
+    <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${config.className}`}>
+      <Icon size={10} />
+      {config.label}
     </span>
   )
 }
@@ -193,11 +199,20 @@ function ActionsMenu({
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
+  // Admins/owners have nothing actionable here once pending/restriction
+  // states are ruled out (no profile page, can't be restricted) — an empty
+  // popover is worse than no trigger at all.
+  const hasAnyAction = row.status === 'pending'
+    || row.role === 'worker'
+    || !!row.restriction
+    || (row.role !== 'admin' && row.role !== 'owner')
+  if (!hasAnyAction) return <div className="w-8 h-8" />
+
   return (
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen(o => !o)}
-        className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+        className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-muted-foreground transition-colors"
         aria-label="Actions"
       >
         <MoreHorizontal size={16} />
@@ -209,12 +224,12 @@ function ActionsMenu({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: -4 }}
             transition={{ duration: 0.1 }}
-            className="absolute right-0 top-9 w-52 bg-white border border-slate-200 rounded-xl shadow-lg z-10 py-1 overflow-hidden"
+            className="absolute right-0 top-9 w-52 bg-card border border-border rounded-xl shadow-lg z-10 py-1 overflow-hidden"
           >
             {row.status === 'pending' ? (
               <>
                 <MenuButton icon={<RefreshCw size={13} />} label="Resend invitation" onClick={() => { onResend(row); setOpen(false) }} />
-                <div className="h-px bg-slate-100 my-1" />
+                <div className="h-px bg-muted my-1" />
                 <MenuButton icon={<Ban size={13} />} label="Revoke invitation" onClick={() => { onRevoke(row); setOpen(false) }} destructive />
               </>
             ) : (
@@ -225,12 +240,12 @@ function ActionsMenu({
                     to={`/workers/${row.key}/worker-profile`}
                     state={backLinkState('Team')}
                     onClick={() => setOpen(false)}
-                    className="w-full flex items-center gap-2.5 px-3.5 py-2 text-sm transition-colors text-left text-slate-700 hover:bg-slate-50"
+                    className="w-full flex items-center gap-2.5 px-3.5 py-2 text-sm transition-colors text-left text-foreground hover:bg-muted"
                   >
                     <User size={13} className="shrink-0" /> View profile
                   </Link>
                 )}
-                {row.role === 'worker' && <div className="h-px bg-slate-100 my-1" />}
+                {row.role === 'worker' && <div className="h-px bg-muted my-1" />}
                 {row.restriction?.appeal?.status === 'pending' && (
                   <MenuButton
                     icon={<Scale size={13} />}
@@ -245,7 +260,11 @@ function ActionsMenu({
                     onClick={() => { if (!liftLoading) { onLift(row); setOpen(false) } }}
                   />
                 ) : (
-                  <MenuButton icon={<ShieldAlert size={13} />} label="Suspend / restrict" onClick={() => { onSuspend(row); setOpen(false) }} destructive />
+                  // Admins/owners can't be restricted — the backend rejects
+                  // it outright, so the action isn't offered here either.
+                  row.role !== 'admin' && row.role !== 'owner' && (
+                    <MenuButton icon={<ShieldAlert size={13} />} label="Suspend / restrict" onClick={() => { onSuspend(row); setOpen(false) }} destructive />
+                  )
                 )}
               </>
             )}
@@ -260,7 +279,7 @@ function MenuButton({ icon, label, onClick, destructive }: { icon: React.ReactNo
   return (
     <button
       onClick={onClick}
-      className={`w-full flex items-center gap-2.5 px-3.5 py-2 text-sm transition-colors text-left ${destructive ? 'text-red-600 hover:bg-red-50' : 'text-slate-700 hover:bg-slate-50'
+      className={`w-full flex items-center gap-2.5 px-3.5 py-2 text-sm transition-colors text-left ${destructive ? 'text-red-600 hover:bg-red-50' : 'text-foreground hover:bg-muted'
         }`}
     >
       <span className="shrink-0">{icon}</span>
@@ -276,16 +295,16 @@ function RevokeDialog({ row, onConfirm, onCancel, loading }: {
 }) {
   return (
     <DialogBackdrop onClose={onCancel}>
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+      <div className="bg-card rounded-2xl shadow-2xl w-full max-w-sm p-6">
         <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center mb-4">
           <Ban size={18} className="text-red-500" />
         </div>
-        <h3 className="text-base font-bold text-slate-900 mb-1">Revoke invitation?</h3>
-        <p className="text-sm text-slate-500 leading-relaxed mb-6">
-          <strong className="text-slate-700">{row.email}</strong> will no longer be able to use the current invitation link.
+        <h3 className="text-base font-bold text-foreground mb-1">Revoke invitation?</h3>
+        <p className="text-sm text-muted-foreground leading-relaxed mb-6">
+          <strong className="text-foreground">{row.email}</strong> will no longer be able to use the current invitation link.
         </p>
         <div className="flex gap-3 justify-end">
-          <button onClick={onCancel} className="h-9 px-4 text-sm font-semibold text-slate-600 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors">
+          <button onClick={onCancel} className="h-9 px-4 text-sm font-semibold text-muted-foreground border border-border rounded-xl hover:bg-muted transition-colors">
             Cancel
           </button>
           <button
@@ -315,33 +334,33 @@ function ReviewAppealDialog({ row, onRespond, onCancel, loading }: {
 
   return (
     <DialogBackdrop onClose={onCancel}>
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+      <div className="bg-card rounded-2xl shadow-2xl w-full max-w-md p-6">
         <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center mb-4">
           <Scale size={18} className="text-blue-500" />
         </div>
-        <h3 className="text-base font-bold text-slate-900 mb-1">
+        <h3 className="text-base font-bold text-foreground mb-1">
           {row.fullname ?? row.email}'s appeal
         </h3>
-        <p className="text-sm text-slate-500 leading-relaxed mb-4">
-          Their restriction: <strong className="text-slate-700">{row.restriction && ACCESS_LEVEL_LABELS[row.restriction.accessLevel]}</strong>
+        <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+          Their restriction: <strong className="text-foreground">{row.restriction && ACCESS_LEVEL_LABELS[row.restriction.accessLevel]}</strong>
         </p>
-        <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 mb-4">
-          <p className="text-xs font-semibold text-slate-500 mb-1.5">Their message</p>
-          <p className="text-sm text-slate-700 leading-relaxed">{appeal?.message}</p>
+        <div className="bg-muted border border-border rounded-xl p-3.5 mb-4">
+          <p className="text-xs font-semibold text-muted-foreground mb-1.5">Their message</p>
+          <p className="text-sm text-foreground leading-relaxed">{appeal?.message}</p>
         </div>
-        <label className="block text-xs font-semibold text-slate-700 mb-1.5">Your response <span className="text-red-400">*</span></label>
-        <p className="text-[11px] text-slate-400 mb-1.5">Sent to them either way — a decline with no explanation is worse than no appeal process.</p>
+        <label className="block text-xs font-semibold text-foreground mb-1.5">Your response <span className="text-red-400">*</span></label>
+        <p className="text-[11px] text-muted-foreground mb-1.5">Sent to them either way — a decline with no explanation is worse than no appeal process.</p>
         <textarea
           value={response}
           onChange={e => setResponse(e.target.value)}
           rows={3}
           placeholder="Explain your decision…"
-          className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/15 focus:border-[#1E3A5F]/40 resize-none transition-all mb-5"
+          className="w-full px-3 py-2.5 border border-border rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/15 focus:border-[var(--primary)]/40 resize-none transition-all mb-5"
         />
         <div className="flex gap-2.5">
           <button
             onClick={onCancel}
-            className="flex-1 h-10 text-sm font-semibold text-slate-600 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors"
+            className="flex-1 h-10 text-sm font-semibold text-muted-foreground border border-border rounded-xl hover:bg-muted transition-colors"
           >
             Cancel
           </button>
@@ -355,7 +374,7 @@ function ReviewAppealDialog({ row, onRespond, onCancel, loading }: {
           <button
             onClick={() => response.trim() && onRespond('accepted', response)}
             disabled={loading || !response.trim()}
-            className="flex-1 h-10 text-sm font-bold bg-[#1E3A5F] text-white rounded-xl hover:bg-[#162D4A] disabled:opacity-40 transition-colors flex items-center justify-center gap-1.5"
+            className="flex-1 h-10 text-sm font-bold bg-[var(--primary)] text-white rounded-xl hover:bg-primary/90 disabled:opacity-40 transition-colors flex items-center justify-center gap-1.5"
           >
             {loading ? <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Check size={13} />}
             Approve
@@ -397,7 +416,7 @@ function DialogBackdrop({ children, onClose }: { children: React.ReactNode; onCl
 
 // ─── Main Team page ───────────────────────────────────────────────────────────
 
-type FilterRole = 'all' | 'worker' | 'manager'
+type FilterRole = 'all' | 'worker' | 'manager' | 'admin' | 'owner'
 type FilterStatus = 'all' | 'active' | 'pending' | 'suspended'
 
 export function Team() {
@@ -531,12 +550,12 @@ export function Team() {
       {/* Header */}
       <div className="flex items-start justify-between mb-6 flex-wrap gap-4">
         <div>
-          <h1 className="text-xl font-bold text-slate-900 tracking-tight">Team</h1>
-          <p className="text-sm text-slate-500 mt-0.5">Manage the people who work across your company.</p>
+          <h1 className="text-xl font-bold text-foreground tracking-tight">Team</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">Manage the people who work across your company.</p>
         </div>
         <Link to="/team/invite" className="shrink-0">
           <button
-            className="h-9 px-4 bg-[#1E3A5F] text-white text-sm font-bold rounded-xl hover:bg-[#162D4A] transition-colors flex items-center gap-2 shadow-sm"
+            className="h-9 px-4 bg-[var(--primary)] text-white text-sm font-bold rounded-xl hover:bg-primary/90 transition-colors flex items-center gap-2 shadow-sm"
           >
             <UserPlus size={14} />
             Invite team member
@@ -552,28 +571,28 @@ export function Team() {
           { label: 'Managers', value: stats.managers, icon: <ShieldCheck size={15} /> },
           { label: 'Pending invitations', value: stats.pending, icon: <Mail size={15} />, accent: true },
         ].map(s => (
-          <div key={s.label} className={`rounded-2xl border p-4 ${s.accent && s.value > 0 ? 'bg-amber-50 border-amber-200' : 'bg-white border-slate-200'}`}>
-            <div className={`flex items-center gap-1.5 text-sm font-semibold mb-1 ${s.accent && s.value > 0 ? 'text-amber-700' : 'text-slate-500'}`}>
+          <div key={s.label} className={`rounded-2xl border p-4 ${s.accent && s.value > 0 ? 'bg-amber-50 border-amber-200' : 'bg-card border-border'}`}>
+            <div className={`flex items-center gap-1.5 text-sm font-semibold mb-1 ${s.accent && s.value > 0 ? 'text-amber-700' : 'text-muted-foreground'}`}>
               {s.icon} {s.label}
             </div>
-            <p className={`text-2xl font-bold ${s.accent && s.value > 0 ? 'text-amber-800' : 'text-slate-900'}`}>{s.value}</p>
+            <p className={`text-2xl font-bold ${s.accent && s.value > 0 ? 'text-amber-800' : 'text-foreground'}`}>{s.value}</p>
           </div>
         ))}
       </div>
 
       {isEmpty ? (
         /* Empty state */
-        <div className="bg-white border border-slate-200 rounded-2xl flex flex-col items-center justify-center py-20 px-8 text-center">
-          <div className="w-14 h-14 rounded-2xl bg-[#1E3A5F]/8 flex items-center justify-center mb-5">
-            <Users size={26} className="text-[#1E3A5F]" />
+        <div className="bg-card border border-border rounded-2xl flex flex-col items-center justify-center py-20 px-8 text-center">
+          <div className="w-14 h-14 rounded-2xl bg-[var(--primary)]/8 flex items-center justify-center mb-5">
+            <Users size={26} className="text-[var(--primary)]" />
           </div>
-          <h3 className="text-base font-bold text-slate-900 mb-2">Build your team</h3>
-          <p className="text-sm text-slate-500 leading-relaxed max-w-xs mb-6">
+          <h3 className="text-base font-bold text-foreground mb-2">Build your team</h3>
+          <p className="text-sm text-muted-foreground leading-relaxed max-w-xs mb-6">
             Invite workers and managers so you can assign jobs, manage schedules and track work.
           </p>
           <button
             onClick={() => navigate('/team/invite')}
-            className="h-10 px-5 bg-[#1E3A5F] text-white text-sm font-bold rounded-xl hover:bg-[#162D4A] transition-colors flex items-center gap-2"
+            className="h-10 px-5 bg-[var(--primary)] text-white text-sm font-bold rounded-xl hover:bg-primary/90 transition-colors flex items-center gap-2"
           >
             <UserPlus size={14} />
             Invite your first team member
@@ -584,12 +603,12 @@ export function Team() {
           {/* Filters */}
           <div className="flex flex-wrap items-center gap-3 mb-4">
             <div className="relative flex-1 min-w-[200px] max-w-xs">
-              <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <input
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 placeholder="Search by name or email…"
-                className="w-full h-9 pl-8 pr-3 border border-slate-200 rounded-xl text-sm text-slate-700 bg-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/15 focus:border-[#1E3A5F]/40 transition-all"
+                className="w-full h-9 pl-8 pr-3 border border-border rounded-xl text-sm text-foreground bg-card placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/15 focus:border-[var(--primary)]/40 transition-all"
               />
             </div>
             <FilterSelect
@@ -599,6 +618,8 @@ export function Team() {
                 { value: 'all', label: 'All roles' },
                 { value: 'worker', label: 'Worker' },
                 { value: 'manager', label: 'Manager' },
+                { value: 'admin', label: 'Admin' },
+                { value: 'owner', label: 'Owner' },
               ]}
               onChange={v => setFilterRole(v as FilterRole)}
             />
@@ -616,35 +637,35 @@ export function Team() {
           </div>
 
           {/* Desktop table */}
-          <div className="hidden md:block bg-white border border-slate-200 rounded-2xl overflow-hidden">
+          <div className="hidden md:block bg-card border border-border rounded-2xl overflow-hidden">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-slate-100">
+                <tr className="border-b border-border">
                   {['Member', 'Role', 'Status', 'Last active', ''].map(col => (
-                    <th key={col} className="px-5 py-3.5 text-left text-xs font-bold text-slate-400 uppercase tracking-wider whitespace-nowrap">{col}</th>
+                    <th key={col} className="px-5 py-3.5 text-left text-xs font-bold text-muted-foreground uppercase tracking-wider whitespace-nowrap">{col}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {filtered.length === 0 ? (
-                  <tr><td colSpan={5} className="px-5 py-12 text-center text-sm text-slate-400">No team members match your filters.</td></tr>
+                  <tr><td colSpan={5} className="px-5 py-12 text-center text-sm text-muted-foreground">No team members match your filters.</td></tr>
                 ) : filtered.map(m => (
-                  <tr key={m.key} className="border-b border-slate-50 last:border-0 hover:bg-slate-50/50 transition-colors">
+                  <tr key={m.key} className="border-b border-slate-50 last:border-0 hover:bg-muted/50 transition-colors">
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-3">
                         <MemberAvatar row={m} />
                         <div className="min-w-0">
-                          <p className="text-sm font-semibold text-slate-900 truncate">
-                            {m.fullname ?? <span className="text-slate-500 italic">No name set</span>}
+                          <p className="text-sm font-semibold text-foreground truncate">
+                            {m.fullname ?? <span className="text-muted-foreground italic">No name set</span>}
                           </p>
-                          <p className="text-xs text-slate-400 truncate">{m.email}</p>
+                          <p className="text-xs text-muted-foreground truncate">{m.email}</p>
                         </div>
                       </div>
                     </td>
                     <td className="px-5 py-4"><RoleBadge role={m.role} /></td>
                     <td className="px-5 py-4"><StatusBadge status={m.status} sentDate={m.invitedAt} restriction={m.restriction} /></td>
                     <td className="px-5 py-4">
-                      <span className="text-sm text-slate-500">
+                      <span className="text-sm text-muted-foreground">
                         {m.status === 'pending'
                           ? <span className="text-slate-300">—</span>
                           : m.lastActive ?? '—'
@@ -653,7 +674,7 @@ export function Team() {
                     </td>
                     <td className="px-3 py-4">
                       {resendLoading === m.invitationId || liftingKey === m.key
-                        ? <span className="w-5 h-5 border-2 border-[#1E3A5F] border-t-transparent rounded-full animate-spin block mx-auto" />
+                        ? <span className="w-5 h-5 border-2 border-[var(--primary)] border-t-transparent rounded-full animate-spin block mx-auto" />
                         : <ActionsMenu row={m} onResend={handleResend} onRevoke={setRevokeTarget} onSuspend={setSuspendTarget} onLift={handleLift} onReviewAppeal={setAppealTarget} liftLoading={liftingKey === m.key} />
                       }
                     </td>
@@ -666,20 +687,20 @@ export function Team() {
           {/* Mobile cards */}
           <div className="md:hidden flex flex-col gap-3">
             {filtered.length === 0 ? (
-              <p className="text-sm text-slate-400 text-center py-8">No team members match your filters.</p>
+              <p className="text-sm text-muted-foreground text-center py-8">No team members match your filters.</p>
             ) : filtered.map(m => (
-              <div key={m.key} className="bg-white border border-slate-200 rounded-2xl p-4 flex items-start gap-3">
+              <div key={m.key} className="bg-card border border-border rounded-2xl p-4 flex items-start gap-3">
                 <MemberAvatar row={m} size="lg" />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2 mb-0.5">
-                    <p className="text-sm font-semibold text-slate-900 truncate">{m.fullname ?? m.email}</p>
+                    <p className="text-sm font-semibold text-foreground truncate">{m.fullname ?? m.email}</p>
                     <ActionsMenu row={m} onResend={handleResend} onRevoke={setRevokeTarget} onSuspend={setSuspendTarget} onLift={handleLift} onReviewAppeal={setAppealTarget} liftLoading={liftingKey === m.key} />
                   </div>
-                  {m.fullname && <p className="text-xs text-slate-400 mb-2">{m.email}</p>}
+                  {m.fullname && <p className="text-xs text-muted-foreground mb-2">{m.email}</p>}
                   <div className="flex flex-wrap items-center gap-1.5">
                     <RoleBadge role={m.role} />
                     <StatusBadge status={m.status} sentDate={m.invitedAt} restriction={m.restriction} />
-                    {m.lastActive && <span className="text-xs text-slate-400 flex items-center gap-1"><Clock size={10} />{m.lastActive}</span>}
+                    {m.lastActive && <span className="text-xs text-muted-foreground flex items-center gap-1"><Clock size={10} />{m.lastActive}</span>}
                   </div>
                 </div>
               </div>
@@ -731,12 +752,12 @@ function FilterSelect({ label, value, options, onChange }: {
       <select
         value={value}
         onChange={e => onChange(e.target.value)}
-        className="h-9 pl-3 pr-8 border border-slate-200 rounded-xl text-sm text-slate-700 bg-white appearance-none focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/15 focus:border-[#1E3A5F]/40 transition-all"
+        className="h-9 pl-3 pr-8 border border-border rounded-xl text-sm text-foreground bg-card appearance-none focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/15 focus:border-[var(--primary)]/40 transition-all"
         aria-label={label}
       >
         {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
       </select>
-      <ChevronDown size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+      <ChevronDown size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
     </div>
   )
 }

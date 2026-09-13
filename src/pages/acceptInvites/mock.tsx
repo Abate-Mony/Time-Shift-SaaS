@@ -27,7 +27,7 @@ const MOCK_INVITE: InviteData = {
 function Logo() {
   return (
     <div className="flex items-center gap-2.5 justify-center mb-8">
-      <div className="w-8 h-8 rounded-xl bg-[#1E3A5F] flex items-center justify-center">
+      <div className="w-8 h-8 rounded-xl bg-[var(--primary)] flex items-center justify-center">
         <svg viewBox="0 0 16 16" width="14" height="14" fill="none">
           <rect x="1" y="1" width="5.5" height="5.5" rx="1.5" fill="white" />
           <rect x="9.5" y="1" width="5.5" height="5.5" rx="1.5" fill="white" opacity="0.6" />
@@ -35,7 +35,7 @@ function Logo() {
           <rect x="9.5" y="9.5" width="5.5" height="5.5" rx="1.5" fill="white" opacity="0.3" />
         </svg>
       </div>
-      <span className="text-base font-bold text-slate-800">work<span className="text-slate-300">.wrk</span></span>
+      <span className="text-base font-bold text-foreground">work<span className="text-slate-300">.wrk</span></span>
     </div>
   )
 }
@@ -44,15 +44,15 @@ function Logo() {
 
 function InvitationSummary({ invite }: { invite: InviteData }) {
   return (
-    <div className="bg-slate-50 border border-slate-200 rounded-xl px-5 py-4 mb-6">
+    <div className="bg-muted border border-border rounded-xl px-5 py-4 mb-6">
       {[
         { label: 'Company', value: invite.company },
         { label: 'Role', value: invite.role === 'worker' ? 'Worker' : 'Manager' },
         { label: 'Email', value: invite.email },
       ].map((row, i, arr) => (
-        <div key={row.label} className={`flex items-center justify-between py-2 ${i < arr.length - 1 ? 'border-b border-slate-100' : ''}`}>
-          <span className="text-sm text-slate-500">{row.label}</span>
-          <span className="text-sm font-semibold text-slate-800">{row.value}</span>
+        <div key={row.label} className={`flex items-center justify-between py-2 ${i < arr.length - 1 ? 'border-b border-border' : ''}`}>
+          <span className="text-sm text-muted-foreground">{row.label}</span>
+          <span className="text-sm font-semibold text-foreground">{row.value}</span>
         </div>
       ))}
     </div>
@@ -64,7 +64,7 @@ function InvitationSummary({ invite }: { invite: InviteData }) {
 function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label className="text-sm font-semibold text-slate-700">{label}</label>
+      <label className="text-sm font-semibold text-foreground">{label}</label>
       {children}
       {error && <p className="text-xs text-red-500">{error}</p>}
     </div>
@@ -72,11 +72,11 @@ function Field({ label, error, children }: { label: string; error?: string; chil
 }
 
 const inputCls = (err?: string) =>
-  `w-full h-11 px-4 border rounded-xl text-sm text-slate-800 bg-white placeholder:text-slate-400
+  `w-full h-11 px-4 border rounded-xl text-sm text-foreground bg-card placeholder:text-muted-foreground
    focus:outline-none focus:ring-2 transition-all ${
     err
       ? 'border-red-400 focus:ring-red-100'
-      : 'border-slate-200 focus:ring-[#1E3A5F]/15 focus:border-[#1E3A5F]/40'
+      : 'border-border focus:ring-[var(--primary)]/15 focus:border-[var(--primary)]/40'
   }`
 
 // ─── Password field with visibility toggle ────────────────────────────────────
@@ -97,7 +97,7 @@ function PasswordInput({ value, onChange, placeholder, error }: {
       <button
         type="button"
         onClick={() => setVisible(v => !v)}
-        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground transition-colors"
         aria-label={visible ? 'Hide password' : 'Show password'}
       >
         {visible ? <EyeOff size={15} /> : <Eye size={15} />}
@@ -111,9 +111,9 @@ function PasswordInput({ value, onChange, placeholder, error }: {
 function OrDivider() {
   return (
     <div className="flex items-center gap-3 my-1">
-      <div className="flex-1 h-px bg-slate-200" />
-      <span className="text-xs text-slate-400 font-medium">or</span>
-      <div className="flex-1 h-px bg-slate-200" />
+      <div className="flex-1 h-px bg-muted" />
+      <span className="text-xs text-muted-foreground font-medium">or</span>
+      <div className="flex-1 h-px bg-muted" />
     </div>
   )
 }
@@ -124,7 +124,7 @@ function GoogleButton({ label }: { label: string }) {
   return (
     <button
       type="button"
-      className="w-full h-11 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors flex items-center justify-center gap-2.5"
+      className="w-full h-11 border border-border rounded-xl text-sm font-semibold text-foreground hover:bg-muted transition-colors flex items-center justify-center gap-2.5"
     >
       <svg viewBox="0 0 18 18" width="16" height="16">
         <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615Z" fill="#4285F4" />
@@ -142,13 +142,13 @@ function GoogleButton({ label }: { label: string }) {
 function LoadingSkeleton() {
   return (
     <div className="animate-pulse flex flex-col gap-4">
-      <div className="h-5 bg-slate-200 rounded-lg w-2/3 mx-auto" />
-      <div className="h-4 bg-slate-200 rounded-lg w-1/2 mx-auto" />
-      <div className="h-20 bg-slate-100 rounded-xl mt-2" />
-      <div className="h-4 bg-slate-200 rounded-lg w-full mt-2" />
-      <div className="h-11 bg-slate-200 rounded-xl" />
-      <div className="h-11 bg-slate-200 rounded-xl" />
-      <div className="h-11 bg-slate-100 rounded-xl" />
+      <div className="h-5 bg-muted rounded-lg w-2/3 mx-auto" />
+      <div className="h-4 bg-muted rounded-lg w-1/2 mx-auto" />
+      <div className="h-20 bg-muted rounded-xl mt-2" />
+      <div className="h-4 bg-muted rounded-lg w-full mt-2" />
+      <div className="h-11 bg-muted rounded-xl" />
+      <div className="h-11 bg-muted rounded-xl" />
+      <div className="h-11 bg-muted rounded-xl" />
     </div>
   )
 }
@@ -161,16 +161,16 @@ function ExpiredScreen({ onSignIn }: { onSignIn: () => void }) {
       <div className="w-12 h-12 rounded-full bg-amber-50 flex items-center justify-center mx-auto mb-5">
         <Clock size={22} className="text-amber-500" />
       </div>
-      <h2 className="text-lg font-bold text-slate-900 mb-2">Invitation expired</h2>
-      <p className="text-sm text-slate-500 leading-relaxed mb-2">
+      <h2 className="text-lg font-bold text-foreground mb-2">Invitation expired</h2>
+      <p className="text-sm text-muted-foreground leading-relaxed mb-2">
         This invitation is no longer valid.
       </p>
-      <p className="text-sm text-slate-500 leading-relaxed mb-8">
-        Ask a manager at <strong className="text-slate-700">Sparkle Cleaning Ltd</strong> to send you a new invitation.
+      <p className="text-sm text-muted-foreground leading-relaxed mb-8">
+        Ask a manager at <strong className="text-foreground">Sparkle Cleaning Ltd</strong> to send you a new invitation.
       </p>
       <button
         onClick={onSignIn}
-        className="w-full h-11 border border-slate-200 text-sm font-semibold text-slate-700 rounded-xl hover:bg-slate-50 transition-colors"
+        className="w-full h-11 border border-border text-sm font-semibold text-foreground rounded-xl hover:bg-muted transition-colors"
       >
         Back to sign in
       </button>
@@ -184,11 +184,11 @@ function RevokedScreen({ onSignIn }: { onSignIn: () => void }) {
       <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-5">
         <Ban size={22} className="text-red-500" />
       </div>
-      <h2 className="text-lg font-bold text-slate-900 mb-2">Invitation no longer available</h2>
-      <p className="text-sm text-slate-500 leading-relaxed mb-8">
-        This invitation has been cancelled by <strong className="text-slate-700">Sparkle Cleaning Ltd</strong>. Contact your manager if you believe this is a mistake.
+      <h2 className="text-lg font-bold text-foreground mb-2">Invitation no longer available</h2>
+      <p className="text-sm text-muted-foreground leading-relaxed mb-8">
+        This invitation has been cancelled by <strong className="text-foreground">Sparkle Cleaning Ltd</strong>. Contact your manager if you believe this is a mistake.
       </p>
-      <button onClick={onSignIn} className="w-full h-11 border border-slate-200 text-sm font-semibold text-slate-700 rounded-xl hover:bg-slate-50 transition-colors">
+      <button onClick={onSignIn} className="w-full h-11 border border-border text-sm font-semibold text-foreground rounded-xl hover:bg-muted transition-colors">
         Back to sign in
       </button>
     </div>
@@ -201,11 +201,11 @@ function AlreadyAcceptedScreen({ onSignIn }: { onSignIn: () => void }) {
       <div className="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center mx-auto mb-5">
         <CheckCircle2 size={22} className="text-emerald-500" />
       </div>
-      <h2 className="text-lg font-bold text-slate-900 mb-2">Invitation already accepted</h2>
-      <p className="text-sm text-slate-500 leading-relaxed mb-8">
+      <h2 className="text-lg font-bold text-foreground mb-2">Invitation already accepted</h2>
+      <p className="text-sm text-muted-foreground leading-relaxed mb-8">
         This invitation has already been used.
       </p>
-      <button onClick={onSignIn} className="w-full h-11 bg-[#1E3A5F] text-white text-sm font-bold rounded-xl hover:bg-[#162D4A] transition-colors">
+      <button onClick={onSignIn} className="w-full h-11 bg-[var(--primary)] text-white text-sm font-bold rounded-xl hover:bg-primary/90 transition-colors">
         Sign in
       </button>
     </div>
@@ -215,14 +215,14 @@ function AlreadyAcceptedScreen({ onSignIn }: { onSignIn: () => void }) {
 function InvalidScreen({ onSignIn }: { onSignIn: () => void }) {
   return (
     <div className="text-center py-4">
-      <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-5">
-        <AlertTriangle size={22} className="text-slate-400" />
+      <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-5">
+        <AlertTriangle size={22} className="text-muted-foreground" />
       </div>
-      <h2 className="text-lg font-bold text-slate-900 mb-2">Invitation not found</h2>
-      <p className="text-sm text-slate-500 leading-relaxed mb-8">
+      <h2 className="text-lg font-bold text-foreground mb-2">Invitation not found</h2>
+      <p className="text-sm text-muted-foreground leading-relaxed mb-8">
         This invitation link may be invalid or no longer available.
       </p>
-      <button onClick={onSignIn} className="w-full h-11 border border-slate-200 text-sm font-semibold text-slate-700 rounded-xl hover:bg-slate-50 transition-colors">
+      <button onClick={onSignIn} className="w-full h-11 border border-border text-sm font-semibold text-foreground rounded-xl hover:bg-muted transition-colors">
         Go to sign in
       </button>
     </div>
@@ -252,20 +252,20 @@ function SuccessScreen({ invite, onDone }: { invite: InviteData; onDone: () => v
         <CheckCircle2 size={32} className="text-emerald-500" strokeWidth={1.5} />
       </motion.div>
       <p className="text-xs font-bold uppercase tracking-widest text-emerald-600 mb-2">All set</p>
-      <h2 className="text-xl font-bold text-slate-900 mb-2">{"You're all set!"}</h2>
-      <p className="text-sm text-slate-500 leading-relaxed mb-8">
+      <h2 className="text-xl font-bold text-foreground mb-2">{"You're all set!"}</h2>
+      <p className="text-sm text-muted-foreground leading-relaxed mb-8">
         {"You've joined "}
-        <strong className="text-slate-700">{invite.company}</strong>
+        <strong className="text-foreground">{invite.company}</strong>
         {` as a ${invite.role === 'worker' ? 'Worker' : 'Manager'}.`}
       </p>
       <button
         onClick={onDone}
-        className="w-full h-11 bg-[#1E3A5F] text-white text-sm font-bold rounded-xl hover:bg-[#162D4A] transition-colors flex items-center justify-center gap-2"
+        className="w-full h-11 bg-[var(--primary)] text-white text-sm font-bold rounded-xl hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
       >
         {invite.role === 'worker' ? 'Go to my jobs' : 'Go to dashboard'}
         <ArrowRight size={14} />
       </button>
-      <p className="text-xs text-slate-400 mt-3">Redirecting automatically in a moment…</p>
+      <p className="text-xs text-muted-foreground mt-3">Redirecting automatically in a moment…</p>
     </div>
   )
 }
@@ -299,17 +299,17 @@ function NewUserForm({ invite, onSuccess }: { invite: InviteData; onSuccess: () 
       <InvitationSummary invite={invite} />
 
       <div>
-        <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">Create your account</p>
+        <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">Create your account</p>
         <div className="flex flex-col gap-4">
           <Field label="Full name" error={errors.name}>
             <input className={inputCls(errors.name)} placeholder="John Smith" value={name} onChange={e => setName(e.target.value)} />
           </Field>
           <Field label="Email address">
-            <input className={inputCls() + ' bg-slate-50 text-slate-500 cursor-not-allowed'} value={invite.email} readOnly tabIndex={-1} />
+            <input className={inputCls() + ' bg-muted text-muted-foreground cursor-not-allowed'} value={invite.email} readOnly tabIndex={-1} />
           </Field>
           <Field label="Password" error={errors.password}>
             <PasswordInput value={password} onChange={setPassword} error={errors.password} />
-            {!errors.password && <p className="text-xs text-slate-400">At least 8 characters.</p>}
+            {!errors.password && <p className="text-xs text-muted-foreground">At least 8 characters.</p>}
           </Field>
           <Field label="Confirm password" error={errors.confirm}>
             <PasswordInput value={confirm} onChange={setConfirm} placeholder="Re-enter password" error={errors.confirm} />
@@ -320,7 +320,7 @@ function NewUserForm({ invite, onSuccess }: { invite: InviteData; onSuccess: () 
       <button
         onClick={submit}
         disabled={loading}
-        className="w-full h-11 bg-[#1E3A5F] text-white text-sm font-bold rounded-xl hover:bg-[#162D4A] transition-colors flex items-center justify-center gap-2 disabled:opacity-70"
+        className="w-full h-11 bg-[var(--primary)] text-white text-sm font-bold rounded-xl hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-70"
       >
         {loading
           ? <><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Accepting invitation…</>
@@ -355,18 +355,18 @@ function ExistingUserForm({ invite, onSuccess }: { invite: InviteData; onSuccess
       <InvitationSummary invite={invite} />
 
       <div>
-        <h3 className="text-sm font-bold text-slate-900 mb-1">You already have an account</h3>
-        <p className="text-sm text-slate-500 mb-4">
-          Sign in to accept your invitation to <strong className="text-slate-700">{invite.company}</strong>.
+        <h3 className="text-sm font-bold text-foreground mb-1">You already have an account</h3>
+        <p className="text-sm text-muted-foreground mb-4">
+          Sign in to accept your invitation to <strong className="text-foreground">{invite.company}</strong>.
         </p>
         <div className="flex flex-col gap-4">
           <Field label="Email address">
-            <input className={inputCls() + ' bg-slate-50 text-slate-500 cursor-not-allowed'} value={invite.email} readOnly tabIndex={-1} />
+            <input className={inputCls() + ' bg-muted text-muted-foreground cursor-not-allowed'} value={invite.email} readOnly tabIndex={-1} />
           </Field>
           <Field label="Password" error={errors.password}>
             <PasswordInput value={password} onChange={setPassword} error={errors.password} />
           </Field>
-          <button className="text-xs text-[#1E3A5F] font-semibold text-left hover:underline">
+          <button className="text-xs text-[var(--primary)] font-semibold text-left hover:underline">
             Forgot password?
           </button>
         </div>
@@ -375,7 +375,7 @@ function ExistingUserForm({ invite, onSuccess }: { invite: InviteData; onSuccess
       <button
         onClick={submit}
         disabled={loading}
-        className="w-full h-11 bg-[#1E3A5F] text-white text-sm font-bold rounded-xl hover:bg-[#162D4A] transition-colors flex items-center justify-center gap-2 disabled:opacity-70"
+        className="w-full h-11 bg-[var(--primary)] text-white text-sm font-bold rounded-xl hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-70"
       >
         {loading
           ? <><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Signing in…</>
@@ -413,7 +413,7 @@ export function AcceptInvite({ onDone }: { onDone: () => void }) {
   const invite = MOCK_INVITE
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center px-4 py-10">
+    <div className="min-h-screen bg-background flex items-center justify-center px-4 py-10">
       <div className="w-full max-w-sm">
         <Logo />
 
@@ -428,18 +428,18 @@ export function AcceptInvite({ onDone }: { onDone: () => void }) {
               transition={{ duration: 0.2 }}
               className="text-center mb-6"
             >
-              <div className="w-12 h-12 rounded-full bg-[#1E3A5F]/8 flex items-center justify-center mx-auto mb-4">
-                <Mail size={20} className="text-[#1E3A5F]" />
+              <div className="w-12 h-12 rounded-full bg-[var(--primary)]/8 flex items-center justify-center mx-auto mb-4">
+                <Mail size={20} className="text-[var(--primary)]" />
               </div>
-              <p className="text-xs font-bold uppercase tracking-widest text-[#1E3A5F] mb-1">{"You're invited"}</p>
-              <h1 className="text-xl font-bold text-slate-900">
+              <p className="text-xs font-bold uppercase tracking-widest text-[var(--primary)] mb-1">{"You're invited"}</p>
+              <h1 className="text-xl font-bold text-foreground">
                 {"Join "}
-                <span className="text-[#1E3A5F]">{invite.company}</span>
+                <span className="text-[var(--primary)]">{invite.company}</span>
               </h1>
               {status !== 'loading' && (
-                <p className="text-sm text-slate-500 mt-1.5">
+                <p className="text-sm text-muted-foreground mt-1.5">
                   {invite.invitedBy} invited you as a{' '}
-                  <span className="font-semibold text-slate-700">{invite.role === 'worker' ? 'Worker' : 'Manager'}</span>.
+                  <span className="font-semibold text-foreground">{invite.role === 'worker' ? 'Worker' : 'Manager'}</span>.
                 </p>
               )}
             </motion.div>
@@ -447,7 +447,7 @@ export function AcceptInvite({ onDone }: { onDone: () => void }) {
         </AnimatePresence>
 
         {/* Card */}
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+        <div className="bg-card border border-border rounded-2xl shadow-sm p-6">
           <AnimatePresence mode="wait">
             {status === 'loading' && (
               <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
@@ -496,16 +496,16 @@ export function AcceptInvite({ onDone }: { onDone: () => void }) {
         <div className="mt-6 flex flex-col items-center gap-2">
           <button
             onClick={cycleDemo}
-            className="text-xs text-slate-400 hover:text-slate-600 transition-colors border border-slate-200 rounded-lg px-3 py-1.5"
+            className="text-xs text-muted-foreground hover:text-muted-foreground transition-colors border border-border rounded-lg px-3 py-1.5"
           >
             Demo: cycle states →
           </button>
           <p className="text-[10px] text-slate-300 uppercase tracking-wider">{status}</p>
         </div>
 
-        <p className="text-xs text-slate-400 text-center mt-6">
+        <p className="text-xs text-muted-foreground text-center mt-6">
           Powered by{' '}
-          <span className="font-semibold text-slate-600">INPRN</span>
+          <span className="font-semibold text-muted-foreground">INPRN</span>
         </p>
       </div>
     </div>

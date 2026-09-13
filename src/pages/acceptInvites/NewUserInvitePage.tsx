@@ -65,10 +65,10 @@ export default function NewUserInvitePage() {
     if (isLoading) {
         return (
             <div className="animate-pulse space-y-4">
-                <div className="h-20 bg-slate-100 rounded-xl" />
-                <div className="h-11 bg-slate-200 rounded-xl" />
-                <div className="h-11 bg-slate-200 rounded-xl" />
-                <div className="h-11 bg-slate-200 rounded-xl" />
+                <div className="h-20 bg-muted rounded-xl" />
+                <div className="h-11 bg-muted rounded-xl" />
+                <div className="h-11 bg-muted rounded-xl" />
+                <div className="h-11 bg-muted rounded-xl" />
             </div>
         );
     }
@@ -244,12 +244,12 @@ export default function NewUserInvitePage() {
         };
 
     const inputClass =
-        "w-full h-11 px-4 border border-slate-200 rounded-xl text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/15 focus:border-[#1E3A5F]/40 transition-all";
+        "w-full h-11 px-4 border border-border rounded-xl text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/15 focus:border-[var(--primary)]/40 transition-all";
 
     return (
         <div className="flex flex-col gap-5">
             {/* Invitation summary */}
-            <div className="bg-slate-50 border border-slate-200 rounded-xl px-5 py-4">
+            <div className="bg-muted border border-border rounded-xl px-5 py-4">
                 {[
                     {
                         label:
@@ -287,17 +287,17 @@ export default function NewUserInvitePage() {
                                 index <
                                 arr.length -
                                     1
-                                    ? "border-b border-slate-100"
+                                    ? "border-b border-border"
                                     : ""
                             }`}
                         >
-                            <span className="text-sm text-slate-500">
+                            <span className="text-sm text-muted-foreground">
                                 {
                                     row.label
                                 }
                             </span>
 
-                            <span className="text-sm font-semibold text-slate-800 text-right">
+                            <span className="text-sm font-semibold text-foreground text-right">
                                 {
                                     row.value
                                 }
@@ -308,13 +308,13 @@ export default function NewUserInvitePage() {
             </div>
 
             <div>
-                <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">
+                <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">
                     Create your account
                 </p>
 
                 <div className="space-y-4">
                     <div>
-                        <label className="text-sm font-semibold text-slate-700 block mb-1.5">
+                        <label className="text-sm font-semibold text-foreground block mb-1.5">
                             Full name
                         </label>
 
@@ -346,7 +346,7 @@ export default function NewUserInvitePage() {
                     </div>
 
                     <div>
-                        <label className="text-sm font-semibold text-slate-700 block mb-1.5">
+                        <label className="text-sm font-semibold text-foreground block mb-1.5">
                             Email address
                         </label>
 
@@ -355,12 +355,12 @@ export default function NewUserInvitePage() {
                                 invite.email
                             }
                             readOnly
-                            className={`${inputClass} bg-slate-50 text-slate-500 cursor-not-allowed`}
+                            className={`${inputClass} bg-muted text-muted-foreground cursor-not-allowed`}
                         />
                     </div>
 
                     <div>
-                        <label className="text-sm font-semibold text-slate-700 block mb-1.5">
+                        <label className="text-sm font-semibold text-foreground block mb-1.5">
                             Password
                         </label>
 
@@ -396,7 +396,7 @@ export default function NewUserInvitePage() {
                                             !value
                                     )
                                 }
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
                             >
                                 {passwordVisible ? (
                                     <EyeOff
@@ -421,7 +421,7 @@ export default function NewUserInvitePage() {
                                 }
                             </p>
                         ) : (
-                            <p className="text-xs text-slate-400 mt-1">
+                            <p className="text-xs text-muted-foreground mt-1">
                                 At
                                 least
                                 8
@@ -431,7 +431,7 @@ export default function NewUserInvitePage() {
                     </div>
 
                     <div>
-                        <label className="text-sm font-semibold text-slate-700 block mb-1.5">
+                        <label className="text-sm font-semibold text-foreground block mb-1.5">
                             Confirm
                             password
                         </label>
@@ -468,7 +468,7 @@ export default function NewUserInvitePage() {
                                             !value
                                     )
                                 }
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
                             >
                                 {confirmVisible ? (
                                     <EyeOff
@@ -501,7 +501,7 @@ export default function NewUserInvitePage() {
                 type="button"
                 onClick={handleSubmit}
                 disabled={loading}
-                className="w-full h-11 bg-[#1E3A5F] text-white text-sm font-bold rounded-xl hover:bg-[#162D4A] disabled:opacity-60 transition-colors"
+                className="w-full h-11 bg-[var(--primary)] text-white text-sm font-bold rounded-xl hover:bg-primary/90 disabled:opacity-60 transition-colors"
             >
                 {loading
                     ? "Accepting invitation..."

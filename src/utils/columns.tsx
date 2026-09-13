@@ -26,7 +26,7 @@ import dayjs from "dayjs"
 import { isJobLocked } from "./jobLock"
 
 const STATUS_STYLES: Record<string, string> = {
-  draft: "bg-slate-100 text-slate-600",
+  draft: "bg-muted text-muted-foreground",
   published: "bg-blue-100 text-blue-700",
   completed: "bg-emerald-100 text-emerald-700",
   cancelled: "bg-red-100 text-red-600",
@@ -43,7 +43,7 @@ function StatusPill({ value }: { value: string }) {
   const key = value?.toLowerCase() ?? ""
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold capitalize ${STATUS_STYLES[key] ?? "bg-slate-100 text-slate-600"
+      className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold capitalize ${STATUS_STYLES[key] ?? "bg-muted text-muted-foreground"
         }`}
     >
       {value || "draft"}
@@ -55,7 +55,7 @@ function PriorityPill({ value }: { value: string }) {
   const key = value?.toLowerCase() ?? ""
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold capitalize ${PRIORITY_STYLES[key] ?? "bg-slate-100 text-slate-700"
+      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold capitalize ${PRIORITY_STYLES[key] ?? "bg-muted text-foreground"
         }`}
     >
       {key === "urgent" && <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />}
@@ -95,19 +95,19 @@ export const jobsColumns: ColumnDef<CreateJobForm>[] = [
     header: ({ column }) => (
       <Button
         variant="ghost"
-        className="px-0 hover:bg-transparent font-semibold text-slate-600"
+        className="px-0 hover:bg-transparent font-semibold text-muted-foreground"
         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
       >
         Job
-        <ArrowUpDown className="ml-2 h-3.5 w-3.5 text-slate-400" />
+        <ArrowUpDown className="ml-2 h-3.5 w-3.5 text-muted-foreground" />
       </Button>
     ),
     cell: ({ row }) => {
       const { title, client } = row.original
       return (
         <div className="min-w-45">
-          <p className="font-medium text-slate-900 line-clamp-1 max-w-sm">{title}</p>
-          <p className="text-xs text-slate-500 mt-0.5">{client?.name}</p>
+          <p className="font-medium text-foreground line-clamp-1 max-w-sm">{title}</p>
+          <p className="text-xs text-muted-foreground mt-0.5">{client?.name}</p>
         </div>
       )
     },
@@ -119,8 +119,8 @@ export const jobsColumns: ColumnDef<CreateJobForm>[] = [
     cell: ({ row }) => {
       const location = row.original.location
       return (
-        <div className="flex items-center gap-1.5 min-w-37.5 text-slate-600">
-          <MapPin className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+        <div className="flex items-center gap-1.5 min-w-37.5 text-muted-foreground">
+          <MapPin className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
           <span className="text-sm truncate">{location?.split(",")[0]}</span>
         </div>
       )
@@ -132,11 +132,11 @@ export const jobsColumns: ColumnDef<CreateJobForm>[] = [
     header: ({ column }) => (
       <Button
         variant="ghost"
-        className="px-0 hover:bg-transparent font-semibold text-slate-600"
+        className="px-0 hover:bg-transparent font-semibold text-muted-foreground"
         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
       >
         Schedule
-        <ArrowUpDown className="ml-2 h-3.5 w-3.5 text-slate-400" />
+        <ArrowUpDown className="ml-2 h-3.5 w-3.5 text-muted-foreground" />
       </Button>
     ),
     cell: ({ row }) => {
@@ -148,10 +148,10 @@ export const jobsColumns: ColumnDef<CreateJobForm>[] = [
           className="min-w-32.5 cursor-pointer block"
           onClick={(e) => e.stopPropagation()}
         >
-          <p className="text-sm font-medium text-slate-800">
+          <p className="text-sm font-medium text-foreground">
             {formatDate(date, 'dddd D MMMM YYYY')}
           </p>
-          <div className="flex items-center gap-1 text-xs text-slate-500 mt-0.5">
+          <div className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
             <Clock className="h-3 w-3" />
             {startTime} – {endTime}
           </div>
@@ -196,7 +196,7 @@ export const jobsColumns: ColumnDef<CreateJobForm>[] = [
               }))}
             />
             {workers.length > 3 && (
-              <div className="flex z-10 relative size-9 items-center justify-center rounded-full bg-slate-100 border-2 border-white text-[10px] font-bold text-slate-600">
+              <div className="flex z-10 relative size-9 items-center justify-center rounded-full bg-muted border-2 border-white text-[10px] font-bold text-muted-foreground">
                 +{workers.length - 3}
               </div>
             )}
@@ -218,13 +218,13 @@ export const jobsColumns: ColumnDef<CreateJobForm>[] = [
       const { percent, isOverTime } = getShiftProgress(date, startTime!, endTime!)
       return (
         <div className="flex items-center gap-2 min-w-25">
-          <div className="flex-1 h-1.5 rounded-full bg-slate-100 overflow-hidden">
+          <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
             <div
               className={`h-full rounded-full transition-colors ${isOverTime ? "bg-rose-500" : "bg-blue-500"}`}
               style={{ width: `${percent}%` }}
             />
           </div>
-          <span className={`text-[10px] font-semibold tabular-nums ${isOverTime ? "text-rose-600" : "text-slate-500"}`}>
+          <span className={`text-[10px] font-semibold tabular-nums ${isOverTime ? "text-rose-600" : "text-muted-foreground"}`}>
             {Math.round(percent)}%
           </span>
         </div>
@@ -275,8 +275,8 @@ export const jobsColumns: ColumnDef<CreateJobForm>[] = [
         <div onClick={(e) => e.stopPropagation()}>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="rounded-full hover:bg-slate-100">
-              <MoreHorizontal className="h-4 w-4 text-slate-500" />
+            <Button variant="ghost" size="icon" className="rounded-full hover:bg-muted">
+              <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
             </Button>
           </DropdownMenuTrigger>
 
@@ -320,7 +320,7 @@ export const jobsColumns: ColumnDef<CreateJobForm>[] = [
 ]
 
 const INVOICE_STATUS_STYLES: Record<string, string> = {
-  draft: "bg-slate-100 text-slate-600",
+  draft: "bg-muted text-muted-foreground",
   sent: "bg-blue-100 text-blue-700",
   paid: "bg-emerald-100 text-emerald-700",
   overdue: "bg-red-100 text-red-600",
@@ -330,7 +330,7 @@ function InvoiceStatusPill({ value }: { value: string }) {
   const key = value?.toLowerCase() ?? ""
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold capitalize ${INVOICE_STATUS_STYLES[key] ?? "bg-slate-100 text-slate-600"
+      className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold capitalize ${INVOICE_STATUS_STYLES[key] ?? "bg-muted text-muted-foreground"
         }`}
     >
       {value || "draft"}
@@ -344,15 +344,15 @@ export const invoiceColumns: ColumnDef<Invoice>[] = [
     header: ({ column }) => (
       <Button
         variant="ghost"
-        className="px-0 hover:bg-transparent font-semibold text-slate-600"
+        className="px-0 hover:bg-transparent font-semibold text-muted-foreground"
         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
       >
         Invoice
-        <ArrowUpDown className="ml-2 h-3.5 w-3.5 text-slate-400" />
+        <ArrowUpDown className="ml-2 h-3.5 w-3.5 text-muted-foreground" />
       </Button>
     ),
     cell: ({ row }) => (
-      <Link to={`/invoices/${row.original._id}`} state={backLinkState('Invoices')} className="font-medium text-slate-900 hover:underline">
+      <Link to={`/invoices/${row.original._id}`} state={backLinkState('Invoices')} className="font-medium text-foreground hover:underline">
         {row.original.invoiceNumber}
       </Link>
     ),
@@ -361,14 +361,14 @@ export const invoiceColumns: ColumnDef<Invoice>[] = [
   {
     accessorKey: "client",
     header: "Client",
-    cell: ({ row }) => <span className="text-sm text-slate-700">{row.original.client}</span>,
+    cell: ({ row }) => <span className="text-sm text-foreground">{row.original.client}</span>,
   },
 
   {
     accessorKey: "issueDate",
     header: "Issue Date",
     cell: ({ row }) => (
-      <span className="text-sm text-slate-600">{formatDate(row.original.issueDate, "dddd D MMMM YYYY")}</span>
+      <span className="text-sm text-muted-foreground">{formatDate(row.original.issueDate, "dddd D MMMM YYYY")}</span>
     ),
   },
 
@@ -376,7 +376,7 @@ export const invoiceColumns: ColumnDef<Invoice>[] = [
     accessorKey: "dueDate",
     header: "Due Date",
     cell: ({ row }) => (
-      <span className="text-sm text-slate-600">{formatDate(row.original.dueDate, "dddd D MMMM YYYY")}</span>
+      <span className="text-sm text-muted-foreground">{formatDate(row.original.dueDate, "dddd D MMMM YYYY")}</span>
     ),
   },
 
@@ -385,14 +385,14 @@ export const invoiceColumns: ColumnDef<Invoice>[] = [
     header: ({ column }) => (
       <Button
         variant="ghost"
-        className="px-0 hover:bg-transparent font-semibold text-slate-600"
+        className="px-0 hover:bg-transparent font-semibold text-muted-foreground"
         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
       >
         Total
-        <ArrowUpDown className="ml-2 h-3.5 w-3.5 text-slate-400" />
+        <ArrowUpDown className="ml-2 h-3.5 w-3.5 text-muted-foreground" />
       </Button>
     ),
-    cell: ({ row }) => <span className="text-sm font-semibold text-slate-900">{formatCurrency(row.original.total)}</span>,
+    cell: ({ row }) => <span className="text-sm font-semibold text-foreground">{formatCurrency(row.original.total)}</span>,
   },
 
   {
@@ -408,8 +408,8 @@ export const invoiceColumns: ColumnDef<Invoice>[] = [
     cell: ({ row }) => (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="rounded-full hover:bg-slate-100">
-            <MoreHorizontal className="h-4 w-4 text-slate-500" />
+          <Button variant="ghost" size="icon" className="rounded-full hover:bg-muted">
+            <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
           </Button>
         </DropdownMenuTrigger>
 

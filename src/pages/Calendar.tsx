@@ -74,7 +74,7 @@ function toDateStr(year: number, month: number, day: number) {
 
 const jobColors: Record<string, string> = {
   'in-progress': 'bg-blue-500',
-  'published': 'bg-[#1E3A5F]',
+  'published': 'bg-[var(--primary)]',
   'completed': 'bg-emerald-500',
   'cancelled': 'bg-red-500',
   'draft': 'bg-slate-400',
@@ -108,17 +108,17 @@ const DisplayCalendar = ({
         }
       }}
       className='flex flex-col max-h-[calc(100svh-10rem)]   scrollto!'>
-      <div className="bg-white rounded-xl border border-[#E2E8F0] p-5 flex-1 overflow-y-auto scrollto">
-        <h3 className="text-sm font-semibold text-slate-900 mb-1">
+      <div className="bg-card rounded-xl border border-[var(--border)] p-5 flex-1 overflow-y-auto scrollto">
+        <h3 className="text-sm font-semibold text-foreground mb-1">
           {selectedDate ? dayjs(selectedDate).format('D MMMM') : 'Select a day'}
         </h3>
-        <p className="text-xs text-slate-400 mb-4">
+        <p className="text-xs text-muted-foreground mb-4">
           {selectedJobs.length} job{selectedJobs.length !== 1 ? 's' : ''} scheduled
         </p>
 
         {selectedJobs?.length === 0 ? (
           <div className="text-center py-8">
-            <p className="text-xs text-slate-400">No jobs on this day
+            <p className="text-xs text-muted-foreground">No jobs on this day
 
               <EmptyState
                 title='Create New Job With this Date'
@@ -142,20 +142,20 @@ const DisplayCalendar = ({
                   state={backLinkState('Calendar')}
                   to={`/jobs/${job._id}`}
                   key={job._id}
-                  className="border border-[#E2E8F0] rounded-xl p-3.5"
+                  className="border border-[var(--border)] rounded-xl p-3.5"
                 >
                   <div className="flex items-start justify-between gap-2 mb-2">
-                    <p className="text-xs font-semibold text-slate-800 leading-snug">
+                    <p className="text-xs font-semibold text-foreground leading-snug">
                       {job?.title}
                     </p>
                     <StatusBadge status={job?.status || ''} />
                   </div>
                   <div className="flex flex-col gap-1.5">
-                    <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                       <Clock size={11} className="shrink-0" />
                       {job.startTime} – {job.endTime}
                     </div>
-                    <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                       <MapPin size={11} className="shrink-0" />
                       <span className="truncate">{job?.location?.split(',')[0]}</span>
                     </div>
@@ -172,7 +172,7 @@ const DisplayCalendar = ({
                         />
                       ))}
                       {assignedWorkers.length > 4 && (
-                        <span className="text-[10px] text-slate-400 ml-1">
+                        <span className="text-[10px] text-muted-foreground ml-1">
                           +{assignedWorkers.length - 4}
                         </span>
                       )}
@@ -186,13 +186,13 @@ const DisplayCalendar = ({
       </div>
 
       {/* Legend */}
-      <div className="bg-white rounded-xl border border-[#E2E8F0] p-4 mt-3 flex-none">
-        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">
+      <div className="bg-card rounded-xl border border-[var(--border)] p-4 mt-3 flex-none">
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
           Legend
         </p>
         <div className="flex overflow-x-auto scrollto sm:flex-col gap-2">
           {[
-            { label: 'Published', color: 'bg-[#1E3A5F]' },
+            { label: 'Published', color: 'bg-[var(--primary)]' },
             { label: 'In Progress', color: 'bg-blue-500' },
             { label: 'Completed', color: 'bg-emerald-500' },
             { label: 'Cancelled', color: 'bg-red-500' },
@@ -200,7 +200,7 @@ const DisplayCalendar = ({
           ].map(l => (
             <div key={l.label} className="flex items-center   gap-2">
               <span className={`w-3 h-2 rounded-sm ${l.color}`} />
-              <span className="text-xs text-slate-600 flex truncate">{l.label}</span>
+              <span className="text-xs text-muted-foreground flex truncate">{l.label}</span>
             </div>
           ))}
         </div>
@@ -296,8 +296,8 @@ export function Calendar() {
     <div className="px-2 sm:px-4 lg:p-6 animate-fade-in">
       <div className="flex items-start justify-between mb-6">
         <div>
-          <h1 className="text-xl font-semibold text-slate-900 tracking-tight">Calendar</h1>
-          <p className="text-sm text-slate-500 mt-0.5">Visual overview of all scheduled jobs</p>
+          <h1 className="text-xl font-semibold text-foreground tracking-tight">Calendar</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">Visual overview of all scheduled jobs</p>
         </div>
         <div className="flex items-center gap-2">
           {(['Month', 'Week', 'Day'] as const).map(v => {
@@ -313,7 +313,7 @@ export function Calendar() {
                 onClick={() => {
                   if (key !== 'month' && selectedDate) setCurrentDate(dayjs(selectedDate))
                 }}
-                className={`h-8  px-3.5 rounded-lg text-xs font-medium transition-colors ${key === view ? 'bg-[#21262c]- text-white' : 'text-slate-500 hover:bg-slate-100'
+                className={`h-8  px-3.5 rounded-lg text-xs font-medium transition-colors ${key === view ? 'bg-[#21262c]- text-white' : 'text-muted-foreground hover:bg-muted'
                   }`}
               >
                 {v}
@@ -343,22 +343,22 @@ export function Calendar() {
               duration: 0.3
             }
           }}
-          key={view} className="flex-1 bg-white rounded-xl border border-[#E2E8F0] overflow-hidden ">
+          key={view} className="flex-1 bg-card rounded-xl border border-[var(--border)] overflow-hidden ">
           {/* Date nav */}
-          <div className="flex items-center justify-between px-5 py-4 border-b border-[#E2E8F0]">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border)]">
             <button
               onClick={prev}
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:bg-slate-100 transition-colors"
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors"
             >
               <ChevronLeft size={16} />
             </button>
-            <h2 className="text-sm font-semibold text-slate-900">
+            <h2 className="text-sm font-semibold text-foreground">
               {headerTitle}
-              {isLoading && <span className="ml-2 text-xs text-slate-400 font-normal">loading…</span>}
+              {isLoading && <span className="ml-2 text-xs text-muted-foreground font-normal">loading…</span>}
             </h2>
             <button
               onClick={next}
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:bg-slate-100 transition-colors"
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors"
             >
               <ChevronRight size={16} />
             </button>
@@ -367,11 +367,11 @@ export function Calendar() {
           {view === 'month' && (
             <>
               {/* Day headers */}
-              <div className="grid grid-cols-7 border-b border-[#F1F5F9]">
+              <div className="grid grid-cols-7 border-b border-[var(--border)]">
                 {DAYS.map(d => (
                   <div
                     key={d}
-                    className="py-2.5 text-center text-xs font-semibold text-slate-400 uppercase tracking-wide"
+                    className="py-2.5 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wide"
                   >
                     {d}
                   </div>
@@ -381,7 +381,7 @@ export function Calendar() {
               {/* Day cells */}
               <div className="grid grid-cols-7">
                 {Array.from({ length: firstDay }).map((_, i) => (
-                  <div key={`empty-${i}`} className="h-28 border-b border-r border-[#F8FAFC]" />
+                  <div key={`empty-${i}`} className="h-28 border-b border-r border-border" />
                 ))}
                 {Array.from({ length: days }).map((_, i) => {
                   const day = i + 1
@@ -403,7 +403,7 @@ export function Calendar() {
                       <div
                         key={day}
                         onClick={() => selectDay(dateStr)}
-                        className={`h-28 border-b border-r border-[#F8FAFC] p-2 cursor-pointer transition-colors hover:bg-slate-50/60 ${isSelected ? 'bg-blue-50/40' : ''
+                        className={`h-28 border-b border-r border-border p-2 cursor-pointer transition-colors hover:bg-muted/60 ${isSelected ? 'bg-blue-50/40' : ''
                           }`}
                       >
                         <div className="flex justify-end mb-1">
@@ -411,10 +411,10 @@ export function Calendar() {
                           <span
                             className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold
                             ${isToday
-                                ? 'bg-[#1E3A5F] text-white'
+                                ? 'bg-[var(--primary)] text-white'
                                 : isSelected
                                   ? 'bg-blue-100 text-blue-700'
-                                  : 'text-slate-600'
+                                  : 'text-muted-foreground'
                               }`}
                           >
                             {day}
@@ -432,7 +432,7 @@ export function Calendar() {
                             </div>
                           ))}
                           {dayJobs.length > 2 && (
-                            <p className="text-[10px] text-slate-400 font-medium px-1">
+                            <p className="text-[10px] text-muted-foreground font-medium px-1">
                               +{dayJobs.length - 2} more
                             </p>
                           )}
@@ -448,16 +448,16 @@ export function Calendar() {
           {view === 'week' && (
             <>
               {/* Day headers with dates */}
-              <div className="grid grid-cols-7 border-b border-[#F1F5F9]">
+              <div className="grid grid-cols-7 border-b border-[var(--border)]">
                 {weekDates.map(d => {
                   const isToday = d.isSame(today, 'day')
                   return (
                     <div
                       key={d.format('YYYY-MM-DD')}
-                      className="py-2.5 text-center border-r border-[#F1F5F9] last:border-r-0"
+                      className="py-2.5 text-center border-r border-[var(--border)] last:border-r-0"
                     >
-                      <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">{d.format('ddd')}</p>
-                      <p className={`text-sm font-semibold mt-0.5 ${isToday ? 'text-[#1E3A5F]' : 'text-slate-700'}`}>
+                      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">{d.format('ddd')}</p>
+                      <p className={`text-sm font-semibold mt-0.5 ${isToday ? 'text-[var(--primary)]' : 'text-foreground'}`}>
                         {d.format('D')}
                       </p>
                     </div>
@@ -476,7 +476,7 @@ export function Calendar() {
                     <div
                       key={dateStr}
                       onClick={() => selectDay(dateStr)}
-                      className={`h-72 border-b border-r border-[#F8FAFC] last:border-r-0 p-2 cursor-pointer transition-colors hover:bg-slate-50/60 ${isSelected ? 'bg-blue-50/40' : ''
+                      className={`h-72 border-b border-r border-border last:border-r-0 p-2 cursor-pointer transition-colors hover:bg-muted/60 ${isSelected ? 'bg-blue-50/40' : ''
                         }`}
                     >
                       <div className="flex flex-col gap-0.5">
@@ -491,7 +491,7 @@ export function Calendar() {
                           </div>
                         ))}
                         {dayJobs.length > 6 && (
-                          <p className="text-[10px] text-slate-400 font-medium px-1">
+                          <p className="text-[10px] text-muted-foreground font-medium px-1">
                             +{dayJobs.length - 6} more
                           </p>
                         )}
@@ -505,12 +505,12 @@ export function Calendar() {
 
           {view === 'day' && (
             <div className="p-5">
-              <p className="text-xs text-slate-400 mb-4">
+              <p className="text-xs text-muted-foreground mb-4">
                 {selectedJobs.length} job{selectedJobs.length !== 1 ? 's' : ''} scheduled
               </p>
               {selectedJobs.length === 0 ? (
                 <div className="text-center py-12">
-                  <p className="text-xs text-slate-400">No jobs on this day</p>
+                  <p className="text-xs text-muted-foreground">No jobs on this day</p>
                 </div>
               ) : (
                 <div className="flex flex-col gap-3">
@@ -519,19 +519,19 @@ export function Calendar() {
                     return (
                       <Link to={`/jobs/${job._id}`}
                         state={backLinkState('Calendar')}
-                        key={job._id} className="border border-[#E2E8F0] rounded-xl p-3.5 block">
+                        key={job._id} className="border border-[var(--border)] rounded-xl p-3.5 block">
                         <div className="flex items-start justify-between gap-2 mb-2">
-                          <p className="text-xs font-semibold text-slate-800 leading-snug">
+                          <p className="text-xs font-semibold text-foreground leading-snug">
                             {job?.title} 
                           </p>
                           <StatusBadge status={job?.status || ''} />
                         </div>
                         <div className="flex flex-col gap-1.5">
-                          <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                             <Clock size={11} className="shrink-0" />
                             {job.startTime} – {job.endTime}
                           </div>
-                          <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                             <MapPin size={11} className="shrink-0" />
                             <span className="truncate">{job?.location?.split(',')[0]}</span>
                           </div>
@@ -548,7 +548,7 @@ export function Calendar() {
                               />
                             ))}
                             {assignedWorkers.length > 4 && (
-                              <span className="text-[10px] text-slate-400 ml-1">
+                              <span className="text-[10px] text-muted-foreground ml-1">
                                 +{assignedWorkers.length - 4}
                               </span>
                             )}

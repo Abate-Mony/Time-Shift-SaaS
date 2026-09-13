@@ -76,10 +76,10 @@ const statusConfig = {
         icon: AlertTriangle,
 
         iconWrapper:
-            "bg-slate-100",
+            "bg-muted",
 
         iconColor:
-            "text-slate-400",
+            "text-muted-foreground",
 
         title:
             "Invitation not found",
@@ -132,11 +132,11 @@ export default function InvitationStatusPage() {
                 />
             </div>
 
-            <h2 className="text-lg font-bold text-slate-900 mb-2">
+            <h2 className="text-lg font-bold text-foreground mb-2">
                 {config.title}
             </h2>
 
-            <p className="text-sm text-slate-500 leading-relaxed">
+            <p className="text-sm text-muted-foreground leading-relaxed">
                 {
                     config.description
                 }
@@ -145,9 +145,9 @@ export default function InvitationStatusPage() {
             {status ===
                 "expired" &&
                 invite && (
-                    <p className="text-sm text-slate-500 leading-relaxed mt-2">
+                    <p className="text-sm text-muted-foreground leading-relaxed mt-2">
                         Ask a manager at{" "}
-                        <strong className="text-slate-700">
+                        <strong className="text-foreground">
                             {
                                 invite
                                     .company
@@ -162,10 +162,10 @@ export default function InvitationStatusPage() {
             {status ===
                 "revoked" &&
                 invite && (
-                    <p className="text-sm text-slate-500 leading-relaxed mt-2">
+                    <p className="text-sm text-muted-foreground leading-relaxed mt-2">
                         Contact your
                         manager at{" "}
-                        <strong className="text-slate-700">
+                        <strong className="text-foreground">
                             {
                                 invite
                                     .company
@@ -182,7 +182,7 @@ export default function InvitationStatusPage() {
                 onClick={() =>
                     navigate("/auth")
                 }
-                className="w-full h-11 mt-8 border border-slate-200 text-sm font-semibold text-slate-700 rounded-xl hover:bg-slate-50 transition-colors"
+                className="w-full h-11 mt-8 border border-border text-sm font-semibold text-foreground rounded-xl hover:bg-muted transition-colors"
             >
                 {config.button}
             </button>

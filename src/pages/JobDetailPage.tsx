@@ -72,7 +72,7 @@ export const recordFormatUI: Record<ActivityType, { icon: LucideIcon; className:
     // ── Job lifecycle ──────────────────────────────────────────────
     job_created: { icon: FileText, className: "bg-slate-400", label: "created this job" },
     job_updated: { icon: Pencil, className: "bg-amber-500", label: "updated this job" },
-    job_published: { icon: Send, className: "bg-[#1E3A5F]", label: "published this job" },
+    job_published: { icon: Send, className: "bg-[var(--primary)]", label: "published this job" },
     job_cancelled: { icon: XCircle, className: "bg-red-500", label: "cancelled this job" },
     job_deleted: { icon: Trash2, className: "bg-red-600", label: "deleted this job" },
     job_completed: { icon: CircleCheck, className: "bg-emerald-600", label: "job completed" },
@@ -188,7 +188,7 @@ function describeActivity(entry: ActivityLogEntry): React.ReactNode {
 
     return (
         <div className='relative  ml-2 -mb-px'>
-            <span className="absolute h-full w-px bg-slate-200 left-1.5 top-0"></span>
+            <span className="absolute h-full w-px bg-muted left-1.5 top-0"></span>
             <span className='flex items-center space-x-1.5  py-4 '>
                 <span className={cn("size-4 relative z-10 rounded-full flex items-center justify-center shadow-sm", ui.className)}>
                     <ui.icon className={cn(
@@ -200,13 +200,13 @@ function describeActivity(entry: ActivityLogEntry): React.ReactNode {
 
                 </span>
 
-                <span className="font-semibold text-slate-900">{subject} </span>{" "}
-                <span className="text-slate-600">
+                <span className="font-semibold text-foreground">{subject} </span>{" "}
+                <span className="text-muted-foreground">
                     {ui?.label ?? type}
                     {assignedNames?.length ? `: ${assignedNames.join(", ")}` : ""}
                 </span>
             </span>
-            <p className="pl-5 text-[10px] text-slate-400 mt-0.5 font-medium">{dayjs(entry.createdAt).format("DD/MM h:mm A")}</p>
+            <p className="pl-5 text-[10px] text-muted-foreground mt-0.5 font-medium">{dayjs(entry.createdAt).format("DD/MM h:mm A")}</p>
 
             {hasCheckInDetail && (
                 <div className="pl-5 mt-1 flex flex-wrap items-center gap-1.5">
@@ -221,12 +221,12 @@ function describeActivity(entry: ActivityLogEntry): React.ReactNode {
                         </span>
                     )}
                     {checkIn.distanceMeters != null && (
-                        <span className="text-[10px] text-slate-400">
+                        <span className="text-[10px] text-muted-foreground">
                             ~{Math.round(checkIn.distanceMeters)}m from site
                         </span>
                     )}
                     {checkIn.location && (
-                        <span className="text-[10px] text-slate-400">
+                        <span className="text-[10px] text-muted-foreground">
                             near {checkIn.location}
                         </span>
                     )}
@@ -444,12 +444,12 @@ export function JobDetail() {
 
     const statusColor: Record<string, string> = {
         'in-progress': 'from-blue-600 to-blue-700',
-        'assigned': 'from-[#1E3A5F] to-[#2D5A8E]',
+        'assigned': 'from-[var(--primary)] to-[#2D5A8E]',
         'completed': 'from-emerald-600 to-emerald-700',
         'pending': 'from-amber-500 to-amber-600',
         'draft': 'from-slate-500 to-slate-600',
     }
-    const gradient = statusColor[job?.status ?? "accepted"] ?? 'from-[#1E3A5F] to-[#2D5A8E]'
+    const gradient = statusColor[job?.status ?? "accepted"] ?? 'from-[var(--primary)] to-[#2D5A8E]'
 
     // Total minutes across all workers — trusts hoursWorked for a checked-out
     // shift, computes live (minus breaks) for one still in progress.
@@ -476,13 +476,13 @@ export function JobDetail() {
             <div className="flex items-center gap-2 mb-5">
                 <button
                     onClick={() => onNavigate(back.to)}
-                    className="flex  cursor-pointer items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition-colors group"
+                    className="flex  cursor-pointer items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors group"
                 >
                     <ChevronLeft size={15} className="group-hover:-translate-x-0.5 transition-transform" />
                     Back to {back.label}
                 </button>
                 <span className="text-slate-300">/</span>
-                <span className="text-sm text-slate-800 font-medium truncate max-w-xs">{job.title}</span>
+                <span className="text-sm text-foreground font-medium truncate max-w-xs">{job.title}</span>
             </div>
 
             {/* ── Hero card ────────────────────────────────────────────────────── */}
@@ -506,7 +506,7 @@ export function JobDetail() {
                                         </button>
                                     </PopoverTrigger>
                                     <PopoverContent align="start" className="w-56 flex flex-col gap-1">
-                                        <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide px-1 pb-1">Job status</p>
+                                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide px-1 pb-1">Job status</p>
                                         {JOB_STATUSES.map(opt => (
                                             <button
                                                 key={opt.value}
@@ -516,8 +516,8 @@ export function JobDetail() {
                                                 className={cn(
                                                     "flex items-center justify-between px-3 py-2 rounded-lg text-sm text-left transition-colors disabled:opacity-60 disabled:cursor-not-allowed",
                                                     job?.status === opt.value
-                                                        ? "bg-[#1E3A5F]/[0.06] text-[#1E3A5F] font-semibold"
-                                                        : "text-slate-600 hover:bg-slate-50"
+                                                        ? "bg-[var(--primary)]/[0.06] text-[var(--primary)] font-semibold"
+                                                        : "text-muted-foreground hover:bg-muted"
                                                 )}
                                             >
                                                 {opt.label}
@@ -632,11 +632,11 @@ export function JobDetail() {
                                     const over = w.overtimeMinutes || Math.max(0, actual - scheduledMinutes)
                                     const isAdjusting = adjustingId === w._id
                                     return (
-                                        <div key={w._id} className="bg-white border border-amber-200 rounded-xl p-3.5 flex flex-col gap-2.5">
+                                        <div key={w._id} className="bg-card border border-amber-200 rounded-xl p-3.5 flex flex-col gap-2.5">
                                             <div className="flex items-center gap-2 min-w-0">
                                                 <Avatar initials={getInitials(w.fullname)} size="sm" index={0} src={w.profilePhoto?.url} />
                                                 <div className="min-w-0">
-                                                    <p className="text-sm font-semibold text-slate-800 truncate">{w.fullname}</p>
+                                                    <p className="text-sm font-semibold text-foreground truncate">{w.fullname}</p>
                                                     <p className="text-[11px] text-amber-700">
                                                         Worked {formatDuration(actual)} · scheduled {formatDuration(scheduledMinutes)} · +{formatDuration(over)} over
                                                     </p>
@@ -644,7 +644,7 @@ export function JobDetail() {
                                             </div>
 
                                             {(w.clockOutNote || w.clockOutReason) && (
-                                                <p className="text-[11px] text-slate-600 bg-amber-50 border border-amber-100 rounded-lg px-2.5 py-1.5">
+                                                <p className="text-[11px] text-muted-foreground bg-amber-50 border border-amber-100 rounded-lg px-2.5 py-1.5">
                                                     <span className="font-semibold">Worker's note: </span>
                                                     {w.clockOutNote || CLOCK_OUT_REASON_LABELS[w.clockOutReason ?? ''] || w.clockOutReason}
                                                 </p>
@@ -660,7 +660,7 @@ export function JobDetail() {
                                                         value={adjustHours}
                                                         onChange={e => setAdjustHours(e.target.value)}
                                                         placeholder="Hours to pay"
-                                                        className="h-8 flex-1 min-w-0 px-2.5 border border-amber-300 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-amber-300"
+                                                        className="h-8 flex-1 min-w-0 px-2.5 border border-amber-300 rounded-lg text-xs bg-card focus:outline-none focus:ring-2 focus:ring-amber-300"
                                                     />
                                                     <button
                                                         onClick={() => {
@@ -675,7 +675,7 @@ export function JobDetail() {
                                                     </button>
                                                     <button
                                                         onClick={() => setAdjustingId(null)}
-                                                        className="h-8 px-2 text-xs text-slate-500 hover:text-slate-700 shrink-0"
+                                                        className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground shrink-0"
                                                     >
                                                         Cancel
                                                     </button>
@@ -714,10 +714,10 @@ export function JobDetail() {
 
                     {/* Job info */}
                     <Card>
-                        <div className="px-5 pt-5 pb-4 border-b border-[#E2E8F0]">
-                            <h3 className="text-sm font-semibold text-slate-900">Job Details</h3>
+                        <div className="px-5 pt-5 pb-4 border-b border-[var(--border)]">
+                            <h3 className="text-sm font-semibold text-foreground">Job Details</h3>
                         </div>
-                        <div className="divide-y divide-[#F8FAFC]">
+                        <div className="divide-y divide-border">
                             {[
                                 {
                                     icon: MapPin,
@@ -742,13 +742,13 @@ export function JobDetail() {
                                 { icon: Flag, label: 'Priority', value: <PriorityBadge priority={job.priority} /> },
                             ].map((row, i) => (
                                 <div key={i} className="flex items-center gap-4 px-5 py-3.5">
-                                    <div className="w-8 h-8 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0">
-                                        <row.icon size={14} className="text-slate-500" />
+                                    <div className="w-8 h-8 rounded-xl bg-muted border border-border flex items-center justify-center shrink-0">
+                                        <row.icon size={14} className="text-muted-foreground" />
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide">{row.label}</p>
+                                        <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wide">{row.label}</p>
                                         {typeof row.value === 'string'
-                                            ? <p className="text-sm text-slate-800 font-medium mt-0.5">{row.value}</p>
+                                            ? <p className="text-sm text-foreground font-medium mt-0.5">{row.value}</p>
                                             : <div className="mt-0.5">{row.value}</div>
                                         }
                                     </div>
@@ -758,7 +758,7 @@ export function JobDetail() {
                         </div>
 
                         {directionsHref && (
-                            <div className="px-5 py-3 border-t border-[#F8FAFC] flex items-center justify-center gap-1.5">
+                            <div className="px-5 py-3 border-t border-border flex items-center justify-center gap-1.5">
                                 {MAP_SERVICES.map(service => (
                                     <button
                                         key={service.id}
@@ -768,7 +768,7 @@ export function JobDetail() {
                                             "text-xs font-medium px-2.5 py-1 rounded-full transition-colors",
                                             preferredMap === service.id
                                                 ? "bg-slate-800 text-white"
-                                                : "text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+                                                : "text-muted-foreground hover:text-muted-foreground hover:bg-muted"
                                         )}
                                     >
                                         {service.label}
@@ -806,13 +806,13 @@ export function JobDetail() {
                                 }}
                             />
                             {job.attachment ? (
-                                <div className="flex items-center gap-2.5 bg-slate-50 border border-[#E2E8F0] rounded-xl px-4 py-3">
-                                    <FileText size={16} className="text-slate-400 shrink-0" />
+                                <div className="flex items-center gap-2.5 bg-muted border border-[var(--border)] rounded-xl px-4 py-3">
+                                    <FileText size={16} className="text-muted-foreground shrink-0" />
                                     <a
                                         href={job.attachment.url}
                                         target="_blank"
                                         rel="noreferrer"
-                                        className="text-sm font-medium text-slate-700 hover:text-slate-900 underline underline-offset-2 truncate flex-1 min-w-0"
+                                        className="text-sm font-medium text-foreground hover:text-foreground underline underline-offset-2 truncate flex-1 min-w-0"
                                     >
                                         {job.attachment.filename}
                                     </a>
@@ -820,7 +820,7 @@ export function JobDetail() {
                                         type="button"
                                         onClick={() => attachmentInputRef.current?.click()}
                                         disabled={uploadAttachmentMutation.isPending}
-                                        className="text-xs font-semibold text-slate-500 hover:text-slate-800 shrink-0"
+                                        className="text-xs font-semibold text-muted-foreground hover:text-foreground shrink-0"
                                     >
                                         Replace
                                     </button>
@@ -838,7 +838,7 @@ export function JobDetail() {
                                     type="button"
                                     onClick={() => attachmentInputRef.current?.click()}
                                     disabled={uploadAttachmentMutation.isPending}
-                                    className="flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-800 border border-dashed border-[#CBD5E1] rounded-xl px-4 py-3 w-full justify-center hover:bg-slate-50 transition-colors"
+                                    className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground border border-dashed border-[#CBD5E1] rounded-xl px-4 py-3 w-full justify-center hover:bg-muted transition-colors"
                                 >
                                     <Paperclip size={14} />
                                     {uploadAttachmentMutation.isPending ? "Uploading…" : "Add attachment (optional)"}
@@ -850,11 +850,11 @@ export function JobDetail() {
                     {/* Worker time logs */}
                     {assignedWorkers.length > 0 && (
                         <Card>
-                            <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-[#E2E8F0]">
+                            <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-[var(--border)]">
                                 <div className="flex items-center gap-2.5">
                                     <div>
-                                        <h3 className="text-sm font-semibold text-slate-900">Time Logs</h3>
-                                        <p className="text-xs text-slate-400 mt-0.5">Individual clock-in/out records</p>
+                                        <h3 className="text-sm font-semibold text-foreground">Time Logs</h3>
+                                        <p className="text-xs text-muted-foreground mt-0.5">Individual clock-in/out records</p>
                                     </div>
                                     {overtimeWorkersCount > 0 && (
                                         <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-700 bg-amber-100 px-2 py-1 rounded-full">
@@ -862,19 +862,19 @@ export function JobDetail() {
                                         </span>
                                     )}
                                 </div>
-                                <button className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 border border-[#E2E8F0] rounded-lg px-3 py-1.5 hover:bg-slate-50 transition-colors">
+                                <button className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground border border-[var(--border)] rounded-lg px-3 py-1.5 hover:bg-muted transition-colors">
                                     <Download size={12} /> Export
                                 </button>
                             </div>
 
                             {/* Table header */}
-                            <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-4 px-5 py-2.5 bg-slate-50/60 border-b border-[#F1F5F9]">
+                            <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-4 px-5 py-2.5 bg-muted/60 border-b border-[var(--border)]">
                                 {['Worker', 'Clock In', 'Clock Out', 'Break', 'Billable'].map(h => (
-                                    <p key={h} className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">{h}</p>
+                                    <p key={h} className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">{h}</p>
                                 ))}
                             </div>
 
-                            <div className="divide-y divide-[#F8FAFC]">
+                            <div className="divide-y divide-border">
                                 {assignedWorkers.map((w, i) => {
                                     const breakMinutes = getWorkerBreakMinutes(w)
                                     const workedMinutes = getWorkerMinutes(w)
@@ -886,7 +886,7 @@ export function JobDetail() {
                                         <div
                                             key={w.email}
                                             className={cn(
-                                                "grid grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-4 px-5 py-3.5 items-center hover:bg-slate-50/50 transition-colors cursor-pointer",
+                                                "grid grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-4 px-5 py-3.5 items-center hover:bg-muted/50 transition-colors cursor-pointer",
                                                 isOvertime && "bg-amber-50/40"
                                             )}
                                             onClick={() => onNavigate(`/workers/${w.worker}/worker-profile`, backLinkState(job.title))}
@@ -894,22 +894,22 @@ export function JobDetail() {
                                             <div className="flex items-center gap-2.5">
                                                 <Avatar initials={getInitials(w.fullname)} size="sm" index={i} src={w.profilePhoto?.url} />
                                                 <div>
-                                                    <p className="text-sm font-medium text-slate-800">{w.fullname}</p>
-                                                    <p className="text-[10px] text-slate-400">{w.email}</p>
+                                                    <p className="text-sm font-medium text-foreground">{w.fullname}</p>
+                                                    <p className="text-[10px] text-muted-foreground">{w.email}</p>
                                                 </div>
                                             </div>
-                                            <p className="text-xs font-semibold text-slate-700 mono">
+                                            <p className="text-xs font-semibold text-foreground mono">
                                                 {w.checkedInAt ? dayjs(w.checkedInAt).format("HH:mm") : "—"}
                                             </p>
                                             <div>
                                                 {w.checkedOutAt
-                                                    ? <p className="text-xs font-semibold text-slate-700 ">{dayjs(w.checkedOutAt).format("HH:mm")}</p>
+                                                    ? <p className="text-xs font-semibold text-foreground ">{dayjs(w.checkedOutAt).format("HH:mm")}</p>
                                                     : w.checkedInAt
                                                         ? <span className="flex items-center gap-1 text-xs text-blue-600 font-semibold"><span className="w-1.5 h-1.5 bg-blue-500 rounded-full pulse-dot" />Live</span>
                                                         : <span className="text-xs text-slate-300">—</span>
                                                 }
                                             </div>
-                                            <p className="text-xs text-slate-500 mono">{breakMinutes > 0 ? formatDuration(breakMinutes) : "—"}</p>
+                                            <p className="text-xs text-muted-foreground mono">{breakMinutes > 0 ? formatDuration(breakMinutes) : "—"}</p>
                                             <div>
                                                 <p className={cn("text-xs font-semibold mono", isOvertime ? "text-amber-700" : "text-emerald-700")}>
                                                     {w.checkedInAt ? formatDuration(workedMinutes) : "—"}
@@ -926,8 +926,8 @@ export function JobDetail() {
                             </div>
 
                             {/* Totals row */}
-                            <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-4 px-5 py-3.5 bg-slate-50/60 border-t border-[#E2E8F0]">
-                                <p className="text-xs font-bold text-slate-700 col-span-4">Estimated Total Billable</p>
+                            <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-4 px-5 py-3.5 bg-muted/60 border-t border-[var(--border)]">
+                                <p className="text-xs font-bold text-foreground col-span-4">Estimated Total Billable</p>
                                 <p className="text-xs font-bold text-emerald-700">{formatDuration(totalMinutes)}</p>
                             </div>
                         </Card>
@@ -935,17 +935,17 @@ export function JobDetail() {
 
                     {/* Activity timeline */}
                     <Card className="p-5">
-                        <h3 className="text-sm font-semibold text-slate-900 mb-5">Activity Timeline</h3>
+                        <h3 className="text-sm font-semibold text-foreground mb-5">Activity Timeline</h3>
                         <div className="flex flex-col gap-0 relative">
-                            {/* <div className="absolute left-[7px] top-4 bottom-4 w-px bg-slate-100" /> */}
+                            {/* <div className="absolute left-[7px] top-4 bottom-4 w-px bg-muted" /> */}
                             {
                                 data?.activity?.length === 0 && (
                                     <div className="px-5 py-8 text-center">
-                                        <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-2">
-                                            <FileText size={16} className="text-slate-400" />
+                                        <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center mx-auto mb-2">
+                                            <FileText size={16} className="text-muted-foreground" />
                                         </div>
-                                        <p className="text-xs text-slate-500 font-medium">No activity yet</p>
-                                        <p className="text-[10px] text-slate-400 mt-0.5">All job activity will appear here</p>
+                                        <p className="text-xs text-muted-foreground font-medium">No activity yet</p>
+                                        <p className="text-[10px] text-muted-foreground mt-0.5">All job activity will appear here</p>
                                     </div>
                                 )
                             }
@@ -954,7 +954,7 @@ export function JobDetail() {
                                     <div key={i} className="">
 
                                         <div className="flex-1 min-w-0 pt-px">
-                                            <p className="text-sm text-slate-700 leading-snug">{describeActivity(entry)}</p>
+                                            <p className="text-sm text-foreground leading-snug">{describeActivity(entry)}</p>
                                         </div>
                                     </div>
                                 ))}
@@ -967,7 +967,7 @@ export function JobDetail() {
 
                     {/* Manager actions */}
                     <Card className="p-5">
-                        <h3 className="text-sm font-semibold text-slate-900 mb-3">Actions</h3>
+                        <h3 className="text-sm font-semibold text-foreground mb-3">Actions</h3>
                         <div className="flex flex-col gap-2.5">
                             {job?.status === 'in-progress' && (
                                 <button
@@ -988,7 +988,7 @@ export function JobDetail() {
                                             <button
                                                 key={invoiceId}
                                                 onClick={() => onNavigate(`/invoices/${invoiceId}`, backLinkState(job.title))}
-                                                className="w-full h-10 rounded-xl bg-white border border-[#1E3A5F]/20 text-[#1E3A5F] text-sm font-semibold hover:bg-[#1E3A5F]/5 transition-colors flex items-center justify-center gap-2"
+                                                className="w-full h-10 rounded-xl bg-card border border-[var(--primary)]/20 text-[var(--primary)] text-sm font-semibold hover:bg-[var(--primary)]/5 transition-colors flex items-center justify-center gap-2"
                                             >
                                                 <Receipt size={13} /> {label}
                                             </button>
@@ -996,7 +996,7 @@ export function JobDetail() {
                                     ) : (
                                         <button
                                             onClick={() => onNavigate(`/invoices/new?jobId=${id}`)}
-                                            className="w-full h-10 rounded-xl bg-[#1E3A5F] text-white text-sm font-semibold hover:bg-[#162D4A] transition-colors flex items-center justify-center gap-2 shadow-sm shadow-[#1E3A5F]/20"
+                                            className="w-full h-10 rounded-xl bg-[var(--primary)] text-white text-sm font-semibold hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 shadow-sm shadow-[var(--primary)]/20"
                                         >
                                             <Receipt size={13} /> Generate Invoice
                                         </button>
@@ -1028,12 +1028,12 @@ export function JobDetail() {
                                         <SheetContent className="sm:max-w-[405px] rounded-2xl shadow-2xl max-h-fit top-[calc(20%-8rem)] p-o right-10 rounded-sm" side="right">
 
 
-                                            <div className="bg-white=  w-full max-w-md p-6 animate-fade-in bg-transparent">
+                                            <div className="bg-card=  w-full max-w-md p-6 animate-fade-in bg-transparent">
                                                 <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4">
                                                     <CheckCircle2 size={24} className="text-emerald-600" />
                                                 </div>
-                                                <h3 className="text-base font-bold text-slate-900 text-center mb-1">Approve this job?</h3>
-                                                <p className="text-sm text-slate-500 text-center mb-6">This will mark the job as completed and notify all workers. Hours will be submitted for payroll.</p>
+                                                <h3 className="text-base font-bold text-foreground text-center mb-1">Approve this job?</h3>
+                                                <p className="text-sm text-muted-foreground text-center mb-6">This will mark the job as completed and notify all workers. Hours will be submitted for payroll.</p>
 
                                                 {/* The interactive approve/adjust/reject controls live in the
                                                     always-visible card at the top of the page (reachable whether
@@ -1048,7 +1048,7 @@ export function JobDetail() {
                                                     </div>
                                                 )}
 
-                                                <div className="bg-slate-50 rounded-xl p-4 mb-5 flex flex-col gap-2">
+                                                <div className="bg-muted rounded-xl p-4 mb-5 flex flex-col gap-2">
                                                     {[
                                                         { label: 'Job', value: job?.title.split('—')[0].trim() },
                                                         { label: 'Workers', value: `${assignedWorkers.length} workers` },
@@ -1056,15 +1056,15 @@ export function JobDetail() {
                                                         { label: 'Est. Cost', value: `${formatCurrency(estimatedCost)}` },
                                                     ].map(r => (
                                                         <div key={r.label} className="flex items-center justify-between">
-                                                            <p className="text-xs text-slate-500">{r.label}</p>
-                                                            <p className="text-xs font-semibold text-slate-800">{r.value}</p>
+                                                            <p className="text-xs text-muted-foreground">{r.label}</p>
+                                                            <p className="text-xs font-semibold text-foreground">{r.value}</p>
                                                         </div>
                                                     ))}
                                                 </div>
                                                 <div className="flex gap-3">
                                                     {/* <button
                                                         onClick={() => setShowApproveModal(false)}
-                                                        className="flex-1 h-11 rounded-xl border border-[#E2E8F0] text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
+                                                        className="flex-1 h-11 rounded-xl border border-[var(--border)] text-sm font-semibold text-muted-foreground hover:bg-muted transition-colors"
                                                     >
                                                         Cancel
                                                     </button> */}
@@ -1091,15 +1091,15 @@ export function JobDetail() {
                                             <button
                                                 title={job?.status === 'cancelled' ? "Cannot change status of a cancelled job" : undefined}
                                                 disabled={job?.status === 'cancelled'}
-                                                className={cn("w-full h-10 rounded-xl border border-[#E2E8F0] text-sm font-semibold text-slate-600 hover:bg-slate-50 flex items-center justify-center gap-2 transition-colors bg-muted",
+                                                className={cn("w-full h-10 rounded-xl border border-[var(--border)] text-sm font-semibold text-muted-foreground hover:bg-muted flex items-center justify-center gap-2 transition-colors bg-muted",
                                                     job?.status === 'cancelled' && "opacity-50 cursor-not-allowed"
                                                 )}
                                             >
-                                                <Flag size={13} className="text-slate-400" /> Change Status
+                                                <Flag size={13} className="text-muted-foreground" /> Change Status
                                             </button>
                                         </PopoverTrigger>
                                         <PopoverContent align="start" className=" w-56 flex flex-col gap-1">
-                                            <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide px-1 pb-1">Job status</p>
+                                            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide px-1 pb-1">Job status</p>
                                             {JOB_STATUSES.map(opt => (
                                                 <button
                                                     key={opt.value}
@@ -1109,8 +1109,8 @@ export function JobDetail() {
                                                     className={cn(
                                                         "flex items-center justify-between px-3 py-2 rounded-lg text-sm text-left transition-colors disabled:opacity-60 disabled:cursor-not-allowed",
                                                         job?.status === opt.value
-                                                            ? "bg-[#1E3A5F]/[0.06] text-[#1E3A5F] font-semibold"
-                                                            : "text-slate-600 hover:bg-slate-50"
+                                                            ? "bg-[var(--primary)]/[0.06] text-[var(--primary)] font-semibold"
+                                                            : "text-muted-foreground hover:bg-muted"
                                                     )}
                                                 >
                                                     {opt.label}
@@ -1163,7 +1163,7 @@ export function JobDetail() {
                             {(job?.status === 'assigned' || job?.status === 'accepted' || job.status === 'draft') && (
                                 <button
                                     onClick={() => onNavigate(`/jobs/${id}/edit?edit=assigned-workers#assigned-worker`)}
-                                    className="w-full h-11 rounded-xl bg-[#1E3A5F] text-white text-sm font-bold  transition-colors flex items-center justify-center gap-2 shadow-sm shadow-[#1E3A5F]/20"
+                                    className="w-full h-11 rounded-xl bg-[var(--primary)] text-white text-sm font-bold  transition-colors flex items-center justify-center gap-2 shadow-sm shadow-[var(--primary)]/20"
                                 >
                                     <Users size={14} /> Assign Workers
                                 </button>
@@ -1175,16 +1175,16 @@ export function JobDetail() {
                             <button
                                 onClick={() => onNavigate(`/jobs/${id}/edit`)}
                                 title={isJobLocked(job) ? "This job has already happened — its date, time and rates are locked, but everything else (title, notes, workers, etc.) can still be edited" : undefined}
-                                className="w-full h-10 rounded-xl border border-[#E2E8F0] text-sm font-semibold text-slate-600 hover:bg-slate-50 flex items-center justify-center gap-2 transition-colors"
+                                className="w-full h-10 rounded-xl border border-[var(--border)] text-sm font-semibold text-muted-foreground hover:bg-muted flex items-center justify-center gap-2 transition-colors"
                             >
-                                <Edit size={13} className="text-slate-400" /> Edit Job
+                                <Edit size={13} className="text-muted-foreground" /> Edit Job
                             </button>
                             <button
                                 onClick={() => duplicateJobMutation.mutate(id!)}
                                 disabled={duplicateJobMutation.isPending}
-                                className="w-full h-10 rounded-xl border border-[#E2E8F0] text-sm font-semibold text-slate-600 hover:bg-slate-50 flex items-center justify-center gap-2 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                                className="w-full h-10 rounded-xl border border-[var(--border)] text-sm font-semibold text-muted-foreground hover:bg-muted flex items-center justify-center gap-2 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                             >
-                                <Copy size={13} className="text-slate-400" /> {duplicateJobMutation.isPending ? "Duplicating..." : "Duplicate"}
+                                <Copy size={13} className="text-muted-foreground" /> {duplicateJobMutation.isPending ? "Duplicating..." : "Duplicate"}
                             </button>
 
                         </div>
@@ -1192,14 +1192,14 @@ export function JobDetail() {
 
                     {/* Assigned workers */}
                     <Card className="overflow-hidden">
-                        <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-[#E2E8F0]">
+                        <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-[var(--border)]">
                             <div>
-                                <h3 className="text-sm font-semibold text-slate-900">Assigned Workers</h3>
-                                <p className="text-xs text-slate-400 mt-0.5">{assignedWorkers.length} assigned</p>
+                                <h3 className="text-sm font-semibold text-foreground">Assigned Workers</h3>
+                                <p className="text-xs text-muted-foreground mt-0.5">{assignedWorkers.length} assigned</p>
                             </div>
                             <button
                                 onClick={() => setShowAssignWorkersModal(true)}
-                                className="h-7 px-2.5 rounded-lg bg-[#1E3A5F]/10 text-[#1E3A5F] text-xs font-semibold hover:bg-[#1E3A5F]/20 transition-colors flex items-center gap-1"
+                                className="h-7 px-2.5 rounded-lg bg-[var(--primary)]/10 text-[var(--primary)] text-xs font-semibold hover:bg-[var(--primary)]/20 transition-colors flex items-center gap-1"
                             >
                                 <Plus size={11} /> Add
                             </button>
@@ -1207,18 +1207,18 @@ export function JobDetail() {
 
                         {assignedWorkers.length === 0 ? (
                             <div className="px-5 py-8 text-center">
-                                <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-2">
-                                    <Users size={16} className="text-slate-400" />
+                                <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center mx-auto mb-2">
+                                    <Users size={16} className="text-muted-foreground" />
                                 </div>
-                                <p className="text-xs text-slate-500 font-medium">No workers assigned</p>
-                                <p className="text-[10px] text-slate-400 mt-0.5">Add workers to this job</p>
+                                <p className="text-xs text-muted-foreground font-medium">No workers assigned</p>
+                                <p className="text-[10px] text-muted-foreground mt-0.5">Add workers to this job</p>
                             </div>
                         ) : (
-                            <div className="divide-y divide-[#F8FAFC]">
+                            <div className="divide-y divide-border">
                                 {assignedWorkers.map((w, i) => (
                                     <div
                                         key={w.email}
-                                        className="flex items-center gap-3 px-5 py-3.5 hover:bg-slate-50/60 transition-colors cursor-pointer group"
+                                        className="flex items-center gap-3 px-5 py-3.5 hover:bg-muted/60 transition-colors cursor-pointer group"
                                         onClick={() => onNavigate(`/workers/${w.worker}/worker-profile`, backLinkState(job.title))}
                                     >
 
@@ -1243,7 +1243,7 @@ export function JobDetail() {
                                                 >
                                                     <button
                                                         disabled={removeWorkerMutation.isPending}
-                                                        className="p-1 cursor-pointer rounded-full hover:bg-slate-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                                                        className="p-1 cursor-pointer rounded-full hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                                                     >
                                                         <X size={20} className='text-rose-400' />
                                                     </button>
@@ -1257,8 +1257,8 @@ export function JobDetail() {
 
                                         <Avatar initials={w.fullname?.slice(0, 2)} size="sm" index={i} src={w.profilePhoto?.url} />
                                         <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-medium text-slate-800 group-hover:text-blue-700 transition-colors">{w.fullname}</p>
-                                            <p className="text-[10px] text-slate-400">{w.email}</p>
+                                            <p className="text-sm font-medium text-foreground group-hover:text-blue-700 transition-colors">{w.fullname}</p>
+                                            <p className="text-[10px] text-muted-foreground">{w.email}</p>
                                         </div>
                                         {w.pendingApproval ? (
                                             <div className="flex items-center gap-1.5">
@@ -1296,7 +1296,7 @@ export function JobDetail() {
                     </Card>
 
                     {/* Clock-in Policy */}
-                    <Card className="overflow-hidden border-slate-200/80 shadow-sm">
+                    <Card className="overflow-hidden border-border/80 shadow-sm">
                         {/* Header */}
                         <div className="flex items-start justify-between gap-4 p-5 pb-4">
                             <div className="flex items-start gap-3">
@@ -1308,7 +1308,7 @@ export function JobDetail() {
                                             : job?.geofenceMode === "warn"
                                                 ? "bg-amber-50 text-amber-600"
                                                 : job?.geofenceMode === "off"
-                                                    ? "bg-slate-100 text-slate-500"
+                                                    ? "bg-muted text-muted-foreground"
                                                     : "bg-blue-50 text-blue-600"
                                     )}
                                 >
@@ -1316,11 +1316,11 @@ export function JobDetail() {
                                 </div>
 
                                 <div>
-                                    <h3 className="text-sm font-semibold text-slate-900">
+                                    <h3 className="text-sm font-semibold text-foreground">
                                         Clock-in Policy
                                     </h3>
 
-                                    <p className="mt-0.5 text-xs leading-5 text-slate-500">
+                                    <p className="mt-0.5 text-xs leading-5 text-muted-foreground">
                                         Control where workers are allowed to clock in
                                     </p>
                                 </div>
@@ -1335,10 +1335,10 @@ export function JobDetail() {
                                         type="button"
                                         className="
             inline-flex h-8 items-center gap-1.5 rounded-lg
-            border border-slate-200 bg-white px-2.5
-            text-xs font-semibold text-slate-600
+            border border-border bg-card px-2.5
+            text-xs font-semibold text-muted-foreground
             shadow-sm transition-all
-            hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900
+            hover:border-slate-300 hover:bg-muted hover:text-foreground
           "
                                     >
                                         <Pencil size={12} />
@@ -1348,15 +1348,15 @@ export function JobDetail() {
 
                                 <PopoverContent
                                     align="end"
-                                    className="w-[340px] rounded-xl border-slate-200 p-0 shadow-xl"
+                                    className="w-[340px] rounded-xl border-border p-0 shadow-xl"
                                 >
                                     {/* Popover heading */}
-                                    <div className="border-b border-slate-100 px-4 py-3.5">
-                                        <h4 className="text-sm font-semibold text-slate-900">
+                                    <div className="border-b border-border px-4 py-3.5">
+                                        <h4 className="text-sm font-semibold text-foreground">
                                             Clock-in location
                                         </h4>
 
-                                        <p className="mt-0.5 text-xs text-slate-500">
+                                        <p className="mt-0.5 text-xs text-muted-foreground">
                                             Choose how location should affect clock-in.
                                         </p>
                                     </div>
@@ -1410,16 +1410,16 @@ export function JobDetail() {
                     px-3 py-3 text-left transition-all
                   `,
                                                         selected
-                                                            ? "border-[#1E3A5F] bg-[#1E3A5F]/[0.04] ring-1 ring-[#1E3A5F]/10"
-                                                            : "border-slate-200 hover:border-slate-300 hover:bg-slate-50/70"
+                                                            ? "border-[var(--primary)] bg-[var(--primary)]/[0.04] ring-1 ring-[var(--primary)]/10"
+                                                            : "border-border hover:border-slate-300 hover:bg-muted/70"
                                                     )}
                                                 >
                                                     <div
                                                         className={cn(
                                                             "mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg",
                                                             selected
-                                                                ? "bg-[#1E3A5F] text-white"
-                                                                : "bg-slate-100 text-slate-500"
+                                                                ? "bg-[var(--primary)] text-white"
+                                                                : "bg-muted text-muted-foreground"
                                                         )}
                                                     >
                                                         <Icon size={15} />
@@ -1431,8 +1431,8 @@ export function JobDetail() {
                                                                 className={cn(
                                                                     "text-sm font-medium",
                                                                     selected
-                                                                        ? "text-slate-900"
-                                                                        : "text-slate-700"
+                                                                        ? "text-foreground"
+                                                                        : "text-foreground"
                                                                 )}
                                                             >
                                                                 {opt.label}
@@ -1445,7 +1445,7 @@ export function JobDetail() {
                           justify-center rounded-full border
                         `,
                                                                     selected
-                                                                        ? "border-[#1E3A5F] bg-[#1E3A5F]"
+                                                                        ? "border-[var(--primary)] bg-[var(--primary)]"
                                                                         : "border-slate-300"
                                                                 )}
                                                             >
@@ -1459,7 +1459,7 @@ export function JobDetail() {
                                                             </div>
                                                         </div>
 
-                                                        <p className="mt-0.5 pr-3 text-xs leading-4 text-slate-500">
+                                                        <p className="mt-0.5 pr-3 text-xs leading-4 text-muted-foreground">
                                                             {opt.description}
                                                         </p>
                                                     </div>
@@ -1470,19 +1470,19 @@ export function JobDetail() {
                                         {/* Radius */}
                                         {geofenceModeInput &&
                                             geofenceModeInput !== "off" && (
-                                                <div className="mt-4 rounded-xl bg-slate-50 p-3.5">
+                                                <div className="mt-4 rounded-xl bg-muted p-3.5">
                                                     <div className="mb-2 flex items-center justify-between">
                                                         <div>
-                                                            <p className="text-xs font-semibold text-slate-700">
+                                                            <p className="text-xs font-semibold text-foreground">
                                                                 Allowed radius
                                                             </p>
 
-                                                            <p className="mt-0.5 text-[11px] text-slate-500">
+                                                            <p className="mt-0.5 text-[11px] text-muted-foreground">
                                                                 Distance from the job location
                                                             </p>
                                                         </div>
 
-                                                        <span className="rounded-md bg-white px-2 py-1 text-xs font-semibold text-slate-700 shadow-sm ring-1 ring-slate-200">
+                                                        <span className="rounded-md bg-card px-2 py-1 text-xs font-semibold text-foreground shadow-sm ring-1 ring-slate-200">
                                                             {geofenceRadiusInput} m
                                                         </span>
                                                     </div>
@@ -1498,21 +1498,21 @@ export function JobDetail() {
                                                                 Number(e.target.value)
                                                             )
                                                         }
-                                                        className="h-9 bg-white"
+                                                        className="h-9 bg-card"
                                                     />
                                                 </div>
                                             )}
                                     </div>
 
                                     {/* Actions */}
-                                    <div className="flex items-center justify-end gap-2 border-t border-slate-100 bg-slate-50/50 px-4 py-3">
+                                    <div className="flex items-center justify-end gap-2 border-t border-border bg-muted/50 px-4 py-3">
                                         <button
                                             type="button"
                                             onClick={() => setGeofenceEditOpen(false)}
                                             className="
               h-9 rounded-lg px-3
-              text-xs font-semibold text-slate-600
-              transition-colors hover:bg-slate-100
+              text-xs font-semibold text-muted-foreground
+              transition-colors hover:bg-muted
             "
                                         >
                                             Cancel
@@ -1523,10 +1523,10 @@ export function JobDetail() {
                                             onClick={() => updateGeofenceMutation.mutate()}
                                             disabled={updateGeofenceMutation.isPending}
                                             className="
-              h-9 rounded-lg bg-[#1E3A5F] px-4
+              h-9 rounded-lg bg-[var(--primary)] px-4
               text-xs font-semibold text-white
               transition-colors
-              hover:bg-[#162D4A]
+              hover:bg-primary/90
               disabled:cursor-not-allowed disabled:opacity-60
             "
                                         >
@@ -1540,7 +1540,7 @@ export function JobDetail() {
                         </div>
 
                         {/* Current policy */}
-                        <div className="border-t border-slate-100 bg-slate-50/60 px-5 py-4">
+                        <div className="border-t border-border bg-muted/60 px-5 py-4">
                             {job?.geofenceMode === "enforce" ? (
                                 <div className="flex items-center justify-between gap-4">
                                     <div className="flex items-center gap-2">
@@ -1550,17 +1550,17 @@ export function JobDetail() {
                                         </span>
 
                                         <div>
-                                            <p className="text-sm font-semibold text-slate-800">
+                                            <p className="text-sm font-semibold text-foreground">
                                                 On-site required
                                             </p>
 
-                                            <p className="mt-0.5 text-xs text-slate-500">
+                                            <p className="mt-0.5 text-xs text-muted-foreground">
                                                 Workers outside the allowed area cannot clock in.
                                             </p>
                                         </div>
                                     </div>
 
-                                    <span className="shrink-0 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 shadow-sm">
+                                    <span className="shrink-0 rounded-lg border border-border bg-card px-2.5 py-1.5 text-xs font-semibold text-foreground shadow-sm">
                                         {job.geofenceRadiusMeters ?? 150} m
                                     </span>
                                 </div>
@@ -1570,17 +1570,17 @@ export function JobDetail() {
                                         <span className="h-2 w-2 shrink-0 rounded-full bg-amber-500" />
 
                                         <div>
-                                            <p className="text-sm font-semibold text-slate-800">
+                                            <p className="text-sm font-semibold text-foreground">
                                                 Record & flag
                                             </p>
 
-                                            <p className="mt-0.5 text-xs text-slate-500">
+                                            <p className="mt-0.5 text-xs text-muted-foreground">
                                                 Out-of-range clock-ins are allowed but flagged for review.
                                             </p>
                                         </div>
                                     </div>
 
-                                    <span className="shrink-0 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 shadow-sm">
+                                    <span className="shrink-0 rounded-lg border border-border bg-card px-2.5 py-1.5 text-xs font-semibold text-foreground shadow-sm">
                                         {job.geofenceRadiusMeters ?? 150} m
                                     </span>
                                 </div>
@@ -1589,11 +1589,11 @@ export function JobDetail() {
                                     <span className="h-2 w-2 shrink-0 rounded-full bg-slate-400" />
 
                                     <div>
-                                        <p className="text-sm font-semibold text-slate-800">
+                                        <p className="text-sm font-semibold text-foreground">
                                             Location check disabled
                                         </p>
 
-                                        <p className="mt-0.5 text-xs text-slate-500">
+                                        <p className="mt-0.5 text-xs text-muted-foreground">
                                             Workers can clock in regardless of their location.
                                         </p>
                                     </div>
@@ -1603,11 +1603,11 @@ export function JobDetail() {
                                     <span className="h-2 w-2 shrink-0 rounded-full bg-blue-500" />
 
                                     <div>
-                                        <p className="text-sm font-semibold text-slate-800">
+                                        <p className="text-sm font-semibold text-foreground">
                                             Company default
                                         </p>
 
-                                        <p className="mt-0.5 text-xs text-slate-500">
+                                        <p className="mt-0.5 text-xs text-muted-foreground">
                                             This job follows your company's default clock-in policy.
                                         </p>
                                     </div>
@@ -1617,7 +1617,7 @@ export function JobDetail() {
                     </Card>
                     {/* Cost estimate */}
                     <Card className="p-5">
-                        <h3 className="text-sm font-semibold text-slate-900 mb-4">Cost Summary</h3>
+                        <h3 className="text-sm font-semibold text-foreground mb-4">Cost Summary</h3>
                         <div className="flex flex-col gap-2.5">
                             {[
                                 { label: 'Workers', value: `${assignedWorkers.length}` },
@@ -1633,14 +1633,14 @@ export function JobDetail() {
                                 { label: 'Rate (avg actual)', value: avgRate ? `${formatCurrency(avgRate)}/hr` : '—' },
                             ].map(r => (
                                 <div key={r.label} className="flex items-center justify-between">
-                                    <p className="text-xs text-slate-500">{r.label}</p>
-                                    <p className="text-xs font-semibold text-slate-800 mono">{r.value}</p>
+                                    <p className="text-xs text-muted-foreground">{r.label}</p>
+                                    <p className="text-xs font-semibold text-foreground mono">{r.value}</p>
                                 </div>
                             ))}
                             <Divider className="my-1" />
                             <div className="flex items-center justify-between">
-                                <p className="text-sm font-bold text-slate-900">Estimated Cost</p>
-                                <p className="text-base font-bold text-slate-900 mono">{formatCurrency(estimatedCost)}</p>
+                                <p className="text-sm font-bold text-foreground">Estimated Cost</p>
+                                <p className="text-base font-bold text-foreground mono">{formatCurrency(estimatedCost)}</p>
                             </div>
                         </div>
                     </Card>
@@ -1648,7 +1648,7 @@ export function JobDetail() {
                     {/* Attachments */}
                     <Card className="p-5">
                         <div className="flex items-center justify-between mb-3">
-                            <h3 className="text-sm font-semibold text-slate-900">Attachments</h3>
+                            <h3 className="text-sm font-semibold text-foreground">Attachments</h3>
                             <Link to={`/jobs/${id}/edit?edit=attachments`} className="flex items-center gap-1.5">
                                 <button className="text-xs text-blue-600 font-semibold hover:text-blue-800 transition-colors"
                                 >+ Add</button>
@@ -1659,15 +1659,15 @@ export function JobDetail() {
                                 { name: 'Site_Briefing.pdf', size: '284 KB', icon: FileText },
                                 { name: 'Access_Passes.jpg', size: '1.2 MB', icon: Camera },
                             ].map(f => (
-                                <div key={f.name} className="flex items-center gap-3 p-2.5 rounded-xl border border-[#E2E8F0] hover:bg-slate-50 cursor-pointer transition-colors">
-                                    <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
-                                        <f.icon size={14} className="text-slate-500" />
+                                <div key={f.name} className="flex items-center gap-3 p-2.5 rounded-xl border border-[var(--border)] hover:bg-muted cursor-pointer transition-colors">
+                                    <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                                        <f.icon size={14} className="text-muted-foreground" />
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <p className="text-xs font-semibold text-slate-800 truncate">{f.name}</p>
-                                        <p className="text-[10px] text-slate-400">{f.size}</p>
+                                        <p className="text-xs font-semibold text-foreground truncate">{f.name}</p>
+                                        <p className="text-[10px] text-muted-foreground">{f.size}</p>
                                     </div>
-                                    <Download size={13} className="text-slate-400 shrink-0" />
+                                    <Download size={13} className="text-muted-foreground shrink-0" />
                                 </div>
                             ))}
                         </div>
@@ -1686,13 +1686,13 @@ export function JobDetail() {
             {/* Approve modal */}
             {showApproveModal && (
                 <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 animate-fade-in">
+                    <div className="bg-card rounded-2xl shadow-2xl w-full max-w-md p-6 animate-fade-in">
                         <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4">
                             <CheckCircle2 size={24} className="text-emerald-600" />
                         </div>
-                        <h3 className="text-base font-bold text-slate-900 text-center mb-1">Approve this job?</h3>
-                        <p className="text-sm text-slate-500 text-center mb-6">This will mark the job as completed and notify all workers. Hours will be submitted for payroll.</p>
-                        <div className="bg-slate-50 rounded-xl p-4 mb-5 flex flex-col gap-2">
+                        <h3 className="text-base font-bold text-foreground text-center mb-1">Approve this job?</h3>
+                        <p className="text-sm text-muted-foreground text-center mb-6">This will mark the job as completed and notify all workers. Hours will be submitted for payroll.</p>
+                        <div className="bg-muted rounded-xl p-4 mb-5 flex flex-col gap-2">
                             {[
                                 { label: 'Job', value: job.title?.split('—')[0]?.trim() },
                                 { label: 'Workers', value: `${assignedWorkers.length} workers` },
@@ -1700,15 +1700,15 @@ export function JobDetail() {
                                 { label: 'Est. Cost', value: formatCurrency(estimatedCost) },
                             ].map(r => (
                                 <div key={r.label} className="flex items-center justify-between">
-                                    <p className="text-xs text-slate-500">{r.label}</p>
-                                    <p className="text-xs font-semibold text-slate-800">{r.value}</p>
+                                    <p className="text-xs text-muted-foreground">{r.label}</p>
+                                    <p className="text-xs font-semibold text-foreground">{r.value}</p>
                                 </div>
                             ))}
                         </div>
                         <div className="flex gap-3">
                             <button
                                 onClick={() => setShowApproveModal(false)}
-                                className="flex-1 h-11 rounded-xl border border-[#E2E8F0] text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
+                                className="flex-1 h-11 rounded-xl border border-[var(--border)] text-sm font-semibold text-muted-foreground hover:bg-muted transition-colors"
                             >
                                 Cancel
                             </button>

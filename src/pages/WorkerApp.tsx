@@ -77,7 +77,7 @@ function JobCard({
 
   return (
     <div
-      className="bg-white rounded-2xl border border-[#E2E8F0] overflow-hidden shadow-sm hover:shadow-md hover:border-slate-300 transition-all cursor-pointer"
+      className="bg-card rounded-2xl border border-[var(--border)] overflow-hidden shadow-sm hover:shadow-md hover:border-slate-300 transition-all cursor-pointer"
       onClick={onSelect}
     >
       {/* Accent stripe */}
@@ -86,28 +86,28 @@ function JobCard({
       <div className="p-4">
         <div className="flex items-start justify-between gap-2 mb-3">
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-slate-900 leading-snug">{job.name}</p>
-            <p className="text-xs text-slate-400 mt-0.5 font-medium">{job.company}</p>
+            <p className="text-sm font-semibold text-foreground leading-snug">{job.name}</p>
+            <p className="text-xs text-muted-foreground mt-0.5 font-medium">{job.company}</p>
           </div>
           <StatusBadge status={job.status} />
         </div>
 
         <div className="grid grid-cols-2 gap-y-2 gap-x-3">
-          <div className="flex items-center gap-1.5 text-xs text-slate-500">
-            <div className="w-5 h-5 rounded-md bg-slate-50 flex items-center justify-center shrink-0">
-              <Clock size={11} className="text-slate-400" />
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <div className="w-5 h-5 rounded-md bg-muted flex items-center justify-center shrink-0">
+              <Clock size={11} className="text-muted-foreground" />
             </div>
             {job.startTime} – {job.endTime}
           </div>
-          <div className="flex items-center gap-1.5 text-xs text-slate-500">
-            <div className="w-5 h-5 rounded-md bg-slate-50 flex items-center justify-center shrink-0">
-              <Timer size={11} className="text-slate-400" />
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <div className="w-5 h-5 rounded-md bg-muted flex items-center justify-center shrink-0">
+              <Timer size={11} className="text-muted-foreground" />
             </div>
             {job.hours}h shift
           </div>
-          <div className="flex items-center gap-1.5 text-xs text-slate-500 col-span-2">
-            <div className="w-5 h-5 rounded-md bg-slate-50 flex items-center justify-center shrink-0">
-              <MapPin size={11} className="text-slate-400" />
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground col-span-2">
+            <div className="w-5 h-5 rounded-md bg-muted flex items-center justify-center shrink-0">
+              <MapPin size={11} className="text-muted-foreground" />
             </div>
             <span className="truncate">{job.location}</span>
           </div>
@@ -125,7 +125,7 @@ function JobCard({
           <div className="mt-4 grid grid-cols-2 gap-2.5" onClick={e => e.stopPropagation()}>
             <button
               onClick={onReject}
-              className="h-11 rounded-xl bg-slate-50 border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-colors flex items-center justify-center gap-1.5"
+              className="h-11 rounded-xl bg-muted border border-border text-muted-foreground text-sm font-semibold hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-colors flex items-center justify-center gap-1.5"
             >
               <X size={14} /> Decline
             </button>
@@ -141,7 +141,7 @@ function JobCard({
         {job.status === 'in-progress' && onClock && (
           <button
             onClick={e => { e.stopPropagation(); onClock() }}
-            className="mt-4 w-full h-11 rounded-xl bg-[#1E3A5F] text-white text-sm font-bold hover:bg-[#162D4A] active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-sm shadow-[#1E3A5F]/25"
+            className="mt-4 w-full h-11 rounded-xl bg-[var(--primary)] text-white text-sm font-bold hover:bg-primary/90 active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-sm shadow-[var(--primary)]/25"
           >
             <Timer size={14} /> Continue Working
           </button>
@@ -163,7 +163,7 @@ function HomeScreen({ onJobSelect, onClockIn, onViewJobs }: {
   return (
     <div className="flex flex-col gap-5 pb-4">
       {/* Header */}
-      <div className="bg-[#1E3A5F] rounded-3xl p-5 text-white relative overflow-hidden">
+      <div className="bg-[var(--primary)] rounded-3xl p-5 text-white relative overflow-hidden">
         {/* Background pattern */}
         <div className="absolute inset-0 opacity-[0.04]"
           style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '24px 24px' }} />
@@ -179,7 +179,7 @@ function HomeScreen({ onJobSelect, onClockIn, onViewJobs }: {
             </div>
             <button className="relative w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors">
               <Bell size={16} className="text-white" />
-              <span className="absolute top-2 right-2 w-2 h-2 bg-blue-400 rounded-full border-2 border-[#1E3A5F]" />
+              <span className="absolute top-2 right-2 w-2 h-2 bg-blue-400 rounded-full border-2 border-[var(--primary)]" />
             </button>
           </div>
 
@@ -227,7 +227,7 @@ function HomeScreen({ onJobSelect, onClockIn, onViewJobs }: {
       {pendingJobs.length > 0 && (
         <div>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-bold text-slate-800">Action Required</h2>
+            <h2 className="text-sm font-bold text-foreground">Action Required</h2>
             <span className="text-xs font-semibold text-blue-600 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-full">
               {pendingJobs.length} pending
             </span>
@@ -249,7 +249,7 @@ function HomeScreen({ onJobSelect, onClockIn, onViewJobs }: {
       {/* Today's schedule */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-bold text-slate-800">Today's Shift</h2>
+          <h2 className="text-sm font-bold text-foreground">Today's Shift</h2>
           <button onClick={onViewJobs} className="text-xs text-blue-600 font-semibold flex items-center gap-1 hover:text-blue-800 transition-colors">
             View all <ArrowUpRight size={12} />
           </button>
@@ -263,48 +263,48 @@ function HomeScreen({ onJobSelect, onClockIn, onViewJobs }: {
             onClock={onClockIn}
           />
         ) : (
-          <div className="bg-white rounded-2xl border border-[#E2E8F0] p-8 text-center shadow-sm">
-            <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-3">
-              <Briefcase size={20} className="text-slate-400" />
+          <div className="bg-card rounded-2xl border border-[var(--border)] p-8 text-center shadow-sm">
+            <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-3">
+              <Briefcase size={20} className="text-muted-foreground" />
             </div>
-            <p className="text-sm font-semibold text-slate-700 mb-1">No shifts today</p>
-            <p className="text-xs text-slate-400">Check the Jobs tab for upcoming assignments</p>
+            <p className="text-sm font-semibold text-foreground mb-1">No shifts today</p>
+            <p className="text-xs text-muted-foreground">Check the Jobs tab for upcoming assignments</p>
           </div>
         )}
       </div>
 
       {/* This week */}
       <div>
-        <h2 className="text-sm font-bold text-slate-800 mb-3">This Week</h2>
-        <div className="bg-white rounded-2xl border border-[#E2E8F0] p-4 shadow-sm">
+        <h2 className="text-sm font-bold text-foreground mb-3">This Week</h2>
+        <div className="bg-card rounded-2xl border border-[var(--border)] p-4 shadow-sm">
           <div className="grid grid-cols-7 gap-1">
             {weekDays.map((d, i) => (
               <div key={i} className="flex flex-col items-center gap-1.5">
-                <span className="text-[10px] font-semibold text-slate-400">{d.day}</span>
+                <span className="text-[10px] font-semibold text-muted-foreground">{d.day}</span>
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold relative
-                  ${d.date === 25 ? 'bg-[#1E3A5F] text-white' : d.hasShift ? 'bg-blue-50 text-blue-700' : 'text-slate-400'}`}>
+                  ${d.date === 25 ? 'bg-[var(--primary)] text-white' : d.hasShift ? 'bg-blue-50 text-blue-700' : 'text-muted-foreground'}`}>
                   {d.date}
                   {d.hasShift && d.date !== 25 && (
                     <span className="absolute -bottom-0.5 w-1.5 h-1.5 bg-blue-400 rounded-full" />
                   )}
                 </div>
-                <span className="text-[9px] text-slate-400 font-medium">{d.hasShift ? `${d.hours}h` : '—'}</span>
+                <span className="text-[9px] text-muted-foreground font-medium">{d.hasShift ? `${d.hours}h` : '—'}</span>
               </div>
             ))}
           </div>
-          <div className="mt-4 pt-3 border-t border-[#F1F5F9] flex items-center justify-between">
+          <div className="mt-4 pt-3 border-t border-[var(--border)] flex items-center justify-between">
             <div>
-              <p className="text-xs text-slate-500">Total this week</p>
-              <p className="text-lg font-bold text-slate-900 mt-0.5">{worker.hoursThisWeek}h <span className="text-sm font-normal text-slate-400">/ 40h target</span></p>
+              <p className="text-xs text-muted-foreground">Total this week</p>
+              <p className="text-lg font-bold text-foreground mt-0.5">{worker.hoursThisWeek}h <span className="text-sm font-normal text-muted-foreground">/ 40h target</span></p>
             </div>
             <div className="flex-1 max-w-[120px] ml-4">
-              <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+              <div className="h-2 bg-muted rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-[#1E3A5F] rounded-full transition-all"
+                  className="h-full bg-[var(--primary)] rounded-full transition-all"
                   style={{ width: `${(worker.hoursThisWeek / 40) * 100}%` }}
                 />
               </div>
-              <p className="text-[10px] text-slate-400 mt-1 text-right">{Math.round((worker.hoursThisWeek / 40) * 100)}%</p>
+              <p className="text-[10px] text-muted-foreground mt-1 text-right">{Math.round((worker.hoursThisWeek / 40) * 100)}%</p>
             </div>
           </div>
         </div>
@@ -331,12 +331,12 @@ function JobsScreen({ onJobSelect, onClockIn }: {
   return (
     <div className="flex flex-col gap-4 pb-4">
       <div>
-        <h2 className="text-lg font-bold text-slate-900">My Jobs</h2>
-        <p className="text-xs text-slate-400 mt-0.5">All your assignments in one place</p>
+        <h2 className="text-lg font-bold text-foreground">My Jobs</h2>
+        <p className="text-xs text-muted-foreground mt-0.5">All your assignments in one place</p>
       </div>
 
       {/* Tab pills */}
-      <div className="flex gap-2 bg-slate-100 p-1 rounded-xl">
+      <div className="flex gap-2 bg-muted p-1 rounded-xl">
         {([
           { id: 'pending', label: 'Pending', count: tabData.pending.length },
           { id: 'active', label: 'Active', count: tabData.active.length },
@@ -346,12 +346,12 @@ function JobsScreen({ onJobSelect, onClockIn }: {
             key={t.id}
             onClick={() => setTab(t.id)}
             className={`flex-1 flex items-center justify-center gap-1.5 h-8 rounded-lg text-xs font-semibold transition-all
-              ${tab === t.id ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+              ${tab === t.id ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
           >
             {t.label}
             {t.count > 0 && (
               <span className={`w-4 h-4 rounded-full text-[10px] font-bold flex items-center justify-center
-                ${tab === t.id ? (t.id === 'pending' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700') : 'bg-slate-200 text-slate-500'}`}>
+                ${tab === t.id ? (t.id === 'pending' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700') : 'bg-muted text-muted-foreground'}`}>
                 {t.count}
               </span>
             )}
@@ -362,12 +362,12 @@ function JobsScreen({ onJobSelect, onClockIn }: {
       {/* Job list */}
       <div className="flex flex-col gap-3">
         {tab === 'pending' && tabData.pending.length === 0 && (
-          <div className="bg-white rounded-2xl border border-[#E2E8F0] p-10 text-center shadow-sm">
+          <div className="bg-card rounded-2xl border border-[var(--border)] p-10 text-center shadow-sm">
             <div className="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center mx-auto mb-3">
               <Check size={20} className="text-emerald-500" />
             </div>
-            <p className="text-sm font-semibold text-slate-700 mb-1">All caught up!</p>
-            <p className="text-xs text-slate-400">No pending job requests right now.</p>
+            <p className="text-sm font-semibold text-foreground mb-1">All caught up!</p>
+            <p className="text-xs text-muted-foreground">No pending job requests right now.</p>
           </div>
         )}
 
@@ -382,12 +382,12 @@ function JobsScreen({ onJobSelect, onClockIn }: {
         ))}
 
         {tab === 'active' && tabData.active.length === 0 && (
-          <div className="bg-white rounded-2xl border border-[#E2E8F0] p-10 text-center shadow-sm">
+          <div className="bg-card rounded-2xl border border-[var(--border)] p-10 text-center shadow-sm">
             <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center mx-auto mb-3">
               <Briefcase size={20} className="text-blue-400" />
             </div>
-            <p className="text-sm font-semibold text-slate-700 mb-1">No active jobs</p>
-            <p className="text-xs text-slate-400">Accept a job from Pending to start working.</p>
+            <p className="text-sm font-semibold text-foreground mb-1">No active jobs</p>
+            <p className="text-xs text-muted-foreground">Accept a job from Pending to start working.</p>
           </div>
         )}
 
@@ -401,19 +401,19 @@ function JobsScreen({ onJobSelect, onClockIn }: {
         ))}
 
         {tab === 'completed' && completedHistory.map((h, i) => (
-          <div key={i} className="bg-white rounded-2xl border border-[#E2E8F0] overflow-hidden shadow-sm">
+          <div key={i} className="bg-card rounded-2xl border border-[var(--border)] overflow-hidden shadow-sm">
             <div className="h-1 bg-emerald-500" />
             <div className="p-4">
               <div className="flex items-start justify-between gap-2 mb-2">
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-slate-900 truncate">{h.job}</p>
-                  <p className="text-xs text-slate-400 mt-0.5">{h.date}</p>
+                  <p className="text-sm font-semibold text-foreground truncate">{h.job}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{h.date}</p>
                 </div>
                 <span className="text-sm font-bold text-emerald-600 shrink-0">£{h.pay}</span>
               </div>
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5 text-xs text-slate-500">
-                  <Clock size={11} className="text-slate-400" />
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <Clock size={11} className="text-muted-foreground" />
                   {h.hours} hours worked
                 </div>
                 {h.rated ? (
@@ -455,14 +455,14 @@ function JobDetailScreen({ jobId, onBack, onStartWork }: {
     <div className="flex flex-col gap-4 pb-4 animate-fade-in">
       <button
         onClick={onBack}
-        className="flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors -mb-1"
+        className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors -mb-1"
       >
         <ChevronLeft size={16} /> Back
       </button>
 
       {/* Hero card */}
-      <div className="bg-white rounded-2xl border border-[#E2E8F0] overflow-hidden shadow-sm">
-        <div className="bg-gradient-to-br from-[#1E3A5F] to-[#2D5A8E] p-5 relative overflow-hidden">
+      <div className="bg-card rounded-2xl border border-[var(--border)] overflow-hidden shadow-sm">
+        <div className="bg-gradient-to-br from-[var(--primary)] to-[#2D5A8E] p-5 relative overflow-hidden">
           <div className="absolute inset-0 opacity-[0.05]"
             style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '20px 20px' }} />
           <div className="relative">
@@ -490,13 +490,13 @@ function JobDetailScreen({ jobId, onBack, onStartWork }: {
 
         <div className="p-4 flex flex-col gap-0">
           {infoRows.map((row, i) => (
-            <div key={i} className={`flex items-center gap-3 py-3 ${i < infoRows.length - 1 ? 'border-b border-[#F8FAFC]' : ''}`}>
-              <div className="w-8 h-8 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0">
-                <row.icon size={14} className="text-slate-500" />
+            <div key={i} className={`flex items-center gap-3 py-3 ${i < infoRows.length - 1 ? 'border-b border-border' : ''}`}>
+              <div className="w-8 h-8 rounded-xl bg-muted border border-border flex items-center justify-center shrink-0">
+                <row.icon size={14} className="text-muted-foreground" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide">{row.label}</p>
-                <p className="text-sm text-slate-800 font-medium truncate">{row.value}</p>
+                <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wide">{row.label}</p>
+                <p className="text-sm text-foreground font-medium truncate">{row.value}</p>
               </div>
             </div>
           ))}
@@ -515,8 +515,8 @@ function JobDetailScreen({ jobId, onBack, onStartWork }: {
       )}
 
       {/* Navigate CTA */}
-      <button className="w-full h-11 rounded-xl bg-slate-100 text-slate-700 text-sm font-semibold hover:bg-slate-200 transition-colors flex items-center justify-center gap-2">
-        <Navigation size={15} className="text-slate-500" />
+      <button className="w-full h-11 rounded-xl bg-muted text-foreground text-sm font-semibold hover:bg-muted transition-colors flex items-center justify-center gap-2">
+        <Navigation size={15} className="text-muted-foreground" />
         Get Directions
       </button>
 
@@ -524,7 +524,7 @@ function JobDetailScreen({ jobId, onBack, onStartWork }: {
       {(job.status === 'in-progress' || job.status === 'assigned') && (
         <button
           onClick={onStartWork}
-          className="w-full h-14 rounded-2xl bg-[#1E3A5F] text-white text-base font-bold hover:bg-[#162D4A] active:scale-[0.98] transition-all flex items-center justify-center gap-3 shadow-lg shadow-[#1E3A5F]/25 mt-1"
+          className="w-full h-14 rounded-2xl bg-[var(--primary)] text-white text-base font-bold hover:bg-primary/90 active:scale-[0.98] transition-all flex items-center justify-center gap-3 shadow-lg shadow-[var(--primary)]/25 mt-1"
         >
           <Play size={18} fill="currentColor" />
           {job.status === 'in-progress' ? 'Continue Working' : 'Start Work'}
@@ -577,7 +577,7 @@ function ClockScreen({ jobId, onBack, onDone }: {
   if (clockState === 'done') {
     return (
       <div className="flex flex-col items-center pb-4 animate-fade-in">
-        <div className="w-full bg-white rounded-3xl border border-[#E2E8F0] overflow-hidden shadow-sm mb-4">
+        <div className="w-full bg-card rounded-3xl border border-[var(--border)] overflow-hidden shadow-sm mb-4">
           <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 p-8 text-center relative overflow-hidden">
             <div className="absolute inset-0 opacity-10"
               style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1.5px, transparent 0)', backgroundSize: '20px 20px' }} />
@@ -597,27 +597,27 @@ function ClockScreen({ jobId, onBack, onDone }: {
                 { label: 'Break Time', value: fmtHours(breakTime) },
                 { label: 'Breaks Taken', value: breaks },
               ].map(s => (
-                <div key={s.label} className="bg-slate-50 rounded-xl p-3 text-center border border-slate-100">
-                  <p className="text-base font-bold text-slate-900">{s.value}</p>
-                  <p className="text-[10px] text-slate-400 mt-0.5 font-medium">{s.label}</p>
+                <div key={s.label} className="bg-muted rounded-xl p-3 text-center border border-border">
+                  <p className="text-base font-bold text-foreground">{s.value}</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5 font-medium">{s.label}</p>
                 </div>
               ))}
             </div>
 
-            <p className="text-xs text-slate-500 text-center mb-5 bg-blue-50 border border-blue-100 rounded-xl px-4 py-2.5">
+            <p className="text-xs text-muted-foreground text-center mb-5 bg-blue-50 border border-blue-100 rounded-xl px-4 py-2.5">
               ✓ Your hours have been recorded automatically and sent to your manager.
             </p>
 
             <div className="flex flex-col gap-2.5">
-              <button className="w-full h-11 rounded-xl border border-[#E2E8F0] text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors flex items-center justify-center gap-2">
-                <Camera size={15} className="text-slate-400" /> Upload Site Photos
+              <button className="w-full h-11 rounded-xl border border-[var(--border)] text-sm font-semibold text-foreground hover:bg-muted transition-colors flex items-center justify-center gap-2">
+                <Camera size={15} className="text-muted-foreground" /> Upload Site Photos
               </button>
               {!showNote ? (
                 <button
                   onClick={() => setShowNote(true)}
-                  className="w-full h-11 rounded-xl border border-[#E2E8F0] text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors flex items-center justify-center gap-2"
+                  className="w-full h-11 rounded-xl border border-[var(--border)] text-sm font-semibold text-foreground hover:bg-muted transition-colors flex items-center justify-center gap-2"
                 >
-                  <FileText size={15} className="text-slate-400" /> Add a Note
+                  <FileText size={15} className="text-muted-foreground" /> Add a Note
                 </button>
               ) : (
                 <div>
@@ -626,13 +626,13 @@ function ClockScreen({ jobId, onBack, onDone }: {
                     onChange={e => setNote(e.target.value)}
                     placeholder="Any notes for your manager..."
                     rows={3}
-                    className="w-full px-3 py-2.5 border border-[#E2E8F0] rounded-xl text-sm text-slate-700 bg-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all resize-none"
+                    className="w-full px-3 py-2.5 border border-[var(--border)] rounded-xl text-sm text-foreground bg-card placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all resize-none"
                   />
                 </div>
               )}
               <button
                 onClick={onDone}
-                className="w-full h-12 rounded-xl bg-[#1E3A5F] text-white text-sm font-bold hover:bg-[#162D4A] transition-colors mt-1"
+                className="w-full h-12 rounded-xl bg-[var(--primary)] text-white text-sm font-bold hover:bg-primary/90 transition-colors mt-1"
               >
                 Done
               </button>
@@ -646,24 +646,24 @@ function ClockScreen({ jobId, onBack, onDone }: {
   return (
     <div className="flex flex-col gap-4 pb-4 animate-fade-in">
       {clockState === 'idle' && (
-        <button onClick={onBack} className="flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors">
+        <button onClick={onBack} className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
           <ChevronLeft size={16} /> Back
         </button>
       )}
 
       {/* Job context */}
       {job && (
-        <div className="bg-white rounded-2xl border border-[#E2E8F0] px-4 py-3.5 flex items-center gap-3 shadow-sm">
-          <div className="w-8 h-8 rounded-xl bg-[#1E3A5F]/10 flex items-center justify-center shrink-0">
-            <Briefcase size={14} className="text-[#1E3A5F]" />
+        <div className="bg-card rounded-2xl border border-[var(--border)] px-4 py-3.5 flex items-center gap-3 shadow-sm">
+          <div className="w-8 h-8 rounded-xl bg-[var(--primary)]/10 flex items-center justify-center shrink-0">
+            <Briefcase size={14} className="text-[var(--primary)]" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-xs text-slate-400 font-medium">Current Job</p>
-            <p className="text-sm font-semibold text-slate-900 truncate">{job.name}</p>
+            <p className="text-xs text-muted-foreground font-medium">Current Job</p>
+            <p className="text-sm font-semibold text-foreground truncate">{job.name}</p>
           </div>
           <div className="text-right shrink-0">
-            <p className="text-[10px] text-slate-400">Scheduled</p>
-            <p className="text-xs font-bold text-slate-700">{job.startTime}–{job.endTime}</p>
+            <p className="text-[10px] text-muted-foreground">Scheduled</p>
+            <p className="text-xs font-bold text-foreground">{job.startTime}–{job.endTime}</p>
           </div>
         </div>
       )}
@@ -744,7 +744,7 @@ function ClockScreen({ jobId, onBack, onDone }: {
           </button>
           <button
             onClick={finish}
-            className="h-14 rounded-2xl bg-[#1E3A5F] text-white text-sm font-bold hover:bg-[#162D4A] active:scale-[0.97] transition-all flex items-center justify-center gap-2 shadow-sm shadow-[#1E3A5F]/25"
+            className="h-14 rounded-2xl bg-[var(--primary)] text-white text-sm font-bold hover:bg-primary/90 active:scale-[0.97] transition-all flex items-center justify-center gap-2 shadow-sm shadow-[var(--primary)]/25"
           >
             <Square size={14} fill="currentColor" /> Finish Work
           </button>
@@ -761,7 +761,7 @@ function ClockScreen({ jobId, onBack, onDone }: {
           </button>
           <button
             onClick={finish}
-            className="w-full h-11 rounded-xl bg-slate-100 text-slate-600 text-sm font-semibold hover:bg-slate-200 transition-colors flex items-center justify-center gap-2"
+            className="w-full h-11 rounded-xl bg-muted text-muted-foreground text-sm font-semibold hover:bg-muted transition-colors flex items-center justify-center gap-2"
           >
             <Square size={13} fill="currentColor" /> Finish Shift Instead
           </button>
@@ -776,9 +776,9 @@ function ClockScreen({ jobId, onBack, onDone }: {
             { label: 'Billable', value: fmtHours(elapsed - breakTime) },
             { label: 'Est. Finish', value: job?.endTime ?? '--:--' },
           ].map(s => (
-            <div key={s.label} className="bg-white rounded-xl border border-[#E2E8F0] p-3 text-center shadow-sm">
-              <p className="text-sm font-bold text-slate-900 mono">{s.value}</p>
-              <p className="text-[10px] text-slate-400 mt-0.5 font-medium">{s.label}</p>
+            <div key={s.label} className="bg-card rounded-xl border border-[var(--border)] p-3 text-center shadow-sm">
+              <p className="text-sm font-bold text-foreground mono">{s.value}</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5 font-medium">{s.label}</p>
             </div>
           ))}
         </div>
@@ -794,19 +794,19 @@ function ScheduleScreen({ onJobSelect }: { onJobSelect: (id: string) => void }) 
   return (
     <div className="flex flex-col gap-4 pb-4">
       <div>
-        <h2 className="text-lg font-bold text-slate-900">Schedule</h2>
-        <p className="text-xs text-slate-400 mt-0.5">Your upcoming assignments</p>
+        <h2 className="text-lg font-bold text-foreground">Schedule</h2>
+        <p className="text-xs text-muted-foreground mt-0.5">Your upcoming assignments</p>
       </div>
 
       {/* Week strip */}
-      <div className="bg-white rounded-2xl border border-[#E2E8F0] p-4 shadow-sm">
+      <div className="bg-card rounded-2xl border border-[var(--border)] p-4 shadow-sm">
         <div className="flex items-center justify-between mb-3">
-          <p className="text-xs font-bold text-slate-700">Week of 21 July</p>
+          <p className="text-xs font-bold text-foreground">Week of 21 July</p>
           <div className="flex gap-1">
-            <button className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-100 transition-colors">
+            <button className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors">
               <ChevronLeft size={14} />
             </button>
-            <button className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-100 transition-colors">
+            <button className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors">
               <ChevronRight size={14} />
             </button>
           </div>
@@ -814,15 +814,15 @@ function ScheduleScreen({ onJobSelect }: { onJobSelect: (id: string) => void }) 
         <div className="grid grid-cols-7 gap-1.5">
           {weekDays.map((d, i) => (
             <div key={i} className="flex flex-col items-center gap-1.5">
-              <span className="text-[10px] font-semibold text-slate-400">{d.day}</span>
+              <span className="text-[10px] font-semibold text-muted-foreground">{d.day}</span>
               <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold relative transition-colors
-                ${d.date === 25 ? 'bg-[#1E3A5F] text-white shadow-sm' : d.hasShift ? 'bg-blue-50 text-blue-700 border border-blue-100' : 'text-slate-300 border border-slate-100'}`}>
+                ${d.date === 25 ? 'bg-[var(--primary)] text-white shadow-sm' : d.hasShift ? 'bg-blue-50 text-blue-700 border border-blue-100' : 'text-slate-300 border border-border'}`}>
                 {d.date}
               </div>
               {d.hasShift && (
                 <div className="flex flex-col gap-0.5 w-full">
                   {Array.from({ length: Math.ceil(d.hours! / 8) }).map((_, j) => (
-                    <div key={j} className={`h-1 rounded-full ${d.date === 25 ? 'bg-[#1E3A5F]' : 'bg-blue-300'}`} />
+                    <div key={j} className={`h-1 rounded-full ${d.date === 25 ? 'bg-[var(--primary)]' : 'bg-blue-300'}`} />
                   ))}
                 </div>
               )}
@@ -832,11 +832,11 @@ function ScheduleScreen({ onJobSelect }: { onJobSelect: (id: string) => void }) 
       </div>
 
       {/* Upcoming jobs */}
-      <h3 className="text-sm font-bold text-slate-700">Upcoming Shifts</h3>
+      <h3 className="text-sm font-bold text-foreground">Upcoming Shifts</h3>
       <div className="flex flex-col gap-3">
         {upcoming.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-[#E2E8F0] p-10 text-center shadow-sm">
-            <p className="text-sm font-semibold text-slate-600">No upcoming shifts scheduled</p>
+          <div className="bg-card rounded-2xl border border-[var(--border)] p-10 text-center shadow-sm">
+            <p className="text-sm font-semibold text-muted-foreground">No upcoming shifts scheduled</p>
           </div>
         ) : (
           upcoming.map(job => (
@@ -853,26 +853,26 @@ function ProfileScreen() {
   return (
     <div className="flex flex-col gap-4 pb-4">
       {/* Profile hero */}
-      <div className="bg-white rounded-2xl border border-[#E2E8F0] overflow-hidden shadow-sm">
-        <div className="h-20 bg-gradient-to-r from-[#1E3A5F] to-[#2D5A8E]" />
+      <div className="bg-card rounded-2xl border border-[var(--border)] overflow-hidden shadow-sm">
+        <div className="h-20 bg-gradient-to-r from-[var(--primary)] to-[#2D5A8E]" />
         <div className="px-5 pb-5">
           <div className="-mt-8 mb-4 flex items-end justify-between">
             <div className="ring-4 ring-white rounded-full">
               <Avatar initials={worker.avatar} size="xl" index={0} />
             </div>
-            <button className="h-8 px-3.5 rounded-lg border border-[#E2E8F0] text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors">
+            <button className="h-8 px-3.5 rounded-lg border border-[var(--border)] text-xs font-semibold text-muted-foreground hover:bg-muted transition-colors">
               Edit Profile
             </button>
           </div>
-          <h2 className="text-base font-bold text-slate-900">{worker.name}</h2>
-          <p className="text-sm text-slate-500 mt-0.5">{worker.role}</p>
+          <h2 className="text-base font-bold text-foreground">{worker.name}</h2>
+          <p className="text-sm text-muted-foreground mt-0.5">{worker.role}</p>
           <div className="flex items-center gap-2 mt-2">
             <StatusBadge status={worker.status} />
             <span className="flex items-center gap-1 text-xs text-amber-600 font-semibold">
               <Star size={12} fill="currentColor" /> {worker.rating} rating
             </span>
           </div>
-          <div className="flex items-center gap-4 mt-4 text-xs text-slate-500">
+          <div className="flex items-center gap-4 mt-4 text-xs text-muted-foreground">
             <span className="flex items-center gap-1.5"><MapPin size={11} />{worker.location}</span>
             <span className="flex items-center gap-1.5"><Phone size={11} />{worker.phone}</span>
           </div>
@@ -880,7 +880,7 @@ function ProfileScreen() {
       </div>
 
       {/* Earnings card */}
-      <div className="bg-[#1E3A5F] rounded-2xl p-5 relative overflow-hidden">
+      <div className="bg-[var(--primary)] rounded-2xl p-5 relative overflow-hidden">
         <div className="absolute inset-0 opacity-[0.04]"
           style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '20px 20px' }} />
         <div className="relative">
@@ -914,19 +914,19 @@ function ProfileScreen() {
           { label: 'Jobs Completed', value: worker.jobsCompleted, sub: 'all time', icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50' },
           { label: 'Hours Worked', value: `${worker.hoursThisMonth}h`, sub: 'this month', icon: Clock, color: 'text-blue-600', bg: 'bg-blue-50' },
         ].map(s => (
-          <div key={s.label} className="bg-white rounded-2xl border border-[#E2E8F0] p-4 shadow-sm">
+          <div key={s.label} className="bg-card rounded-2xl border border-[var(--border)] p-4 shadow-sm">
             <div className={`w-9 h-9 rounded-xl ${s.bg} flex items-center justify-center mb-3`}>
               <s.icon size={16} className={s.color} />
             </div>
-            <p className="text-xl font-bold text-slate-900">{s.value}</p>
-            <p className="text-xs text-slate-500 mt-0.5 font-medium">{s.label}</p>
-            <p className="text-[10px] text-slate-400">{s.sub}</p>
+            <p className="text-xl font-bold text-foreground">{s.value}</p>
+            <p className="text-xs text-muted-foreground mt-0.5 font-medium">{s.label}</p>
+            <p className="text-[10px] text-muted-foreground">{s.sub}</p>
           </div>
         ))}
       </div>
 
       {/* Settings list */}
-      <div className="bg-white rounded-2xl border border-[#E2E8F0] shadow-sm overflow-hidden">
+      <div className="bg-card rounded-2xl border border-[var(--border)] shadow-sm overflow-hidden">
         {[
           { label: 'Download Timesheet', icon: Download, sub: 'July 2025' },
           { label: 'Notification Preferences', icon: Bell, sub: 'Job alerts, reminders' },
@@ -934,14 +934,14 @@ function ProfileScreen() {
         ].map((item, i, arr) => (
           <button
             key={item.label}
-            className={`w-full flex items-center gap-3.5 px-5 py-4 hover:bg-slate-50 transition-colors text-left ${i < arr.length - 1 ? 'border-b border-[#F8FAFC]' : ''}`}
+            className={`w-full flex items-center gap-3.5 px-5 py-4 hover:bg-muted transition-colors text-left ${i < arr.length - 1 ? 'border-b border-border' : ''}`}
           >
-            <div className="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center shrink-0">
-              <item.icon size={14} className="text-slate-500" />
+            <div className="w-8 h-8 rounded-xl bg-muted flex items-center justify-center shrink-0">
+              <item.icon size={14} className="text-muted-foreground" />
             </div>
             <div className="flex-1">
-              <p className="text-sm font-semibold text-slate-800">{item.label}</p>
-              <p className="text-xs text-slate-400 mt-0.5">{item.sub}</p>
+              <p className="text-sm font-semibold text-foreground">{item.label}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{item.sub}</p>
             </div>
             <ChevronRight size={14} className="text-slate-300" />
           </button>
@@ -961,7 +961,7 @@ function BottomNav({ active, onChange }: { active: WorkerTab; onChange: (t: Work
     { id: 'profile', label: 'Profile', Icon: User },
   ]
   return (
-    <div className="bg-white border-t border-[#E2E8F0] px-2 pt-2 pb-3 grid grid-cols-5 shrink-0">
+    <div className="bg-card border-t border-[var(--border)] px-2 pt-2 pb-3 grid grid-cols-5 shrink-0">
       {tabs.map(t => (
         <button
           key={t.id}
@@ -969,15 +969,15 @@ function BottomNav({ active, onChange }: { active: WorkerTab; onChange: (t: Work
           className="flex flex-col items-center gap-1 py-1 px-2 rounded-xl transition-colors"
         >
           <div className={`relative w-9 h-9 rounded-xl flex items-center justify-center transition-all
-            ${active === t.id ? 'bg-[#1E3A5F]' : 'hover:bg-slate-100'}`}>
-            <t.Icon size={17} className={active === t.id ? 'text-white' : 'text-slate-400'} />
+            ${active === t.id ? 'bg-[var(--primary)]' : 'hover:bg-muted'}`}>
+            <t.Icon size={17} className={active === t.id ? 'text-white' : 'text-muted-foreground'} />
             {t.id === 'jobs' && pendingJobs.length > 0 && active !== 'jobs' && (
               <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-amber-500 rounded-full text-[8px] font-bold text-white flex items-center justify-center">
                 {pendingJobs.length}
               </span>
             )}
           </div>
-          <span className={`text-[10px] font-semibold ${active === t.id ? 'text-[#1E3A5F]' : 'text-slate-400'}`}>
+          <span className={`text-[10px] font-semibold ${active === t.id ? 'text-[var(--primary)]' : 'text-muted-foreground'}`}>
             {t.label}
           </span>
         </button>
@@ -1011,17 +1011,17 @@ export function WorkerApp() {
   }
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 bg-[#F8FAFC]">
+    <div className="flex-1 flex flex-col min-h-0 bg-background">
       {/* Device chrome on desktop */}
       <div className="flex-1 flex items-start justify-center py-6 px-4 overflow-y-auto">
         <div className="w-full max-w-[400px]">
           {/* Phone shell */}
-          <div className="bg-white rounded-[2rem] shadow-2xl shadow-slate-300/60 border border-slate-200/80 overflow-hidden flex flex-col"
+          <div className="bg-card rounded-[2rem] shadow-2xl shadow-slate-300/60 border border-border/80 overflow-hidden flex flex-col"
             style={{ minHeight: 'calc(100vh - 120px)', maxHeight: 840 }}>
 
             {/* Status bar */}
-            <div className="flex items-center justify-between px-6 pt-4 pb-2 bg-white shrink-0">
-              <span className="text-xs font-bold text-slate-800">9:41</span>
+            <div className="flex items-center justify-between px-6 pt-4 pb-2 bg-card shrink-0">
+              <span className="text-xs font-bold text-foreground">9:41</span>
               <div className="flex items-center gap-1.5">
                 <div className="flex gap-0.5 items-end h-3">
                   {[3, 5, 7, 9].map((h, i) => (

@@ -143,19 +143,19 @@ export default function JobDetailScreen() {
         ? 'from-emerald-500 to-emerald-600'
         : job?.status === 'declined'
             ? 'from-slate-400 to-slate-500'
-            : 'from-[#1E3A5F] to-[#2D5A8E]'
+            : 'from-[var(--primary)] to-[#2D5A8E]'
 
     return (
         <div className="flex flex-col gap-4 pb-4 animate-fade-in">
             <button
                 onClick={() => navigate(-1)}
-                className="flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors -mb-1"
+                className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors -mb-1"
             >
                 <ChevronLeft size={16} /> Back
             </button>
 
             {/* Hero card */}
-            <div className="bg-white rounded-2xl border border-[#E2E8F0] overflow-hidden shadow-sm">
+            <div className="bg-card rounded-2xl border border-[var(--border)] overflow-hidden shadow-sm">
                 <div className={`bg-gradient-to-br ${heroGradient} p-5 relative overflow-hidden`}>
                     <div className="absolute inset-0 opacity-[0.05]"
                         style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '20px 20px' }} />
@@ -184,13 +184,13 @@ export default function JobDetailScreen() {
 
                 <div className="p-4 flex flex-col gap-0">
                     {infoRows.map((row, i) => (
-                        <div key={i} className={`flex items-center gap-3 py-3 ${i < infoRows.length - 1 ? 'border-b border-[#F8FAFC]' : ''}`}>
-                            <div className="w-8 h-8 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0">
-                                <row.icon size={14} className="text-slate-500" />
+                        <div key={i} className={`flex items-center gap-3 py-3 ${i < infoRows.length - 1 ? 'border-b border-border' : ''}`}>
+                            <div className="w-8 h-8 rounded-xl bg-muted border border-border flex items-center justify-center shrink-0">
+                                <row.icon size={14} className="text-muted-foreground" />
                             </div>
                             <div className="flex-1 min-w-0">
-                                <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide">{row.label}</p>
-                                <p className="text-sm text-slate-800 font-medium truncate">{row.value}</p>
+                                <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wide">{row.label}</p>
+                                <p className="text-sm text-foreground font-medium truncate">{row.value}</p>
                             </div>
                         </div>
                     ))}
@@ -213,12 +213,12 @@ export default function JobDetailScreen() {
                     href={job.attachment.url}
                     target="_blank"
                     rel="noreferrer"
-                    className="flex items-center gap-2.5 bg-white border border-[#E2E8F0] rounded-2xl p-4 hover:bg-slate-50 transition-colors"
+                    className="flex items-center gap-2.5 bg-card border border-[var(--border)] rounded-2xl p-4 hover:bg-muted transition-colors"
                 >
-                    <Paperclip size={14} className="text-slate-400 shrink-0" />
+                    <Paperclip size={14} className="text-muted-foreground shrink-0" />
                     <div className="flex-1 min-w-0">
-                        <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide">Attachment</p>
-                        <p className="text-sm text-slate-800 font-medium truncate underline underline-offset-2">
+                        <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wide">Attachment</p>
+                        <p className="text-sm text-foreground font-medium truncate underline underline-offset-2">
                             {job.attachment.filename}
                         </p>
                     </div>
@@ -226,26 +226,26 @@ export default function JobDetailScreen() {
             )}
 
             {job?.siteSnapshot && (job.siteSnapshot.contact?.name || job.siteSnapshot.accessInstructions || job.siteSnapshot.parkingInstructions) && (
-                <div className="bg-white border border-[#E2E8F0] rounded-2xl p-4 flex flex-col gap-3">
+                <div className="bg-card border border-[var(--border)] rounded-2xl p-4 flex flex-col gap-3">
                     {job.siteSnapshot.contact?.name && (
                         <div>
-                            <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide mb-1">Site contact</p>
-                            <p className="text-sm font-medium text-slate-800">{job.siteSnapshot.contact.name}</p>
+                            <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wide mb-1">Site contact</p>
+                            <p className="text-sm font-medium text-foreground">{job.siteSnapshot.contact.name}</p>
                             {job.siteSnapshot.contact.phone && (
-                                <a href={`tel:${job.siteSnapshot.contact.phone}`} className="text-xs text-slate-500">{job.siteSnapshot.contact.phone}</a>
+                                <a href={`tel:${job.siteSnapshot.contact.phone}`} className="text-xs text-muted-foreground">{job.siteSnapshot.contact.phone}</a>
                             )}
                         </div>
                     )}
                     {job.siteSnapshot.accessInstructions && (
                         <div>
-                            <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide mb-1">Access instructions</p>
-                            <p className="text-sm text-slate-700 leading-relaxed">{job.siteSnapshot.accessInstructions}</p>
+                            <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wide mb-1">Access instructions</p>
+                            <p className="text-sm text-foreground leading-relaxed">{job.siteSnapshot.accessInstructions}</p>
                         </div>
                     )}
                     {job.siteSnapshot.parkingInstructions && (
                         <div>
-                            <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide mb-1">Parking</p>
-                            <p className="text-sm text-slate-700 leading-relaxed">{job.siteSnapshot.parkingInstructions}</p>
+                            <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wide mb-1">Parking</p>
+                            <p className="text-sm text-foreground leading-relaxed">{job.siteSnapshot.parkingInstructions}</p>
                         </div>
                     )}
                 </div>
@@ -264,25 +264,25 @@ export default function JobDetailScreen() {
             )}
 
             {job?.status === 'declined' && (
-                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
-                        <X size={16} className="text-slate-500" />
+                <div className="bg-muted border border-border rounded-2xl p-4 flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center shrink-0">
+                        <X size={16} className="text-muted-foreground" />
                     </div>
                     <div>
-                        <p className="text-sm font-bold text-slate-700">You declined this shift</p>
-                        <p className="text-xs text-slate-500 mt-0.5">This job is no longer assigned to you.</p>
+                        <p className="text-sm font-bold text-foreground">You declined this shift</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">This job is no longer assigned to you.</p>
                     </div>
                 </div>
             )}
 
             {job?.status === 'cancelled' && (
-                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
-                        <X size={16} className="text-slate-500" />
+                <div className="bg-muted border border-border rounded-2xl p-4 flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center shrink-0">
+                        <X size={16} className="text-muted-foreground" />
                     </div>
                     <div>
-                        <p className="text-sm font-bold text-slate-700">You cancelled this shift</p>
-                        <p className="text-xs text-slate-500 mt-0.5">This job is no longer assigned to you.</p>
+                        <p className="text-sm font-bold text-foreground">You cancelled this shift</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">This job is no longer assigned to you.</p>
                     </div>
                 </div>
             )}
@@ -293,7 +293,7 @@ export default function JobDetailScreen() {
                     <button
                         onClick={onReject}
                         disabled={loadingAction !== null}
-                        className="h-11 rounded-xl bg-slate-50 border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-colors flex items-center justify-center gap-1.5 disabled:opacity-60 disabled:cursor-not-allowed"
+                        className="h-11 rounded-xl bg-muted border border-border text-muted-foreground text-sm font-semibold hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-colors flex items-center justify-center gap-1.5 disabled:opacity-60 disabled:cursor-not-allowed"
                     >
                         {loadingAction === 'reject' ? <Loader2 size={14} className="animate-spin" /> : <X size={14} />} Decline
                     </button>
@@ -314,7 +314,7 @@ export default function JobDetailScreen() {
                         e.preventDefault()
                         navigate(`/worker/clock`)
                     }}
-                    className="w-full h-11 rounded-xl bg-[#1E3A5F] text-center  text-white text-sm font-bold hover:bg-[#162D4A] active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-sm shadow-[#1E3A5F]/25"
+                    className="w-full h-11 rounded-xl bg-[var(--primary)] text-center  text-white text-sm font-bold hover:bg-primary/90 active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-sm shadow-[var(--primary)]/25"
                 >
                     <Dot className="text-green-400 animate-ping" size={50} /> Job Live
                 </button>
@@ -328,13 +328,13 @@ export default function JobDetailScreen() {
                             e.preventDefault()
                             startWorking()
                         }}
-                        className="w-full h-11 rounded-xl bg-[#1b7b3d] text-white text-sm font-bold hover:bg-[#13a166] active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-sm shadow-[#1E3A5F]/25 disabled:opacity-60 disabled:cursor-not-allowed"
+                        className="w-full h-11 rounded-xl bg-[#1b7b3d] text-white text-sm font-bold hover:bg-[#13a166] active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-sm shadow-[var(--primary)]/25 disabled:opacity-60 disabled:cursor-not-allowed"
                     >
                         {loadingAction === 'start' ? <Loader2 size={14} className="animate-spin" /> : <Timer size={14} />} Start Working Job
                     </button>
                 ) : (
-                    <div className="w-full h-11 rounded-xl bg-slate-100 text-slate-500 text-sm font-semibold flex items-center justify-center gap-2 cursor-not-allowed">
-                        <Timer size={14} className="text-slate-400" />
+                    <div className="w-full h-11 rounded-xl bg-muted text-muted-foreground text-sm font-semibold flex items-center justify-center gap-2 cursor-not-allowed">
+                        <Timer size={14} className="text-muted-foreground" />
                         {hasExpired ? "Shift window missed" : `Starts in ${formatTimeUntil(minutesUntilStart ?? 0)}`}
                     </div>
                 )
@@ -350,12 +350,12 @@ export default function JobDetailScreen() {
                                 <DrawerDescription />
                             </DrawerHeader>
                             <div className="px-4">
-                                <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                                <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
                                     <div className="mb-4">
-                                        <h3 className="text-sm font-bold text-slate-900">
+                                        <h3 className="text-sm font-bold text-foreground">
                                             Release shift
                                         </h3>
-                                        <p className="mt-1 text-xs leading-relaxed text-slate-500">
+                                        <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
                                             Can't work this shift? Release it and it goes straight into open
                                             shifts for another worker to pick up — no need to wait on your manager.
                                         </p>
@@ -365,7 +365,7 @@ export default function JobDetailScreen() {
                                         <div className="space-y-2">
                                             <Label htmlFor="releaseReason">
                                                 Reason
-                                                <span className="ml-1 font-normal text-slate-400">
+                                                <span className="ml-1 font-normal text-muted-foreground">
                                                     optional
                                                 </span>
                                             </Label>
@@ -380,7 +380,7 @@ export default function JobDetailScreen() {
                                             />
 
                                             <div className="flex justify-end">
-                                                <span className="text-[11px] text-slate-400">
+                                                <span className="text-[11px] text-muted-foreground">
                                                     {releaseReason.length}/300
                                                 </span>
                                             </div>
@@ -468,12 +468,12 @@ export default function JobDetailScreen() {
                                 <DrawerDescription />
                             </DrawerHeader>
                             <div className="px-4">
-                                <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                                <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
                                     <div className="mb-4">
-                                        <h3 className="text-sm font-bold text-slate-900">
+                                        <h3 className="text-sm font-bold text-foreground">
                                             Cancel shift
                                         </h3>
-                                        <p className="mt-1 text-xs leading-relaxed text-slate-500">
+                                        <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
                                             If you can no longer work this shift, you can cancel it here.
                                             Your manager will be notified.
                                         </p>
@@ -483,7 +483,7 @@ export default function JobDetailScreen() {
                                         <div className="space-y-2">
                                             <Label htmlFor="cancellationReason">
                                                 Reason
-                                                <span className="ml-1 font-normal text-slate-400">
+                                                <span className="ml-1 font-normal text-muted-foreground">
                                                     optional
                                                 </span>
                                             </Label>
@@ -498,7 +498,7 @@ export default function JobDetailScreen() {
                                             />
 
                                             <div className="flex justify-end">
-                                                <span className="text-[11px] text-slate-400">
+                                                <span className="text-[11px] text-muted-foreground">
                                                     {cancellationReason.length}/300
                                                 </span>
                                             </div>
@@ -581,8 +581,8 @@ export default function JobDetailScreen() {
             {showDirections && (
                 <div className="flex flex-col gap-2">
                     <a href={directionsHref} target="_blank" rel="noreferrer">
-                        <button className="w-full h-11 rounded-xl bg-slate-100 text-slate-700 text-sm font-semibold hover:bg-slate-200 transition-colors flex items-center justify-center gap-2">
-                            <Navigation size={15} className="text-slate-500" />
+                        <button className="w-full h-11 rounded-xl bg-muted text-foreground text-sm font-semibold hover:bg-muted transition-colors flex items-center justify-center gap-2">
+                            <Navigation size={15} className="text-muted-foreground" />
                             Get Directions via {MAP_SERVICES.find(s => s.id === preferredMap)?.label}
                         </button>
                     </a>
@@ -594,7 +594,7 @@ export default function JobDetailScreen() {
                                 onClick={() => chooseMapService(service.id)}
                                 className={`text-xs font-medium px-2.5 py-1 rounded-full transition-colors ${preferredMap === service.id
                                     ? 'bg-slate-800 text-white'
-                                    : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'
+                                    : 'text-muted-foreground hover:text-muted-foreground hover:bg-muted'
                                     }`}
                             >
                                 {service.label}

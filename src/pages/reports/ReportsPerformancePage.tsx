@@ -14,24 +14,24 @@ export function ReportsPerformancePage() {
   const { data, isPending, isError } = useQuery({ ...reportsPerformanceQuery(dateRange), enabled: canView })
 
   if (!canView) return <PlanUpgradeNotice feature="Performance reports" />
-  if (isPending) return <p className="text-sm text-slate-400">Loading performance…</p>
+  if (isPending) return <p className="text-sm text-muted-foreground">Loading performance…</p>
   if (isError) return <p className="text-sm text-red-500">Failed to load the performance report.</p>
 
   const chartData = data.workers.map(w => ({ name: w.fullname.split(' ')[0], hours: w.hours }))
 
   return (
     <Card className="p-5">
-      <h3 className="text-sm font-semibold text-slate-900 mb-4">Hours per Worker</h3>
+      <h3 className="text-sm font-semibold text-foreground mb-4">Hours per Worker</h3>
       {data.workers.length === 0 ? (
-        <p className="text-sm text-slate-400 text-center py-8">No activity in this period.</p>
+        <p className="text-sm text-muted-foreground text-center py-8">No activity in this period.</p>
       ) : (
         <ResponsiveContainer width="100%" height={Math.max(160, chartData.length * 36)}>
           <BarChart data={chartData} layout="vertical" barCategoryGap="25%">
-            <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" horizontal={false} />
-            <XAxis type="number" tick={{ fontSize: 11, fill: '#94A3B8' }} axisLine={false} tickLine={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" horizontal={false} />
+            <XAxis type="number" tick={{ fontSize: 11, fill: 'var(--muted-foreground)' }} axisLine={false} tickLine={false} />
             <YAxis dataKey="name" type="category" tick={{ fontSize: 12, fill: '#64748B' }} axisLine={false} tickLine={false} width={60} />
             <Tooltip content={<CustomTooltip />} />
-            <Bar dataKey="hours" fill="#1E3A5F" radius={[0, 4, 4, 0]} name="Hours" />
+            <Bar dataKey="hours" fill="var(--primary)" radius={[0, 4, 4, 0]} name="Hours" />
           </BarChart>
         </ResponsiveContainer>
       )}

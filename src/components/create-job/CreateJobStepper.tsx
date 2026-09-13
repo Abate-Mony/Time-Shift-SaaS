@@ -35,7 +35,7 @@ export function CreateJobStepper({ currentStep, furthestStep, onStepClick }: Pro
               >
                 <motion.span
                   animate={{
-                    backgroundColor: isComplete ? "#10B981" : isCurrent ? "#1E3A5F" : "#E2E8F0",
+                    backgroundColor: isComplete ? "#10B981" : isCurrent ? "var(--primary)" : "var(--border)",
                     scale: isCurrent ? 1.08 : 1,
                   }}
                   transition={{ duration: 0.25 }}
@@ -51,7 +51,7 @@ export function CreateJobStepper({ currentStep, furthestStep, onStepClick }: Pro
                 <span
                   className={cn(
                     "text-xs font-semibold truncate",
-                    isCurrent ? "text-slate-800" : isComplete ? "text-emerald-600" : "text-slate-400"
+                    isCurrent ? "text-foreground" : isComplete ? "text-emerald-600" : "text-muted-foreground"
                   )}
                 >
                   {step.shortTitle}
@@ -59,7 +59,7 @@ export function CreateJobStepper({ currentStep, furthestStep, onStepClick }: Pro
               </button>
 
               {i < STEPS.length - 1 && (
-                <div className="flex-1 h-px mx-3 bg-slate-200 min-w-0 overflow-hidden">
+                <div className="flex-1 h-px mx-3 bg-muted min-w-0 overflow-hidden">
                   <motion.div
                     className="h-full bg-emerald-500"
                     initial={false}
@@ -76,14 +76,14 @@ export function CreateJobStepper({ currentStep, furthestStep, onStepClick }: Pro
       {/* Mobile — count, title, progress bar */}
       <div className="sm:hidden min-w-0">
         <div className="flex items-baseline justify-between gap-3 mb-1.5 min-w-0">
-          <p className="text-sm font-semibold text-slate-800 truncate">{active?.title}</p>
-          <p className="text-xs text-slate-400 shrink-0">
+          <p className="text-sm font-semibold text-foreground truncate">{active?.title}</p>
+          <p className="text-xs text-muted-foreground shrink-0">
             Step {currentStep} of {TOTAL_STEPS}
           </p>
         </div>
-        <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+        <div className="h-1.5 bg-muted rounded-full overflow-hidden">
           <motion.div
-            className="h-full bg-[#1E3A5F] rounded-full"
+            className="h-full bg-[var(--primary)] rounded-full"
             initial={false}
             animate={{ width: `${(currentStep / TOTAL_STEPS) * 100}%` }}
             transition={{ duration: 0.35, ease: "easeInOut" }}

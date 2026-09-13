@@ -20,15 +20,15 @@ console.log("toekn")
     if (isLoading) {
         return (
             <div className="animate-pulse flex flex-col gap-4">
-                <div className="h-5 bg-slate-200 rounded-lg w-2/3 mx-auto" />
+                <div className="h-5 bg-muted rounded-lg w-2/3 mx-auto" />
 
-                <div className="h-4 bg-slate-200 rounded-lg w-1/2 mx-auto" />
+                <div className="h-4 bg-muted rounded-lg w-1/2 mx-auto" />
 
-                <div className="h-20 bg-slate-100 rounded-xl mt-2" />
+                <div className="h-20 bg-muted rounded-xl mt-2" />
 
-                <div className="h-11 bg-slate-200 rounded-xl" />
+                <div className="h-11 bg-muted rounded-xl" />
 
-                <div className="h-11 bg-slate-200 rounded-xl" />
+                <div className="h-11 bg-muted rounded-xl" />
             </div>
         );
     }

@@ -35,16 +35,16 @@ function ShiftRow({ job }: { job: CreateJobForm }) {
     <button
       type="button"
       onClick={() => navigate(`/worker/jobs/${job._id}`)}
-      className="w-full flex items-center gap-3 bg-white rounded-xl border border-[#E2E8F0] p-3 text-left hover:border-slate-300 hover:shadow-sm transition-all"
+      className="w-full flex items-center gap-3 bg-card rounded-xl border border-[var(--border)] p-3 text-left hover:border-slate-300 hover:shadow-sm transition-all"
     >
       <div className="flex flex-col items-center justify-center w-12 shrink-0">
-        <span className="text-xs font-bold text-slate-700">{job.startTime}</span>
-        <span className="text-[10px] text-slate-400">{job.endTime}</span>
+        <span className="text-xs font-bold text-foreground">{job.startTime}</span>
+        <span className="text-[10px] text-muted-foreground">{job.endTime}</span>
       </div>
-      <div className="w-px self-stretch bg-[#F1F5F9]" />
+      <div className="w-px self-stretch bg-[var(--border)]" />
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-slate-900 truncate">{job.title}</p>
-        <p className="text-xs text-slate-400 truncate">{job.location || job.client?.name}</p>
+        <p className="text-sm font-semibold text-foreground truncate">{job.title}</p>
+        <p className="text-xs text-muted-foreground truncate">{job.location || job.client?.name}</p>
       </div>
       <StatusBadge status={job.status!} />
     </button>
@@ -105,26 +105,26 @@ export default function ScheduleScreen() {
   return (
     <div className="flex flex-col gap-4 pb-4">
       <div>
-        <h2 className="text-lg font-bold text-slate-900">Schedule</h2>
-        <p className="text-xs text-slate-400 mt-0.5">Your upcoming assignments</p>
+        <h2 className="text-lg font-bold text-foreground">Schedule</h2>
+        <p className="text-xs text-muted-foreground mt-0.5">Your upcoming assignments</p>
       </div>
 
       {/* Week strip */}
-      <div className="bg-white rounded-2xl border border-[#E2E8F0] p-4 shadow-sm">
+      <div className="bg-card rounded-2xl border border-[var(--border)] p-4 shadow-sm">
         <div className="flex items-center justify-between mb-3">
-          <p className="text-xs font-bold text-slate-700">Week of {weekStart.format('D MMMM')}</p>
+          <p className="text-xs font-bold text-foreground">Week of {weekStart.format('D MMMM')}</p>
           <div className="flex gap-1">
             <button
               type="button"
               onClick={() => setWeekStart(w => w.subtract(7, 'day'))}
-              className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-100 transition-colors"
+              className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors"
             >
               <ChevronLeft size={14} />
             </button>
             <button
               type="button"
               onClick={() => setWeekStart(w => w.add(7, 'day'))}
-              className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-100 transition-colors"
+              className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors"
             >
               <ChevronRight size={14} />
             </button>
@@ -140,15 +140,15 @@ export default function ScheduleScreen() {
                 onClick={() => setSelectedDate(sel => sel === d.dateStr ? null : d.dateStr)}
                 className="flex flex-col items-center gap-1.5"
               >
-                <span className="text-[10px] font-semibold text-slate-400">{d.day}</span>
+                <span className="text-[10px] font-semibold text-muted-foreground">{d.day}</span>
                 <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold relative transition-colors
-                  ${isSelected ? 'bg-[#1E3A5F] text-white shadow-sm' : d.isToday ? 'bg-blue-50 text-blue-700 border-2 border-blue-200' : d.jobs.length ? 'bg-blue-50 text-blue-700 border border-blue-100' : 'text-slate-300 border border-slate-100'}`}>
+                  ${isSelected ? 'bg-[var(--primary)] text-white shadow-sm' : d.isToday ? 'bg-blue-50 text-blue-700 border-2 border-blue-200' : d.jobs.length ? 'bg-blue-50 text-blue-700 border border-blue-100' : 'text-slate-300 border border-border'}`}>
                   {d.date.date()}
                 </div>
                 {d.jobs.length > 0 && (
                   <div className="flex flex-col gap-0.5 w-full">
                     {Array.from({ length: Math.max(1, Math.ceil(d.hours / 8)) }).map((_, j) => (
-                      <div key={j} className={`h-1 rounded-full ${isSelected ? 'bg-[#1E3A5F]' : 'bg-blue-300'}`} />
+                      <div key={j} className={`h-1 rounded-full ${isSelected ? 'bg-[var(--primary)]' : 'bg-blue-300'}`} />
                     ))}
                   </div>
                 )}
@@ -160,14 +160,14 @@ export default function ScheduleScreen() {
 
       {/* Agenda */}
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-bold text-slate-700">
+        <h3 className="text-sm font-bold text-foreground">
           {selectedDate ? dayHeading(selectedDate) : 'Upcoming Shifts'}
         </h3>
         {selectedDate && (
           <button
             type="button"
             onClick={() => setSelectedDate(null)}
-            className="flex items-center gap-1 text-xs font-semibold text-slate-400 hover:text-slate-600 transition-colors"
+            className="flex items-center gap-1 text-xs font-semibold text-muted-foreground hover:text-muted-foreground transition-colors"
           >
             <X size={12} /> Clear
           </button>
@@ -176,12 +176,12 @@ export default function ScheduleScreen() {
 
       <div className="flex flex-col gap-4">
         {isLoading ? (
-          <div className="bg-white rounded-2xl border border-[#E2E8F0] p-10 text-center shadow-sm">
-            <p className="text-sm text-slate-400">Loading…</p>
+          <div className="bg-card rounded-2xl border border-[var(--border)] p-10 text-center shadow-sm">
+            <p className="text-sm text-muted-foreground">Loading…</p>
           </div>
         ) : visibleGroups.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-[#E2E8F0] p-10 text-center shadow-sm">
-            <p className="text-sm font-semibold text-slate-600">
+          <div className="bg-card rounded-2xl border border-[var(--border)] p-10 text-center shadow-sm">
+            <p className="text-sm font-semibold text-muted-foreground">
               {selectedDate ? 'No shifts on this day' : 'No upcoming shifts scheduled'}
             </p>
           </div>
@@ -189,7 +189,7 @@ export default function ScheduleScreen() {
           visibleGroups.map(([date, dayJobs]) => (
             <div key={date} className="flex flex-col gap-2">
               {!selectedDate && (
-                <p className="text-xs font-semibold text-slate-400">{dayHeading(date)}</p>
+                <p className="text-xs font-semibold text-muted-foreground">{dayHeading(date)}</p>
               )}
               <div className="flex flex-col gap-2">
                 {dayJobs.map(job => <ShiftRow key={job._id} job={job} />)}

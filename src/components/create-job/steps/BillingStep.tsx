@@ -43,8 +43,8 @@ export function BillingStep() {
   return (
     <div className="flex flex-col gap-5 min-w-0">
       {/* What you pay */}
-      <div className="bg-white rounded-xl border border-[#E2E8F0] p-6 min-w-0">
-        <h2 className="text-sm font-semibold text-slate-800 mb-4">What you pay workers</h2>
+      <div className="bg-card rounded-xl border border-[var(--border)] p-6 min-w-0">
+        <h2 className="text-sm font-semibold text-foreground mb-4">What you pay workers</h2>
 
         <div className="max-w-xs min-w-0">
           <Input
@@ -53,11 +53,11 @@ export function BillingStep() {
             step="0.01"
             min="0"
             placeholder="0.00"
-            icon={<span className="text-slate-400 text-xs font-semibold">£</span>}
+            icon={<span className="text-muted-foreground text-xs font-semibold">£</span>}
             {...register("payRate", { valueAsNumber: true })}
             className={cn(errors.payRate && "border-red-500!")}
           />
-          <p className="text-[11px] text-slate-400 mt-1">
+          <p className="text-[11px] text-muted-foreground mt-1">
             Per hour, paid to each assigned worker
           </p>
           <FieldError message={errors.payRate?.message as string} />
@@ -65,14 +65,14 @@ export function BillingStep() {
       </div>
 
       {/* What you charge */}
-      <div className="bg-white rounded-xl border border-[#E2E8F0] p-6 min-w-0">
-        <h2 className="text-sm font-semibold text-slate-800 mb-1">What you charge the client</h2>
+      <div className="bg-card rounded-xl border border-[var(--border)] p-6 min-w-0">
+        <h2 className="text-sm font-semibold text-foreground mb-1">What you charge the client</h2>
 
         {selectedClient && clientDefaultRate !== null && onClientDefault ? (
-          <div className="mt-3 flex items-center justify-between gap-3 p-3.5 rounded-xl bg-slate-50 border border-slate-100 min-w-0">
+          <div className="mt-3 flex items-center justify-between gap-3 p-3.5 rounded-xl bg-muted border border-border min-w-0">
             <div className="min-w-0">
-              <p className="text-sm font-semibold text-slate-800 truncate">{selectedClient.name}</p>
-              <p className="text-xs text-slate-500 mt-0.5">
+              <p className="text-sm font-semibold text-foreground truncate">{selectedClient.name}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
                 {clientDefaultType === "fixed"
                   ? `${formatCurrency(clientDefaultRate)} fixed per job`
                   : `${formatCurrency(clientDefaultRate)}/hour`}{" "}
@@ -95,7 +95,7 @@ export function BillingStep() {
             </button>
           </div>
         ) : (
-          <p className="text-[11px] text-slate-400 mb-4">
+          <p className="text-[11px] text-muted-foreground mb-4">
             {selectedClient
               ? `Overriding ${selectedClient.name}'s default for this job only.`
               : "Pick a client on step 1 to use their default rate."}
@@ -110,8 +110,8 @@ export function BillingStep() {
                 className={cn(
                   "flex-1 min-w-0 flex items-start gap-3 p-3.5 rounded-xl border-2 cursor-pointer transition-all",
                   chargeType === opt.value
-                    ? "border-[#1E3A5F] bg-[#1E3A5F]/[0.03]"
-                    : "border-[#E2E8F0] hover:border-slate-300"
+                    ? "border-[var(--primary)] bg-[var(--primary)]/[0.03]"
+                    : "border-[var(--border)] hover:border-slate-300"
                 )}
               >
                 <input
@@ -125,14 +125,14 @@ export function BillingStep() {
                 <span
                   className={cn(
                     "mt-0.5 w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors",
-                    chargeType === opt.value ? "border-[#1E3A5F] bg-[#1E3A5F]" : "border-slate-300"
+                    chargeType === opt.value ? "border-[var(--primary)] bg-[var(--primary)]" : "border-slate-300"
                   )}
                 >
                   {chargeType === opt.value && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
                 </span>
                 <span className="min-w-0">
-                  <span className="block text-sm font-semibold text-slate-800">{opt.label}</span>
-                  <span className="block text-[11px] text-slate-400 mt-0.5">{opt.sub}</span>
+                  <span className="block text-sm font-semibold text-foreground">{opt.label}</span>
+                  <span className="block text-[11px] text-muted-foreground mt-0.5">{opt.sub}</span>
                 </span>
               </label>
             ))}
@@ -154,7 +154,7 @@ export function BillingStep() {
                   step="0.01"
                   min="0"
                   placeholder="0.00"
-                  icon={<span className="text-slate-400 text-xs font-semibold">£</span>}
+                  icon={<span className="text-muted-foreground text-xs font-semibold">£</span>}
                   {...register("chargeAmount", { valueAsNumber: true })}
                   className={cn(errors.chargeAmount && "border-red-500!")}
                 />
@@ -175,7 +175,7 @@ export function BillingStep() {
                   step="0.01"
                   min="0"
                   placeholder="0.00"
-                  icon={<span className="text-slate-400 text-xs font-semibold">£</span>}
+                  icon={<span className="text-muted-foreground text-xs font-semibold">£</span>}
                   {...register("chargeRate", { valueAsNumber: true })}
                   className={cn(errors.chargeRate && "border-red-500!")}
                 />
@@ -186,8 +186,8 @@ export function BillingStep() {
         </div>
 
         {shiftHours > 0 && (payRate > 0 || totalCharge > 0) && (
-          <div className="mt-5 pt-5 border-t border-[#F1F5F9] min-w-0">
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">
+          <div className="mt-5 pt-5 border-t border-[var(--border)] min-w-0">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
               Estimated for this shift
               {selectedWorkers.length > 1 && ` · ${selectedWorkers.length} workers`}
             </p>
@@ -199,7 +199,7 @@ export function BillingStep() {
               ].map(s => (
                 <div
                   key={s.label}
-                  className="bg-slate-50 rounded-xl p-3 text-center border border-slate-100 min-w-0"
+                  className="bg-muted rounded-xl p-3 text-center border border-border min-w-0"
                 >
                   <p
                     className={cn(
@@ -208,12 +208,12 @@ export function BillingStep() {
                         ? s.value >= 0
                           ? "text-emerald-600"
                           : "text-red-600"
-                        : "text-slate-900"
+                        : "text-foreground"
                     )}
                   >
                     {formatCurrency(s.value)}
                   </p>
-                  <p className="text-[10px] text-slate-400 mt-0.5 font-medium">{s.label}</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5 font-medium">{s.label}</p>
                 </div>
               ))}
             </div>

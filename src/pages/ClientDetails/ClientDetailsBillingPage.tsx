@@ -7,7 +7,7 @@ export default function ClentBillingPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <SectionCard>
                 <SectionLabel>Billing details</SectionLabel>
-                <div className="divide-y divide-slate-100">
+                <div className="divide-y divide-border">
                     <DataRow label="Billing email" value={client.billingEmail} />
                     <DataRow label="VAT number" value={client.vatNumber} />
                     <DataRow label="Payment terms" value={`${client.paymentTermsDays} days`} />
@@ -15,7 +15,7 @@ export default function ClentBillingPage() {
             </SectionCard>
             <SectionCard>
                 <SectionLabel>Default charge</SectionLabel>
-                <div className="divide-y divide-slate-100">
+                <div className="divide-y divide-border">
                     <DataRow label="Charge type" value={client.defaultChargeType === 'hourly' ? 'Hourly rate' : 'Fixed price'} />
                     <DataRow
                         label="Rate"
@@ -24,7 +24,7 @@ export default function ClentBillingPage() {
                             : `£${client.defaultChargeRate.toFixed(2)}`}
                     />
                 </div>
-                <p className="text-xs text-slate-400 mt-3 leading-relaxed">
+                <p className="text-xs text-muted-foreground mt-3 leading-relaxed">
                     These values prefill new jobs for this client. Managers can override per job.
                 </p>
             </SectionCard>

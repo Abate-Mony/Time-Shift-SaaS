@@ -167,7 +167,7 @@ export default function SearchLocation({
             )}
 
             {suggestions.length > 0 && (
-                <div className="absolute z-50 mt-2 max-h-72 w-full overflow-auto rounded-lg border bg-white shadow-lg">
+                <div className="absolute z-50 mt-2 max-h-72 w-full overflow-auto rounded-lg border bg-card shadow-lg">
                     {suggestions.map((suggestion) => (
                         <button
                             key={suggestion.id}

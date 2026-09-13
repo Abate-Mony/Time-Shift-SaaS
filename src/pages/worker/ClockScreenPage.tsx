@@ -153,7 +153,7 @@ export default function ClockScreen() {
   if (clockState === 'done') {
     return (
       <div className="flex flex-col items-center pb-4 animate-fade-in">
-        <div className="w-full bg-white rounded-3xl border border-[#E2E8F0] overflow-hidden shadow-sm mb-4">
+        <div className="w-full bg-card rounded-3xl border border-border overflow-hidden shadow-sm dark:shadow-none mb-4">
           <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 p-8 text-center relative overflow-hidden">
             <div className="absolute inset-0 opacity-10"
               style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1.5px, transparent 0)', backgroundSize: '20px 20px' }} />
@@ -173,27 +173,27 @@ export default function ClockScreen() {
                 { label: 'Break Time', value: formatSecondsAsDuration(doneSnapshot!.breakSeconds) },
                 { label: 'Breaks Taken', value: doneSnapshot!.breaksTaken },
               ].map(s => (
-                <div key={s.label} className="bg-slate-50 rounded-xl p-3 text-center border border-slate-100">
-                  <p className="text-base font-bold text-slate-900">{s.value}</p>
-                  <p className="text-[10px] text-slate-400 mt-0.5 font-medium">{s.label}</p>
+                <div key={s.label} className="bg-muted rounded-xl p-3 text-center border border-border">
+                  <p className="text-base font-bold text-foreground">{s.value}</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5 font-medium">{s.label}</p>
                 </div>
               ))}
             </div>
 
-            <p className="text-xs text-slate-500 text-center mb-5 bg-blue-50 border border-blue-100 rounded-xl px-4 py-2.5">
+            <p className="text-xs text-blue-800 dark:text-blue-300 text-center mb-5 bg-blue-50 border border-blue-100 dark:bg-blue-500/10 dark:border-blue-500/25 rounded-xl px-4 py-2.5">
               ✓ Your hours have been recorded automatically and sent to your manager.
             </p>
 
             <div className="flex flex-col gap-2.5">
-              <button className="w-full h-11 rounded-xl border border-[#E2E8F0] text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors flex items-center justify-center gap-2">
-                <Camera size={15} className="text-slate-400" /> Upload Site Photos
+              <button className="w-full h-11 rounded-xl border border-border text-sm font-semibold text-foreground hover:bg-muted transition-colors flex items-center justify-center gap-2">
+                <Camera size={15} className="text-muted-foreground" /> Upload Site Photos
               </button>
               {!showNote ? (
                 <Button
                   onClick={() => setShowNote(true)}
-                  className="w-full h-11 rounded-xl border border-[#E2E8F0] text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors flex items-center justify-center gap-2"
+                  className="w-full h-11 rounded-xl border border-border text-sm font-semibold text-foreground hover:bg-muted transition-colors flex items-center justify-center gap-2"
                 >
-                  <FileText size={15} className="text-slate-400" /> Add a Note
+                  <FileText size={15} className="text-muted-foreground" /> Add a Note
                 </Button>
               ) : (
                 <div>
@@ -202,12 +202,12 @@ export default function ClockScreen() {
                     onChange={e => setNote(e.target.value)}
                     placeholder="Any notes for your manager..."
                     rows={3}
-                    className="w-full px-3 py-2.5 border border-[#E2E8F0] rounded-xl text-sm text-slate-700 bg-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all resize-none"
+                    className="w-full px-3 py-2.5 border border-border rounded-xl text-sm text-foreground bg-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-500/30 focus:border-blue-400 transition-all resize-none"
                   />
                 </div>
               )}
               <Button
-                className="w-full h-12 rounded-xl bg-[#1E3A5F] text-white text-sm font-bold hover:bg-[#162D4A] transition-colors mt-1"
+                className="w-full h-12 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors mt-1"
               >
                 Done
               </Button>
@@ -223,17 +223,17 @@ export default function ClockScreen() {
     <div className="flex flex-col gap-4 pb-4 animate-fade-in">
       {/* Job context */}
       {job && (
-        <div className="bg-white rounded-2xl border border-[#E2E8F0] px-4 py-3.5 flex items-center gap-3 shadow-sm">
-          <div className="w-8 h-8 rounded-xl bg-[#1E3A5F]/10 flex items-center justify-center shrink-0">
-            <Briefcase size={14} className="text-[#1E3A5F]" />
+        <div className="bg-card rounded-2xl border border-border px-4 py-3.5 flex items-center gap-3 shadow-sm dark:shadow-none">
+          <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+            <Briefcase size={14} className="text-primary" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-xs text-slate-400 font-medium">Current Job</p>
-            <p className="text-sm font-semibold text-slate-900 truncate">{job.title}</p>
+            <p className="text-xs text-muted-foreground font-medium">Current Job</p>
+            <p className="text-sm font-semibold text-foreground truncate">{job.title}</p>
           </div>
           <div className="text-right shrink-0">
-            <p className="text-[10px] text-slate-400">Scheduled</p>
-            <p className="text-xs font-bold text-slate-700">{job.startTime}–{job.endTime}</p>
+            <p className="text-[10px] text-muted-foreground">Scheduled</p>
+            <p className="text-xs font-bold text-foreground">{job.startTime}–{job.endTime}</p>
           </div>
         </div>
       )}
@@ -315,13 +315,13 @@ export default function ClockScreen() {
           <button
             onClick={startBreak}
             disabled={isBreakActionLoading}
-            className="h-14 rounded-2xl bg-amber-50 border border-amber-200 text-amber-700 text-sm font-bold hover:bg-amber-100 active:scale-[0.97] transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+            className="h-14 rounded-2xl bg-amber-50 border border-amber-200 text-amber-700 dark:bg-amber-500/10 dark:border-amber-500/25 dark:text-amber-400 text-sm font-bold hover:bg-amber-100 dark:hover:bg-amber-500/20 active:scale-[0.97] transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {isBreakActionLoading ? <Loader2 size={16} className="animate-spin" /> : <Coffee size={16} />} Take Break
           </button>
           <button
             onClick={finish}
-            className="h-14 rounded-2xl bg-[#1E3A5F] text-white text-sm font-bold hover:bg-[#162D4A] active:scale-[0.97] transition-all flex items-center justify-center gap-2 shadow-sm shadow-[#1E3A5F]/25"
+            className="h-14 rounded-2xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 active:scale-[0.97] transition-all flex items-center justify-center gap-2 shadow-sm shadow-primary/25"
           >
             <Square size={14} fill="currentColor" /> Finish Work
           </button>
@@ -339,7 +339,7 @@ export default function ClockScreen() {
           </button>
           <button
             onClick={finish}
-            className="w-full h-11 rounded-xl bg-slate-100 text-slate-600 text-sm font-semibold hover:bg-slate-200 transition-colors flex items-center justify-center gap-2"
+            className="w-full h-11 rounded-xl bg-muted text-muted-foreground text-sm font-semibold hover:bg-muted/70 transition-colors flex items-center justify-center gap-2"
           >
             <Square size={13} fill="currentColor" /> Finish Shift Instead
           </button>
@@ -354,9 +354,9 @@ export default function ClockScreen() {
             { label: 'Billable', value: formatSecondsAsDuration(elapsedSeconds - breakSeconds) },
             { label: 'Est. Finish', value: job?.endTime ?? '--:--' },
           ].map(s => (
-            <div key={s.label} className="bg-white rounded-xl border border-[#E2E8F0] p-3 text-center shadow-sm">
-              <p className="text-sm font-bold text-slate-900 mono">{s.value}</p>
-              <p className="text-[10px] text-slate-400 mt-0.5 font-medium">{s.label}</p>
+            <div key={s.label} className="bg-card rounded-xl border border-border p-3 text-center shadow-sm dark:shadow-none">
+              <p className="text-sm font-bold text-foreground mono">{s.value}</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5 font-medium">{s.label}</p>
             </div>
           ))}
         </div>

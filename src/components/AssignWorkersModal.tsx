@@ -102,7 +102,7 @@ export default function AssignWorkersModal({
                 </DialogHeader>
 
                 <div className="relative">
-                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                     <Input
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
@@ -111,15 +111,15 @@ export default function AssignWorkersModal({
                     />
                 </div>
 
-                <div className="max-h-80 overflow-y-auto border border-[#E2E8F0] rounded-xl">
+                <div className="max-h-80 overflow-y-auto border border-[var(--border)] rounded-xl">
                     {isLoading ? (
                         <div className="flex items-center justify-center py-10">
-                            <Loader2 size={18} className="animate-spin text-slate-400" />
+                            <Loader2 size={18} className="animate-spin text-muted-foreground" />
                         </div>
                     ) : visibleWorkers.length === 0 ? (
                         <div className="py-10 text-center">
                             <Users size={18} className="text-slate-300 mx-auto mb-2" />
-                            <p className="text-xs text-slate-400">
+                            <p className="text-xs text-muted-foreground">
                                 {allWorkers.length > 0 ? "No workers match your search" : "No workers found"}
                             </p>
                         </div>
@@ -134,21 +134,21 @@ export default function AssignWorkersModal({
                                     key={w._id}
                                     onClick={() => toggleWorker(w)}
                                     className={cn(
-                                        "w-full flex items-center gap-3 px-4 py-3 transition-colors border-b border-[#F1F5F9] last:border-0",
-                                        isAssigned ? "opacity-50 cursor-not-allowed" : "hover:bg-slate-50",
+                                        "w-full flex items-center gap-3 px-4 py-3 transition-colors border-b border-[var(--border)] last:border-0",
+                                        isAssigned ? "opacity-50 cursor-not-allowed" : "hover:bg-muted",
                                         isSelected && "bg-blue-50/40"
                                     )}
                                 >
                                     <Avatar initials={w.fullname.slice(0, 2)} size="sm" index={i} src={w.profilePhoto?.url} />
                                     <div className="flex-1 text-left min-w-0">
-                                        <p className="text-sm font-medium text-slate-800 truncate">{w.fullname}</p>
-                                        <p className="text-xs text-slate-400">
+                                        <p className="text-sm font-medium text-foreground truncate">{w.fullname}</p>
+                                        <p className="text-xs text-muted-foreground">
                                             {isAssigned ? "Already assigned" : w.role}
                                         </p>
                                     </div>
                                     <div className={cn(
                                         "w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all shrink-0",
-                                        isSelected || isAssigned ? "bg-[#1E3A5F] border-[#1E3A5F]" : "border-slate-300"
+                                        isSelected || isAssigned ? "bg-[var(--primary)] border-[var(--primary)]" : "border-slate-300"
                                     )}>
                                         {(isSelected || isAssigned) && <Check size={11} className="text-white" />}
                                     </div>
@@ -166,8 +166,8 @@ export default function AssignWorkersModal({
                         className={cn(
                             "w-full h-11 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 disabled:cursor-not-allowed",
                             selected.length > 0
-                                ? "bg-[#1E3A5F] text-white hover:bg-[#162D4A] shadow-sm shadow-[#1E3A5F]/25"
-                                : "bg-slate-100 text-slate-400"
+                                ? "bg-[var(--primary)] text-white hover:bg-primary/90 shadow-sm shadow-[var(--primary)]/25"
+                                : "bg-muted text-muted-foreground"
                         )}
                     >
                         {addWorkersMutation.isPending ? (

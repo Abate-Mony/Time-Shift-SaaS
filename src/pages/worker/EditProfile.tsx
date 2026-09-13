@@ -69,17 +69,17 @@ export default function EditProfileScreen() {
             <button
                 type="button"
                 onClick={() => navigate(-1)}
-                className="flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors -mb-1"
+                className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors -mb-1"
             >
                 <ChevronLeft size={16} /> Back
             </button>
 
             <div>
-                <h2 className="text-lg font-bold text-slate-900">Edit Profile</h2>
-                <p className="text-xs text-slate-400 mt-1">Update your personal details</p>
+                <h2 className="text-lg font-bold text-foreground">Edit Profile</h2>
+                <p className="text-xs text-muted-foreground mt-1">Update your personal details</p>
             </div>
 
-            <div className="bg-white rounded-2xl border border-[#E2E8F0] p-5 shadow-sm">
+            <div className="bg-card rounded-2xl border border-[var(--border)] p-5 shadow-sm">
                 <div className="flex items-center gap-3 mb-5">
                     <input
                         ref={photoInputRef}
@@ -99,7 +99,7 @@ export default function EditProfileScreen() {
                         className="relative shrink-0"
                     >
                         <Avatar initials={user?.fullname?.slice(0, 3)} size="xl" index={0} src={user?.profilePhoto?.url} />
-                        <span className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full bg-[#1E3A5F] border-2 border-white flex items-center justify-center">
+                        <span className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full bg-[var(--primary)] border-2 border-white flex items-center justify-center">
                             {uploadPhotoMutation.isPending ? (
                                 <Loader2 size={9} className="text-white animate-spin" />
                             ) : (
@@ -108,8 +108,8 @@ export default function EditProfileScreen() {
                         </span>
                     </button>
                     <div className="min-w-0">
-                        <p className="text-sm font-semibold text-slate-800">{user?.fullname}</p>
-                        <p className="text-xs text-slate-400 mt-0.5">{user?.email}</p>
+                        <p className="text-sm font-semibold text-foreground">{user?.fullname}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{user?.email}</p>
                         {user?.profilePhoto && (
                             <button
                                 type="button"
@@ -140,10 +140,10 @@ export default function EditProfileScreen() {
                     </div>
 
                     <div className="flex flex-col gap-1.5">
-                        <label className="text-sm font-medium text-slate-700">Gender</label>
+                        <label className="text-sm font-medium text-foreground">Gender</label>
                         <select
                             {...register("gender")}
-                            className="h-9 px-3 border border-[#E2E8F0] rounded-lg text-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#3B82F6]/30 focus:border-[#3B82F6] transition-all appearance-none cursor-pointer"
+                            className="h-9 px-3 border border-[var(--border)] rounded-lg text-sm text-foreground bg-card focus:outline-none focus:ring-2 focus:ring-[#3B82F6]/30 focus:border-[#3B82F6] transition-all appearance-none cursor-pointer"
                         >
                             <option value="">Not specified</option>
                             {GENDER_OPTIONS.map(g => (
@@ -156,7 +156,7 @@ export default function EditProfileScreen() {
                     <button
                         type="submit"
                         disabled={isSubmitting}
-                        className="mt-2 h-11 rounded-xl bg-[#1E3A5F] text-white text-sm font-bold hover:bg-[#162D4A] active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-sm shadow-[#1E3A5F]/25 disabled:opacity-60 disabled:cursor-not-allowed"
+                        className="mt-2 h-11 rounded-xl bg-[var(--primary)] text-white text-sm font-bold hover:bg-primary/90 active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-sm shadow-[var(--primary)]/25 disabled:opacity-60 disabled:cursor-not-allowed"
                     >
                         {isSubmitting && <Loader2 size={14} className="animate-spin" />}
                         Save Changes

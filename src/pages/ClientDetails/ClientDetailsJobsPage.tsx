@@ -12,7 +12,7 @@ function jobStatusStyle(status?: string) {
     if (status === 'published') return 'bg-blue-50 text-blue-700'
     if (status === 'completed') return 'bg-emerald-50 text-emerald-700'
     if (status === 'cancelled') return 'bg-red-50 text-red-500'
-    return 'bg-slate-100 text-slate-500'
+    return 'bg-muted text-muted-foreground'
 }
 
 const clientJobsQuery = (clientId: string) => ({
@@ -42,38 +42,38 @@ export function ClientDetailsaJobsPage() {
     return (
         <div>
             <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
-                <div className="flex items-center gap-1 bg-slate-100 rounded-xl p-1">
+                <div className="flex items-center gap-1 bg-muted rounded-xl p-1">
                     {(['upcoming', 'past', 'all'] as const).map(f => (
                         <button key={f} onClick={() => setJobFilter(f)}
-                            className={`h-7 px-3 rounded-lg text-xs font-semibold capitalize transition-all ${jobFilter === f ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                            className={`h-7 px-3 rounded-lg text-xs font-semibold capitalize transition-all ${jobFilter === f ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
                                 }`}>
                             {f === 'all' ? `All (${jobs.length})` : f === 'upcoming' ? `Upcoming (${jobs.filter(isUpcoming).length})` : `Past (${jobs.filter(j => !isUpcoming(j)).length})`}
                         </button>
                     ))}
                 </div>
                 <Link to={"/create-job"}
-                    className="h-8 px-3.5 bg-[#1E3A5F] text-white text-xs font-bold rounded-xl hover:bg-[#162D4A] transition-colors flex items-center gap-1.5"
+                    className="h-8 px-3.5 bg-[var(--primary)] text-white text-xs font-bold rounded-xl hover:bg-primary/90 transition-colors flex items-center gap-1.5"
                 >
                     <Plus size={12} /> Create job
                 </Link>
             </div>
 
             {filtered.length === 0 ? (
-                <div className="bg-white border border-[#E2E8F0] rounded-xl flex flex-col items-center justify-center py-12 text-center">
+                <div className="bg-card border border-[var(--border)] rounded-xl flex flex-col items-center justify-center py-12 text-center">
                     <Briefcase size={20} className="text-slate-300 mb-2" />
-                    <p className="text-sm text-slate-500">No {jobFilter} jobs for this client</p>
+                    <p className="text-sm text-muted-foreground">No {jobFilter} jobs for this client</p>
                 </div>
             ) : (
-                <div className="bg-white border border-[#E2E8F0] rounded-xl overflow-hidden">
+                <div className="bg-card border border-[var(--border)] rounded-xl overflow-hidden">
                     {filtered.map((job, i) => (
                         <Link to={`/jobs/${job._id}`}
                             state={backLinkState(client.name)}
                             key={job._id}
-                            className={`w-full flex items-center justify-between gap-4 px-5 py-3.5 hover:bg-slate-50/70 transition-colors text-left ${i > 0 ? 'border-t border-[#E2E8F0]' : ''}`}
+                            className={`w-full flex items-center justify-between gap-4 px-5 py-3.5 hover:bg-muted/70 transition-colors text-left ${i > 0 ? 'border-t border-[var(--border)]' : ''}`}
                         >
                             <div className="flex-1 min-w-0">
-                                <p className="text-sm font-semibold text-slate-900 truncate">{job.title}</p>
-                                <div className="flex items-center gap-3 mt-0.5 text-xs text-slate-500 flex-wrap">
+                                <p className="text-sm font-semibold text-foreground truncate">{job.title}</p>
+                                <div className="flex items-center gap-3 mt-0.5 text-xs text-muted-foreground flex-wrap">
                                     {job.date && <span className="flex items-center gap-1"><Calendar size={10} /> {fmtDate(job.date)}</span>}
                                     {(job.startTime || job.endTime) && <span>{job.startTime}–{job.endTime}</span>}
                                     {job.location && (

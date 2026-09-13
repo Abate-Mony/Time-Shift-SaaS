@@ -43,7 +43,7 @@ function SiteStatusBadge({ status }: { status: Site['status'] }) {
     return (
         <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${status === 'active'
             ? 'bg-emerald-50 text-emerald-700'
-            : 'bg-slate-100 text-slate-500'
+            : 'bg-muted text-muted-foreground'
             }`}>
             {status === 'active' ? 'Active' : 'Inactive'}
         </span>
@@ -51,22 +51,22 @@ function SiteStatusBadge({ status }: { status: Site['status'] }) {
 }
 
 function SectionCard({ children, className = '' }: { children: React.ReactNode; className?: string }) {
-    return <div className={`bg-white border border-[#E2E8F0] rounded-xl p-5 ${className}`}>{children}</div>
+    return <div className={`bg-card border border-[var(--border)] rounded-xl p-5 ${className}`}>{children}</div>
 }
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
-    return <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">{children}</p>
+    return <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">{children}</p>
 }
 
 function JobRow({ job }: { job: SiteJobSummary }) {
     return (
         <Link
             to={`/jobs/${job._id}`}
-            className="flex items-center justify-between gap-3 py-2.5 border-b border-[#F1F5F9] last:border-0 hover:bg-slate-50/70 transition-colors -mx-1 px-1 rounded-lg"
+            className="flex items-center justify-between gap-3 py-2.5 border-b border-[var(--border)] last:border-0 hover:bg-muted/70 transition-colors -mx-1 px-1 rounded-lg"
         >
             <div className="min-w-0">
-                <p className="text-sm font-medium text-slate-800 truncate">{job.title}</p>
-                <p className="text-xs text-slate-400 mt-0.5 flex items-center gap-1.5">
+                <p className="text-sm font-medium text-foreground truncate">{job.title}</p>
+                <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1.5">
                     <Calendar size={10} /> {new Date(job.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
                     · {job.startTime}–{job.endTime}
                 </p>
@@ -79,22 +79,22 @@ function StatusDialog({ site, onConfirm, onClose }: { site: Site; onConfirm: () 
     const isActive = site.status === 'active'
     return (
         <DialogBackdrop onClose={onClose}>
-            <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden">
+            <div className="bg-card rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden">
                 <div className="p-6">
                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-4 ${isActive ? 'bg-amber-50' : 'bg-emerald-50'}`}>
                         {isActive ? <Archive size={18} className="text-amber-600" /> : <RefreshCw size={18} className="text-emerald-600" />}
                     </div>
-                    <h3 className="text-base font-bold text-slate-900 mb-2">
+                    <h3 className="text-base font-bold text-foreground mb-2">
                         {isActive ? `Mark ${site.name} as inactive?` : 'Reactivate site'}
                     </h3>
-                    <p className="text-sm text-slate-500 leading-relaxed">
+                    <p className="text-sm text-muted-foreground leading-relaxed">
                         {isActive
                             ? "Historical jobs at this site remain intact. It just won't show up when scheduling new site-backed jobs until reactivated."
                             : `${site.name} will be available again when scheduling new jobs.`}
                     </p>
                 </div>
-                <div className="border-t border-[#E2E8F0] px-6 py-4 flex items-center justify-end gap-2.5">
-                    <button onClick={onClose} className="h-9 px-4 text-sm font-semibold text-slate-600 hover:text-slate-800 transition-colors">Cancel</button>
+                <div className="border-t border-[var(--border)] px-6 py-4 flex items-center justify-end gap-2.5">
+                    <button onClick={onClose} className="h-9 px-4 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors">Cancel</button>
                     <button onClick={onConfirm} className={`h-9 px-5 text-sm font-bold rounded-xl transition-colors ${isActive ? 'bg-amber-500 text-white hover:bg-amber-600' : 'bg-emerald-600 text-white hover:bg-emerald-700'}`}>
                         {isActive ? 'Mark inactive' : 'Reactivate site'}
                     </button>
@@ -163,42 +163,42 @@ export function SiteDetailPage() {
 
     return (
         <div className="p-6 max-w-5xl mx-auto">
-            <Link to={back.to} className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition-colors mb-5">
+            <Link to={back.to} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-5">
                 <ChevronLeft size={14} /> Back to {back.label}
             </Link>
 
             {/* Header */}
-            <div className="bg-white border border-[#E2E8F0] rounded-xl p-5 mb-5">
+            <div className="bg-card border border-[var(--border)] rounded-xl p-5 mb-5">
                 <div className="flex items-start gap-4 flex-wrap">
-                    <div className="w-12 h-12 rounded-xl bg-[#1E3A5F]/8 flex items-center justify-center shrink-0">
-                        <MapPin size={20} className="text-[#1E3A5F]" />
+                    <div className="w-12 h-12 rounded-xl bg-[var(--primary)]/8 flex items-center justify-center shrink-0">
+                        <MapPin size={20} className="text-[var(--primary)]" />
                     </div>
                     <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2.5 flex-wrap mb-1">
-                            <h1 className="text-lg font-bold text-slate-900 truncate">{site.name}</h1>
+                            <h1 className="text-lg font-bold text-foreground truncate">{site.name}</h1>
                             <SiteStatusBadge status={site.status} />
                         </div>
-                        <div className="flex items-center gap-4 flex-wrap text-xs text-slate-500">
+                        <div className="flex items-center gap-4 flex-wrap text-xs text-muted-foreground">
                             {clientRef && (
-                                <Link to={`/clients/${clientRef._id}`} className="flex items-center gap-1 hover:text-[#1E3A5F] transition-colors">
-                                    <Building2 size={10} className="text-slate-400" />{clientRef.name}
+                                <Link to={`/clients/${clientRef._id}`} className="flex items-center gap-1 hover:text-[var(--primary)] transition-colors">
+                                    <Building2 size={10} className="text-muted-foreground" />{clientRef.name}
                                 </Link>
                             )}
                             {site.formattedAddress && (
-                                <span className="flex items-center gap-1"><MapPin size={10} className="text-slate-400" />{site.formattedAddress}</span>
+                                <span className="flex items-center gap-1"><MapPin size={10} className="text-muted-foreground" />{site.formattedAddress}</span>
                             )}
                         </div>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                         <button
                             onClick={() => setShowEdit(true)}
-                            className="h-9 px-4 border border-[#E2E8F0] text-slate-700 text-sm font-semibold rounded-xl hover:bg-slate-50 transition-colors flex items-center gap-1.5"
+                            className="h-9 px-4 border border-[var(--border)] text-foreground text-sm font-semibold rounded-xl hover:bg-muted transition-colors flex items-center gap-1.5"
                         >
                             <Pencil size={13} /> Edit
                         </button>
                         <button
                             onClick={() => setShowStatus(true)}
-                            className="h-9 px-4 border border-[#E2E8F0] text-slate-700 text-sm font-semibold rounded-xl hover:bg-slate-50 transition-colors flex items-center gap-1.5"
+                            className="h-9 px-4 border border-[var(--border)] text-foreground text-sm font-semibold rounded-xl hover:bg-muted transition-colors flex items-center gap-1.5"
                         >
                             {site.status === 'active' ? <><Archive size={13} /> Deactivate</> : <><RefreshCw size={13} /> Reactivate</>}
                         </button>
@@ -211,19 +211,19 @@ export function SiteDetailPage() {
                 <SectionCard>
                     <SectionLabel>Geofence</SectionLabel>
                     {site.geofenceMode && site.geofenceMode !== 'off' ? (
-                        <div className="flex items-center gap-2 text-sm text-slate-700">
-                            <ShieldCheck size={14} className="text-slate-400" />
+                        <div className="flex items-center gap-2 text-sm text-foreground">
+                            <ShieldCheck size={14} className="text-muted-foreground" />
                             {site.geofenceRadiusMeters ?? 150}m radius · {site.geofenceMode === 'enforce' ? 'Enforced' : 'Warn only'}
                         </div>
                     ) : (
-                        <p className="text-sm text-slate-400 italic">Using your company's default geofence settings.</p>
+                        <p className="text-sm text-muted-foreground italic">Using your company's default geofence settings.</p>
                     )}
                     {directionsHref && (
                         <a
                             href={directionsHref}
                             target="_blank"
                             rel="noreferrer"
-                            className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-[#1E3A5F] hover:opacity-75 transition-opacity"
+                            className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--primary)] hover:opacity-75 transition-opacity"
                         >
                             <Navigation size={11} /> Get directions
                         </a>
@@ -235,18 +235,18 @@ export function SiteDetailPage() {
                     <SectionLabel>Site contact</SectionLabel>
                     {site.contact?.name || site.contact?.phone || site.contact?.email ? (
                         <div className="flex flex-col gap-1.5">
-                            {site.contact?.name && <p className="text-sm font-semibold text-slate-800">{site.contact.name}</p>}
+                            {site.contact?.name && <p className="text-sm font-semibold text-foreground">{site.contact.name}</p>}
                             {site.contact?.phone && (
-                                <span className="flex items-center gap-2 text-xs text-slate-600"><Phone size={11} className="text-slate-400" />{site.contact.phone}</span>
+                                <span className="flex items-center gap-2 text-xs text-muted-foreground"><Phone size={11} className="text-muted-foreground" />{site.contact.phone}</span>
                             )}
                             {site.contact?.email && (
-                                <a href={`mailto:${site.contact.email}`} className="flex items-center gap-2 text-xs text-slate-600 hover:text-[#1E3A5F] transition-colors">
-                                    <Mail size={11} className="text-slate-400" />{site.contact.email}
+                                <a href={`mailto:${site.contact.email}`} className="flex items-center gap-2 text-xs text-muted-foreground hover:text-[var(--primary)] transition-colors">
+                                    <Mail size={11} className="text-muted-foreground" />{site.contact.email}
                                 </a>
                             )}
                         </div>
                     ) : (
-                        <p className="text-sm text-slate-400 italic">No site contact on file.</p>
+                        <p className="text-sm text-muted-foreground italic">No site contact on file.</p>
                     )}
                 </SectionCard>
 
@@ -257,20 +257,20 @@ export function SiteDetailPage() {
                         <div className="flex flex-col gap-3">
                             {site.instructions && (
                                 <div>
-                                    <p className="text-xs font-semibold text-slate-600 mb-0.5">General</p>
-                                    <p className="text-sm text-slate-700 leading-relaxed">{site.instructions}</p>
+                                    <p className="text-xs font-semibold text-muted-foreground mb-0.5">General</p>
+                                    <p className="text-sm text-foreground leading-relaxed">{site.instructions}</p>
                                 </div>
                             )}
                             {site.accessInstructions && (
                                 <div>
-                                    <p className="text-xs font-semibold text-slate-600 mb-0.5">Access</p>
-                                    <p className="text-sm text-slate-700 leading-relaxed">{site.accessInstructions}</p>
+                                    <p className="text-xs font-semibold text-muted-foreground mb-0.5">Access</p>
+                                    <p className="text-sm text-foreground leading-relaxed">{site.accessInstructions}</p>
                                 </div>
                             )}
                             {site.parkingInstructions && (
                                 <div>
-                                    <p className="text-xs font-semibold text-slate-600 mb-0.5">Parking</p>
-                                    <p className="text-sm text-slate-700 leading-relaxed">{site.parkingInstructions}</p>
+                                    <p className="text-xs font-semibold text-muted-foreground mb-0.5">Parking</p>
+                                    <p className="text-sm text-foreground leading-relaxed">{site.parkingInstructions}</p>
                                 </div>
                             )}
                         </div>
@@ -284,7 +284,7 @@ export function SiteDetailPage() {
                         <Briefcase size={12} className="text-slate-300" />
                     </div>
                     {upcomingJobs.length === 0 ? (
-                        <p className="text-sm text-slate-400 italic">No upcoming jobs at this site.</p>
+                        <p className="text-sm text-muted-foreground italic">No upcoming jobs at this site.</p>
                     ) : (
                         <div>{upcomingJobs.map(j => <JobRow key={j._id} job={j} />)}</div>
                     )}
@@ -297,7 +297,7 @@ export function SiteDetailPage() {
                         <Briefcase size={12} className="text-slate-300" />
                     </div>
                     {recentJobs.length === 0 ? (
-                        <p className="text-sm text-slate-400 italic">No past jobs at this site yet.</p>
+                        <p className="text-sm text-muted-foreground italic">No past jobs at this site yet.</p>
                     ) : (
                         <div>{recentJobs.map(j => <JobRow key={j._id} job={j} />)}</div>
                     )}
@@ -311,12 +311,12 @@ export function SiteDetailPage() {
                             initial={{ opacity: 0, scale: 0.97, y: 8 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.97, y: 8 }}
-                            className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden"
+                            className="bg-card rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden"
                             onClick={e => e.stopPropagation()}
                         >
-                            <div className="flex items-center justify-between px-6 py-5 border-b border-[#E2E8F0] shrink-0">
-                                <h2 className="text-base font-bold text-slate-900">Edit site</h2>
-                                <button onClick={() => setShowEdit(false)} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-400 transition-colors">
+                            <div className="flex items-center justify-between px-6 py-5 border-b border-[var(--border)] shrink-0">
+                                <h2 className="text-base font-bold text-foreground">Edit site</h2>
+                                <button onClick={() => setShowEdit(false)} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-muted text-muted-foreground transition-colors">
                                     <span className="text-lg leading-none">×</span>
                                 </button>
                             </div>

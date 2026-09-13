@@ -60,14 +60,14 @@ function AddAdjustmentDialog({ onAdd, onClose }: { onAdd: (adj: InvoiceAdjustmen
             className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm"
             onClick={e => { if (e.target === e.currentTarget) onClose() }}
         >
-            <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full max-w-sm">
-                <div className="flex items-center justify-between px-5 py-4 border-b border-[#E2E8F0]">
-                    <h3 className="text-base font-bold text-slate-900">Add adjustment</h3>
-                    <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-400 transition-colors"><X size={15} /></button>
+            <div className="bg-card rounded-t-2xl sm:rounded-2xl shadow-2xl w-full max-w-sm">
+                <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border)]">
+                    <h3 className="text-base font-bold text-foreground">Add adjustment</h3>
+                    <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-muted text-muted-foreground transition-colors"><X size={15} /></button>
                 </div>
                 <div className="p-5 flex flex-col gap-4">
                     <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">Description</label>
+                        <label className="block text-xs font-semibold text-foreground mb-1.5">Description</label>
                         <Input
                             placeholder="e.g. Parking reimbursement"
                             value={description}
@@ -75,14 +75,14 @@ function AddAdjustmentDialog({ onAdd, onClose }: { onAdd: (adj: InvoiceAdjustmen
                         />
                     </div>
                     <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">Type</label>
-                        <div className="flex bg-slate-100 rounded-lg p-1">
+                        <label className="block text-xs font-semibold text-foreground mb-1.5">Type</label>
+                        <div className="flex bg-muted rounded-lg p-1">
                             {(['charge', 'discount'] as const).map(t => (
                                 <button
                                     key={t}
                                     type="button"
                                     onClick={() => setType(t)}
-                                    className={`flex-1 h-8 rounded-md text-xs font-semibold capitalize transition-colors ${type === t ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'}`}
+                                    className={`flex-1 h-8 rounded-md text-xs font-semibold capitalize transition-colors ${type === t ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground'}`}
                                 >
                                     {t}
                                 </button>
@@ -90,9 +90,9 @@ function AddAdjustmentDialog({ onAdd, onClose }: { onAdd: (adj: InvoiceAdjustmen
                         </div>
                     </div>
                     <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">Amount</label>
-                        <div className="flex items-center border border-[#E2E8F0] rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-[#1E3A5F]/15 focus-within:border-[#1E3A5F]/40 transition-all">
-                            <span className="px-3 text-sm text-slate-500 bg-slate-50 h-10 flex items-center border-r border-[#E2E8F0]">£</span>
+                        <label className="block text-xs font-semibold text-foreground mb-1.5">Amount</label>
+                        <div className="flex items-center border border-[var(--border)] rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-[var(--primary)]/15 focus-within:border-[var(--primary)]/40 transition-all">
+                            <span className="px-3 text-sm text-muted-foreground bg-muted h-10 flex items-center border-r border-[var(--border)]">£</span>
                             <input
                                 type="number"
                                 step="0.01"
@@ -100,7 +100,7 @@ function AddAdjustmentDialog({ onAdd, onClose }: { onAdd: (adj: InvoiceAdjustmen
                                 value={amount}
                                 onChange={e => setAmount(e.target.value)}
                                 placeholder="0.00"
-                                className="flex-1 h-10 px-3 text-sm text-slate-800 outline-none"
+                                className="flex-1 h-10 px-3 text-sm text-foreground outline-none"
                             />
                         </div>
                     </div>
@@ -129,12 +129,12 @@ function EarlyGenerationDialog({ daysRemaining, onConfirm, onClose }: { daysRema
             className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm"
             onClick={e => { if (e.target === e.currentTarget) onClose() }}
         >
-            <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full max-w-sm p-5">
+            <div className="bg-card rounded-t-2xl sm:rounded-2xl shadow-2xl w-full max-w-sm p-5">
                 <div className="flex items-center gap-2 mb-2">
                     <AlertTriangle size={16} className="text-amber-500" />
-                    <h3 className="text-base font-bold text-slate-900">This billing period hasn't ended yet</h3>
+                    <h3 className="text-base font-bold text-foreground">This billing period hasn't ended yet</h3>
                 </div>
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-muted-foreground">
                     {daysRemaining} day{daysRemaining === 1 ? '' : 's'} remain in this client's billing cycle. Jobs completed after this
                     invoice is created will remain ready and can be invoiced separately later — nothing gets missed.
                 </p>
@@ -287,23 +287,23 @@ export function CreateInvoicePage() {
         <div className="px-2 pt-2.5 lg:p-6 max-w-4xl mx-auto animate-fade-in">
             {/* Header */}
             <div className="flex items-center gap-3 mb-7">
-                <button onClick={() => navigate(-1)} className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:bg-slate-100 transition-colors">
+                <button onClick={() => navigate(-1)} className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors">
                     <ChevronLeft size={16} />
                 </button>
                 <div>
-                    <h1 className="text-xl font-semibold text-slate-900 tracking-tight">Create Invoice</h1>
-                    <p className="text-sm text-slate-500 mt-0.5">Select the client and period — completed, approved work shows up ready to bill</p>
+                    <h1 className="text-xl font-semibold text-foreground tracking-tight">Create Invoice</h1>
+                    <p className="text-sm text-muted-foreground mt-0.5">Select the client and period — completed, approved work shows up ready to bill</p>
                 </div>
             </div>
 
             <div className="flex flex-col gap-5">
                 {/* Client */}
-                <div className="bg-white rounded-xl border border-[#E2E8F0] p-6">
-                    <h2 className="text-sm font-semibold text-slate-800 mb-4">Client</h2>
+                <div className="bg-card rounded-xl border border-[var(--border)] p-6">
+                    <h2 className="text-sm font-semibold text-foreground mb-4">Client</h2>
                     <select
                         value={clientId}
                         onChange={e => setClient(e.target.value)}
-                        className="w-full sm:w-1/3 h-10 px-3 border border-[#E2E8F0] rounded-lg text-sm bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/15 focus:border-[#1E3A5F]/40 transition-all"
+                        className="w-full sm:w-1/3 h-10 px-3 border border-[var(--border)] rounded-lg text-sm bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/15 focus:border-[var(--primary)]/40 transition-all"
                     >
                         <option value="">Select a client…</option>
                         {clients.map(c => (
@@ -314,27 +314,27 @@ export function CreateInvoicePage() {
 
                 {/* Billing schedule */}
                 {clientId && billingInfo && (
-                    <div className="bg-white rounded-xl border border-[#E2E8F0] p-6">
-                        <h2 className="text-sm font-semibold text-slate-800 mb-4">Billing Schedule</h2>
+                    <div className="bg-card rounded-xl border border-[var(--border)] p-6">
+                        <h2 className="text-sm font-semibold text-foreground mb-4">Billing Schedule</h2>
                         <div className="flex flex-wrap gap-x-10 gap-y-3 mb-4">
                             <div>
-                                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1">Billing</p>
-                                <p className="text-sm text-slate-700">
+                                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">Billing</p>
+                                <p className="text-sm text-foreground">
                                     {billingInfo.billingFrequency ? FREQUENCY_LABEL[billingInfo.billingFrequency] : 'Manual'} · {billingInfo.paymentTermsDays} day terms
                                 </p>
                             </div>
                             <div>
-                                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1">Last invoice</p>
-                                <p className="text-sm text-slate-700">
+                                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">Last invoice</p>
+                                <p className="text-sm text-foreground">
                                     {billingInfo.lastInvoice?.servicePeriod ? formatRange(billingInfo.lastInvoice.servicePeriod) : 'None yet'}
                                 </p>
                             </div>
                             {billingInfo.currentPeriod && (
                                 <div>
-                                    <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1">
+                                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
                                         {dayjs().isAfter(dayjs(billingInfo.currentPeriod.end)) ? 'Billing period' : 'Current billing period'}
                                     </p>
-                                    <p className="text-sm text-slate-700">{formatRange(billingInfo.currentPeriod)}</p>
+                                    <p className="text-sm text-foreground">{formatRange(billingInfo.currentPeriod)}</p>
                                 </div>
                             )}
                         </div>
@@ -355,8 +355,8 @@ export function CreateInvoicePage() {
                 {/* Service period — editable whenever there's no schedule-driven
                     period to default to, or the manager asked for a custom one */}
                 {clientId && (!billingInfo?.currentPeriod || periodMode === 'custom') && (
-                    <div className="bg-white rounded-xl border border-[#E2E8F0] p-6">
-                        <h2 className="text-sm font-semibold text-slate-800 mb-4">Service Period</h2>
+                    <div className="bg-card rounded-xl border border-[var(--border)] p-6">
+                        <h2 className="text-sm font-semibold text-foreground mb-4">Service Period</h2>
                         <div className="grid sm:grid-cols-2 gap-4">
                             <Input
                                 label="Start"
@@ -386,14 +386,14 @@ export function CreateInvoicePage() {
 
                 {/* Ready to invoice */}
                 {clientId && (
-                    <div className="bg-white rounded-xl border border-[#E2E8F0] p-6">
+                    <div className="bg-card rounded-xl border border-[var(--border)] p-6">
                         <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-sm font-semibold text-slate-800">Ready to invoice{items.length > 0 ? ` (${items.length})` : ''}</h2>
+                            <h2 className="text-sm font-semibold text-foreground">Ready to invoice{items.length > 0 ? ` (${items.length})` : ''}</h2>
                             {items.length > 0 && (
                                 <button
                                     type="button"
                                     onClick={toggleAll}
-                                    className="text-xs font-semibold text-[#1E3A5F] hover:underline"
+                                    className="text-xs font-semibold text-[var(--primary)] hover:underline"
                                 >
                                     {allSelected ? 'Clear all' : 'Select all'}
                                 </button>
@@ -401,7 +401,7 @@ export function CreateInvoicePage() {
                         </div>
 
                         {isFetching ? (
-                            <div className="py-10 flex items-center justify-center text-slate-400">
+                            <div className="py-10 flex items-center justify-center text-muted-foreground">
                                 <Loader2 size={18} className="animate-spin" />
                             </div>
                         ) : isError ? (
@@ -409,8 +409,8 @@ export function CreateInvoicePage() {
                         ) : items.length === 0 ? (
                             <div className="py-10 text-center flex flex-col items-center gap-2">
                                 <FileQuestion size={22} className="text-slate-300" />
-                                <p className="text-sm font-semibold text-slate-700">No work is ready to invoice</p>
-                                <p className="text-xs text-slate-400 max-w-sm">
+                                <p className="text-sm font-semibold text-foreground">No work is ready to invoice</p>
+                                <p className="text-xs text-muted-foreground max-w-sm">
                                     There are no completed, approved and uninvoiced jobs for this client in this period.
                                 </p>
                             </div>
@@ -422,25 +422,25 @@ export function CreateInvoicePage() {
                                     return (
                                         <label
                                             key={key}
-                                            className={`flex items-start gap-3 p-3.5 rounded-xl border cursor-pointer transition-colors ${checked ? 'border-[#1E3A5F]/30 bg-[#1E3A5F]/[0.03]' : 'border-[#E2E8F0] hover:border-slate-300'}`}
+                                            className={`flex items-start gap-3 p-3.5 rounded-xl border cursor-pointer transition-colors ${checked ? 'border-[var(--primary)]/30 bg-[var(--primary)]/[0.03]' : 'border-[var(--border)] hover:border-slate-300'}`}
                                         >
                                             <input
                                                 type="checkbox"
                                                 checked={checked}
                                                 onChange={() => toggle(item)}
-                                                className="w-4 h-4 mt-0.5 rounded border-slate-300 accent-[#1E3A5F] cursor-pointer shrink-0"
+                                                className="w-4 h-4 mt-0.5 rounded border-slate-300 accent-[var(--primary)] cursor-pointer shrink-0"
                                             />
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-start justify-between gap-3">
-                                                    <p className="text-sm font-semibold text-slate-900 truncate">{item.title}</p>
-                                                    <p className="text-sm font-bold text-slate-900 tabular-nums shrink-0">
+                                                    <p className="text-sm font-semibold text-foreground truncate">{item.title}</p>
+                                                    <p className="text-sm font-bold text-foreground tabular-nums shrink-0">
                                                         {formatCurrency(item.amount)}
                                                     </p>
                                                 </div>
-                                                <p className="text-xs text-slate-400 mt-0.5">
+                                                <p className="text-xs text-muted-foreground mt-0.5">
                                                     {dayjs(item.date).format('D MMM YYYY')}{item.location ? ` · ${item.location}` : ''}
                                                 </p>
-                                                <p className="text-xs text-slate-500 mt-1">
+                                                <p className="text-xs text-muted-foreground mt-1">
                                                     {item.chargeType === 'hourly'
                                                         ? `${item.startTime}–${item.endTime} · ${item.quantity}h × ${formatCurrency(item.rate)}/hour${item.workerName ? ` · ${item.workerName}` : ''}`
                                                         : 'Fixed job charge'}
@@ -453,13 +453,13 @@ export function CreateInvoicePage() {
                         )}
 
                         {items.length > 0 && (
-                            <div className="flex items-center justify-between mt-4 pt-4 border-t border-[#F1F5F9]">
-                                <p className="text-xs text-slate-400">
+                            <div className="flex items-center justify-between mt-4 pt-4 border-t border-[var(--border)]">
+                                <p className="text-xs text-muted-foreground">
                                     {selectedItems.length} of {items.length} jobs selected{billableHours > 0 ? ` · ${billableHours}h billable` : ''}
                                 </p>
                                 <div className="text-right">
-                                    <p className="text-xs text-slate-400 uppercase tracking-wide font-semibold">Subtotal</p>
-                                    <p className="text-xl font-bold text-slate-900 mt-0.5">{formatCurrency(workSubtotal)}</p>
+                                    <p className="text-xs text-muted-foreground uppercase tracking-wide font-semibold">Subtotal</p>
+                                    <p className="text-xl font-bold text-foreground mt-0.5">{formatCurrency(workSubtotal)}</p>
                                 </div>
                             </div>
                         )}
@@ -491,11 +491,11 @@ export function CreateInvoicePage() {
 
                 {/* Adjustments — secondary to the actual work */}
                 {clientId && items.length > 0 && (
-                    <div className="bg-white rounded-xl border border-[#E2E8F0] p-6">
+                    <div className="bg-card rounded-xl border border-[var(--border)] p-6">
                         <div className="flex items-center justify-between mb-1">
                             <div>
-                                <h2 className="text-sm font-semibold text-slate-800">Adjustments{adjustments.length > 0 ? ` (${adjustments.length})` : ''}</h2>
-                                <p className="text-xs text-slate-400 mt-0.5">Optional extra charges or discounts</p>
+                                <h2 className="text-sm font-semibold text-foreground">Adjustments{adjustments.length > 0 ? ` (${adjustments.length})` : ''}</h2>
+                                <p className="text-xs text-muted-foreground mt-0.5">Optional extra charges or discounts</p>
                             </div>
                             <Button type="button" variant="outline" size="sm" onClick={() => setShowAdjustmentDialog(true)}>
                                 <Plus size={13} /> Add adjustment
@@ -503,21 +503,21 @@ export function CreateInvoicePage() {
                         </div>
 
                         {adjustments.length > 0 && (
-                            <div className="flex flex-col divide-y divide-[#F1F5F9] mt-4">
+                            <div className="flex flex-col divide-y divide-[var(--border)] mt-4">
                                 {adjustments.map((adj, i) => (
                                     <div key={i} className="flex items-center justify-between gap-3 py-2.5">
                                         <div className="min-w-0">
-                                            <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Adjustment</p>
-                                            <p className="text-sm text-slate-700 truncate">{adj.description}</p>
+                                            <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Adjustment</p>
+                                            <p className="text-sm text-foreground truncate">{adj.description}</p>
                                         </div>
                                         <div className="flex items-center gap-2 shrink-0">
-                                            <p className={`text-sm font-semibold tabular-nums ${adj.type === 'discount' ? 'text-red-500' : 'text-slate-900'}`}>
+                                            <p className={`text-sm font-semibold tabular-nums ${adj.type === 'discount' ? 'text-red-500' : 'text-foreground'}`}>
                                                 {adj.type === 'discount' ? '-' : ''}{formatCurrency(adj.amount)}
                                             </p>
                                             <button
                                                 type="button"
                                                 onClick={() => setAdjustments(a => a.filter((_, idx) => idx !== i))}
-                                                className="w-6 h-6 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+                                                className="w-6 h-6 flex items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-muted-foreground transition-colors"
                                             >
                                                 <X size={12} />
                                             </button>
@@ -531,8 +531,8 @@ export function CreateInvoicePage() {
 
                 {/* Notes / PO */}
                 {clientId && items.length > 0 && (
-                    <div className="bg-white rounded-xl border border-[#E2E8F0] p-6">
-                        <h2 className="text-sm font-semibold text-slate-800 mb-4">Additional details</h2>
+                    <div className="bg-card rounded-xl border border-[var(--border)] p-6">
+                        <h2 className="text-sm font-semibold text-foreground mb-4">Additional details</h2>
                         <div className="grid sm:grid-cols-2 gap-4">
                             <Input
                                 label="Purchase order number (optional)"

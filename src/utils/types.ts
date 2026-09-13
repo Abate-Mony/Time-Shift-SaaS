@@ -23,7 +23,7 @@ export interface JobClientRef {
   defaultChargeRate?: number;
 }
 
-export type UserRole = "admin" | "manager" | "worker";
+export type UserRole = "owner" | "admin" | "manager" | "worker";
 
 // export type NotificationPreferences = {
 //   jobAssigned: boolean;

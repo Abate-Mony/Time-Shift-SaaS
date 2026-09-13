@@ -39,20 +39,20 @@ function Section({
   children,
 }: SectionProps) {
   return (
-    <section className="bg-white rounded-2xl border border-[#E2E8F0] shadow-sm overflow-hidden min-w-0">
-      <div className="flex items-start justify-between gap-4 px-5 py-4 border-b border-[#F1F5F9] bg-slate-50/50 min-w-0">
+    <section className="bg-card rounded-2xl border border-[var(--border)] shadow-sm overflow-hidden min-w-0">
+      <div className="flex items-start justify-between gap-4 px-5 py-4 border-b border-[var(--border)] bg-muted/50 min-w-0">
         <div className="flex items-start gap-3 min-w-0">
-          <div className="w-9 h-9 rounded-xl bg-[#1E3A5F]/[0.07] flex items-center justify-center text-[#1E3A5F] shrink-0">
+          <div className="w-9 h-9 rounded-xl bg-[var(--primary)]/[0.07] flex items-center justify-center text-[var(--primary)] shrink-0">
             {icon}
           </div>
 
           <div className="min-w-0">
-            <h3 className="text-sm font-semibold text-slate-900">
+            <h3 className="text-sm font-semibold text-foreground">
               {title}
             </h3>
 
             {description && (
-              <p className="text-xs text-slate-400 mt-0.5">
+              <p className="text-xs text-muted-foreground mt-0.5">
                 {description}
               </p>
             )}
@@ -62,7 +62,7 @@ function Section({
         <button
           type="button"
           onClick={() => onEdit(step)}
-          className="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-[#1E3A5F] hover:bg-[#1E3A5F]/[0.06] transition-colors"
+          className="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-[var(--primary)] hover:bg-[var(--primary)]/[0.06] transition-colors"
         >
           <Pencil size={11} />
           Edit
@@ -88,17 +88,17 @@ function DetailRow({
   return (
     <div className="flex items-start gap-3 py-2.5 min-w-0">
       {icon && (
-        <div className="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center text-slate-400 shrink-0 mt-0.5">
+        <div className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center text-muted-foreground shrink-0 mt-0.5">
           {icon}
         </div>
       )}
 
       <div className="flex-1 min-w-0">
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400 mb-0.5">
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-0.5">
           {label}
         </p>
 
-        <div className="text-sm font-medium text-slate-800 min-w-0 break-words">
+        <div className="text-sm font-medium text-foreground min-w-0 break-words">
           {value}
         </div>
       </div>
@@ -116,19 +116,19 @@ function StatCard({
   tone?: "default" | "positive" | "negative"
 }) {
   return (
-    <div className="rounded-xl border border-slate-100 bg-slate-50/70 px-4 py-3 min-w-0">
+    <div className="rounded-xl border border-border bg-muted/70 px-4 py-3 min-w-0">
       <p
         className={cn(
           "text-base font-bold truncate",
           tone === "positive" && "text-emerald-600",
           tone === "negative" && "text-red-600",
-          tone === "default" && "text-slate-900"
+          tone === "default" && "text-foreground"
         )}
       >
         {value}
       </p>
 
-      <p className="text-[11px] text-slate-400 mt-0.5 font-medium">
+      <p className="text-[11px] text-muted-foreground mt-0.5 font-medium">
         {label}
       </p>
     </div>
@@ -164,7 +164,7 @@ export function ReviewStep() {
   return (
     <div className="flex flex-col gap-5 min-w-0">
       {/* Header */}
-      <div className="relative overflow-hidden rounded-2xl border border-[#DCE5EF] bg-gradient-to-br from-[#1E3A5F] to-[#284D78] px-6 py-6 text-white shadow-sm">
+      <div className="relative overflow-hidden rounded-2xl border border-[#DCE5EF] bg-gradient-to-br from-[var(--primary)] to-[#284D78] px-6 py-6 text-white shadow-sm">
         <div className="absolute -right-8 -top-8 w-32 h-32 rounded-full bg-white/[0.04]" />
         <div className="absolute right-10 bottom-0 w-20 h-20 rounded-full bg-white/[0.03]" />
 
@@ -232,7 +232,7 @@ export function ReviewStep() {
         icon={<BriefcaseBusiness size={16} />}
       >
         {v.description && (
-          <p className="text-sm text-slate-500 leading-relaxed mb-4">
+          <p className="text-sm text-muted-foreground leading-relaxed mb-4">
             {v.description}
           </p>
         )}
@@ -243,7 +243,7 @@ export function ReviewStep() {
             label="Client"
             value={
               selectedClient?.name ?? (
-                <span className="text-slate-400">
+                <span className="text-muted-foreground">
                   No client
                 </span>
               )
@@ -263,7 +263,7 @@ export function ReviewStep() {
                   v.priority === "medium" &&
                     "bg-amber-50 text-amber-700",
                   v.priority === "low" &&
-                    "bg-slate-100 text-slate-600"
+                    "bg-muted text-muted-foreground"
                 )}
               >
                 {v.priority}
@@ -291,7 +291,7 @@ export function ReviewStep() {
                   "dddd D MMMM YYYY"
                 )
               ) : (
-                <span className="text-slate-400">
+                <span className="text-muted-foreground">
                   Not set
                 </span>
               )
@@ -305,7 +305,7 @@ export function ReviewStep() {
               v.startTime && v.endTime ? (
                 <span>
                   {v.startTime}–{v.endTime}
-                  <span className="text-slate-400 font-normal">
+                  <span className="text-muted-foreground font-normal">
                     {" "}
                     · {formatHours(shiftHours)}
                   </span>
@@ -317,7 +317,7 @@ export function ReviewStep() {
                   )}
                 </span>
               ) : (
-                <span className="text-slate-400">
+                <span className="text-muted-foreground">
                   Not set
                 </span>
               )
@@ -326,23 +326,23 @@ export function ReviewStep() {
         </div>
 
         {hasLocation && (
-          <div className="mt-2 rounded-xl border border-slate-100 bg-slate-50 px-4 py-3">
+          <div className="mt-2 rounded-xl border border-border bg-muted px-4 py-3">
             <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center shrink-0">
+              <div className="w-8 h-8 rounded-lg bg-card border border-border flex items-center justify-center shrink-0">
                 <MapPin
                   size={14}
-                  className="text-[#1E3A5F]"
+                  className="text-[var(--primary)]"
                 />
               </div>
 
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-slate-800">
+                <p className="text-sm font-semibold text-foreground">
                   {v.location ||
                     "Selected location"}
                 </p>
 
                 {v.address && (
-                  <p className="text-xs text-slate-500 mt-0.5 break-words">
+                  <p className="text-xs text-muted-foreground mt-0.5 break-words">
                     {v.address}
                   </p>
                 )}
@@ -399,9 +399,9 @@ export function ReviewStep() {
             {selectedWorkers.map((worker) => (
               <div
                 key={worker.email}
-                className="flex items-center gap-3 rounded-xl border border-slate-100 bg-slate-50/60 px-3 py-2.5 min-w-0"
+                className="flex items-center gap-3 rounded-xl border border-border bg-muted/60 px-3 py-2.5 min-w-0"
               >
-                <div className="w-8 h-8 rounded-full bg-[#1E3A5F]/10 text-[#1E3A5F] flex items-center justify-center text-xs font-bold shrink-0">
+                <div className="w-8 h-8 rounded-full bg-[var(--primary)]/10 text-[var(--primary)] flex items-center justify-center text-xs font-bold shrink-0">
                   {worker.fullname
                     .split(" ")
                     .map((part) => part[0])
@@ -411,11 +411,11 @@ export function ReviewStep() {
                 </div>
 
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-slate-800 truncate">
+                  <p className="text-sm font-semibold text-foreground truncate">
                     {worker.fullname}
                   </p>
 
-                  <p className="text-xs text-slate-400 truncate">
+                  <p className="text-xs text-muted-foreground truncate">
                     {worker.email}
                   </p>
                 </div>
@@ -436,7 +436,7 @@ export function ReviewStep() {
         )}
 
         {(supervisorUser || v.openToClaims) && (
-          <div className="mt-4 pt-4 border-t border-slate-100">
+          <div className="mt-4 pt-4 border-t border-border">
             {supervisorUser && (
               <DetailRow
                 icon={<UserRound size={13} />}
@@ -468,25 +468,25 @@ export function ReviewStep() {
         icon={<PoundSterling size={16} />}
       >
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-          <div className="rounded-xl border border-slate-100 p-4 bg-slate-50/60">
-            <p className="text-[11px] uppercase tracking-wide font-semibold text-slate-400">
+          <div className="rounded-xl border border-border p-4 bg-muted/60">
+            <p className="text-[11px] uppercase tracking-wide font-semibold text-muted-foreground">
               Worker rate
             </p>
 
-            <p className="text-lg font-bold text-slate-900 mt-1">
+            <p className="text-lg font-bold text-foreground mt-1">
               {formatCurrency(v.payRate ?? 0)}
-              <span className="text-xs font-medium text-slate-400">
+              <span className="text-xs font-medium text-muted-foreground">
                 /hour
               </span>
             </p>
           </div>
 
-          <div className="rounded-xl border border-slate-100 p-4 bg-slate-50/60">
-            <p className="text-[11px] uppercase tracking-wide font-semibold text-slate-400">
+          <div className="rounded-xl border border-border p-4 bg-muted/60">
+            <p className="text-[11px] uppercase tracking-wide font-semibold text-muted-foreground">
               Client charge
             </p>
 
-            <p className="text-lg font-bold text-slate-900 mt-1">
+            <p className="text-lg font-bold text-foreground mt-1">
               {v.chargeType === "fixed"
                 ? formatCurrency(
                     v.chargeAmount ?? 0
@@ -495,7 +495,7 @@ export function ReviewStep() {
                     v.chargeRate ?? 0
                   )}
 
-              <span className="text-xs font-medium text-slate-400">
+              <span className="text-xs font-medium text-muted-foreground">
                 {v.chargeType === "fixed"
                   ? " fixed"
                   : "/hour"}
@@ -543,7 +543,7 @@ export function ReviewStep() {
               v.clockInGraceMinutes ? (
                 `${v.clockInGraceMinutes} minutes early`
               ) : (
-                <span className="text-slate-400">
+                <span className="text-muted-foreground">
                   Company default
                 </span>
               )
@@ -570,7 +570,7 @@ export function ReviewStep() {
                   </>
                 )
               ) : (
-                <span className="text-slate-400">
+                <span className="text-muted-foreground">
                   Company default
                 </span>
               )
@@ -584,7 +584,7 @@ export function ReviewStep() {
               Worker instructions
             </p>
 
-            <p className="text-sm text-slate-700 whitespace-pre-wrap break-words">
+            <p className="text-sm text-foreground whitespace-pre-wrap break-words">
               {v.instructions}
             </p>
           </div>
@@ -596,7 +596,7 @@ export function ReviewStep() {
               Internal notes
             </p>
 
-            <p className="text-sm text-slate-600 italic whitespace-pre-wrap break-words">
+            <p className="text-sm text-muted-foreground italic whitespace-pre-wrap break-words">
               {v.notes}
             </p>
           </div>

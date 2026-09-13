@@ -78,7 +78,7 @@ function ChannelSwitch({
 }) {
   return (
     <div className="flex flex-col items-center gap-1">
-      <span className="text-[10px] font-medium text-slate-400">
+      <span className="text-[10px] font-medium text-muted-foreground">
         {label}
       </span>
 
@@ -86,7 +86,7 @@ function ChannelSwitch({
         checked={checked}
         disabled={disabled}
         onCheckedChange={onCheckedChange}
-        className="shrink-0 data-[state=checked]:bg-[#1E3A5F]"
+        className="shrink-0 data-[state=checked]:bg-[var(--primary)]"
       />
     </div>
   );
@@ -157,7 +157,7 @@ export default function NotificationPreferencesScreen() {
 
   if (isLoading) {
     return (
-      <div className="py-10 text-sm text-slate-400">
+      <div className="py-10 text-sm text-muted-foreground">
         Loading notification preferences...
       </div>
     );
@@ -176,45 +176,45 @@ export default function NotificationPreferencesScreen() {
       <button
         type="button"
         onClick={() => navigate(-1)}
-        className="flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors -mb-1"
+        className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors -mb-1"
       >
         <ChevronLeft size={16} />
         Back
       </button>
 
       <div>
-        <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-          <span className="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center">
+        <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
+          <span className="w-8 h-8 rounded-xl bg-muted flex items-center justify-center">
             <Bell
               size={15}
-              className="text-slate-500"
+              className="text-muted-foreground"
             />
           </span>
 
           Notification Preferences
         </h2>
 
-        <p className="text-xs text-slate-400 mt-1">
+        <p className="text-xs text-muted-foreground mt-1">
           Choose what you want to hear about and how
         </p>
       </div>
 
       {/* Master channels */}
 
-      <div className="bg-white rounded-2xl border border-[#E2E8F0] px-5 shadow-sm">
-        <div className="py-3.5 border-b border-[#F1F5F9]">
-          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+      <div className="bg-card rounded-2xl border border-[var(--border)] px-5 shadow-sm">
+        <div className="py-3.5 border-b border-[var(--border)]">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
             Communication channels
           </p>
         </div>
 
-        <div className="divide-y divide-[#F8FAFC]">
+        <div className="divide-y divide-border">
           <div className="flex items-center justify-between gap-3 py-3.5">
             <div>
-              <p className="text-sm font-medium text-slate-800">
+              <p className="text-sm font-medium text-foreground">
                 Email notifications
               </p>
-              <p className="text-xs text-slate-400 mt-0.5">
+              <p className="text-xs text-muted-foreground mt-0.5">
                 Receive important updates by email
               </p>
             </div>
@@ -227,16 +227,16 @@ export default function NotificationPreferencesScreen() {
                   value
                 )
               }
-              className="shrink-0 data-[state=checked]:bg-[#1E3A5F]"
+              className="shrink-0 data-[state=checked]:bg-[var(--primary)]"
             />
           </div>
 
           <div className="flex items-center justify-between gap-3 py-3.5">
             <div>
-              <p className="text-sm font-medium text-slate-800">
+              <p className="text-sm font-medium text-foreground">
                 Push notifications
               </p>
-              <p className="text-xs text-slate-400 mt-0.5">
+              <p className="text-xs text-muted-foreground mt-0.5">
                 Receive browser or device notifications
               </p>
             </div>
@@ -249,16 +249,16 @@ export default function NotificationPreferencesScreen() {
                   value
                 )
               }
-              className="shrink-0 data-[state=checked]:bg-[#1E3A5F]"
+              className="shrink-0 data-[state=checked]:bg-[var(--primary)]"
             />
           </div>
 
           <div className="flex items-center justify-between gap-3 py-3.5">
             <div>
-              <p className="text-sm font-medium text-slate-800">
+              <p className="text-sm font-medium text-foreground">
                 In-app notifications
               </p>
-              <p className="text-xs text-slate-400 mt-0.5">
+              <p className="text-xs text-muted-foreground mt-0.5">
                 Show notifications inside the app
               </p>
             </div>
@@ -271,7 +271,7 @@ export default function NotificationPreferencesScreen() {
                   value
                 )
               }
-              className="shrink-0 data-[state=checked]:bg-[#1E3A5F]"
+              className="shrink-0 data-[state=checked]:bg-[var(--primary)]"
             />
           </div>
         </div>
@@ -282,15 +282,15 @@ export default function NotificationPreferencesScreen() {
       {SECTIONS.map((section) => (
         <div
           key={section.title}
-          className="bg-white rounded-2xl border border-[#E2E8F0] px-5 shadow-sm"
+          className="bg-card rounded-2xl border border-[var(--border)] px-5 shadow-sm"
         >
-          <div className="py-3.5 border-b border-[#F1F5F9]">
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+          <div className="py-3.5 border-b border-[var(--border)]">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
               {section.title}
             </p>
           </div>
 
-          <div className="divide-y divide-[#F8FAFC]">
+          <div className="divide-y divide-border">
             {section.rows.map((row) => {
               const eventPrefs: EventNotificationPreference =
                 prefs.events[row.event];
@@ -301,11 +301,11 @@ export default function NotificationPreferencesScreen() {
                   className="py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
                 >
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-slate-800">
+                    <p className="text-sm font-medium text-foreground">
                       {row.label}
                     </p>
 
-                    <p className="text-xs text-slate-400 mt-0.5">
+                    <p className="text-xs text-muted-foreground mt-0.5">
                       {row.description}
                     </p>
                   </div>

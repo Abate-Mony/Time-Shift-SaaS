@@ -100,8 +100,8 @@ export default function JobsScreen() {
     return (
         <div className="flex flex-col gap-4 pb-4">
             <div>
-                <h2 className="text-lg font-bold text-slate-900">My Jobs</h2>
-                <p className="text-xs text-slate-400 mt-0.5">All your assignments in one place</p>
+                <h2 className="text-lg font-bold text-foreground">My Jobs</h2>
+                <p className="text-xs text-muted-foreground mt-0.5">All your assignments in one place</p>
             </div>
 
 
@@ -110,15 +110,15 @@ export default function JobsScreen() {
                     <SearchComponent placeholder="Search Jobs" />
 
                     {/* Date filter — week strip, same UI as the Schedule screen */}
-                    <div className="bg-white rounded-2xl border border-[#E2E8F0] p-4 shadow-sm">
+                    <div className="bg-card rounded-2xl border border-[var(--border)] p-4 shadow-sm">
                         <div className="flex items-center justify-between mb-3">
-                            <p className="text-xs font-bold text-slate-700">Week of {weekStart.format('D MMMM')}</p>
+                            <p className="text-xs font-bold text-foreground">Week of {weekStart.format('D MMMM')}</p>
                             <div className="flex items-center gap-1">
                                 {searchParams.get('start') && (
                                     <button
                                         type="button"
                                         onClick={() => handleFiltersChange({ start: null, end: null })}
-                                        className="flex items-center gap-1 h-7 px-2 rounded-lg text-[11px] font-medium text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors mr-1"
+                                        className="flex items-center gap-1 h-7 px-2 rounded-lg text-[11px] font-medium text-muted-foreground hover:text-muted-foreground hover:bg-muted transition-colors mr-1"
                                     >
                                         <X size={11} /> Clear
                                     </button>
@@ -126,14 +126,14 @@ export default function JobsScreen() {
                                 <button
                                     type="button"
                                     onClick={() => setWeekStart(w => w.subtract(7, 'day'))}
-                                    className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-100 transition-colors"
+                                    className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors"
                                 >
                                     <ChevronLeft size={14} />
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => setWeekStart(w => w.add(7, 'day'))}
-                                    className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-100 transition-colors"
+                                    className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors"
                                 >
                                     <ChevronRight size={14} />
                                 </button>
@@ -151,9 +151,9 @@ export default function JobsScreen() {
                                         )}
                                         className="flex flex-col items-center gap-1.5"
                                     >
-                                        <span className="text-[10px] font-semibold text-slate-400">{d.day}</span>
+                                        <span className="text-[10px] font-semibold text-muted-foreground">{d.day}</span>
                                         <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold relative transition-colors
-                                          ${isSelected ? 'bg-[#1E3A5F] text-white shadow-sm' : d.isToday ? 'bg-blue-50 text-blue-700 border-2 border-blue-200' : 'text-slate-500 border border-slate-100'}`}>
+                                          ${isSelected ? 'bg-[var(--primary)] text-white shadow-sm' : d.isToday ? 'bg-blue-50 text-blue-700 border-2 border-blue-200' : 'text-muted-foreground border border-border'}`}>
                                             {d.date.date()}
                                         </div>
                                     </button>
@@ -164,7 +164,7 @@ export default function JobsScreen() {
 
                     {/* Tab pills */}
                     {/* "draft" | "published" | "assigned" | "in-progress" | "completed" | "cancelled"  */}
-                    <h2 className="text-sm font-medium text-slate-900">Filter Status</h2>
+                    <h2 className="text-sm font-medium text-foreground">Filter Status</h2>
 
                     <Scrollable>
                         {tabs.map((t, idx) => (
@@ -176,9 +176,9 @@ export default function JobsScreen() {
                                     , "h-full opacity-45! backdrop-blur-sm!"
                                 )
                                 }
-                                // animateClassName={`h-full ${tab === t.id ? (t.id === 'pending' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700') : 'bg-slate-00 text-slate-500'}`}
+                                // animateClassName={`h-full ${tab === t.id ? (t.id === 'pending' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700') : 'bg-slate-00 text-muted-foreground'}`}
                                 className={`w-full max-w-fit flex items-center flex-none   justify-center gap-1.5 h-8 rounded-lg text-xs font-semibold transition-all
-                         bg-white group-[.active-slide]:text-slate-900 shadow-s text-slate-500 hover:text-slate-700`}
+                         bg-card group-[.active-slide]:text-foreground shadow-s text-muted-foreground hover:text-foreground`}
                                 name='status'
                                 value={t.id}
                                 key={t.id}
@@ -229,19 +229,19 @@ export default function JobsScreen() {
                                 job.status === 'completed'
                                     ? <CompletedJobCard job={job} key={job._id} />
                                     : <JobCard job={job} key={job._id} />
-                            ) : <div className="bg-white rounded-2xl border border-[#E2E8F0] p-10 text-center shadow-sm">
+                            ) : <div className="bg-card rounded-2xl border border-[var(--border)] p-10 text-center shadow-sm">
                                 <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center mx-auto mb-3">
                                     <Briefcase size={20} className="text-blue-400" />
                                 </div>
-                                <p className="text-sm font-semibold text-slate-700 mb-1">No {""} jobs</p>
-                                <p className="text-xs text-slate-400">Accept a job from Pending to start working.</p>
+                                <p className="text-sm font-semibold text-foreground mb-1">No {""} jobs</p>
+                                <p className="text-xs text-muted-foreground">Accept a job from Pending to start working.</p>
                             </div>
                         }
                     </div>
 
                     {totalPages > 1 && (
                         <div className="flex items-center justify-between gap-3 pt-1">
-                            <p className="text-xs text-slate-400">
+                            <p className="text-xs text-muted-foreground">
                                 Showing {Math.min((page - 1) * limit + 1, total)}–{Math.min(page * limit, total)} of {total}
                             </p>
                             <div className="flex items-center gap-2">
@@ -249,18 +249,18 @@ export default function JobsScreen() {
                                     type="button"
                                     disabled={page <= 1}
                                     onClick={() => handleFilterChange({ key: 'page', value: String(page - 1) })}
-                                    className="flex items-center gap-1 h-8 px-2.5 rounded-lg text-xs font-semibold text-slate-600 bg-white border border-[#E2E8F0] hover:bg-slate-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                                    className="flex items-center gap-1 h-8 px-2.5 rounded-lg text-xs font-semibold text-muted-foreground bg-card border border-[var(--border)] hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                                 >
                                     <ChevronLeft size={14} /> Prev
                                 </button>
-                                <span className="text-xs text-slate-500 font-medium tabular-nums">
+                                <span className="text-xs text-muted-foreground font-medium tabular-nums">
                                     {page} / {totalPages}
                                 </span>
                                 <button
                                     type="button"
                                     disabled={page >= totalPages}
                                     onClick={() => handleFilterChange({ key: 'page', value: String(page + 1) })}
-                                    className="flex items-center gap-1 h-8 px-2.5 rounded-lg text-xs font-semibold text-slate-600 bg-white border border-[#E2E8F0] hover:bg-slate-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                                    className="flex items-center gap-1 h-8 px-2.5 rounded-lg text-xs font-semibold text-muted-foreground bg-card border border-[var(--border)] hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                                 >
                                     Next <ChevronRight size={14} />
                                 </button>

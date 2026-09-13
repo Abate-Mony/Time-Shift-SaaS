@@ -159,7 +159,7 @@ export function WorkerAppLayout() {
   const [showRestrictionDetail, setShowRestrictionDetail] = useState(false)
   const restriction = useQuery(myRestrictionQuery).data ?? null
   return (
-    <div className="border-black   bg-[#F8FAFC]">
+    <div className="border-black   bg-muted dark:bg-background min-h-screen">
       <ScrollToTop />
          {/* Restriction banner — only read_only/limited ever render here; a
              "none" restriction already redirected to /account/suspended in

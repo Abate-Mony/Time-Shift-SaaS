@@ -42,14 +42,14 @@ export function ReportsProfitabilityPage() {
     <div className="flex flex-col gap-5">
       {/* Controls */}
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <div className="flex items-center gap-1 bg-slate-100 rounded-xl p-1">
+        <div className="flex items-center gap-1 bg-muted rounded-xl p-1">
           {BASIS_OPTIONS.map(o => (
             <button
               key={o.id}
               title={o.hint}
               onClick={() => setBasis(o.id)}
               className={`h-8 px-3 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${
-                basis === o.id ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                basis === o.id ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               {o.label}
@@ -59,7 +59,7 @@ export function ReportsProfitabilityPage() {
         <select
           value={clientId}
           onChange={e => setClientId(e.target.value)}
-          className="h-9 px-3 border border-[#E2E8F0] rounded-lg text-sm text-slate-600 bg-white focus:outline-none appearance-none cursor-pointer"
+          className="h-9 px-3 border border-[var(--border)] rounded-lg text-sm text-muted-foreground bg-card focus:outline-none appearance-none cursor-pointer"
         >
           <option value="">All clients</option>
           {clients.map(c => (
@@ -69,7 +69,7 @@ export function ReportsProfitabilityPage() {
       </div>
 
       {isPending ? (
-        <p className="text-sm text-slate-400">Loading profitability…</p>
+        <p className="text-sm text-muted-foreground">Loading profitability…</p>
       ) : isError || !data ? (
         <p className="text-sm text-red-500">Failed to load the profitability report.</p>
       ) : (
@@ -100,11 +100,11 @@ export function ReportsProfitabilityPage() {
           <Card className="p-5">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 className="text-sm font-semibold text-slate-900">Revenue &amp; costs</h3>
-                <p className="text-xs text-slate-400 mt-0.5">{monthLabel}</p>
+                <h3 className="text-sm font-semibold text-foreground">Revenue &amp; costs</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">{monthLabel}</p>
               </div>
-              <div className="flex gap-4 text-xs text-slate-500">
-                <span className="flex items-center gap-1.5"><span className="w-3 h-1 rounded bg-[#1E3A5F] inline-block" />Revenue</span>
+              <div className="flex gap-4 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1.5"><span className="w-3 h-1 rounded bg-[var(--primary)] inline-block" />Revenue</span>
                 <span className="flex items-center gap-1.5"><span className="w-3 h-1 rounded bg-emerald-500 inline-block" />Profit</span>
               </div>
             </div>
@@ -112,19 +112,19 @@ export function ReportsProfitabilityPage() {
               <AreaChart data={data.trend}>
                 <defs>
                   <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#1E3A5F" stopOpacity={0.15} />
-                    <stop offset="95%" stopColor="#1E3A5F" stopOpacity={0} />
+                    <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.15} />
+                    <stop offset="95%" stopColor="var(--primary)" stopOpacity={0} />
                   </linearGradient>
                   <linearGradient id="profitGrad" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#10B981" stopOpacity={0.15} />
                     <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
-                <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#94A3B8' }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
-                <YAxis tick={{ fontSize: 11, fill: '#94A3B8' }} axisLine={false} tickLine={false} width={45} tickFormatter={v => `£${v}`} />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+                <XAxis dataKey="label" tick={{ fontSize: 11, fill: 'var(--muted-foreground)' }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
+                <YAxis tick={{ fontSize: 11, fill: 'var(--muted-foreground)' }} axisLine={false} tickLine={false} width={45} tickFormatter={v => `£${v}`} />
                 <Tooltip content={<CustomTooltip />} />
-                <Area type="monotone" dataKey="revenue" name="Revenue" stroke="#1E3A5F" strokeWidth={2} fill="url(#revenueGrad)" />
+                <Area type="monotone" dataKey="revenue" name="Revenue" stroke="var(--primary)" strokeWidth={2} fill="url(#revenueGrad)" />
                 <Area type="monotone" dataKey="profit" name="Profit" stroke="#10B981" strokeWidth={2} fill="url(#profitGrad)" />
               </AreaChart>
             </ResponsiveContainer>
@@ -132,24 +132,24 @@ export function ReportsProfitabilityPage() {
 
           {/* By client */}
           <Card>
-            <div className="px-5 pt-5 pb-4 border-b border-[#E2E8F0]">
-              <h3 className="text-sm font-semibold text-slate-900">Profitability by client</h3>
+            <div className="px-5 pt-5 pb-4 border-b border-[var(--border)]">
+              <h3 className="text-sm font-semibold text-foreground">Profitability by client</h3>
             </div>
-            <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-4 px-5 py-2.5 bg-slate-50/60 border-b border-[#F1F5F9]">
+            <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-4 px-5 py-2.5 bg-muted/60 border-b border-[var(--border)]">
               {['Client', 'Revenue', 'Labour', 'Profit', 'Margin'].map(h => (
-                <p key={h} className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">{h}</p>
+                <p key={h} className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">{h}</p>
               ))}
             </div>
             {data.byClient.length === 0 ? (
-              <p className="px-5 py-8 text-sm text-slate-400 text-center">No {basis} revenue in {monthLabel}.</p>
+              <p className="px-5 py-8 text-sm text-muted-foreground text-center">No {basis} revenue in {monthLabel}.</p>
             ) : (
               data.byClient.map(row => (
-                <Link to={`/clients/${row.clientId}`} state={backLinkState('Reports')} key={row.clientId} className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-4 px-5 py-3.5 border-b border-[#F8FAFC] items-center hover:bg-slate-50/50 transition-colors">
-                  <p className="text-sm font-medium text-slate-800 truncate">{row.clientName}</p>
-                  <p className="text-sm text-slate-700 font-mono">{formatCurrency(row.revenue)}</p>
-                  <p className="text-sm text-slate-700 font-mono">{formatCurrency(row.labourCost)}</p>
+                <Link to={`/clients/${row.clientId}`} state={backLinkState('Reports')} key={row.clientId} className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-4 px-5 py-3.5 border-b border-border items-center hover:bg-muted/50 transition-colors">
+                  <p className="text-sm font-medium text-foreground truncate">{row.clientName}</p>
+                  <p className="text-sm text-foreground font-mono">{formatCurrency(row.revenue)}</p>
+                  <p className="text-sm text-foreground font-mono">{formatCurrency(row.labourCost)}</p>
                   <p className={`text-sm font-semibold font-mono ${row.profit >= 0 ? 'text-emerald-700' : 'text-rose-600'}`}>{formatCurrency(row.profit)}</p>
-                  <p className="text-sm text-slate-600 font-mono">{row.marginPercent}%</p>
+                  <p className="text-sm text-muted-foreground font-mono">{row.marginPercent}%</p>
                 </Link >
               ))
             )}

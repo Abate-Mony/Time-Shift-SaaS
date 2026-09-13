@@ -32,7 +32,7 @@ export const loader = (queryClient: QueryClient) => async () => {
 function RecurringStatusBadge({ active }: { active: boolean }) {
   return (
     <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
-      active ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'
+      active ? 'bg-emerald-50 text-emerald-700' : 'bg-muted text-muted-foreground'
     }`}>
       {active ? 'Active' : 'Stopped'}
     </span>
@@ -46,7 +46,7 @@ function RecurrenceSummary({ schedule }: { schedule: RecurringSchedule }) {
   const time = `${schedule.templateJob.startTime}–${schedule.templateJob.endTime}`
   const end = schedule.endDate ? `until ${fmtDateLong(schedule.endDate)}` : 'no end date'
   return (
-    <p className="text-sm text-slate-600 min-w-0 truncate">
+    <p className="text-sm text-muted-foreground min-w-0 truncate">
       {rule} · {time} · {end}
     </p>
   )
@@ -66,13 +66,13 @@ function RecurringScheduleCard({
       onClick={onClick}
       whileHover={{ y: -1 }}
       transition={{ duration: 0.12 }}
-      className="w-full text-left bg-white border border-[#E2E8F0] rounded-xl p-5 hover:border-slate-300 hover:shadow-sm transition-all group"
+      className="w-full text-left bg-card border border-[var(--border)] rounded-xl p-5 hover:border-slate-300 hover:shadow-sm transition-all group"
     >
       <div className="flex items-start gap-3">
         <div className="flex-1 min-w-0">
           {/* Title + badge */}
           <div className="flex items-start gap-2.5 mb-1.5 flex-wrap">
-            <h3 className="text-sm font-bold text-slate-900 min-w-0 truncate flex-1">
+            <h3 className="text-sm font-bold text-foreground min-w-0 truncate flex-1">
               {schedule.templateJob.title}
             </h3>
             <RecurringStatusBadge active={schedule.active} />
@@ -82,7 +82,7 @@ function RecurringScheduleCard({
           <RecurrenceSummary schedule={schedule} />
 
           {/* Client / location */}
-          <div className="flex items-center gap-1.5 mt-1.5 text-xs text-slate-400 min-w-0">
+          <div className="flex items-center gap-1.5 mt-1.5 text-xs text-muted-foreground min-w-0">
             <MapPin size={11} className="shrink-0" />
             <span className="truncate">
               {schedule.templateJob.client ? `${schedule.templateJob.client} · ` : ''}
@@ -93,21 +93,21 @@ function RecurringScheduleCard({
           {/* Stats row */}
           <div className="flex items-center gap-5 mt-3.5 flex-wrap">
             {schedule.nextOccurrence && (
-              <div className="flex items-center gap-1.5 text-xs text-slate-500">
-                <Calendar size={11} className="shrink-0 text-slate-400" />
-                <span>Next: <span className="font-semibold text-slate-700">{fmtDate(schedule.nextOccurrence)}</span></span>
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Calendar size={11} className="shrink-0 text-muted-foreground" />
+                <span>Next: <span className="font-semibold text-foreground">{fmtDate(schedule.nextOccurrence)}</span></span>
               </div>
             )}
-            <div className="text-xs text-slate-500">
-              <span className="font-semibold text-slate-700">{schedule.upcomingCount}</span> upcoming
+            <div className="text-xs text-muted-foreground">
+              <span className="font-semibold text-foreground">{schedule.upcomingCount}</span> upcoming
             </div>
-            <div className="text-xs text-slate-500">
-              <span className="font-semibold text-slate-700">{schedule.occurrenceCount}</span> generated
+            <div className="text-xs text-muted-foreground">
+              <span className="font-semibold text-foreground">{schedule.occurrenceCount}</span> generated
             </div>
           </div>
         </div>
 
-        <ChevronRight size={16} className="text-slate-300 group-hover:text-slate-500 transition-colors shrink-0 mt-1" />
+        <ChevronRight size={16} className="text-slate-300 group-hover:text-muted-foreground transition-colors shrink-0 mt-1" />
       </div>
     </motion.button>
   )
@@ -129,16 +129,16 @@ function EmptyRecurringState({
   }
   const { title, desc } = messages[filter]
   return (
-    <div className="bg-white border border-[#E2E8F0] rounded-xl flex flex-col items-center justify-center py-16 px-8 text-center">
-      <div className="w-12 h-12 rounded-2xl bg-[#1E3A5F]/8 flex items-center justify-center mb-4">
-        <Repeat2 size={22} className="text-[#1E3A5F]" />
+    <div className="bg-card border border-[var(--border)] rounded-xl flex flex-col items-center justify-center py-16 px-8 text-center">
+      <div className="w-12 h-12 rounded-2xl bg-[var(--primary)]/8 flex items-center justify-center mb-4">
+        <Repeat2 size={22} className="text-[var(--primary)]" />
       </div>
-      <h3 className="text-sm font-bold text-slate-800 mb-1.5">{title}</h3>
-      <p className="text-sm text-slate-500 leading-relaxed max-w-xs mb-5">{desc}</p>
+      <h3 className="text-sm font-bold text-foreground mb-1.5">{title}</h3>
+      <p className="text-sm text-muted-foreground leading-relaxed max-w-xs mb-5">{desc}</p>
       {filter === 'all' && (
         <button
           onClick={onCreateJob}
-          className="h-9 px-5 bg-[#1E3A5F] text-white text-sm font-bold rounded-xl hover:bg-[#162D4A] transition-colors flex items-center gap-2"
+          className="h-9 px-5 bg-[var(--primary)] text-white text-sm font-bold rounded-xl hover:bg-primary/90 transition-colors flex items-center gap-2"
         >
           <Plus size={13} /> Create Job
         </button>
@@ -178,14 +178,14 @@ export function RecurringJobs() {
       {/* Page header */}
       <div className="flex items-start justify-between mb-6 flex-wrap gap-4">
         <div>
-          <h2 className="text-lg font-bold text-slate-900 tracking-tight">Recurring Shifts</h2>
-          <p className="text-sm text-slate-500 mt-0.5">
+          <h2 className="text-lg font-bold text-foreground tracking-tight">Recurring Shifts</h2>
+          <p className="text-sm text-muted-foreground mt-0.5">
             Manage repeating schedules that automatically create individual shifts.
           </p>
         </div>
         <button
           onClick={() => onNavigate('/create-job')}
-          className="h-9 px-4 bg-[#1E3A5F] text-white text-sm font-bold rounded-xl hover:bg-[#162D4A] transition-colors flex items-center gap-2"
+          className="h-9 px-4 bg-[var(--primary)] text-white text-sm font-bold rounded-xl hover:bg-primary/90 transition-colors flex items-center gap-2"
         >
           <Plus size={13} /> Create Job
         </button>
@@ -193,13 +193,13 @@ export function RecurringJobs() {
 
       {/* Filter tabs + search */}
       <div className="flex items-center justify-between gap-3 mb-5 flex-wrap">
-        <div className="flex items-center gap-1 bg-slate-100 rounded-xl p-1">
+        <div className="flex items-center gap-1 bg-muted rounded-xl p-1">
           {(['all', 'active', 'stopped'] as FilterType[]).map(f => (
             <button
               key={f}
               onClick={() => setFilter(f)}
               className={`h-8 px-4 rounded-lg text-sm font-semibold capitalize transition-all ${
-                filter === f ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                filter === f ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               {f === 'all' ? `All (${schedules.length})` : f === 'active' ? `Active (${schedules.filter(s => s.active).length})` : `Stopped (${schedules.filter(s => !s.active).length})`}
@@ -208,12 +208,12 @@ export function RecurringJobs() {
         </div>
 
         <div className="relative min-w-[200px]">
-          <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search recurring shifts…"
-            className="w-full h-9 pl-8 pr-3 border border-[#E2E8F0] rounded-xl text-sm text-slate-700 bg-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/15 focus:border-[#1E3A5F]/40 transition-all"
+            className="w-full h-9 pl-8 pr-3 border border-[var(--border)] rounded-xl text-sm text-foreground bg-card placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/15 focus:border-[var(--primary)]/40 transition-all"
           />
         </div>
       </div>
@@ -239,7 +239,7 @@ export function RecurringJobs() {
               />
             ))}
 
-            <div className="flex items-center justify-between pt-4 text-xs text-slate-400">
+            <div className="flex items-center justify-between pt-4 text-xs text-muted-foreground">
               <span>Showing 1–{filtered.length} of {filtered.length}</span>
             </div>
           </motion.div>

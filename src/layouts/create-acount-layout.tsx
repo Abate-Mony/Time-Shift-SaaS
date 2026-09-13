@@ -60,7 +60,7 @@ export function JoinUsLayout() {
                             replace
                             selectedClassName='text-green-800  !pointer-events-none text-white bg-primary-color'
                             animateClassName="inset-0 animate-pulse size-full shadow-md  right-0  bg-purple-600/60 !pointer-events-none rounded-sm "
-                            className=' text-xs relative z-20 bg-white lg:text-sm capitalize w-fit px-4 shadow text-medium rounded-sm   mb-0.5 h-9 flex items-center pointer-events-none!  hover:bg-purple-600/20'
+                            className=' text-xs relative z-20 bg-card lg:text-sm capitalize w-fit px-4 shadow text-medium rounded-sm   mb-0.5 h-9 flex items-center pointer-events-none!  hover:bg-purple-600/20'
                         >
 
                             <span className='text-[10px]! mr-1 font-black'>({idx + 1})</span> {page.name}</CustomNavLink>)

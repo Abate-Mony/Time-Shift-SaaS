@@ -9,7 +9,7 @@ export default function CompletedJobCard({ job }: { job: CreateJobForm }) {
     return (
         <div
             onClick={() => navigate(`/worker/jobs/${job._id}`)}
-            className="bg-white rounded-2xl border border-[#E2E8F0] overflow-hidden shadow-sm hover:shadow-md hover:border-slate-300 transition-all cursor-pointer"
+            className="bg-card rounded-2xl border border-[var(--border)] overflow-hidden shadow-sm hover:shadow-md hover:border-slate-300 transition-all cursor-pointer"
         >
             <div className="h-1 bg-emerald-500" />
             <div className="p-4">
@@ -19,29 +19,29 @@ export default function CompletedJobCard({ job }: { job: CreateJobForm }) {
                             <CheckCircle2 size={14} className="text-emerald-600" />
                         </div>
                         <div className="min-w-0">
-                            <p className="text-sm font-semibold text-slate-900 leading-snug truncate">{job.title}</p>
-                            <p className="text-xs text-slate-400 mt-0.5 font-medium truncate">{job.client?.name}</p>
+                            <p className="text-sm font-semibold text-foreground leading-snug truncate">{job.title}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5 font-medium truncate">{job.client?.name}</p>
                         </div>
                     </div>
 
                     {/* Hours worked is the headline stat on a completed card — biggest, most legible element on it. */}
                     <div className="text-right shrink-0">
                         <p className="text-lg font-bold text-emerald-600 leading-none">{formatDuration(job.minutes)}</p>
-                        <p className="text-[10px] text-slate-400 font-semibold mt-1 uppercase tracking-wide">Worked</p>
+                        <p className="text-[10px] text-muted-foreground font-semibold mt-1 uppercase tracking-wide">Worked</p>
                     </div>
                 </div>
 
-                <div className="flex items-center flex-wrap gap-x-4 gap-y-1.5 text-xs text-slate-500 pt-3 border-t border-[#F1F5F9]">
+                <div className="flex items-center flex-wrap gap-x-4 gap-y-1.5 text-xs text-muted-foreground pt-3 border-t border-[var(--border)]">
                     <div className="flex items-center gap-1.5">
-                        <CalendarDays size={12} className="text-slate-400" />
+                        <CalendarDays size={12} className="text-muted-foreground" />
                         {formatDate(job.date, "ddd, D MMM")}
                     </div>
                     <div className="flex items-center gap-1.5">
-                        <Clock size={12} className="text-slate-400" />
+                        <Clock size={12} className="text-muted-foreground" />
                         {job.startTime} – {job.endTime}
                     </div>
                     <div className="flex items-center gap-1.5 min-w-0">
-                        <MapPin size={12} className="text-slate-400 shrink-0" />
+                        <MapPin size={12} className="text-muted-foreground shrink-0" />
                         <span className="truncate">{job.location}</span>
                     </div>
                 </div>

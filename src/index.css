@@ -54,8 +54,8 @@
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
+  --primary: #1E3A5F;
+  --primary-foreground: #FFFFFF;
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.97 0 0);
@@ -188,16 +188,6 @@ body {
   outline: 2px solid var(--ring);
   outline-offset: 2px;
 }
-body {
-  @apply  text-foreground;
-  font-family: var(--primary-font);
-  font-size: 16px;
-  font-weight: 400;
-  line-height: 1.8;
-  color: var(--dark-color);
-  background-color: var(--color-light);
-  /* overflow-x: hidden; */
-}
 
 .mono {
   font-family: 'Geist Mono', 'JetBrains Mono', monospace;
@@ -284,38 +274,85 @@ body {
   border-radius: 6px;
 }
 
+.dark .skeleton {
+  background: linear-gradient(90deg, #1E293B 25%, #334155 50%, #1E293B 75%);
+  background-size: 200% 100%;
+}
+
+/*
+ * Dark palette is deliberately built from the same Tailwind slate scale the
+ * rest of the app already uses in light mode (slate-50/100/200/... via
+ * hardcoded classes like bg-[#F8FAFC] and border-[#E2E8F0]) rather than the
+ * generic neutral-gray shadcn defaults this block replaced — so dark mode
+ * reads as "the same app, inverted with intent" instead of a bolted-on
+ * theme. --card/--sidebar share slate-900 (#0F172A) on purpose: it's the
+ * exact color Sidebar.tsx already uses for its permanently-dark panel, so
+ * surfaces match it instead of clashing next to it.
+ */
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
+  --background: #020617;
+  /* slate-950 */
+  --foreground: #F8FAFC;
+  /* slate-50 */
+  --card: #0F172A;
+  /* slate-900 */
+  --card-foreground: #F8FAFC;
+  --popover: #0F172A;
+  --popover-foreground: #F8FAFC;
+  --primary: #3B82F6;
+  /* blue-500 — brand navy #1E3A5F is too close to the dark background to
+     read as an accent, so dark mode promotes the existing --info blue */
+  --primary-foreground: #FFFFFF;
+  --secondary: #1E293B;
+  /* slate-800 */
+  --secondary-foreground: #F8FAFC;
+  --muted: #1E293B;
+  --muted-foreground: #94A3B8;
+  /* slate-400 */
+  --accent: #1E293B;
+  --accent-foreground: #F8FAFC;
+  --destructive: #F87171;
+  /* red-400 — brighter than light-mode red-500 for AA contrast on dark bg */
+  --border: #1E293B;
+  --input: #1E293B;
+  --ring: #3B82F6;
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --sidebar: #0F172A;
+  --sidebar-foreground: #F8FAFC;
+  --sidebar-primary: #3B82F6;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #1E293B;
+  --sidebar-accent-foreground: #F8FAFC;
+  --sidebar-border: #1E293B;
+  --sidebar-ring: #3B82F6;
+
+  --success: #34D399;
+  --success-bg: rgba(16, 185, 129, 0.12);
+  --warning: #FBBF24;
+  --warning-bg: rgba(245, 158, 11, 0.12);
+  --danger: #F87171;
+  --danger-bg: rgba(239, 68, 68, 0.12);
+  --info: #60A5FA;
+  --info-bg: rgba(59, 130, 246, 0.12);
+  --grey-color: #94A3B8;
+  --light-color: #1E293B;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+.dark ::selection {
+  background: #1E3A5F;
+  color: #DBEAFE;
 }
 
 @layer base {

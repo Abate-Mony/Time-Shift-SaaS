@@ -36,7 +36,7 @@ function TokenVerifier({ token }: { token: string }) {
     return (
       <div className="flex flex-col items-center text-center gap-4 py-6">
         <Loader2 size={28} className="animate-spin text-blue-500" />
-        <p className="text-sm text-slate-500">Verifying your email…</p>
+        <p className="text-sm text-muted-foreground">Verifying your email…</p>
       </div>
     )
   }
@@ -48,12 +48,12 @@ function TokenVerifier({ token }: { token: string }) {
           <CheckCircle2 size={28} className="text-emerald-600" />
         </div>
         <div>
-          <h2 className="text-xl font-bold text-slate-900 mb-1">Email verified!</h2>
-          <p className="text-sm text-slate-500">You can now sign in to your account.</p>
+          <h2 className="text-xl font-bold text-foreground mb-1">Email verified!</h2>
+          <p className="text-sm text-muted-foreground">You can now sign in to your account.</p>
         </div>
         <Link
           to="/auth/login"
-          className="w-full h-11 rounded-xl bg-[#1E3A5F] text-white text-sm font-bold flex items-center justify-center hover:bg-[#162D4A] transition-colors"
+          className="w-full h-11 rounded-xl bg-[var(--primary)] text-white text-sm font-bold flex items-center justify-center hover:bg-primary/90 transition-colors"
         >
           Continue to login
         </Link>
@@ -67,12 +67,12 @@ function TokenVerifier({ token }: { token: string }) {
         <AlertCircle size={28} className="text-red-500" />
       </div>
       <div>
-        <h2 className="text-xl font-bold text-slate-900 mb-1">Link expired</h2>
-        <p className="text-sm text-slate-500">{errorMsg}</p>
+        <h2 className="text-xl font-bold text-foreground mb-1">Link expired</h2>
+        <p className="text-sm text-muted-foreground">{errorMsg}</p>
       </div>
       <Link
         to="/auth/login"
-        className="w-full h-11 rounded-xl border border-[#E2E8F0] text-sm font-semibold text-slate-700 flex items-center justify-center hover:bg-slate-50 transition-colors"
+        className="w-full h-11 rounded-xl border border-[var(--border)] text-sm font-semibold text-foreground flex items-center justify-center hover:bg-muted transition-colors"
       >
         Back to login
       </Link>
@@ -87,13 +87,13 @@ export default function VerifyEmailPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 flex items-center justify-center px-4">
-      <div className="w-full max-w-[440px] bg-white rounded-3xl border border-[#E2E8F0] shadow-xl shadow-slate-200/60 p-7 sm:p-8">
+      <div className="w-full max-w-[440px] bg-card rounded-3xl border border-[var(--border)] shadow-xl shadow-slate-200/60 p-7 sm:p-8">
         {token ? (
           <TokenVerifier token={token} />
         ) : email ? (
           <>
             <VerifyEmailPanel email={email} />
-            <p className="text-center text-xs text-slate-400 mt-6">
+            <p className="text-center text-xs text-muted-foreground mt-6">
               Already verified?{" "}
               <Link to="/auth/" className="font-semibold text-blue-600 hover:text-blue-800 transition-colors">
                 Sign in
@@ -102,16 +102,16 @@ export default function VerifyEmailPage() {
           </>
         ) : (
           <div className="flex flex-col items-center text-center gap-4 py-4">
-            <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center">
-              <AlertCircle size={28} className="text-slate-400" />
+            <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
+              <AlertCircle size={28} className="text-muted-foreground" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-slate-900 mb-1">Nothing to verify</h2>
-              <p className="text-sm text-slate-500">This page needs a verification link or an email address.</p>
+              <h2 className="text-xl font-bold text-foreground mb-1">Nothing to verify</h2>
+              <p className="text-sm text-muted-foreground">This page needs a verification link or an email address.</p>
             </div>
             <Link
               to="/auth"
-              className="w-full h-11 rounded-xl border border-[#E2E8F0] text-sm font-semibold text-slate-700 flex items-center justify-center hover:bg-slate-50 transition-colors"
+              className="w-full h-11 rounded-xl border border-[var(--border)] text-sm font-semibold text-foreground flex items-center justify-center hover:bg-muted transition-colors"
             >
               Back to login
             </Link>

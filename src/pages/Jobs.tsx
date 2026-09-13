@@ -153,7 +153,7 @@ export function Jobs() {
         placeholder='search jobs ...'
         />
       </div>
-      <div className="flex items-center gap-1 gap-x-0 border-b flex-wrap border-[#E2E8F0]">
+      <div className="flex items-center gap-1 gap-x-0 border-b flex-wrap border-[var(--border)]">
         {tabs.map((tab, idx) => (
           <AnimatedHeadLessUi
             animatedClassName='bg-black/5 p-0 rounded-sm'
@@ -191,22 +191,22 @@ export function Jobs() {
             type="button"
             onClick={() => setFilterOpen(o => !o)}
             className={cn(
-              "flex items-center gap-2 h-9 px-3 border rounded-lg text-sm bg-white hover:bg-slate-50 transition-colors",
-              activeFilterCount > 0 ? "border-[#1E3A5F] text-[#1E3A5F]" : "border-[#E2E8F0] text-slate-600"
+              "flex items-center gap-2 h-9 px-3 border rounded-lg text-sm bg-card hover:bg-muted transition-colors",
+              activeFilterCount > 0 ? "border-[var(--primary)] text-[var(--primary)]" : "border-[var(--border)] text-muted-foreground"
             )}
           >
             <Filter size={13} /> Filter
             {activeFilterCount > 0 && (
-              <span className="w-4 h-4 rounded-full bg-[#1E3A5F] text-white text-[10px] font-bold flex items-center justify-center">
+              <span className="w-4 h-4 rounded-full bg-[var(--primary)] text-white text-[10px] font-bold flex items-center justify-center">
                 {activeFilterCount}
               </span>
             )}
           </button>
 
           {filterOpen && (
-            <div className="absolute z-20 top-full mt-2 left-0 w-72 bg-white border border-[#E2E8F0] rounded-xl shadow-lg p-4 flex flex-col gap-4">
+            <div className="absolute z-20 top-full mt-2 left-0 w-72 bg-card border border-[var(--border)] rounded-xl shadow-lg p-4 flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">
-                <Label className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Client</Label>
+                <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Client</Label>
                 {/* The backend now expects a real Client _id here, not a
                     name substring — filtering by free text would just 400. */}
                 <Select
@@ -226,7 +226,7 @@ export function Jobs() {
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <Label className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Priority</Label>
+                <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Priority</Label>
                 <Select
                   value={priorityFilter || 'all'}
                   onValueChange={v => handleFilterChange({ key: 'priority', value: v === 'all' ? null : v })}
@@ -249,7 +249,7 @@ export function Jobs() {
                   checked={unassignedOnly}
                   onCheckedChange={checked => handleFilterChange({ key: 'unassigned', value: checked ? 'true' : null })}
                 />
-                <span className="text-sm text-slate-700">No workers assigned</span>
+                <span className="text-sm text-foreground">No workers assigned</span>
               </Label>
 
               {activeFilterCount > 0 && (
@@ -259,7 +259,7 @@ export function Jobs() {
                     handleFiltersChange({ client: null, priority: null, unassigned: null, start: null, end: null })
                     setFilterOpen(false)
                   }}
-                  className="text-xs text-slate-400 hover:text-slate-600 self-start"
+                  className="text-xs text-muted-foreground hover:text-muted-foreground self-start"
                 >
                   Clear filters
                 </button>
@@ -269,7 +269,7 @@ export function Jobs() {
         </div>
 
         <Select value={sortValue} onValueChange={v => handleFilterChange({ key: 'sort', value: v })}>
-          <SelectTrigger className="h-9 w-auto text-sm text-slate-600">
+          <SelectTrigger className="h-9 w-auto text-sm text-muted-foreground">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -282,7 +282,7 @@ export function Jobs() {
         </Select>
 
         <Select value={limitValue} onValueChange={handleLimitChange}>
-          <SelectTrigger className="h-9 w-auto text-sm text-slate-600">
+          <SelectTrigger className="h-9 w-auto text-sm text-muted-foreground">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -300,7 +300,7 @@ export function Jobs() {
               <Button
                 variant="outline"
                 id="date-picker-range"
-                className="h-9 justify-start px-2.5 font-normal text-sm text-slate-600"
+                className="h-9 justify-start px-2.5 font-normal text-sm text-muted-foreground"
               >
                 <CalendarIcon size={14} />
                 {startFilter ? (
@@ -378,7 +378,7 @@ export function Jobs() {
 
 
       {/* Pagination */}
-      <div className="flex items-center justify-between mt-4 text-xs text-slate-500">
+      <div className="flex items-center justify-between mt-4 text-xs text-muted-foreground">
         <p>Showing {jobs.length} of {totalJobs} job{totalJobs === 1 ? '' : 's'}</p>
         {totalPages > 1 && (
           <div className="flex items-center gap-1">
@@ -386,18 +386,18 @@ export function Jobs() {
               type="button"
               onClick={() => goToPage(currentPage - 1)}
               disabled={currentPage <= 1}
-              className="h-7 px-2.5 rounded-lg border border-[#E2E8F0] text-slate-600 hover:bg-slate-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white flex items-center gap-1"
+              className="h-7 px-2.5 rounded-lg border border-[var(--border)] text-muted-foreground hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-card flex items-center gap-1"
             >
               <ChevronLeft size={12} /> Previous
             </button>
-            <span className="px-2 font-medium text-slate-600">
+            <span className="px-2 font-medium text-muted-foreground">
               Page {currentPage} of {totalPages}
             </span>
             <button
               type="button"
               onClick={() => goToPage(currentPage + 1)}
               disabled={currentPage >= totalPages}
-              className="h-7 px-2.5 rounded-lg border border-[#E2E8F0] text-slate-600 hover:bg-slate-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white flex items-center gap-1"
+              className="h-7 px-2.5 rounded-lg border border-[var(--border)] text-muted-foreground hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-card flex items-center gap-1"
             >
               Next <ChevronRight size={12} />
             </button>

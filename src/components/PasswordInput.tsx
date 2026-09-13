@@ -38,16 +38,16 @@ export default function PasswordInput({
                 className={`
                     w-full h-11 px-4 pr-11
                     border rounded-xl
-                    text-sm text-slate-800
-                    bg-white
-                    placeholder:text-slate-400
+                    text-sm text-foreground
+                    bg-card
+                    placeholder:text-muted-foreground
                     focus:outline-none
                     focus:ring-2
                     transition-all
                     ${
                         error
                             ? "border-red-400 focus:ring-red-100"
-                            : "border-slate-200 focus:ring-[#1E3A5F]/15 focus:border-[#1E3A5F]/40"
+                            : "border-border focus:ring-[var(--primary)]/15 focus:border-[var(--primary)]/40"
                     }
                 `}
             />
@@ -57,7 +57,7 @@ export default function PasswordInput({
                 onClick={() =>
                     setVisible((v) => !v)
                 }
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground"
                 aria-label={
                     visible
                         ? "Hide password"

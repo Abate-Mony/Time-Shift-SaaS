@@ -37,18 +37,18 @@ export function HelpArticlePage() {
 
   return (
     <div className="p-6 max-w-3xl mx-auto animate-fade-in">
-      <div className="flex items-center gap-1.5 text-sm text-slate-500 mb-5 flex-wrap">
-        <Link to="/help" className="hover:text-slate-800 transition-colors flex items-center gap-1">
+      <div className="flex items-center gap-1.5 text-sm text-muted-foreground mb-5 flex-wrap">
+        <Link to="/help" className="hover:text-foreground transition-colors flex items-center gap-1">
           <ChevronLeft size={14} /> Help Centre
         </Link>
         <span className="text-slate-300">/</span>
-        <Link to={`/help?category=${article.category}`} className="hover:text-slate-800 transition-colors">
+        <Link to={`/help?category=${article.category}`} className="hover:text-foreground transition-colors">
           {categoryLabel}
         </Link>
       </div>
 
-      <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">{article.title}</h1>
-      <p className="text-sm text-slate-500 mt-1.5">{article.description}</p>
+      <h1 className="text-2xl font-semibold text-foreground tracking-tight">{article.title}</h1>
+      <p className="text-sm text-muted-foreground mt-1.5">{article.description}</p>
 
       {article.link && (
         <Link
@@ -67,16 +67,16 @@ export function HelpArticlePage() {
       </div>
 
       {related.length > 0 && (
-        <div className="mt-10 pt-6 border-t border-[#E2E8F0]">
-          <h2 className="text-sm font-semibold text-slate-800 mb-3">Related articles</h2>
+        <div className="mt-10 pt-6 border-t border-[var(--border)]">
+          <h2 className="text-sm font-semibold text-foreground mb-3">Related articles</h2>
           <div className="flex flex-col gap-1.5">
             {related.map(a => (
               <Link
                 key={a.slug}
                 to={`/help/${a.slug}`}
-                className="flex items-center justify-between gap-2 px-4 py-3 rounded-xl border border-[#E2E8F0] bg-white hover:border-slate-300 hover:shadow-sm transition-all group"
+                className="flex items-center justify-between gap-2 px-4 py-3 rounded-xl border border-[var(--border)] bg-card hover:border-slate-300 hover:shadow-sm transition-all group"
               >
-                <span className="text-sm font-medium text-slate-700 group-hover:text-slate-900">{a.title}</span>
+                <span className="text-sm font-medium text-foreground group-hover:text-foreground">{a.title}</span>
                 <ChevronRight size={14} className="text-slate-300 shrink-0" />
               </Link>
             ))}
@@ -90,13 +90,13 @@ export function HelpArticlePage() {
 function ArticleSectionView({ section }: { section: HelpSection }) {
   return (
     <div>
-      {section.heading && <h2 className="text-base font-semibold text-slate-900 mb-2">{section.heading}</h2>}
-      {section.body && <p className="text-sm text-slate-600 leading-relaxed">{section.body}</p>}
+      {section.heading && <h2 className="text-base font-semibold text-foreground mb-2">{section.heading}</h2>}
+      {section.body && <p className="text-sm text-muted-foreground leading-relaxed">{section.body}</p>}
       {section.steps && (
         <ol className="mt-2 flex flex-col gap-2.5">
           {section.steps.map((step, i) => (
-            <li key={i} className="flex items-start gap-3 text-sm text-slate-600 leading-relaxed">
-              <span className="shrink-0 w-5 h-5 rounded-full bg-[#1E3A5F]/10 text-[#1E3A5F] text-xs font-semibold flex items-center justify-center mt-0.5">
+            <li key={i} className="flex items-start gap-3 text-sm text-muted-foreground leading-relaxed">
+              <span className="shrink-0 w-5 h-5 rounded-full bg-[var(--primary)]/10 text-[var(--primary)] text-xs font-semibold flex items-center justify-center mt-0.5">
                 {i + 1}
               </span>
               {step}
@@ -107,7 +107,7 @@ function ArticleSectionView({ section }: { section: HelpSection }) {
       {section.bullets && (
         <ul className="mt-2 flex flex-col gap-1.5">
           {section.bullets.map((b, i) => (
-            <li key={i} className="flex items-start gap-2 text-sm text-slate-600 leading-relaxed">
+            <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground leading-relaxed">
               <span className="mt-2 w-1 h-1 rounded-full bg-slate-400 shrink-0" />
               {b}
             </li>

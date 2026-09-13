@@ -41,13 +41,13 @@ export function CreateSitePage() {
         <button
           type="button"
           onClick={() => navigate(-1)}
-          className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:bg-slate-100 transition-colors shrink-0"
+          className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors shrink-0"
         >
           <ChevronLeft size={16} />
         </button>
         <div className="min-w-0">
-          <h1 className="text-xl font-semibold text-slate-900 tracking-tight truncate">Add site</h1>
-          <p className="text-sm text-slate-500 mt-0.5 truncate">
+          <h1 className="text-xl font-semibold text-foreground tracking-tight truncate">Add site</h1>
+          <p className="text-sm text-muted-foreground mt-0.5 truncate">
             Use sites for places your team visits repeatedly. Use a one-off location for ad-hoc work.
           </p>
         </div>

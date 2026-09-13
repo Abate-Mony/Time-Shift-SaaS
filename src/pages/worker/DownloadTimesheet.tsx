@@ -91,26 +91,26 @@ export default function DownloadTimesheetScreen() {
       <button
         type="button"
         onClick={() => navigate(-1)}
-        className="flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors -mb-1"
+        className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors -mb-1"
       >
         <ChevronLeft size={16} />
         Back
       </button>
 
       <div>
-        <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-          <span className="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center">
-            <Download size={15} className="text-slate-500" />
+        <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
+          <span className="w-8 h-8 rounded-xl bg-muted flex items-center justify-center">
+            <Download size={15} className="text-muted-foreground" />
           </span>
           Download Timesheet
         </h2>
 
-        <p className="text-xs text-slate-400 mt-1">
+        <p className="text-xs text-muted-foreground mt-1">
           Choose a period to generate and download
         </p>
       </div>
 
-      <div className="flex bg-slate-100 rounded-xl p-1 gap-1">
+      <div className="flex bg-muted rounded-xl p-1 gap-1">
         {PERIOD_TYPES.map((p) => (
           <button
             key={p.id}
@@ -118,7 +118,7 @@ export default function DownloadTimesheetScreen() {
             onClick={() => selectPeriodType(p.id)}
             className={cn(
               "flex-1 py-2 rounded-lg text-xs font-semibold transition-colors",
-              periodType === p.id ? "bg-white text-slate-900 shadow-sm" : "text-slate-500"
+              periodType === p.id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
             )}
           >
             {p.label}
@@ -126,20 +126,20 @@ export default function DownloadTimesheetScreen() {
         ))}
       </div>
 
-      <div className="bg-white rounded-2xl border border-[#E2E8F0] px-3 py-3 shadow-sm flex items-center justify-between">
+      <div className="bg-card rounded-2xl border border-[var(--border)] px-3 py-3 shadow-sm flex items-center justify-between">
         <button
           type="button"
           onClick={() => setAnchor((a) => shiftAnchor(periodType, a, -1))}
-          className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-100 transition-colors shrink-0"
+          className="w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors shrink-0"
         >
           <ChevronLeft size={16} />
         </button>
 
         <div className="text-center">
-          <p className="text-sm font-semibold text-slate-900">
+          <p className="text-sm font-semibold text-foreground">
             {start.format("D MMM")} – {end.format("D MMM YYYY")}
           </p>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <p className="text-xs text-muted-foreground mt-0.5">
             {PERIOD_TYPES.find((p) => p.id === periodType)?.label}
           </p>
         </div>
@@ -148,32 +148,32 @@ export default function DownloadTimesheetScreen() {
           type="button"
           onClick={() => setAnchor((a) => shiftAnchor(periodType, a, 1))}
           disabled={isCurrentOrFuturePeriod}
-          className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-100 transition-colors shrink-0 disabled:opacity-30 disabled:pointer-events-none"
+          className="w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors shrink-0 disabled:opacity-30 disabled:pointer-events-none"
         >
           <ChevronRight size={16} />
         </button>
       </div>
 
-      <div className="bg-white rounded-2xl border border-[#E2E8F0] px-5 shadow-sm divide-y divide-[#F8FAFC]">
+      <div className="bg-card rounded-2xl border border-[var(--border)] px-5 shadow-sm divide-y divide-border">
         <div className="flex items-center justify-between py-3.5">
-          <span className="text-sm text-slate-500">Total hours</span>
-          <span className="text-sm font-semibold text-slate-900">
+          <span className="text-sm text-muted-foreground">Total hours</span>
+          <span className="text-sm font-semibold text-foreground">
             {summaryLoading ? "—" : formatDuration(summary?.totalMinutes)}
           </span>
         </div>
 
         <div className="flex items-center justify-between py-3.5">
-          <span className="text-sm text-slate-500">Shifts</span>
-          <span className="text-sm font-semibold text-slate-900">
+          <span className="text-sm text-muted-foreground">Shifts</span>
+          <span className="text-sm font-semibold text-foreground">
             {summaryLoading ? "—" : (summary?.totalJobs ?? 0)}
           </span>
         </div>
       </div>
 
       {!summaryLoading && summary?.hasData && summary.assignments?.length > 0 && (
-        <div className="bg-white rounded-2xl border border-[#E2E8F0] px-5 shadow-sm divide-y divide-[#F8FAFC]">
+        <div className="bg-card rounded-2xl border border-[var(--border)] px-5 shadow-sm divide-y divide-border">
           <div className="py-3.5">
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
               Shifts in this period
             </p>
           </div>
@@ -181,10 +181,10 @@ export default function DownloadTimesheetScreen() {
           {summary.assignments.map((a, i) => (
             <div key={a._id ?? i} className="flex items-center justify-between gap-3 py-3">
               <div className="min-w-0">
-                <p className="text-sm font-medium text-slate-800 truncate">{a.title || "Shift"}</p>
-                <p className="text-xs text-slate-400 mt-0.5">{formatDate(a.date, "ddd, D MMM")}</p>
+                <p className="text-sm font-medium text-foreground truncate">{a.title || "Shift"}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{formatDate(a.date, "ddd, D MMM")}</p>
               </div>
-              <span className="text-sm font-semibold text-slate-900 shrink-0">
+              <span className="text-sm font-semibold text-foreground shrink-0">
                 {formatDuration(a.minutes)}
               </span>
             </div>
@@ -196,7 +196,7 @@ export default function DownloadTimesheetScreen() {
         type="button"
         onClick={() => downloadMutation.mutate()}
         disabled={summaryLoading || downloadMutation.isPending}
-        className="w-full h-11 rounded-xl bg-[#1E3A5F] text-white text-sm font-semibold flex items-center justify-center gap-2 transition-opacity disabled:opacity-40"
+        className="w-full h-11 rounded-xl bg-[var(--primary)] text-white text-sm font-semibold flex items-center justify-center gap-2 transition-opacity disabled:opacity-40"
       >
         {downloadMutation.isPending ? (
           <Loader2 size={16} className="animate-spin" />
@@ -207,7 +207,7 @@ export default function DownloadTimesheetScreen() {
       </button>
 
       {!summaryLoading && !summary?.totalJobs && (
-        <p className="text-xs text-center text-slate-400 -mt-2">
+        <p className="text-xs text-center text-muted-foreground -mt-2">
           No shifts recorded in this period
         </p>
       )}

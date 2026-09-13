@@ -38,11 +38,11 @@ export function RecurringAssignmentCard({
   }
 
   return (
-    <div className="bg-white rounded-2xl border-2 border-[#1E3A5F]/15 overflow-hidden shadow-sm">
+    <div className="bg-card rounded-2xl border-2 border-[var(--primary)]/15 overflow-hidden shadow-sm">
       {/* Recurring indicator stripe */}
-      <div className="bg-[#1E3A5F]/[0.04] border-b border-[#1E3A5F]/8 px-4 py-2 flex items-center gap-1.5">
-        <Repeat2 size={11} className="text-[#1E3A5F]/60" />
-        <span className="text-[10px] font-bold uppercase tracking-widest text-[#1E3A5F]/60">Recurring shifts</span>
+      <div className="bg-[var(--primary)]/[0.04] border-b border-[var(--primary)]/8 px-4 py-2 flex items-center gap-1.5">
+        <Repeat2 size={11} className="text-[var(--primary)]/60" />
+        <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--primary)]/60">Recurring shifts</span>
         {isNew && (
           <span className="ml-auto text-[10px] font-bold bg-amber-400 text-white px-1.5 py-0.5 rounded-full">New</span>
         )}
@@ -50,10 +50,10 @@ export function RecurringAssignmentCard({
 
       <div className="p-4">
         {/* Title + location */}
-        <h3 className="text-sm font-bold text-slate-900 leading-snug mb-0.5 min-w-0">{group.title}</h3>
-        <p className="text-xs text-slate-500 mb-0.5">{group.recurrenceLabel} · {group.startTime}–{group.endTime}</p>
+        <h3 className="text-sm font-bold text-foreground leading-snug mb-0.5 min-w-0">{group.title}</h3>
+        <p className="text-xs text-muted-foreground mb-0.5">{group.recurrenceLabel} · {group.startTime}–{group.endTime}</p>
         {group.location && (
-          <p className="text-xs text-slate-400 flex items-center gap-1 mb-3">
+          <p className="text-xs text-muted-foreground flex items-center gap-1 mb-3">
             <MapPin size={10} /> {group.location}
           </p>
         )}
@@ -73,18 +73,18 @@ export function RecurringAssignmentCard({
               <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-amber-100 text-amber-700 text-[11px] font-bold shrink-0">
                 {group.pendingCount}
               </span>
-              <p className="text-sm font-semibold text-slate-800">
+              <p className="text-sm font-semibold text-foreground">
                 {group.pendingCount === 1 ? '1 shift' : `${group.pendingCount} shifts`} waiting for your response
               </p>
             </div>
 
             {/* Next shift */}
             {group.nextShift && (
-              <div className="bg-slate-50 rounded-xl px-3 py-2.5 mb-3 flex items-center gap-2.5">
-                <Clock size={12} className="text-slate-400 shrink-0" />
+              <div className="bg-muted rounded-xl px-3 py-2.5 mb-3 flex items-center gap-2.5">
+                <Clock size={12} className="text-muted-foreground shrink-0" />
                 <div>
-                  <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wide">Next shift</p>
-                  <p className="text-sm font-semibold text-slate-800">
+                  <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide">Next shift</p>
+                  <p className="text-sm font-semibold text-foreground">
                     {fmtDate(group.nextShift.date)} · {group.nextShift.startTime}–{group.nextShift.endTime}
                   </p>
                 </div>
@@ -98,7 +98,7 @@ export function RecurringAssignmentCard({
           {group.pendingCount > 0 && (
             <button
               onClick={() => setShowAcceptDialog(true)}
-              className="w-full h-11 bg-[#1E3A5F] text-white rounded-xl text-sm font-bold hover:bg-[#162D4A] transition-colors flex items-center justify-center gap-2"
+              className="w-full h-11 bg-[var(--primary)] text-white rounded-xl text-sm font-bold hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
             >
               <CheckCircle2 size={14} />
               Accept all {group.pendingCount} pending
@@ -109,8 +109,8 @@ export function RecurringAssignmentCard({
             onClick={() => setExpanded(e => !e)}
             className={`w-full h-10 rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2 ${
               allAccepted
-                ? 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                : 'border border-slate-200 text-slate-600 hover:bg-slate-50'
+                ? 'bg-muted text-foreground hover:bg-muted'
+                : 'border border-border text-muted-foreground hover:bg-muted'
             }`}
           >
             {allAccepted ? 'View shifts' : 'Review shifts'}
@@ -128,8 +128,8 @@ export function RecurringAssignmentCard({
               >
                 <div className="flex flex-col gap-1.5 pt-1">
                   {group.shifts.map(s => (
-                    <div key={s.jobId} className="flex items-center justify-between gap-2 bg-slate-50 rounded-lg px-3 py-2">
-                      <span className="text-xs text-slate-600">{fmtDate(s.date)} · {s.startTime}–{s.endTime}</span>
+                    <div key={s.jobId} className="flex items-center justify-between gap-2 bg-muted rounded-lg px-3 py-2">
+                      <span className="text-xs text-muted-foreground">{fmtDate(s.date)} · {s.startTime}–{s.endTime}</span>
                       <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${statusStyle(s.status)}`}>
                         {statusLabel(s.status)}
                       </span>
@@ -146,7 +146,7 @@ export function RecurringAssignmentCard({
           <div className="mt-2">
             <button
               onClick={() => setShowMoreActions(o => !o)}
-              className="flex items-center gap-1 text-xs text-slate-400 hover:text-slate-600 transition-colors mx-auto"
+              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-muted-foreground transition-colors mx-auto"
             >
               <MoreHorizontal size={12} />
               More actions
@@ -170,11 +170,11 @@ export function RecurringAssignmentCard({
                     </button>
                   ) : (
                     <div className="flex items-center gap-2 mt-2">
-                      <p className="text-xs text-slate-600 flex-1">Decline all {group.pendingCount}?</p>
+                      <p className="text-xs text-muted-foreground flex-1">Decline all {group.pendingCount}?</p>
                       <button
                         onClick={() => setConfirmingDecline(false)}
                         disabled={declining}
-                        className="h-8 px-3 text-xs font-semibold text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors disabled:opacity-60"
+                        className="h-8 px-3 text-xs font-semibold text-muted-foreground border border-border rounded-lg hover:bg-muted transition-colors disabled:opacity-60"
                       >
                         Cancel
                       </button>

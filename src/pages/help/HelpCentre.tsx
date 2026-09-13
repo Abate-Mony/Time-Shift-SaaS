@@ -45,18 +45,18 @@ export function HelpCentre() {
   return (
     <div className="p-6 max-w-5xl mx-auto animate-fade-in">
       <div className="mb-7">
-        <h1 className="text-xl font-semibold text-slate-900 tracking-tight">Help Centre</h1>
-        <p className="text-sm text-slate-500 mt-0.5">Guides and answers to help you get the most out of work.wrk</p>
+        <h1 className="text-xl font-semibold text-foreground tracking-tight">Help Centre</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">Guides and answers to help you get the most out of work.wrk</p>
       </div>
 
       <div className="relative mb-8">
-        <Search size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+        <Search size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
         <input
           value={query}
           onChange={e => setQuery(e.target.value)}
           placeholder="Search help articles…"
           aria-label="Search help articles"
-          className="w-full h-11 pl-11 pr-5 border border-[#E2E8F0] rounded-xl text-sm text-slate-700 bg-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all shadow-sm"
+          className="w-full h-11 pl-11 pr-5 border border-[var(--border)] rounded-xl text-sm text-foreground bg-card placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all shadow-sm"
         />
       </div>
 
@@ -96,7 +96,7 @@ export function HelpCentre() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="mb-8">
-      <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-3">{title}</p>
+      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-3">{title}</p>
       {children}
     </div>
   )
@@ -107,14 +107,14 @@ function CategoryCard({ role, category }: { role: HelpRole; category: HelpCatego
   return (
     <Link
       to={`/help?category=${category.id}`}
-      className="bg-white rounded-xl border border-[#E2E8F0] p-5 hover:border-slate-300 hover:shadow-sm transition-all group"
+      className="bg-card rounded-xl border border-[var(--border)] p-5 hover:border-slate-300 hover:shadow-sm transition-all group"
     >
       <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center mb-3">
         <category.icon size={18} className="text-blue-600" />
       </div>
-      <h3 className="text-sm font-semibold text-slate-800 group-hover:text-slate-900">{category.label}</h3>
-      <p className="text-xs text-slate-500 mt-1 leading-relaxed">{category.description}</p>
-      <p className="text-[11px] text-slate-400 mt-3">{count} article{count === 1 ? '' : 's'}</p>
+      <h3 className="text-sm font-semibold text-foreground group-hover:text-foreground">{category.label}</h3>
+      <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{category.description}</p>
+      <p className="text-[11px] text-muted-foreground mt-3">{count} article{count === 1 ? '' : 's'}</p>
     </Link>
   )
 }
@@ -122,7 +122,7 @@ function CategoryCard({ role, category }: { role: HelpRole; category: HelpCatego
 function CategoryView({ role, category, articles }: { role: HelpRole; category: HelpCategoryDef; articles: HelpArticle[] }) {
   return (
     <div>
-      <Link to="/help" className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-800 transition-colors mb-4">
+      <Link to="/help" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mb-4">
         <ChevronLeft size={14} /> Help Centre
       </Link>
       <div className="flex items-center gap-3 mb-5">
@@ -130,8 +130,8 @@ function CategoryView({ role, category, articles }: { role: HelpRole; category: 
           <category.icon size={16} className="text-blue-600" />
         </div>
         <div>
-          <h2 className="text-base font-semibold text-slate-900">{category.label}</h2>
-          <p className="text-xs text-slate-500">{category.description}</p>
+          <h2 className="text-base font-semibold text-foreground">{category.label}</h2>
+          <p className="text-xs text-muted-foreground">{category.description}</p>
         </div>
       </div>
       <ArticleList role={role} articles={articles} />
@@ -151,7 +151,7 @@ function SearchResults({ role, query, results }: { role: HelpRole; query: string
   }
   return (
     <div>
-      <p className="text-xs text-slate-400 mb-3">{results.length} result{results.length === 1 ? '' : 's'}</p>
+      <p className="text-xs text-muted-foreground mb-3">{results.length} result{results.length === 1 ? '' : 's'}</p>
       <ArticleList role={role} articles={results} showCategory />
     </div>
   )
@@ -164,11 +164,11 @@ function ArticleList({ role, articles, showCategory }: { role: HelpRole; article
         <Link
           key={article.slug}
           to={`/help/${article.slug}`}
-          className="flex items-center justify-between gap-3 px-4 py-3.5 rounded-xl border border-[#E2E8F0] bg-white hover:border-slate-300 hover:shadow-sm transition-all group"
+          className="flex items-center justify-between gap-3 px-4 py-3.5 rounded-xl border border-[var(--border)] bg-card hover:border-slate-300 hover:shadow-sm transition-all group"
         >
           <div className="min-w-0">
-            <p className="text-sm font-medium text-slate-800 group-hover:text-slate-900 truncate">{article.title}</p>
-            <p className="text-xs text-slate-500 mt-0.5 truncate">
+            <p className="text-sm font-medium text-foreground group-hover:text-foreground truncate">{article.title}</p>
+            <p className="text-xs text-muted-foreground mt-0.5 truncate">
               {showCategory ? `${getCategoryLabel(role, article.category)} · ` : ''}{article.description}
             </p>
           </div>

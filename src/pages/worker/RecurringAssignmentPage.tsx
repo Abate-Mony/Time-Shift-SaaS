@@ -56,11 +56,11 @@ export default function RecurringAssignmentPage() {
   if (groups.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
-        <div className="w-12 h-12 rounded-2xl bg-[#1E3A5F]/8 flex items-center justify-center mb-4">
-          <Repeat2 size={22} className="text-[#1E3A5F]" />
+        <div className="w-12 h-12 rounded-2xl bg-[var(--primary)]/8 flex items-center justify-center mb-4">
+          <Repeat2 size={22} className="text-[var(--primary)]" />
         </div>
-        <h3 className="text-sm font-bold text-slate-800 mb-1.5">No recurring shifts</h3>
-        <p className="text-sm text-slate-500 leading-relaxed max-w-xs">
+        <h3 className="text-sm font-bold text-foreground mb-1.5">No recurring shifts</h3>
+        <p className="text-sm text-muted-foreground leading-relaxed max-w-xs">
           Recurring shifts you're assigned to will show up here so you can respond to them in bulk.
         </p>
       </div>

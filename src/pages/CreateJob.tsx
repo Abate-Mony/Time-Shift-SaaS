@@ -568,15 +568,15 @@ export function CreateJob() {
           <button
             type="button"
             onClick={() => navigate("/jobs")}
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:bg-slate-100 transition-colors shrink-0"
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors shrink-0"
           >
             <ChevronLeft size={16} />
           </button>
           <div className="min-w-0 flex-1">
-            <h1 className="text-xl font-semibold text-slate-900 tracking-tight truncate">
+            <h1 className="text-xl font-semibold text-foreground tracking-tight truncate">
               Create new job
             </h1>
-            <p className="text-sm text-slate-500 mt-0.5 truncate">
+            <p className="text-sm text-muted-foreground mt-0.5 truncate">
               Fill in the details to assign work to your team
             </p>
           </div>
@@ -584,11 +584,11 @@ export function CreateJob() {
         </div>
 
         {aiAssumptions.length > 0 && (
-          <div className="mb-6 -mt-2 bg-[#1E3A5F]/[0.04] border border-[#1E3A5F]/15 rounded-xl px-4 py-3 min-w-0">
-            <p className="text-xs font-semibold text-[#1E3A5F] uppercase tracking-wide mb-1.5">
+          <div className="mb-6 -mt-2 bg-[var(--primary)]/[0.04] border border-[var(--primary)]/15 rounded-xl px-4 py-3 min-w-0">
+            <p className="text-xs font-semibold text-[var(--primary)] uppercase tracking-wide mb-1.5">
               AI draft — double-check these
             </p>
-            <ul className="text-sm text-slate-600 space-y-1 list-disc list-inside">
+            <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
               {aiAssumptions.map((note, i) => (
                 <li key={i}>{note}</li>
               ))}

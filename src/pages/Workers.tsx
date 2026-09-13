@@ -118,51 +118,51 @@ const SelectedWorkerCard = ({ selectedWorker, setSelected, users, scope, workerJ
       <Card className="p-5 relative md:sticky sm:top-19">
         <div className="flex items-start justify-between mb-4">
           <Avatar initials={selectedWorker?.fullname?.slice(0, 2)} size="xl" index={users.findIndex(w => w._id === selectedWorker._id)} src={selectedWorker?.profilePhoto?.url} />
-          <button onClick={() => setSelected(null)} className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-100 transition-colors">
+          <button onClick={() => setSelected(null)} className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors">
             <X size={14} />
           </button>
         </div>
 
-        <h2 className="text-base font-semibold text-slate-900">{selectedWorker.fullname}</h2>
-        <p className="text-sm text-slate-500 mt-0.5">{selectedWorker.role ?? "role"}</p>
+        <h2 className="text-base font-semibold text-foreground">{selectedWorker.fullname}</h2>
+        <p className="text-sm text-muted-foreground mt-0.5">{selectedWorker.role ?? "role"}</p>
         <div className="mt-2"><StatusBadge status={"status"} /></div>
 
         <div className="mt-4 flex flex-row sm:flex-col gap-2.5">
-          <div className="flex items-center gap-2.5 text-sm text-slate-600">
-            <Mail size={13} className="text-slate-400 shrink-0" />
+          <div className="flex items-center gap-2.5 text-sm text-muted-foreground">
+            <Mail size={13} className="text-muted-foreground shrink-0" />
             {selectedWorker.email}
           </div>
-          <div className="flex items-center gap-2.5 text-sm text-slate-600">
-            <Phone size={13} className="text-slate-400 shrink-0" />
+          <div className="flex items-center gap-2.5 text-sm text-muted-foreground">
+            <Phone size={13} className="text-muted-foreground shrink-0" />
             {"phone number"}
           </div>
         </div>
 
-        <div className="mt-5 pt-4 border-t border-[#F1F5F9] grid grid-cols-3 gap-3 text-center">
+        <div className="mt-5 pt-4 border-t border-[var(--border)] grid grid-cols-3 gap-3 text-center">
           <div>
-            <p className="text-lg font-bold text-slate-900">{selectedWorker.hoursThisWeek}</p>
-            <p className="text-[10px] text-slate-400 mt-0.5">hrs/week</p>
+            <p className="text-lg font-bold text-foreground">{selectedWorker.hoursThisWeek}</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">hrs/week</p>
           </div>
           <div>
-            <p className="text-lg font-bold text-slate-900">{selectedWorker.jobsCompleted}</p>
-            <p className="text-[10px] text-slate-400 mt-0.5">jobs done</p>
+            <p className="text-lg font-bold text-foreground">{selectedWorker.jobsCompleted}</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">jobs done</p>
           </div>
           <div className='hidden'>
             <p className="text-lg font-bold text-amber-600">{"selectedWorker.rating"}</p>
-            <p className="text-[10px] text-slate-400 mt-0.5">rating</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">rating</p>
           </div>
         </div>
 
         <div className=''>
-          <div className="mt-4 pt-4 border-t border-[#F1F5F9] ">
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Assigned Jobs</p>
+          <div className="mt-4 pt-4 border-t border-[var(--border)] ">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">Assigned Jobs</p>
             {workerJobs?.length === 0 ? (
-              <p className="text-xs text-slate-400 text-center py-2">No jobs assigned</p>
+              <p className="text-xs text-muted-foreground text-center py-2">No jobs assigned</p>
             ) : (
               <div className="flex flex-col gap-2">
                 {workerJobs?.slice(0, 4).map(job => (
                   <div key={job.id} className="flex items-center justify-between gap-2">
-                    <p className="text-xs text-slate-700 font-medium truncate">{job.name}</p>
+                    <p className="text-xs text-foreground font-medium truncate">{job.name}</p>
                     <StatusBadge status={job.status} />
                   </div>
                 ))}
@@ -258,8 +258,8 @@ export function Workers() {
       {/* view worker drawer on small screen ends here  */}
       <div className="flex items-start justify-between mb-6">
         <div>
-          <h1 className="text-xl font-semibold text-slate-900 tracking-tight">Workers</h1>
-          <p className="text-sm text-slate-500 mt-0.5">{nHits} workers across all locations</p>
+          <h1 className="text-xl font-semibold text-foreground tracking-tight">Workers</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">{nHits} workers across all locations</p>
         </div>
      
       </div>
@@ -291,15 +291,15 @@ export function Workers() {
                     <Avatar initials={worker?.fullname.slice(0, 2)} size="lg" index={i} src={worker?.profilePhoto?.url} />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-0.5">
-                        <p className="text-sm font-semibold text-slate-900">{worker?.fullname}</p>
+                        <p className="text-sm font-semibold text-foreground">{worker?.fullname}</p>
                         <StatusBadge status={"active"} />
                       </div>
-                      <p className="text-xs text-slate-500">{worker?.role} · {"location"}</p>
+                      <p className="text-xs text-muted-foreground">{worker?.role} · {"location"}</p>
                       <div className="flex items-center gap-3 mt-2">
-                        <span className="flex items-center gap-1 text-xs text-slate-500">
+                        <span className="flex items-center gap-1 text-xs text-muted-foreground">
                           <Clock size={11} />{worker?.isActive}h this week
                         </span>
-                        <span className="flex items-center gap-1 text-xs text-slate-500">
+                        <span className="flex items-center gap-1 text-xs text-muted-foreground">
                           <Briefcase size={11} />{worker?.isVerified} jobs done
                         </span>
                         <span className="flex items-center gap-1 text-xs text-amber-600">
@@ -308,10 +308,10 @@ export function Workers() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <button className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors">
+                      <button className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-muted-foreground transition-colors">
                         <Mail size={14} />
                       </button>
-                      <button className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors">
+                      <button className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-muted-foreground transition-colors">
                         <Phone size={14} />
                       </button>
                       <ChevronRight size={14} className={`text-slate-300 transition-transform ${selected === worker._id ? 'rotate-90' : ''}`} />

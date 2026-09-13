@@ -35,7 +35,7 @@ function SearchComponent({
     return (
         <div>
             <div className="relative mb-4 ">
-                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                 <input
                     //   value={search}
                     defaultValue={searchVal || ""}
@@ -44,7 +44,7 @@ function SearchComponent({
                         placeholder ?? 'Search...'
                     }
 
-                    className="w-full h-9 pl-9 pr-3 border border-[#E2E8F0] rounded-lg text-sm text-slate-700 bg-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all"
+                    className="w-full h-9 pl-9 pr-3 border border-[var(--border)] rounded-lg text-sm text-foreground bg-card placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all"
                     {...props} />
             </div>
         </div>

@@ -44,7 +44,7 @@ export default function ProfileSettings() {
 
     return (
         <div className="p-6 max-w-3xl mx-auto animate-fade-in">
-            <div className="bg-white rounded-xl border border-[#E2E8F0] p-6 flex flex-col gap-5 min-w-0">
+            <div className="bg-card rounded-xl border border-[var(--border)] p-6 flex flex-col gap-5 min-w-0">
                 <div className="flex items-center gap-4 min-w-0">
                     <input
                         ref={photoInputRef}
@@ -59,8 +59,8 @@ export default function ProfileSettings() {
                     />
                     <Avatar initials={getInitials(user?.fullname)} size="xl" index={0} src={user?.profilePhoto?.url} />
                     <div className="min-w-0">
-                        <p className="text-sm font-semibold text-slate-800">Profile Photo</p>
-                        <p className="text-xs text-slate-500 mt-0.5 mb-2">JPG, PNG or WEBP. Max 10MB.</p>
+                        <p className="text-sm font-semibold text-foreground">Profile Photo</p>
+                        <p className="text-xs text-muted-foreground mt-0.5 mb-2">JPG, PNG or WEBP. Max 10MB.</p>
                         <div className="flex items-center gap-3">
                             <Button
                                 variant="outline"

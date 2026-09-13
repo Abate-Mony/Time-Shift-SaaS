@@ -8,10 +8,11 @@ import { Building2, Globe, Loader2, Lock } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useOutletContext } from 'react-router'
 import { deleteCompanyLogo, uploadCompanyLogo } from '@/utils/api-request-functions'
+import { isAdminRole } from '@/utils/roles'
 
 export default function CompanySettings() {
     const { user } = useOutletContext<{ user: iUser }>()
-    const isAdmin = user?.role === 'admin'
+    const isAdmin = isAdminRole(user?.role)
     const queryClient = useQueryClient()
     const logoInputRef = useRef<HTMLInputElement>(null)
 
@@ -39,9 +40,9 @@ export default function CompanySettings() {
     if (!isAdmin) {
         return (
             <div className="p-6 max-w-3xl mx-auto animate-fade-in">
-                <div className="bg-white rounded-xl border border-[#E2E8F0] p-6 flex items-center gap-3 min-w-0">
+                <div className="bg-card rounded-xl border border-[var(--border)] p-6 flex items-center gap-3 min-w-0">
                     <Lock size={16} className="text-amber-600 shrink-0" />
-                    <p className="text-sm text-slate-600">You don't have access to this.</p>
+                    <p className="text-sm text-muted-foreground">You don't have access to this.</p>
                 </div>
             </div>
         )
@@ -49,8 +50,8 @@ export default function CompanySettings() {
 
     return (
         <div className="p-6 max-w-3xl mx-auto animate-fade-in flex flex-col gap-4">
-            <div className="bg-white rounded-xl border border-[#E2E8F0] p-6 flex flex-col gap-4 min-w-0">
-                <h3 className="text-sm font-semibold text-slate-800">Company Logo</h3>
+            <div className="bg-card rounded-xl border border-[var(--border)] p-6 flex flex-col gap-4 min-w-0">
+                <h3 className="text-sm font-semibold text-foreground">Company Logo</h3>
                 <div className="flex items-center gap-4 min-w-0">
                     <input
                         ref={logoInputRef}
@@ -63,7 +64,7 @@ export default function CompanySettings() {
                             e.target.value = ''
                         }}
                     />
-                    <div className="w-14 h-14 rounded-xl border border-[#E2E8F0] bg-slate-50 flex items-center justify-center overflow-hidden shrink-0">
+                    <div className="w-14 h-14 rounded-xl border border-[var(--border)] bg-muted flex items-center justify-center overflow-hidden shrink-0">
                         {user?.company?.logo?.url ? (
                             <img src={user.company.logo.url} alt={user.company.name} className="w-full h-full object-cover" />
                         ) : (
@@ -71,7 +72,7 @@ export default function CompanySettings() {
                         )}
                     </div>
                     <div className="min-w-0">
-                        <p className="text-xs text-slate-500 mb-2">JPG, PNG or WEBP. Max 10MB.</p>
+                        <p className="text-xs text-muted-foreground mb-2">JPG, PNG or WEBP. Max 10MB.</p>
                         <div className="flex items-center gap-3">
                             <Button
                                 variant="outline"
@@ -97,8 +98,8 @@ export default function CompanySettings() {
                 </div>
             </div>
 
-            <div className="bg-white rounded-xl border border-[#E2E8F0] p-6 flex flex-col gap-4 min-w-0">
-                <h3 className="text-sm font-semibold text-slate-800">Company Information</h3>
+            <div className="bg-card rounded-xl border border-[var(--border)] p-6 flex flex-col gap-4 min-w-0">
+                <h3 className="text-sm font-semibold text-foreground">Company Information</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 min-w-0">
                     <Input label="Company Name" defaultValue="SecureGuard Ltd" />
                     <Input label="Company Registration" defaultValue="12345678" />

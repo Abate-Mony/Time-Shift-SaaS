@@ -61,8 +61,8 @@ const configs = {
 
     invalid: {
         icon: AlertTriangle,
-        iconWrapper: "bg-slate-100",
-        iconColor: "text-slate-400",
+        iconWrapper: "bg-muted",
+        iconColor: "text-muted-foreground",
 
         title: "Invitation not found",
 
@@ -101,19 +101,19 @@ export default function InvitationState({
                 />
             </div>
 
-            <h2 className="text-lg font-bold text-slate-900 mb-2">
+            <h2 className="text-lg font-bold text-foreground mb-2">
                 {config.title}
             </h2>
 
-            <p className="text-sm text-slate-500 leading-relaxed mb-2">
+            <p className="text-sm text-muted-foreground leading-relaxed mb-2">
                 {config.description}
             </p>
 
             {type === "expired" &&
                 company && (
-                    <p className="text-sm text-slate-500 leading-relaxed mb-8">
+                    <p className="text-sm text-muted-foreground leading-relaxed mb-8">
                         Ask a manager at{" "}
-                        <strong className="text-slate-700">
+                        <strong className="text-foreground">
                             {company}
                         </strong>{" "}
                         to send you a new
@@ -123,9 +123,9 @@ export default function InvitationState({
 
             {type === "revoked" &&
                 company && (
-                    <p className="text-sm text-slate-500 leading-relaxed mb-8">
+                    <p className="text-sm text-muted-foreground leading-relaxed mb-8">
                         Contact your manager at{" "}
-                        <strong className="text-slate-700">
+                        <strong className="text-foreground">
                             {company}
                         </strong>{" "}
                         if you believe this
@@ -138,11 +138,11 @@ export default function InvitationState({
                 onClick={onSignIn}
                 className="
                     w-full h-11
-                    border border-slate-200
+                    border border-border
                     text-sm font-semibold
-                    text-slate-700
+                    text-foreground
                     rounded-xl
-                    hover:bg-slate-50
+                    hover:bg-muted
                     transition-colors
                 "
             >

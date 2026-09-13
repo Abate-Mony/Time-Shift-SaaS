@@ -313,8 +313,8 @@ export function EditJob() {
                     <div className="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4">
                         <Check size={24} className="text-emerald-600" />
                     </div>
-                    <h2 className="text-lg font-semibold text-slate-900">Job Created</h2>
-                    <p className="text-sm text-slate-500 mt-1">Redirecting to Jobs...</p>
+                    <h2 className="text-lg font-semibold text-foreground">Job Created</h2>
+                    <p className="text-sm text-muted-foreground mt-1">Redirecting to Jobs...</p>
                 </div>
             </div>
         )
@@ -324,12 +324,12 @@ export function EditJob() {
         <div className=" px-2 pt-2.5 lg:p-6 max-w-3xl mx-auto animate-fade-in">
             {/* Header */}
             <div className="flex items-center gap-3 mb-7">
-                <button onClick={() => onNavigate('jobs')} className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:bg-slate-100 transition-colors">
+                <button onClick={() => onNavigate('jobs')} className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors">
                     <ChevronLeft size={16} />
                 </button>
                 <div>
-                    <h1 className="text-xl font-semibold text-slate-900 tracking-tight">Edit Job</h1>
-                    <p className="text-sm text-slate-500 mt-0.5">Fill in the details to edit the job</p>
+                    <h1 className="text-xl font-semibold text-foreground tracking-tight">Edit Job</h1>
+                    <p className="text-sm text-muted-foreground mt-0.5">Fill in the details to edit the job</p>
                 </div>
             </div>
 
@@ -340,9 +340,9 @@ export function EditJob() {
                 method="post"
             >
                 {/* Basic Info */}
-                <div className="bg-white rounded-xl border border-[#E2E8F0] p-6">
-                    <h2 className="text-sm font-semibold text-slate-800 mb-4 flex items-center gap-2">
-                        <span className="w-5 h-5 rounded-full bg-[#1E3A5F] text-white flex items-center justify-center text-[10px] font-bold">1</span>
+                <div className="bg-card rounded-xl border border-[var(--border)] p-6">
+                    <h2 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
+                        <span className="w-5 h-5 rounded-full bg-[var(--primary)] text-white flex items-center justify-center text-[10px] font-bold">1</span>
                         Job Details
                     </h2>
                     <div className="grid grid-cols-1 gap-4">
@@ -367,7 +367,7 @@ export function EditJob() {
 
                         <div className="grid sm:grid-cols-2 gap-4">
                             <div>
-                                <label className="text-sm font-medium text-slate-700 mb-1.5 block">Client</label>
+                                <label className="text-sm font-medium text-foreground mb-1.5 block">Client</label>
                                 <ClientCombobox
                                     value={selectedClient}
                                     onChange={setSelectedClient}
@@ -379,12 +379,12 @@ export function EditJob() {
                             </div>
 
                             <div>
-                                <h2 className="text-sm font-semibold text-slate-800 mb-4 flex items-center gap-2">
+                                <h2 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
                                     Priority
                                 </h2>
                                 <RadioGroup defaultValue={job?.priority || "low"} className="w-fit pl-3 flex  flex-wrap" name='priority'>
                                     {[
-                                        { value: 'low', label: 'Low Priority', className: "text-slate-800" },
+                                        { value: 'low', label: 'Low Priority', className: "text-foreground" },
                                         { value: 'medium', label: 'Medium Priority', className: "text-amber-500" },
                                         { value: 'high', label: 'High Priority', className: "text-red-500" },
                                     ].map((item) => (
@@ -411,9 +411,9 @@ export function EditJob() {
                 </div>
 
                 {/* Location */}
-                <div className="bg-white rounded-xl border border-[#E2E8F0] p-6">
-                    <h2 className="text-sm font-semibold text-slate-800 mb-4 flex items-center gap-2">
-                        <span className="w-5 h-5 rounded-full bg-[#1E3A5F] text-white flex items-center justify-center text-[10px] font-bold">2</span>
+                <div className="bg-card rounded-xl border border-[var(--border)] p-6">
+                    <h2 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
+                        <span className="w-5 h-5 rounded-full bg-[var(--primary)] text-white flex items-center justify-center text-[10px] font-bold">2</span>
                         Location
                     </h2>
                     <SearchLocation
@@ -431,10 +431,10 @@ export function EditJob() {
                     <FieldError message={errors.location?.message} />
                     {address && (
                         <>
-                            <p className="mt-2 flex items-center gap-1.5 text-xs text-slate-500">
-                                <MapPin size={12} className="text-slate-400" /> {address}
+                            <p className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+                                <MapPin size={12} className="text-muted-foreground" /> {address}
                             </p>
-                            <p className="mt-1 text-[11px] text-slate-400">
+                            <p className="mt-1 text-[11px] text-muted-foreground">
                                 Only the general area above is shown to workers before they're assigned — this exact address is used for directions once someone is.
                             </p>
                         </>
@@ -447,18 +447,18 @@ export function EditJob() {
                     )}
 
                     {/* Map placeholder */}
-                    <div className="mt-3 h-36 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center overflow-hidden">
+                    <div className="mt-3 h-36 rounded-xl bg-muted border border-border flex items-center justify-center overflow-hidden">
                         <div className="text-center">
-                            <MapPin size={20} className="text-slate-400 mx-auto mb-1" />
-                            <p className="text-xs text-slate-400">Map preview will appear here</p>
+                            <MapPin size={20} className="text-muted-foreground mx-auto mb-1" />
+                            <p className="text-xs text-muted-foreground">Map preview will appear here</p>
                         </div>
                     </div>
                 </div>
 
                 {/* Date & Time */}
-                <div className="bg-white rounded-xl border border-[#E2E8F0] p-6">
-                    <h2 className="text-sm font-semibold text-slate-800 mb-4 flex items-center gap-2">
-                        <span className="w-5 h-5 rounded-full bg-[#1E3A5F] text-white flex items-center justify-center text-[10px] font-bold">3</span>
+                <div className="bg-card rounded-xl border border-[var(--border)] p-6">
+                    <h2 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
+                        <span className="w-5 h-5 rounded-full bg-[var(--primary)] text-white flex items-center justify-center text-[10px] font-bold">3</span>
                         Date & Time
                     </h2>
                     {locked && (
@@ -479,7 +479,7 @@ export function EditJob() {
                                 {...register("date")}
                                 className={cn(errors.date && "border-red-500!",
                                     "max-w-fit w-full",
-                                    locked && "opacity-60 cursor-not-allowed pointer-events-none bg-slate-50"
+                                    locked && "opacity-60 cursor-not-allowed pointer-events-none bg-muted"
                                 )}
                             />
                             <FieldError message={errors.date?.message} />
@@ -494,7 +494,7 @@ export function EditJob() {
                                 {...register("startTime")}
                                 className={cn(errors.startTime && "border-red-500!",
                                     "max-w-fit w-full",
-                                    locked && "opacity-60 cursor-not-allowed pointer-events-none bg-slate-50"
+                                    locked && "opacity-60 cursor-not-allowed pointer-events-none bg-muted"
 
                                 )}
                             />
@@ -510,7 +510,7 @@ export function EditJob() {
                                 {...register("endTime")}
                                 className={cn(errors.endTime && "border-red-500!",
                                     "max-w-fit w-full",
-                                    locked && "opacity-60 cursor-not-allowed pointer-events-none bg-slate-50"
+                                    locked && "opacity-60 cursor-not-allowed pointer-events-none bg-muted"
                                 )}
                             />
                             <FieldError message={errors.endTime?.message} />
@@ -531,22 +531,22 @@ export function EditJob() {
                 </div>
 
                 {/* Workers */}
-                <div className="bg-white rounded-xl border border-[#E2E8F0] p-6" id="assigned-worker">
-                    <h2 className="text-sm font-semibold text-slate-800 mb-4 flex items-center gap-2">
-                        <span className="w-5 h-5 rounded-full bg-[#1E3A5F] text-white flex items-center justify-center text-[10px] font-bold">4</span>
+                <div className="bg-card rounded-xl border border-[var(--border)] p-6" id="assigned-worker">
+                    <h2 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
+                        <span className="w-5 h-5 rounded-full bg-[var(--primary)] text-white flex items-center justify-center text-[10px] font-bold">4</span>
                         Assign Workers
                     </h2>
 
                     <button
                         type="button"
                         onClick={() => setWorkerOpen(!workerOpen)}
-                        className="w-full flex items-center justify-between h-9 px-3 border border-[#E2E8F0] rounded-lg text-sm text-slate-600 hover:bg-slate-50 transition-colors"
+                        className="w-full flex items-center justify-between h-9 px-3 border border-[var(--border)] rounded-lg text-sm text-muted-foreground hover:bg-muted transition-colors"
                     >
                         <span className="flex items-center gap-2">
-                            <Users size={14} className="text-slate-400" />
+                            <Users size={14} className="text-muted-foreground" />
                             {selectedWorkers.length > 0 ? `${selectedWorkers.length} worker${selectedWorkers.length > 1 ? 's' : ''} selected` : 'Select workers...'}
                         </span>
-                        <ChevronDown size={14} className={`text-slate-400 transition-transform ${workerOpen ? 'rotate-180' : ''}`} />
+                        <ChevronDown size={14} className={`text-muted-foreground transition-transform ${workerOpen ? 'rotate-180' : ''}`} />
                     </button>
 
                     {/* Single hidden input carrying the whole array as JSON — matching
@@ -559,7 +559,7 @@ export function EditJob() {
                     <FieldError message={errors.workers?.message as string | undefined} />
 
                     {workerOpen && (
-                        <div className="mt-2 border border-[#E2E8F0] rounded-xl overflow-hidden animate-fade-in">
+                        <div className="mt-2 border border-[var(--border)] rounded-xl overflow-hidden animate-fade-in">
                             {users.map((w, i) => {
                                 const selected = selectedWorkers.find(sw => sw.email === w.email)
                                 return (
@@ -567,14 +567,14 @@ export function EditJob() {
                                         type="button"
                                         key={w._id}
                                         onClick={() => toggleWorker(w.email)}
-                                        className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 transition-colors border-b border-[#F1F5F9] last:border-0 ${selected ? 'bg-blue-50/40' : ''}`}
+                                        className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-muted transition-colors border-b border-[var(--border)] last:border-0 ${selected ? 'bg-blue-50/40' : ''}`}
                                     >
                                         <Avatar initials={w.fullname.slice(0, 2)} size="sm" index={i} src={w.profilePhoto?.url} />
                                         <div className="flex-1 text-left">
-                                            <p className="text-sm font-medium text-slate-800">{w.fullname}</p>
-                                            <p className="text-xs text-slate-400">{w.role}</p>
+                                            <p className="text-sm font-medium text-foreground">{w.fullname}</p>
+                                            <p className="text-xs text-muted-foreground">{w.role}</p>
                                         </div>
-                                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${selected ? 'bg-[#1E3A5F] border-[#1E3A5F]' : 'border-slate-300'}`}>
+                                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${selected ? 'bg-[var(--primary)] border-[var(--primary)]' : 'border-slate-300'}`}>
                                             {selected && <Check size={11} className="text-white" />}
                                         </div>
                                     </button>
@@ -602,24 +602,24 @@ export function EditJob() {
                 </div>
 
                 {/* Advanced — collapsed by default so the common case stays a short form */}
-                <div className="bg-white rounded-xl border border-[#E2E8F0] overflow-hidden">
+                <div className="bg-card rounded-xl border border-[var(--border)] overflow-hidden">
                     <button
                         type="button"
                         onClick={() => setAdvancedOpen(o => !o)}
-                        className="w-full flex items-center justify-between px-6 py-4 hover:bg-slate-50/60 transition-colors"
+                        className="w-full flex items-center justify-between px-6 py-4 hover:bg-muted/60 transition-colors"
                     >
                         <span className="flex items-center gap-2.5 min-w-0">
-                            <Settings2 size={15} className="text-slate-400 shrink-0" />
+                            <Settings2 size={15} className="text-muted-foreground shrink-0" />
                             <span className="text-left min-w-0">
-                                <span className="block text-sm font-semibold text-slate-800">Advanced options</span>
-                                <span className="block text-[11px] text-slate-400 truncate">
+                                <span className="block text-sm font-semibold text-foreground">Advanced options</span>
+                                <span className="block text-[11px] text-muted-foreground truncate">
                                     {advancedSummary}
                                 </span>
                             </span>
                         </span>
                         <ChevronDown
                             size={15}
-                            className={cn("text-slate-400 transition-transform shrink-0", advancedOpen && "rotate-180")}
+                            className={cn("text-muted-foreground transition-transform shrink-0", advancedOpen && "rotate-180")}
                         />
                     </button>
 
@@ -634,28 +634,28 @@ export function EditJob() {
                                 className="min-w-0"
                             >
                                 <div className="px-6 pb-6 pt-1 min-w-0 flex flex-col gap-6">
-                                    <div className="h-px bg-[#F1F5F9]" />
+                                    <div className="h-px bg-[var(--border)]" />
 
                                     {/* Supervisor */}
                                     <div className="min-w-0">
-                                        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">
+                                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
                                             Supervisor
                                         </p>
-                                        <p className="text-[11px] text-slate-400 mb-2">
+                                        <p className="text-[11px] text-muted-foreground mb-2">
                                             The person workers should contact on site. Optional.
                                         </p>
                                         <div className="relative max-w-xs min-w-0">
                                             <select
                                                 value={supervisor ?? ""}
                                                 onChange={e => setValue("supervisor", e.target.value || undefined, { shouldValidate: true })}
-                                                className="w-full h-10 pl-3 pr-8 border border-[#E2E8F0] rounded-lg text-sm text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-[#3B82F6]/30 focus:border-[#3B82F6] appearance-none cursor-pointer transition-all"
+                                                className="w-full h-10 pl-3 pr-8 border border-[var(--border)] rounded-lg text-sm text-foreground bg-card focus:outline-none focus:ring-2 focus:ring-[#3B82F6]/30 focus:border-[#3B82F6] appearance-none cursor-pointer transition-all"
                                             >
                                                 <option value="">No supervisor assigned</option>
                                                 {users.map(u => (
                                                     <option key={u._id} value={u._id}>{u.fullname}</option>
                                                 ))}
                                             </select>
-                                            <ChevronDown size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                                            <ChevronDown size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
                                         </div>
                                         {supervisor && <input type="hidden" name="supervisor" value={supervisor} />}
                                     </div>
@@ -663,11 +663,11 @@ export function EditJob() {
                                     {/* Internal notes — manager-only, never shown to workers. Worker-visible
                                         instructions stay in the main form (below) since that's the common
                                         case, not an edge case worth burying here. */}
-                                    <div className="min-w-0 pt-6 border-t border-[#F1F5F9]">
-                                        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">
+                                    <div className="min-w-0 pt-6 border-t border-[var(--border)]">
+                                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
                                             Internal notes
                                         </p>
-                                        <p className="text-[11px] text-slate-400 mb-2">
+                                        <p className="text-[11px] text-muted-foreground mb-2">
                                             Internal only — never shown to workers.
                                         </p>
                                         <Textarea
@@ -678,11 +678,11 @@ export function EditJob() {
                                     </div>
 
                                     {/* Open shifts */}
-                                    <div className="min-w-0 pt-6 border-t border-[#F1F5F9]">
+                                    <div className="min-w-0 pt-6 border-t border-[var(--border)]">
                                         <div className="flex items-center justify-between gap-3 min-w-0">
                                             <div className="min-w-0">
-                                                <p className="text-sm font-semibold text-slate-800">Open to claims</p>
-                                                <p className="text-[11px] text-slate-400 mt-0.5">
+                                                <p className="text-sm font-semibold text-foreground">Open to claims</p>
+                                                <p className="text-[11px] text-muted-foreground mt-0.5">
                                                     Lets any worker claim an unfilled slot on this shift.
                                                 </p>
                                             </div>
@@ -693,7 +693,7 @@ export function EditJob() {
                                                 onClick={() => setValue("openToClaims", !openToClaims, { shouldValidate: true })}
                                                 className={cn(
                                                     "relative w-11 h-6 rounded-full transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#3B82F6] focus-visible:ring-offset-1 shrink-0",
-                                                    openToClaims ? "bg-[#1E3A5F]" : "bg-slate-200"
+                                                    openToClaims ? "bg-[var(--primary)]" : "bg-muted"
                                                 )}
                                             >
                                                 <motion.span
@@ -714,10 +714,10 @@ export function EditJob() {
                                                     style={{ overflow: "hidden" }}
                                                     className="min-w-0"
                                                 >
-                                                    <div className="flex items-center justify-between gap-3 min-w-0 mt-4 pl-4 border-l-2 border-slate-100">
+                                                    <div className="flex items-center justify-between gap-3 min-w-0 mt-4 pl-4 border-l-2 border-border">
                                                         <div className="min-w-0">
-                                                            <p className="text-sm font-medium text-slate-700">Require approval</p>
-                                                            <p className="text-[11px] text-slate-400 mt-0.5">
+                                                            <p className="text-sm font-medium text-foreground">Require approval</p>
+                                                            <p className="text-[11px] text-muted-foreground mt-0.5">
                                                                 You approve each claim before the shift is theirs.
                                                             </p>
                                                         </div>
@@ -728,7 +728,7 @@ export function EditJob() {
                                                             onClick={() => setValue("requiresApproval", !requiresApproval, { shouldValidate: true })}
                                                             className={cn(
                                                                 "relative w-11 h-6 rounded-full transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#3B82F6] focus-visible:ring-offset-1 shrink-0",
-                                                                requiresApproval ? "bg-[#1E3A5F]" : "bg-slate-200"
+                                                                requiresApproval ? "bg-[var(--primary)]" : "bg-muted"
                                                             )}
                                                         >
                                                             <motion.span
@@ -744,7 +744,7 @@ export function EditJob() {
                                     </div>
 
                                     {/* Clock-in grace override */}
-                                    <div className="min-w-0 pt-6 border-t border-[#F1F5F9]">
+                                    <div className="min-w-0 pt-6 border-t border-[var(--border)]">
                                         <div className="max-w-xs min-w-0">
                                             <Input
                                                 label="Clock-in grace period"
@@ -755,19 +755,19 @@ export function EditJob() {
                                                 {...register("clockInGraceMinutes", { valueAsNumber: true })}
                                                 className={cn(errors.clockInGraceMinutes && "border-red-500!")}
                                             />
-                                            <p className="text-[11px] text-slate-400 mt-1">
+                                            <p className="text-[11px] text-muted-foreground mt-1">
                                                 How early a worker can clock in. Leave blank to use your company setting.
                                             </p>
                                             <FieldError message={errors.clockInGraceMinutes?.message} />
                                         </div>
                                     </div>
 
-                                    <div className="pt-6 border-t border-[#F1F5F9]" />
+                                    <div className="pt-6 border-t border-[var(--border)]" />
 
-                                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">
+                                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
                                         Clock-in location check
                                     </p>
-                                    <p className="text-[11px] text-slate-400 -mt-4">
+                                    <p className="text-[11px] text-muted-foreground -mt-4">
                                         Overrides your company setting for this job only. Useful for sites with poor
                                         signal, or where workers move around a large area.
                                     </p>
@@ -800,8 +800,8 @@ export function EditJob() {
                                                 className={cn(
                                                     "flex items-start gap-3 px-4 py-3 rounded-xl border-2 cursor-pointer transition-all min-w-0",
                                                     (geofenceMode ?? "") === opt.value
-                                                        ? "border-[#1E3A5F] bg-[#1E3A5F]/[0.03]"
-                                                        : "border-[#E2E8F0] hover:border-slate-300"
+                                                        ? "border-[var(--primary)] bg-[var(--primary)]/[0.03]"
+                                                        : "border-[var(--border)] hover:border-slate-300"
                                                 )}
                                             >
                                                 <Input
@@ -820,7 +820,7 @@ export function EditJob() {
                                                     className={cn(
                                                         "mt-0.5 w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors",
                                                         (geofenceMode ?? "") === opt.value
-                                                            ? "border-[#1E3A5F] bg-[#1E3A5F]"
+                                                            ? "border-[var(--primary)] bg-[var(--primary)]"
                                                             : "border-slate-300"
                                                     )}
                                                 >
@@ -829,8 +829,8 @@ export function EditJob() {
                                                     )}
                                                 </span>
                                                 <span className="min-w-0">
-                                                    <span className="block text-sm font-semibold text-slate-800">{opt.label}</span>
-                                                    <span className="block text-[11px] text-slate-400 mt-0.5">{opt.sub}</span>
+                                                    <span className="block text-sm font-semibold text-foreground">{opt.label}</span>
+                                                    <span className="block text-[11px] text-muted-foreground mt-0.5">{opt.sub}</span>
                                                 </span>
                                             </label>
                                         ))}
@@ -856,7 +856,7 @@ export function EditJob() {
                                                     {...register("geofenceRadiusMeters", { valueAsNumber: true })}
                                                     className={cn(errors.geofenceRadiusMeters && "border-red-500!")}
                                                 />
-                                                <p className="text-[11px] text-slate-400 mt-1">
+                                                <p className="text-[11px] text-muted-foreground mt-1">
                                                     Metres from the site. Phone GPS is often 50–100m out indoors, so anything
                                                     under 100m will flag people who are genuinely there.
                                                 </p>
@@ -890,9 +890,9 @@ export function EditJob() {
                 <input type="hidden" name="requiresApproval" value={String(requiresApproval)} />
 
                 {/* Instructions & Attachments */}
-                <div className="bg-white rounded-xl border border-[#E2E8F0] p-6">
-                    <h2 className="text-sm font-semibold text-slate-800 mb-4 flex items-center gap-2">
-                        <span className="w-5 h-5 rounded-full bg-[#1E3A5F] text-white flex items-center justify-center text-[10px] font-bold">5</span>
+                <div className="bg-card rounded-xl border border-[var(--border)] p-6">
+                    <h2 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
+                        <span className="w-5 h-5 rounded-full bg-[var(--primary)] text-white flex items-center justify-center text-[10px] font-bold">5</span>
                         Instructions & Attachments
                     </h2>
                     <Textarea
@@ -901,10 +901,10 @@ export function EditJob() {
                         rows={4}
                         className={cn(errors.instructions && "border-red-500!")}
                     />
-                    <p className="text-[11px] text-slate-400 mt-1">Workers assigned to this job will see this.</p>
+                    <p className="text-[11px] text-muted-foreground mt-1">Workers assigned to this job will see this.</p>
                     <FieldError message={errors.instructions?.message} />
 
-                    <button type="button" className="mt-3 flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700 border border-dashed border-slate-300 rounded-lg w-full py-3 px-4 hover:bg-slate-50 transition-colors">
+                    <button type="button" className="mt-3 flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground border border-dashed border-slate-300 rounded-lg w-full py-3 px-4 hover:bg-muted transition-colors">
                         <Paperclip size={14} />
                         Attach files, documents or images
                     </button>

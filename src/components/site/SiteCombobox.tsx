@@ -15,14 +15,14 @@ function SiteResult({ site, onSelect }: { site: Site; onSelect: () => void }) {
     <button
       type="button"
       onClick={onSelect}
-      className="w-full flex items-start gap-3 px-3 py-2.5 hover:bg-slate-50 transition-colors text-left"
+      className="w-full flex items-start gap-3 px-3 py-2.5 hover:bg-muted transition-colors text-left"
     >
-      <div className="w-7 h-7 rounded-lg bg-[#1E3A5F]/8 flex items-center justify-center shrink-0 mt-0.5">
-        <MapPin size={12} className="text-[#1E3A5F]" />
+      <div className="w-7 h-7 rounded-lg bg-[var(--primary)]/8 flex items-center justify-center shrink-0 mt-0.5">
+        <MapPin size={12} className="text-[var(--primary)]" />
       </div>
       <div className="flex-1 min-w-0">
-        <span className="text-sm font-semibold text-slate-800 truncate block">{site.name}</span>
-        {site.formattedAddress && <p className="text-xs text-slate-400 truncate">{site.formattedAddress}</p>}
+        <span className="text-sm font-semibold text-foreground truncate block">{site.name}</span>
+        {site.formattedAddress && <p className="text-xs text-muted-foreground truncate">{site.formattedAddress}</p>}
       </div>
     </button>
   )
@@ -30,18 +30,18 @@ function SiteResult({ site, onSelect }: { site: Site; onSelect: () => void }) {
 
 function SelectedSiteCard({ site, onClear }: { site: ComboboxSite; onClear: () => void }) {
   return (
-    <div className="w-full border border-[#E2E8F0] rounded-xl p-3 bg-white">
+    <div className="w-full border border-[var(--border)] rounded-xl p-3 bg-card">
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-bold text-slate-900 truncate">{site.name}</p>
-          {site.formattedAddress && <p className="text-xs text-slate-500 truncate mt-0.5">{site.formattedAddress}</p>}
+          <p className="text-sm font-bold text-foreground truncate">{site.name}</p>
+          {site.formattedAddress && <p className="text-xs text-muted-foreground truncate mt-0.5">{site.formattedAddress}</p>}
           {site.geofenceMode && site.geofenceMode !== 'off' && (
-            <p className="text-xs text-slate-400 mt-1 flex items-center gap-1">
+            <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
               <ShieldCheck size={11} /> {site.geofenceRadiusMeters ?? 150}m geofence
             </p>
           )}
         </div>
-        <button type="button" onClick={onClear} className="w-6 h-6 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-400 shrink-0 transition-colors">
+        <button type="button" onClick={onClear} className="w-6 h-6 flex items-center justify-center rounded-lg hover:bg-muted text-muted-foreground shrink-0 transition-colors">
           <X size={13} />
         </button>
       </div>
@@ -110,10 +110,10 @@ export function SiteCombobox({ clientId, value, onChange }: SiteComboboxProps) {
       <button
         type="button"
         onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center justify-between gap-2 h-10 px-3 border border-[#E2E8F0] rounded-xl bg-white text-sm text-slate-400 hover:border-slate-300 transition-colors"
+        className="w-full flex items-center justify-between gap-2 h-10 px-3 border border-[var(--border)] rounded-xl bg-card text-sm text-muted-foreground hover:border-slate-300 transition-colors"
       >
         <span>Search or select a site…</span>
-        <ChevronDown size={14} className="text-slate-400 shrink-0" />
+        <ChevronDown size={14} className="text-muted-foreground shrink-0" />
       </button>
 
       <AnimatePresence>
@@ -123,19 +123,19 @@ export function SiteCombobox({ clientId, value, onChange }: SiteComboboxProps) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 4 }}
             transition={{ duration: 0.12 }}
-            className="absolute left-0 right-0 top-12 z-50 bg-white border border-[#E2E8F0] rounded-xl shadow-lg overflow-hidden"
+            className="absolute left-0 right-0 top-12 z-50 bg-card border border-[var(--border)] rounded-xl shadow-lg overflow-hidden"
           >
-            <div className="flex items-center gap-2 px-3 py-2 border-b border-[#E2E8F0]">
-              <Search size={13} className="text-slate-400 shrink-0" />
+            <div className="flex items-center gap-2 px-3 py-2 border-b border-[var(--border)]">
+              <Search size={13} className="text-muted-foreground shrink-0" />
               <input
                 ref={inputRef}
                 value={query}
                 onChange={e => setQuery(e.target.value)}
                 placeholder="Search sites…"
-                className="flex-1 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none bg-transparent"
+                className="flex-1 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none bg-transparent"
               />
               {query && (
-                <button type="button" onClick={() => setQuery('')} className="text-slate-400 hover:text-slate-600 transition-colors">
+                <button type="button" onClick={() => setQuery('')} className="text-muted-foreground hover:text-muted-foreground transition-colors">
                   <X size={13} />
                 </button>
               )}
@@ -144,7 +144,7 @@ export function SiteCombobox({ clientId, value, onChange }: SiteComboboxProps) {
             <div className="max-h-[220px] overflow-y-auto py-1">
               {searching ? (
                 <div className="px-4 py-3 text-center">
-                  <p className="text-xs text-slate-400">Searching…</p>
+                  <p className="text-xs text-muted-foreground">Searching…</p>
                 </div>
               ) : results.length > 0 ? (
                 results.map(site => (
@@ -152,7 +152,7 @@ export function SiteCombobox({ clientId, value, onChange }: SiteComboboxProps) {
                 ))
               ) : (
                 <div className="px-4 py-3 text-center">
-                  <p className="text-xs text-slate-500">No sites found for this client.</p>
+                  <p className="text-xs text-muted-foreground">No sites found for this client.</p>
                 </div>
               )}
             </div>

@@ -100,7 +100,7 @@ export const AnimatedTooltip = ({
               item.image ?
                   <ImageAvatar className="h-9 w-9">
                 {item?.image && <AvatarImage src={item.image} alt={item.name} />}
-                <AvatarFallback className="bg-[#1E3A5F] text-white text-xs font-semibold">
+                <AvatarFallback className="bg-[var(--primary)] text-white text-xs font-semibold">
                   {
                     getInitials(item.name)
                   }

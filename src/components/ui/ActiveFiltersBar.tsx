@@ -78,14 +78,14 @@ export function ActiveFiltersBar({ filters, className }: ActiveFiltersBarProps) 
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
             transition={{ type: 'spring', stiffness: 500, damping: 32 }}
-            className="inline-flex items-center gap-1.5 h-7 pl-2.5 pr-1.5 rounded-full bg-[#1E3A5F]/8 border border-[#1E3A5F]/10 text-xs font-medium text-[#1E3A5F] max-w-full"
+            className="inline-flex items-center gap-1.5 h-7 pl-2.5 pr-1.5 rounded-full bg-[var(--primary)]/8 border border-[var(--primary)]/10 text-xs font-medium text-[var(--primary)] max-w-full"
           >
-            <span className="text-[#1E3A5F]/55 shrink-0">{f.label}:</span>
+            <span className="text-[var(--primary)]/55 shrink-0">{f.label}:</span>
             <span className="font-semibold truncate">{f.display}</span>
             <button
               type="button"
               onClick={() => clear(f.keys)}
-              className="w-4 h-4 rounded-full flex items-center justify-center shrink-0 hover:bg-[#1E3A5F]/15 transition-colors"
+              className="w-4 h-4 rounded-full flex items-center justify-center shrink-0 hover:bg-[var(--primary)]/15 transition-colors"
               aria-label={`Clear ${f.label} filter`}
             >
               <X size={10} />
@@ -98,7 +98,7 @@ export function ActiveFiltersBar({ filters, className }: ActiveFiltersBarProps) 
         <button
           type="button"
           onClick={() => clear(active.flatMap(f => f.keys))}
-          className="text-xs font-medium text-slate-400 hover:text-slate-600 transition-colors shrink-0"
+          className="text-xs font-medium text-muted-foreground hover:text-muted-foreground transition-colors shrink-0"
         >
           Clear all
         </button>

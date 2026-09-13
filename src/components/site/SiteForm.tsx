@@ -99,23 +99,23 @@ export const buildSitePayload = (v: SiteFormValues) => {
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 const inputClass =
-  'w-full h-10 px-3 border border-[#E2E8F0] rounded-xl text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/15 focus:border-[#1E3A5F]/40 transition-all'
+  'w-full h-10 px-3 border border-[var(--border)] rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/15 focus:border-[var(--primary)]/40 transition-all'
 
 function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="block text-xs font-semibold text-slate-700 mb-1.5">{label}</label>
+      <label className="block text-xs font-semibold text-foreground mb-1.5">{label}</label>
       {children}
-      {hint && <p className="text-[11px] text-slate-400 mt-1">{hint}</p>}
+      {hint && <p className="text-[11px] text-muted-foreground mt-1">{hint}</p>}
     </div>
   )
 }
 
 function Section({ title, description, children }: { title: string; description?: string; children: React.ReactNode }) {
   return (
-    <div className="bg-white rounded-xl border border-[#E2E8F0] p-6 min-w-0">
-      <h2 className="text-sm font-bold text-slate-900">{title}</h2>
-      {description && <p className="text-xs text-slate-500 mt-0.5 mb-4">{description}</p>}
+    <div className="bg-card rounded-xl border border-[var(--border)] p-6 min-w-0">
+      <h2 className="text-sm font-bold text-foreground">{title}</h2>
+      {description && <p className="text-xs text-muted-foreground mt-0.5 mb-4">{description}</p>}
       <div className={description ? '' : 'mt-4'}>{children}</div>
     </div>
   )
@@ -178,7 +178,7 @@ export function SiteForm({
               value={values.client}
               onChange={set('client')}
               disabled={clientLocked}
-              className={`${inputClass} bg-white cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed`}
+              className={`${inputClass} bg-card cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed`}
             >
               <option value="">Select a client…</option>
               {clients.map(c => (
@@ -221,9 +221,9 @@ export function SiteForm({
             type="checkbox"
             checked={values.geofenceEnabled}
             onChange={e => setValues(v => ({ ...v, geofenceEnabled: e.target.checked }))}
-            className="w-4 h-4 rounded border-slate-300 text-[#1E3A5F] focus:ring-[#1E3A5F]/30"
+            className="w-4 h-4 rounded border-slate-300 text-[var(--primary)] focus:ring-[var(--primary)]/30"
           />
-          <span className="text-sm font-medium text-slate-700">Enable a custom geofence for this site</span>
+          <span className="text-sm font-medium text-foreground">Enable a custom geofence for this site</span>
         </label>
         {values.geofenceEnabled && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 min-w-0">
@@ -238,7 +238,7 @@ export function SiteForm({
               />
             </Field>
             <Field label="On breach" hint="Warn lets the clock-in proceed and flags it; Enforce blocks it.">
-              <select value={values.geofenceMode} onChange={set('geofenceMode')} className={`${inputClass} bg-white cursor-pointer`}>
+              <select value={values.geofenceMode} onChange={set('geofenceMode')} className={`${inputClass} bg-card cursor-pointer`}>
                 <option value="warn">Warn</option>
                 <option value="enforce">Enforce</option>
               </select>
@@ -270,7 +270,7 @@ export function SiteForm({
               onChange={set('instructions')}
               rows={3}
               placeholder="Anything a worker should know before their shift…"
-              className="w-full px-3 py-2.5 border border-[#E2E8F0] rounded-xl text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/15 focus:border-[#1E3A5F]/40 transition-all resize-none"
+              className="w-full px-3 py-2.5 border border-[var(--border)] rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/15 focus:border-[var(--primary)]/40 transition-all resize-none"
             />
           </Field>
           <Field label="Access instructions">
@@ -279,7 +279,7 @@ export function SiteForm({
               onChange={set('accessInstructions')}
               rows={2}
               placeholder="e.g. Enter through Gate B, ask for the site manager"
-              className="w-full px-3 py-2.5 border border-[#E2E8F0] rounded-xl text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/15 focus:border-[#1E3A5F]/40 transition-all resize-none"
+              className="w-full px-3 py-2.5 border border-[var(--border)] rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/15 focus:border-[var(--primary)]/40 transition-all resize-none"
             />
           </Field>
           <Field label="Parking instructions">
@@ -288,7 +288,7 @@ export function SiteForm({
               onChange={set('parkingInstructions')}
               rows={2}
               placeholder="e.g. Rear staff car park, visitor bays only"
-              className="w-full px-3 py-2.5 border border-[#E2E8F0] rounded-xl text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/15 focus:border-[#1E3A5F]/40 transition-all resize-none"
+              className="w-full px-3 py-2.5 border border-[var(--border)] rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/15 focus:border-[var(--primary)]/40 transition-all resize-none"
             />
           </Field>
         </div>
@@ -304,14 +304,14 @@ export function SiteForm({
         <button
           type="button"
           onClick={onCancel}
-          className="h-10 px-5 text-sm font-semibold text-slate-600 border border-[#E2E8F0] rounded-xl hover:bg-slate-50 transition-colors"
+          className="h-10 px-5 text-sm font-semibold text-muted-foreground border border-[var(--border)] rounded-xl hover:bg-muted transition-colors"
         >
           Cancel
         </button>
         <button
           type="submit"
           disabled={submitting}
-          className="h-10 px-6 text-sm font-bold bg-[#1E3A5F] text-white rounded-xl hover:bg-[#162D4A] disabled:opacity-50 transition-colors flex items-center gap-2"
+          className="h-10 px-6 text-sm font-bold bg-[var(--primary)] text-white rounded-xl hover:bg-primary/90 disabled:opacity-50 transition-colors flex items-center gap-2"
         >
           {submitting ? (
             <>

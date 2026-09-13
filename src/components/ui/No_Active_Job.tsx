@@ -61,17 +61,17 @@ export function NoActiveShift({
       {nextShift ? (
         <Link
           to={`/worker/jobs/${nextShift._id}`}
-          className="bg-white rounded-2xl border border-[#E2E8F0] p-4 shadow-sm hover:border-slate-300 transition-colors block"
+          className="bg-card rounded-2xl border border-[var(--border)] p-4 shadow-sm hover:border-slate-300 transition-colors block"
         >
           <div className="flex items-center gap-2 mb-3">
-            <Calendar size={13} className="text-[#1E3A5F]" />
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+            <Calendar size={13} className="text-[var(--primary)]" />
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
               Up next
             </p>
           </div>
 
-          <p className="text-sm font-semibold text-slate-900 mb-1">{nextShift.title}</p>
-          <p className="text-xs text-slate-500 mb-3">
+          <p className="text-sm font-semibold text-foreground mb-1">{nextShift.title}</p>
+          <p className="text-xs text-muted-foreground mb-3">
             {nextShift.date} · {nextShift.startTime} · {nextShift.location}
           </p>
 
@@ -80,12 +80,12 @@ export function NoActiveShift({
           </span>
         </Link>
       ) : (
-        <div className="bg-white rounded-2xl border border-[#E2E8F0] p-6 text-center shadow-sm">
-          <div className="w-11 h-11 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center mx-auto mb-3">
+        <div className="bg-card rounded-2xl border border-[var(--border)] p-6 text-center shadow-sm">
+          <div className="w-11 h-11 rounded-xl bg-muted border border-border flex items-center justify-center mx-auto mb-3">
             <Briefcase size={18} className="text-slate-300" />
           </div>
-          <p className="text-sm font-semibold text-slate-800 mb-1">No upcoming shifts</p>
-          <p className="text-xs text-slate-500 leading-relaxed max-w-[220px] mx-auto">
+          <p className="text-sm font-semibold text-foreground mb-1">No upcoming shifts</p>
+          <p className="text-xs text-muted-foreground leading-relaxed max-w-[220px] mx-auto">
             When your manager assigns you a job, it'll appear here ready to start.
           </p>
         </div>
@@ -93,9 +93,9 @@ export function NoActiveShift({
 
       <Link
         to="/worker/jobs"
-        className="w-full h-12 rounded-xl border border-[#E2E8F0] bg-white text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors flex items-center justify-center gap-2"
+        className="w-full h-12 rounded-xl border border-[var(--border)] bg-card text-sm font-semibold text-foreground hover:bg-muted transition-colors flex items-center justify-center gap-2"
       >
-        <Briefcase size={15} className="text-slate-400" />
+        <Briefcase size={15} className="text-muted-foreground" />
         Browse my jobs
       </Link>
     </motion.div>

@@ -96,7 +96,7 @@ export default function DashboardLayout() {
     return (
         <>
             <ScrollToTop />
-            <div className="flex h-screen  overflow-hidden bg-[#F8FAFC]">
+            <div className="flex h-screen  overflow-hidden bg-muted dark:bg-background">
 
                 <Sidebar active={page} collapsed={sidebarCollapsed} onToggleSidebar={() => setSidebarCollapsed(c => !c)} user={user} />
 

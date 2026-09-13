@@ -71,13 +71,13 @@ export default function InvitationSuccessPage() {
                 All set
             </p>
 
-            <h2 className="text-xl font-bold text-slate-900 mb-2">
+            <h2 className="text-xl font-bold text-foreground mb-2">
                 You're all set!
             </h2>
 
-            <p className="text-sm text-slate-500 leading-relaxed mb-8">
+            <p className="text-sm text-muted-foreground leading-relaxed mb-8">
                 You've joined{" "}
-                <strong className="text-slate-700">
+                <strong className="text-foreground">
                     {company}
                 </strong>{" "}
                 as a{" "}
@@ -90,7 +90,7 @@ export default function InvitationSuccessPage() {
             <button
                 type="button"
                 onClick={done}
-                className="w-full h-11 bg-[#1E3A5F] text-white text-sm font-bold rounded-xl hover:bg-[#162D4A] flex items-center justify-center gap-2"
+                className="w-full h-11 bg-[var(--primary)] text-white text-sm font-bold rounded-xl hover:bg-primary/90 flex items-center justify-center gap-2"
             >
                 {role === "worker"
                     ? "Go to my jobs"

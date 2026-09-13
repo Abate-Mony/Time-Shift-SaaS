@@ -46,13 +46,13 @@ export function CreateClientPage() {
         <button
           type="button"
           onClick={() => navigate('/clients')}
-          className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:bg-slate-100 transition-colors shrink-0"
+          className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors shrink-0"
         >
           <ChevronLeft size={16} />
         </button>
         <div className="min-w-0">
-          <h1 className="text-xl font-semibold text-slate-900 tracking-tight truncate">Add client</h1>
-          <p className="text-sm text-slate-500 mt-0.5 truncate">
+          <h1 className="text-xl font-semibold text-foreground tracking-tight truncate">Add client</h1>
+          <p className="text-sm text-muted-foreground mt-0.5 truncate">
             Add a customer account and its contact, billing and default charging details.
           </p>
         </div>

@@ -8,6 +8,7 @@ const NAV_LINKS = [
     { to: '/settings/profile', label: 'Profile' },
     { to: '/settings/company', label: 'Company' },
     { to: '/settings/notifications', label: 'Notifications' },
+    { to: '/settings/appearance', label: 'Appearance' },
     { to: '/settings/security', label: 'Security' },
     { to: '/settings/billing', label: 'Billing' },
 ]
@@ -22,8 +23,8 @@ export default function SettingsLayout() {
                 stays a sibling rather than nesting and doubling padding. */}
             <div className="p-6 pb-0 max-w-3xl mx-auto">
                 <div className="mb-6">
-                    <h1 className="text-xl font-semibold text-slate-900 tracking-tight">Settings</h1>
-                    <p className="text-sm text-slate-500 mt-0.5">Manage your account preferences</p>
+                    <h1 className="text-xl font-semibold text-foreground tracking-tight">Settings</h1>
+                    <p className="text-sm text-muted-foreground mt-0.5">Manage your account preferences</p>
                 </div>
 
                 <div className="flex items-center gap-1.5 overflow-x-auto">
@@ -38,7 +39,7 @@ export default function SettingsLayout() {
                             end={link.end}
                             className={({ isActive }) => cn(
                                 'shrink-0 px-4 flex-none w-fit py-2 text-sm font-medium rounded-lg transition-colors',
-                                isActive ? 'bg-[#1E3A5F] text-white' : 'text-slate-500 hover:bg-slate-100'
+                                isActive ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted'
                             )}
                         >
                             {link.label}

@@ -132,9 +132,9 @@ const ACTIVITY_DOT: Partial<Record<string, string>> = {
 const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: { value: number }[]; label?: string }) => {
     if (!active || !payload?.length) return null
     return (
-        <div className="bg-white border border-[#E2E8F0] rounded-xl px-3 py-2.5 shadow-lg">
-            <p className="text-[10px] text-slate-400 mb-0.5">{label}</p>
-            <p className="text-sm font-bold text-slate-900">{payload[0].value}</p>
+        <div className="bg-card border border-[var(--border)] rounded-xl px-3 py-2.5 shadow-lg">
+            <p className="text-[10px] text-muted-foreground mb-0.5">{label}</p>
+            <p className="text-sm font-bold text-foreground">{payload[0].value}</p>
         </div>
     )
 }
@@ -220,17 +220,17 @@ export function WorkerProfile() {
             {/* Breadcrumb */}
             <button
                 onClick={() => onNavigate(back.to)}
-                className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition-colors mb-5 group"
+                className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-5 group"
             >
                 <ChevronLeft size={15} className="group-hover:-translate-x-0.5 transition-transform" />
                 Back to {back.label}
             </button>
 
             {/* ── Hero banner ──────────────────────────────────────────────────── */}
-            <div className=" rounded-2xl border border-[#E2E8F0] overflow-hidden  !bg-white shadow-sm mb-5">
+            <div className=" rounded-2xl border border-[var(--border)] overflow-hidden  !bg-card shadow-sm mb-5">
 
                 {/* Cover */}
-                <div className="h-32 bg-gradient-to-br from-[#1E3A5F] via-[#2D5A8E] to-[#1a4b7a] relative overflow-hidden">
+                <div className="h-32 bg-gradient-to-br from-[var(--primary)] via-[#2D5A8E] to-[#1a4b7a] relative overflow-hidden">
                     <div
                         className="absolute inset-0 opacity-[0.07]"
                         style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1.5px, transparent 0)', backgroundSize: '22px 22px' }}
@@ -255,7 +255,7 @@ export function WorkerProfile() {
                             <Button size="sm" onClick={() => onNavigate('/create-job')}>
                                 <Plus size={13} /> Assign Job
                             </Button>
-                            <button className="w-9 h-9 rounded-lg border border-[#E2E8F0] flex items-center justify-center text-slate-400 hover:bg-slate-50 transition-colors">
+                            <button className="w-9 h-9 rounded-lg border border-[var(--border)] flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors">
                                 <MoreHorizontal size={15} />
                             </button>
                         </div>
@@ -265,21 +265,21 @@ export function WorkerProfile() {
                         {/* Identity */}
                         <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-3 flex-wrap mb-1">
-                                <h1 className="text-xl font-bold text-slate-900 tracking-tight">{worker.fullname}</h1>
+                                <h1 className="text-xl font-bold text-foreground tracking-tight">{worker.fullname}</h1>
                                 <StatusBadge status={restriction ? 'suspended' : worker.isActive ? 'active' : 'suspended'} />
                             </div>
-                            <p className="text-sm text-slate-500 mb-3 capitalize">{worker.role}</p>
+                            <p className="text-sm text-muted-foreground mb-3 capitalize">{worker.role}</p>
                             <div className="flex flex-wrap gap-4">
-                                <span className="flex items-center gap-1.5 text-xs text-slate-500">
-                                    <Mail size={12} className="text-slate-400" />{worker.email}
+                                <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                                    <Mail size={12} className="text-muted-foreground" />{worker.email}
                                 </span>
                                 {worker.phone && (
-                                    <span className="flex items-center gap-1.5 text-xs text-slate-500">
-                                        <Phone size={12} className="text-slate-400" />{worker.phone}
+                                    <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                                        <Phone size={12} className="text-muted-foreground" />{worker.phone}
                                     </span>
                                 )}
-                                <span className="flex items-center gap-1.5 text-xs text-slate-500">
-                                    <Calendar size={12} className="text-slate-400" />Joined {new Date(worker.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                                    <Calendar size={12} className="text-muted-foreground" />Joined {new Date(worker.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                                 </span>
                             </div>
                         </div>
@@ -333,15 +333,15 @@ export function WorkerProfile() {
                 ].map(s => (
                     <Card key={s.label} className="p-5">
                         <div className="flex items-start justify-between mb-3">
-                            <p className="text-xs font-semibold text-slate-500">{s.label}</p>
+                            <p className="text-xs font-semibold text-muted-foreground">{s.label}</p>
                             <div className={`w-8 h-8 rounded-lg ${s.bg} flex items-center justify-center`}>
                                 <s.icon size={14} className={s.color} />
                             </div>
                         </div>
-                        <p className="text-2xl font-bold text-slate-900 tracking-tight mb-1">{s.value}</p>
-                        <p className="text-xs text-slate-400">{s.sub}</p>
+                        <p className="text-2xl font-bold text-foreground tracking-tight mb-1">{s.value}</p>
+                        <p className="text-xs text-muted-foreground">{s.sub}</p>
                         {s.progress !== null && (
-                            <div className="mt-3 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                            <div className="mt-3 h-1.5 bg-muted rounded-full overflow-hidden">
                                 <div
                                     className={`h-full ${s.progressColor} rounded-full transition-all`}
                                     style={{ width: `${Math.min(s.progress, 100)}%` }}
@@ -362,8 +362,8 @@ export function WorkerProfile() {
                     <Card className="p-5">
                         <div className="flex items-center justify-between mb-5">
                             <div>
-                                <h3 className="text-sm font-semibold text-slate-900">Hours Trend</h3>
-                                <p className="text-xs text-slate-400 mt-0.5">Last 7 weeks</p>
+                                <h3 className="text-sm font-semibold text-foreground">Hours Trend</h3>
+                                <p className="text-xs text-muted-foreground mt-0.5">Last 7 weeks</p>
                             </div>
                             <Badge variant="info">{stats.hoursThisWeek}h this week</Badge>
                         </div>
@@ -371,43 +371,43 @@ export function WorkerProfile() {
                             <AreaChart data={trendData} margin={{ top: 4, right: 0, bottom: 0, left: -20 }}>
                                 <defs>
                                     <linearGradient id={`grad-${workerId}`} x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#1E3A5F" stopOpacity={0.12} />
-                                        <stop offset="95%" stopColor="#1E3A5F" stopOpacity={0} />
+                                        <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.12} />
+                                        <stop offset="95%" stopColor="var(--primary)" stopOpacity={0} />
                                     </linearGradient>
                                 </defs>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
-                                <XAxis dataKey="week" tick={{ fontSize: 11, fill: '#94A3B8' }} axisLine={false} tickLine={false} />
-                                <YAxis tick={{ fontSize: 11, fill: '#94A3B8' }} axisLine={false} tickLine={false} width={30} />
+                                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+                                <XAxis dataKey="week" tick={{ fontSize: 11, fill: 'var(--muted-foreground)' }} axisLine={false} tickLine={false} />
+                                <YAxis tick={{ fontSize: 11, fill: 'var(--muted-foreground)' }} axisLine={false} tickLine={false} width={30} />
                                 <Tooltip content={<CustomTooltip />} />
                                 <Area
                                     type="monotone"
                                     dataKey="hours"
-                                    stroke="#1E3A5F"
+                                    stroke="var(--primary)"
                                     strokeWidth={2}
                                     fill={`url(#grad-${workerId})`}
-                                    dot={{ fill: '#1E3A5F', r: 3.5, strokeWidth: 0 }}
-                                    activeDot={{ r: 5, fill: '#1E3A5F' }}
+                                    dot={{ fill: 'var(--primary)', r: 3.5, strokeWidth: 0 }}
+                                    activeDot={{ r: 5, fill: 'var(--primary)' }}
                                 />
                             </AreaChart>
                         </ResponsiveContainer>
-                        <div className="flex items-center gap-3 mt-3 pt-3 border-t border-[#F8FAFC] text-xs text-slate-400">
-                            <span className="flex items-center gap-1.5"><span className="w-3 h-0.5 rounded bg-[#1E3A5F] inline-block" />Actual hours</span>
+                        <div className="flex items-center gap-3 mt-3 pt-3 border-t border-border text-xs text-muted-foreground">
+                            <span className="flex items-center gap-1.5"><span className="w-3 h-0.5 rounded bg-[var(--primary)] inline-block" />Actual hours</span>
                         </div>
                     </Card>
 
                     {/* Job history table */}
                     <Card>
-                        <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-[#E2E8F0]">
+                        <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-[var(--border)]">
                             <div>
-                                <h3 className="text-sm font-semibold text-slate-900">Job History</h3>
-                                <p className="text-xs text-slate-400 mt-0.5">{jobHistory.length} recent assignments</p>
+                                <h3 className="text-sm font-semibold text-foreground">Job History</h3>
+                                <p className="text-xs text-muted-foreground mt-0.5">{jobHistory.length} recent assignments</p>
                             </div>
-                            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg">
+                            <div className="flex items-center gap-1 bg-muted p-1 rounded-lg">
                                 {(['all', 'active', 'completed'] as const).map(t => (
                                     <button
                                         key={t}
                                         onClick={() => setActiveJobTab(t)}
-                                        className={`px-2.5 py-1 rounded-md text-xs font-semibold capitalize transition-colors ${activeJobTab === t ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                                        className={`px-2.5 py-1 rounded-md text-xs font-semibold capitalize transition-colors ${activeJobTab === t ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-muted-foreground'}`}
                                     >
                                         {t}
                                     </button>
@@ -417,32 +417,32 @@ export function WorkerProfile() {
 
                         {filteredJobs.length === 0 ? (
                             <div className="py-10 text-center">
-                                <p className="text-sm text-slate-400">No jobs in this category</p>
+                                <p className="text-sm text-muted-foreground">No jobs in this category</p>
                             </div>
                         ) : (
-                            <div className="divide-y divide-[#F8FAFC]">
+                            <div className="divide-y divide-border">
                                 {filteredJobs.map(job => (
                                     <div
                                         key={job._id}
-                                        className="flex items-center gap-4 px-5 py-3.5 hover:bg-slate-50/60 transition-colors cursor-pointer group"
+                                        className="flex items-center gap-4 px-5 py-3.5 hover:bg-muted/60 transition-colors cursor-pointer group"
                                         onClick={() => onNavigate(`/jobs/${job.jobId}`)}
                                     >
                                         <div className={`w-1.5 h-8 rounded-full shrink-0 ${job.status === 'completed' ? 'bg-emerald-400' :
                                             job.status === 'in-progress' ? 'bg-blue-500' :
-                                                job.status === 'accepted' ? 'bg-violet-400' : 'bg-slate-200'
+                                                job.status === 'accepted' ? 'bg-violet-400' : 'bg-muted'
                                             }`} />
 
                                         <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-medium text-slate-900 truncate group-hover:text-blue-700 transition-colors">{job.title}</p>
+                                            <p className="text-sm font-medium text-foreground truncate group-hover:text-blue-700 transition-colors">{job.title}</p>
                                             <div className="flex items-center gap-3 mt-0.5">
-                                                <span className="flex items-center gap-1 text-xs text-slate-400">
+                                                <span className="flex items-center gap-1 text-xs text-muted-foreground">
                                                     <Calendar size={10} />{new Date(job.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
                                                 </span>
-                                                <span className="flex items-center gap-1 text-xs text-slate-400">
+                                                <span className="flex items-center gap-1 text-xs text-muted-foreground">
                                                     <Clock size={10} />{job.startTime}–{job.endTime}
                                                 </span>
                                                 {job.location && (
-                                                    <span className="flex items-center gap-1 text-xs text-slate-400 truncate">
+                                                    <span className="flex items-center gap-1 text-xs text-muted-foreground truncate">
                                                         {job.location.split(',')[0]}
                                                     </span>
                                                 )}
@@ -450,7 +450,7 @@ export function WorkerProfile() {
                                         </div>
 
                                         <div className="flex items-center gap-3 shrink-0">
-                                            <span className="text-xs font-semibold text-slate-500 mono">{job.hours}h</span>
+                                            <span className="text-xs font-semibold text-muted-foreground mono">{job.hours}h</span>
                                             <StatusBadge status={job.status} />
                                             <PriorityBadge priority={job.priority} />
                                         </div>
@@ -467,9 +467,9 @@ export function WorkerProfile() {
                     {/* Timesheet summary */}
                     <Card className="p-5">
                         <div className="flex items-center justify-between mb-3">
-                            <h3 className="text-sm font-semibold text-slate-900">Timesheet</h3>
+                            <h3 className="text-sm font-semibold text-foreground">Timesheet</h3>
                         </div>
-                        <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg mb-4">
+                        <div className="flex items-center gap-1 bg-muted p-1 rounded-lg mb-4">
                             {([
                                 { id: 'weekly', label: 'Weekly' },
                                 { id: 'biweekly', label: 'Bi-weekly' },
@@ -478,40 +478,40 @@ export function WorkerProfile() {
                                 <button
                                     key={p.id}
                                     onClick={() => setTimesheetPeriod(p.id)}
-                                    className={`flex-1 py-1.5 rounded-md text-xs font-semibold transition-colors ${timesheetPeriod === p.id ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                                    className={`flex-1 py-1.5 rounded-md text-xs font-semibold transition-colors ${timesheetPeriod === p.id ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-muted-foreground'}`}
                                 >
                                     {p.label}
                                 </button>
                             ))}
                         </div>
                         <div className="flex items-center justify-between py-1.5">
-                            <span className="text-xs text-slate-500">Hours worked</span>
-                            <span className="text-sm font-bold text-slate-900">
+                            <span className="text-xs text-muted-foreground">Hours worked</span>
+                            <span className="text-sm font-bold text-foreground">
                                 {timesheetLoading ? '—' : `${timesheetData?.summary.totalHours ?? 0}h`}
                             </span>
                         </div>
                         <div className="flex items-center justify-between py-1.5 mb-4">
-                            <span className="text-xs text-slate-500">Shifts</span>
-                            <span className="text-sm font-bold text-slate-900">
+                            <span className="text-xs text-muted-foreground">Shifts</span>
+                            <span className="text-sm font-bold text-foreground">
                                 {timesheetLoading ? '—' : (timesheetData?.summary.shiftsCount ?? 0)}
                             </span>
                         </div>
                         <button
                             onClick={handleDownloadTimesheet}
                             disabled={timesheetLoading || downloadingTimesheet || !timesheetData?.summary.hasData}
-                            className="flex items-center justify-center gap-2 w-full h-9 rounded-xl bg-[#1E3A5F] text-white text-xs font-bold hover:bg-[#162D4A] transition-colors disabled:opacity-40"
+                            className="flex items-center justify-center gap-2 w-full h-9 rounded-xl bg-[var(--primary)] text-white text-xs font-bold hover:bg-primary/90 transition-colors disabled:opacity-40"
                         >
                             <Download size={13} />
                             {downloadingTimesheet ? 'Downloading…' : 'Download PDF'}
                         </button>
                         {!timesheetLoading && !timesheetData?.summary.hasData && (
-                            <p className="text-[11px] text-center text-slate-400 mt-2">No shifts in this period</p>
+                            <p className="text-[11px] text-center text-muted-foreground mt-2">No shifts in this period</p>
                         )}
                     </Card>
 
                     {/* Performance metrics */}
                     <Card className="p-5">
-                        <h3 className="text-sm font-semibold text-slate-900 mb-4">Performance</h3>
+                        <h3 className="text-sm font-semibold text-foreground mb-4">Performance</h3>
                         <div className="flex flex-col gap-4">
                             {[
                                 { label: 'Completion Rate', value: stats.completionRate, color: 'bg-emerald-500' },
@@ -521,16 +521,16 @@ export function WorkerProfile() {
                             ].map(m => (
                                 <div key={m.label}>
                                     <div className="flex items-center justify-between mb-1.5">
-                                        <p className="text-xs font-medium text-slate-600">{m.label}</p>
+                                        <p className="text-xs font-medium text-muted-foreground">{m.label}</p>
                                         <div className="flex items-center gap-1.5">
-                                            <span className="text-xs font-bold text-slate-900">{pct(m.value)}</span>
+                                            <span className="text-xs font-bold text-foreground">{pct(m.value)}</span>
                                             {m.value !== null && (m.value >= 80
                                                 ? <CheckCircle2 size={12} className="text-emerald-500" />
                                                 : <AlertCircle size={12} className="text-amber-500" />
                                             )}
                                         </div>
                                     </div>
-                                    <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                    <div className="h-1.5 bg-muted rounded-full overflow-hidden">
                                         <div className={`h-full ${m.color} rounded-full transition-all`} style={{ width: `${m.value ?? 0}%` }} />
                                     </div>
                                 </div>
@@ -540,22 +540,22 @@ export function WorkerProfile() {
 
                     {/* Activity feed */}
                     <Card className="p-5">
-                        <h3 className="text-sm font-semibold text-slate-900 mb-4">Recent Activity</h3>
+                        <h3 className="text-sm font-semibold text-foreground mb-4">Recent Activity</h3>
                         {recentActivity.length === 0 ? (
-                            <p className="text-xs text-slate-400">No activity yet.</p>
+                            <p className="text-xs text-muted-foreground">No activity yet.</p>
                         ) : (
                             <div className="flex flex-col gap-0">
                                 {recentActivity.map((a, i) => (
                                     <div key={a._id} className="flex items-start gap-3 pb-4 relative">
                                         {i < recentActivity.length - 1 && (
-                                            <div className="absolute left-[7px] top-5 bottom-0 w-px bg-slate-100" />
+                                            <div className="absolute left-[7px] top-5 bottom-0 w-px bg-muted" />
                                         )}
                                         <span className={`w-3.5 h-3.5 rounded-full shrink-0 mt-0.5 border-2 border-white ring-1 ring-slate-200 ${ACTIVITY_DOT[a.type] ?? 'bg-slate-400'}`} />
                                         <div className="flex-1 min-w-0">
-                                            <p className="text-xs text-slate-700 leading-relaxed">
+                                            <p className="text-xs text-foreground leading-relaxed">
                                                 {ACTIVITY_LABEL[a.type] ?? a.type}{a.job ? ` — ${a.job.title}` : ''}
                                             </p>
-                                            <p className="text-[10px] text-slate-400 mt-0.5">
+                                            <p className="text-[10px] text-muted-foreground mt-0.5">
                                                 {new Date(a.createdAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                                             </p>
                                         </div>
@@ -567,9 +567,9 @@ export function WorkerProfile() {
 
                     {/* Actions */}
                     <Card className="p-5">
-                        <h3 className="text-sm font-semibold text-slate-900 mb-3">Quick Actions</h3>
+                        <h3 className="text-sm font-semibold text-foreground mb-3">Quick Actions</h3>
                         <div className="flex flex-col gap-2">
-                            <button className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl hover:bg-slate-50 border border-[#E2E8F0] transition-colors text-sm font-medium text-slate-700">
+                            <button className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl hover:bg-muted border border-[var(--border)] transition-colors text-sm font-medium text-foreground">
                                 <div className="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center">
                                     <MessageSquare size={13} className="text-blue-600" />
                                 </div>
@@ -577,7 +577,7 @@ export function WorkerProfile() {
                             </button>
                             <button
                                 onClick={() => onNavigate('/create-job')}
-                                className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl hover:bg-slate-50 border border-[#E2E8F0] transition-colors text-sm font-medium text-slate-700"
+                                className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl hover:bg-muted border border-[var(--border)] transition-colors text-sm font-medium text-foreground"
                             >
                                 <div className="w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center">
                                     <Briefcase size={13} className="text-emerald-600" />
@@ -611,9 +611,9 @@ export function WorkerProfile() {
 
                     {/* Documents — worker-uploaded, view-only from here */}
                     <Card className="p-5">
-                        <h3 className="text-sm font-semibold text-slate-900 mb-3">Documents</h3>
+                        <h3 className="text-sm font-semibold text-foreground mb-3">Documents</h3>
                         {!workerDocuments?.documents.length ? (
-                            <p className="text-xs text-slate-400">No documents uploaded.</p>
+                            <p className="text-xs text-muted-foreground">No documents uploaded.</p>
                         ) : (
                             <div className="flex flex-col gap-2">
                                 {workerDocuments.documents.map(doc => (
@@ -622,14 +622,14 @@ export function WorkerProfile() {
                                         href={doc.url}
                                         target="_blank"
                                         rel="noreferrer"
-                                        className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl hover:bg-slate-50 border border-[#E2E8F0] transition-colors min-w-0"
+                                        className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl hover:bg-muted border border-[var(--border)] transition-colors min-w-0"
                                     >
                                         {doc.mimeType === "application/pdf" ? (
-                                            <FileText size={14} className="text-slate-400 shrink-0" />
+                                            <FileText size={14} className="text-muted-foreground shrink-0" />
                                         ) : (
-                                            <ImageIcon size={14} className="text-slate-400 shrink-0" />
+                                            <ImageIcon size={14} className="text-muted-foreground shrink-0" />
                                         )}
-                                        <span className="text-sm font-medium text-slate-700 truncate">{doc.name}</span>
+                                        <span className="text-sm font-medium text-foreground truncate">{doc.name}</span>
                                     </a>
                                 ))}
                             </div>

@@ -120,9 +120,9 @@ export function InvoiceForm() {
     if (isEditing && invoice && invoice.status !== 'draft') {
         return (
             <div className="px-2 pt-2.5 lg:p-6 max-w-3xl mx-auto animate-fade-in">
-                <div className="bg-white rounded-xl border border-[#E2E8F0] p-8 text-center">
-                    <p className="text-sm font-semibold text-slate-700 mb-1">This invoice can no longer be edited</p>
-                    <p className="text-xs text-slate-400 mb-4">
+                <div className="bg-card rounded-xl border border-[var(--border)] p-8 text-center">
+                    <p className="text-sm font-semibold text-foreground mb-1">This invoice can no longer be edited</p>
+                    <p className="text-xs text-muted-foreground mb-4">
                         Only draft invoices can be edited — it's already been {invoice.status}.
                     </p>
                     <Button variant="outline" size="sm" onClick={() => navigate(`/invoices/${invoiceId}`)}>
@@ -137,14 +137,14 @@ export function InvoiceForm() {
         <div className="px-2 pt-2.5 lg:p-6 max-w-3xl mx-auto animate-fade-in">
             {/* Header */}
             <div className="flex items-center gap-3 mb-7">
-                <button onClick={() => navigate(-1)} className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:bg-slate-100 transition-colors">
+                <button onClick={() => navigate(-1)} className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors">
                     <ChevronLeft size={16} />
                 </button>
                 <div>
-                    <h1 className="text-xl font-semibold text-slate-900 tracking-tight">
+                    <h1 className="text-xl font-semibold text-foreground tracking-tight">
                         {isEditing ? `Edit Invoice ${invoice?.invoiceNumber ?? ''}` : 'New Invoice'}
                     </h1>
-                    <p className="text-sm text-slate-500 mt-0.5">
+                    <p className="text-sm text-muted-foreground mt-0.5">
                         {isEditing
                             ? 'Update the details below'
                             : job?.title
@@ -158,8 +158,8 @@ export function InvoiceForm() {
                 <input type="hidden" {...register('job')} />
 
                 {/* Details */}
-                <div className="bg-white rounded-xl border border-[#E2E8F0] p-6">
-                    <h2 className="text-sm font-semibold text-slate-800 mb-4">Invoice Details</h2>
+                <div className="bg-card rounded-xl border border-[var(--border)] p-6">
+                    <h2 className="text-sm font-semibold text-foreground mb-4">Invoice Details</h2>
                     <div className="grid sm:grid-cols-3 gap-4">
                         <div>
                             <Input
@@ -192,19 +192,19 @@ export function InvoiceForm() {
                 </div>
 
                 {/* Line items */}
-                <div className="bg-white rounded-xl border border-[#E2E8F0] p-6">
+                <div className="bg-card rounded-xl border border-[var(--border)] p-6">
                     <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-sm font-semibold text-slate-800">Line Items</h2>
+                        <h2 className="text-sm font-semibold text-foreground">Line Items</h2>
                         <Button type="button" variant="outline" size="sm" onClick={() => append({ description: '', hours: 0, rate: 0 })}>
                             <Plus size={13} /> Add Line
                         </Button>
                     </div>
 
                     <div className="grid grid-cols-[2fr_1fr_1fr_1fr_auto] gap-3 px-0.5 mb-1">
-                        <span className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Job</span>
-                        <span className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Hours</span>
-                        <span className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Client rate</span>
-                        <span className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Amount</span>
+                        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Job</span>
+                        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Hours</span>
+                        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Client rate</span>
+                        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Amount</span>
                         <span />
                     </div>
                     <div className="flex flex-col gap-3">
@@ -223,7 +223,7 @@ export function InvoiceForm() {
                                     <div>
                                         {isJobRow ? (
                                             <>
-                                                <p className="h-9 flex items-center px-3 text-sm text-slate-700 bg-slate-50 border border-[#E2E8F0] rounded-lg truncate">
+                                                <p className="h-9 flex items-center px-3 text-sm text-foreground bg-muted border border-[var(--border)] rounded-lg truncate">
                                                     {job?.title}
                                                 </p>
                                                 <input type="hidden" {...register(`lineItems.${index}.description` as const)} />
@@ -239,7 +239,7 @@ export function InvoiceForm() {
                                     </div>
                                     {isFixedJobRow ? (
                                         <>
-                                            <p className="h-9 flex items-center px-3 text-sm text-slate-500 bg-slate-50 border border-[#E2E8F0] rounded-lg">Fixed</p>
+                                            <p className="h-9 flex items-center px-3 text-sm text-muted-foreground bg-muted border border-[var(--border)] rounded-lg">Fixed</p>
                                             <input type="hidden" {...register(`lineItems.${index}.hours` as const, { valueAsNumber: true })} />
                                         </>
                                     ) : (
@@ -256,14 +256,14 @@ export function InvoiceForm() {
                                         placeholder="Rate"
                                         {...register(`lineItems.${index}.rate` as const, { valueAsNumber: true })}
                                     />
-                                    <p className="h-9 flex items-center text-sm font-medium text-slate-700 tabular-nums">
+                                    <p className="h-9 flex items-center text-sm font-medium text-foreground tabular-nums">
                                         {formatCurrency(hours * rate)}
                                     </p>
                                     <button
                                         type="button"
                                         onClick={() => remove(index)}
                                         disabled={fields.length === 1}
-                                        className="h-9 w-9 flex items-center justify-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-500 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                                        className="h-9 w-9 flex items-center justify-center rounded-lg text-muted-foreground hover:bg-red-50 hover:text-red-500 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                                     >
                                         <Trash2 size={14} />
                                     </button>
@@ -273,17 +273,17 @@ export function InvoiceForm() {
                     </div>
                     <FieldError message={errors.lineItems?.message as string | undefined} />
 
-                    <div className="flex justify-end mt-4 pt-4 border-t border-[#F1F5F9]">
+                    <div className="flex justify-end mt-4 pt-4 border-t border-[var(--border)]">
                         <div className="text-right">
-                            <p className="text-xs text-slate-400 uppercase tracking-wide font-semibold">Total</p>
-                            <p className="text-xl font-bold text-slate-900 mt-0.5">{formatCurrency(subtotal)}</p>
+                            <p className="text-xs text-muted-foreground uppercase tracking-wide font-semibold">Total</p>
+                            <p className="text-xl font-bold text-foreground mt-0.5">{formatCurrency(subtotal)}</p>
                         </div>
                     </div>
                 </div>
 
                 {/* Notes */}
-                <div className="bg-white rounded-xl border border-[#E2E8F0] p-6">
-                    <h2 className="text-sm font-semibold text-slate-800 mb-4">Notes</h2>
+                <div className="bg-card rounded-xl border border-[var(--border)] p-6">
+                    <h2 className="text-sm font-semibold text-foreground mb-4">Notes</h2>
                     <Textarea
                         {...register('notes')}
                         placeholder="Payment terms, bank details, or other notes for the client..."

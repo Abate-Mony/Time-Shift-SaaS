@@ -69,37 +69,37 @@ function QuickCreateClient({
   return (
     <div className="p-5">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-bold text-slate-900">Add new client</h3>
-        <button onClick={onClose} className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-400 transition-colors">
+        <h3 className="text-sm font-bold text-foreground">Add new client</h3>
+        <button onClick={onClose} className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-muted text-muted-foreground transition-colors">
           <X size={14} />
         </button>
       </div>
       <div className="flex flex-col gap-3">
         <div>
-          <label className="block text-[11px] text-slate-500 mb-1">Client name <span className="text-red-400">*</span></label>
+          <label className="block text-[11px] text-muted-foreground mb-1">Client name <span className="text-red-400">*</span></label>
           <input value={name} onChange={e => setName(e.target.value)} placeholder="Acme Security"
-            className="w-full h-9 px-3 border border-[#E2E8F0] rounded-xl text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/15 focus:border-[#1E3A5F]/40 transition-all" />
+            className="w-full h-9 px-3 border border-[var(--border)] rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/15 focus:border-[var(--primary)]/40 transition-all" />
         </div>
         <div>
-          <label className="block text-[11px] text-slate-500 mb-1">Primary contact name</label>
+          <label className="block text-[11px] text-muted-foreground mb-1">Primary contact name</label>
           <input value={contactName} onChange={e => setContactName(e.target.value)} placeholder="Jane Smith"
-            className="w-full h-9 px-3 border border-[#E2E8F0] rounded-xl text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/15 focus:border-[#1E3A5F]/40 transition-all" />
+            className="w-full h-9 px-3 border border-[var(--border)] rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/15 focus:border-[var(--primary)]/40 transition-all" />
         </div>
         <div>
-          <label className="block text-[11px] text-slate-500 mb-1">Primary contact email</label>
+          <label className="block text-[11px] text-muted-foreground mb-1">Primary contact email</label>
           <input value={contactEmail} onChange={e => setContactEmail(e.target.value)} placeholder="jane@acmesecurity.co.uk" type="email"
-            className="w-full h-9 px-3 border border-[#E2E8F0] rounded-xl text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/15 focus:border-[#1E3A5F]/40 transition-all" />
+            className="w-full h-9 px-3 border border-[var(--border)] rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/15 focus:border-[var(--primary)]/40 transition-all" />
         </div>
         <div className="grid grid-cols-2 gap-2">
           <div>
-            <label className="block text-[11px] text-slate-500 mb-1">Phone</label>
+            <label className="block text-[11px] text-muted-foreground mb-1">Phone</label>
             <input value={phone} onChange={e => setPhone(e.target.value)} placeholder="07700 900123"
-              className="w-full h-9 px-3 border border-[#E2E8F0] rounded-xl text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/15 focus:border-[#1E3A5F]/40 transition-all" />
+              className="w-full h-9 px-3 border border-[var(--border)] rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/15 focus:border-[var(--primary)]/40 transition-all" />
           </div>
           <div>
-            <label className="block text-[11px] text-slate-500 mb-1">Billing email</label>
+            <label className="block text-[11px] text-muted-foreground mb-1">Billing email</label>
             <input value={billingEmail} onChange={e => setBillingEmail(e.target.value)} placeholder="accounts@…"
-              className="w-full h-9 px-3 border border-[#E2E8F0] rounded-xl text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/15 focus:border-[#1E3A5F]/40 transition-all" />
+              className="w-full h-9 px-3 border border-[var(--border)] rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/15 focus:border-[var(--primary)]/40 transition-all" />
           </div>
         </div>
       </div>
@@ -122,13 +122,13 @@ function QuickCreateClient({
         </div>
       ) : null}
       <div className="flex gap-2.5 mt-4">
-        <button onClick={onClose} className="h-9 px-4 text-sm font-semibold text-slate-600 border border-[#E2E8F0] rounded-xl hover:bg-slate-50 transition-colors">
+        <button onClick={onClose} className="h-9 px-4 text-sm font-semibold text-muted-foreground border border-[var(--border)] rounded-xl hover:bg-muted transition-colors">
           Cancel
         </button>
         <button
           onClick={handleCreate}
           disabled={!name.trim() || loading}
-          className="flex-1 h-9 text-sm font-bold bg-[#1E3A5F] text-white rounded-xl hover:bg-[#162D4A] disabled:opacity-40 transition-colors flex items-center justify-center gap-2"
+          className="flex-1 h-9 text-sm font-bold bg-[var(--primary)] text-white rounded-xl hover:bg-primary/90 disabled:opacity-40 transition-colors flex items-center justify-center gap-2"
         >
           {loading ? (
             <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -149,19 +149,19 @@ function ClientResult({ client, onSelect }: { client: Client; onSelect: () => vo
     <button
       onClick={onSelect}
       disabled={isInactive}
-      className={`w-full flex items-start gap-3 px-3 py-2.5 transition-colors text-left ${isInactive ? 'opacity-60 cursor-default' : 'hover:bg-slate-50'}`}
+      className={`w-full flex items-start gap-3 px-3 py-2.5 transition-colors text-left ${isInactive ? 'opacity-60 cursor-default' : 'hover:bg-muted'}`}
     >
-      <div className="w-7 h-7 rounded-lg bg-[#1E3A5F]/8 flex items-center justify-center shrink-0 mt-0.5">
-        <span className="text-[10px] font-bold text-[#1E3A5F]">{client.name.slice(0, 2).toUpperCase()}</span>
+      <div className="w-7 h-7 rounded-lg bg-[var(--primary)]/8 flex items-center justify-center shrink-0 mt-0.5">
+        <span className="text-[10px] font-bold text-[var(--primary)]">{client.name.slice(0, 2).toUpperCase()}</span>
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-sm font-semibold text-slate-800 truncate">{client.name}</span>
+          <span className="text-sm font-semibold text-foreground truncate">{client.name}</span>
           {isInactive && (
-            <span className="text-[10px] font-semibold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-full">Inactive</span>
+            <span className="text-[10px] font-semibold text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full">Inactive</span>
           )}
         </div>
-        <p className="text-xs text-slate-400 truncate">
+        <p className="text-xs text-muted-foreground truncate">
           {[client.primaryContact?.name, client.formattedAddress].filter(Boolean).join(' · ')}
         </p>
         {isInactive && (
@@ -179,23 +179,23 @@ function ClientResult({ client, onSelect }: { client: Client; onSelect: () => vo
 
 function SelectedClientCard({ client, onClear }: { client: ComboboxClient; onClear: () => void }) {
   return (
-    <div className="w-full border border-[#E2E8F0] rounded-xl p-3 bg-white">
+    <div className="w-full border border-[var(--border)] rounded-xl p-3 bg-card">
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-bold text-slate-900 truncate">{client.name}</p>
+          <p className="text-sm font-bold text-foreground truncate">{client.name}</p>
           {client.primaryContact && (
-            <p className="text-xs text-slate-500 truncate mt-0.5">
+            <p className="text-xs text-muted-foreground truncate mt-0.5">
               {client.primaryContact.name}{client.primaryContact.email ? ` · ${client.primaryContact.email}` : ''}
             </p>
           )}
           {!!client.defaultChargeRate && client.defaultChargeRate > 0 && (
-            <p className="text-xs text-slate-400 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               Default charge: £{client.defaultChargeRate.toFixed(2)}{client.defaultChargeType === 'hourly' ? '/hour' : ''}
               {client.paymentTermsDays != null ? ` · ${client.paymentTermsDays} day terms` : ''}
             </p>
           )}
         </div>
-        <button onClick={onClear} className="w-6 h-6 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-400 shrink-0 transition-colors">
+        <button onClick={onClear} className="w-6 h-6 flex items-center justify-center rounded-lg hover:bg-muted text-muted-foreground shrink-0 transition-colors">
           <X size={13} />
         </button>
       </div>
@@ -314,10 +314,10 @@ export function ClientCombobox({ value, onChange, onToast }: ClientComboboxProps
       <button
       type='button'
         onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center justify-between gap-2 h-10 px-3 border border-[#E2E8F0] rounded-xl bg-white text-sm text-slate-400 hover:border-slate-300 transition-colors"
+        className="w-full flex items-center justify-between gap-2 h-10 px-3 border border-[var(--border)] rounded-xl bg-card text-sm text-muted-foreground hover:border-slate-300 transition-colors"
       >
         <span>Search or select a client…</span>
-        <ChevronDown size={14} className="text-slate-400 shrink-0" />
+        <ChevronDown size={14} className="text-muted-foreground shrink-0" />
       </button>
 
       <AnimatePresence>
@@ -327,7 +327,7 @@ export function ClientCombobox({ value, onChange, onToast }: ClientComboboxProps
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 4 }}
             transition={{ duration: 0.12 }}
-            className="absolute left-0 right-0 top-12 z-50 bg-white border border-[#E2E8F0] rounded-xl shadow-lg overflow-hidden"
+            className="absolute left-0 right-0 top-12 z-50 bg-card border border-[var(--border)] rounded-xl shadow-lg overflow-hidden"
           >
             {showQuickCreate ? (
               <QuickCreateClient
@@ -338,19 +338,19 @@ export function ClientCombobox({ value, onChange, onToast }: ClientComboboxProps
             ) : (
               <>
                 {/* Search input */}
-                <div className="flex items-center gap-2 px-3 py-2 border-b border-[#E2E8F0]">
-                  <Search size={13} className="text-slate-400 shrink-0" />
+                <div className="flex items-center gap-2 px-3 py-2 border-b border-[var(--border)]">
+                  <Search size={13} className="text-muted-foreground shrink-0" />
                   <input
                     ref={inputRef}
                     value={query}
                     onChange={e => setQuery(e.target.value)}
                     placeholder="Search clients…"
-                    className="flex-1 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none bg-transparent"
+                    className="flex-1 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none bg-transparent"
                   />
                   {query && (
                     <button
       type='button'
-                      onClick={() => setQuery('')} className="text-slate-400 hover:text-slate-600 transition-colors">
+                      onClick={() => setQuery('')} className="text-muted-foreground hover:text-muted-foreground transition-colors">
                       <X size={13} />
                     </button>
                   )}
@@ -360,7 +360,7 @@ export function ClientCombobox({ value, onChange, onToast }: ClientComboboxProps
                 <div className="max-h-[220px] overflow-y-auto py-1">
                   {searching ? (
                     <div className="px-4 py-3 text-center">
-                      <p className="text-xs text-slate-400">Searching…</p>
+                      <p className="text-xs text-muted-foreground">Searching…</p>
                     </div>
                   ) : results.length > 0 ? (
                     results.map(client => (
@@ -368,19 +368,19 @@ export function ClientCombobox({ value, onChange, onToast }: ClientComboboxProps
                     ))
                   ) : (
                     <div className="px-4 py-3 text-center">
-                      <p className="text-xs text-slate-500 mb-2">No clients found for "{query}"</p>
+                      <p className="text-xs text-muted-foreground mb-2">No clients found for "{query}"</p>
                     </div>
                   )}
                 </div>
 
                 {/* No match CTA */}
                 {query && (
-                  <div className="border-t border-[#E2E8F0] px-3 py-2">
+                  <div className="border-t border-[var(--border)] px-3 py-2">
                     <button
       type='button'
 
                       onClick={() => setShowQuickCreate(true)}
-                      className="w-full flex items-center gap-2 py-2 px-1 text-sm font-semibold text-[#1E3A5F] hover:text-[#162D4A] transition-colors"
+                      className="w-full flex items-center gap-2 py-2 px-1 text-sm font-semibold text-[var(--primary)] hover:text-[var(--primary)] transition-colors"
                     >
                       <Plus size={13} /> Create "{query}"
                     </button>

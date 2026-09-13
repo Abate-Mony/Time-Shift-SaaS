@@ -83,7 +83,7 @@ export function AIJobDraftDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Sparkles size={16} className="text-[#1E3A5F]" />
+            <Sparkles size={16} className="text-[var(--primary)]" />
             Create with AI
           </DialogTitle>
           <DialogDescription>

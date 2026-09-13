@@ -61,8 +61,8 @@ export function AIDashboardInsights() {
     <Card className="p-5">
       <div className="flex items-center justify-between mb-4 gap-2">
         <div className="flex items-center gap-2 min-w-0">
-          <Sparkles size={16} className="text-[#1E3A5F] shrink-0" />
-          <h3 className="text-sm font-semibold text-slate-900 truncate">What needs attention</h3>
+          <Sparkles size={16} className="text-[var(--primary)] shrink-0" />
+          <h3 className="text-sm font-semibold text-foreground truncate">What needs attention</h3>
         </div>
         <div className="flex items-center gap-2 shrink-0">
           {!canUseAI && <PlanLockBadge label="Upgrade to unlock" />}
@@ -81,7 +81,7 @@ export function AIDashboardInsights() {
       </div>
 
       {!result && !loading && (
-        <p className="text-sm text-slate-400">
+        <p className="text-sm text-muted-foreground">
           Get a quick, prioritised read on today's schedule — staffing gaps, overtime approvals,
           and anything else worth a look.
         </p>
@@ -89,7 +89,7 @@ export function AIDashboardInsights() {
 
       {result && (
         <div className="flex flex-col gap-3">
-          <p className="text-sm text-slate-700">{result.headline}</p>
+          <p className="text-sm text-foreground">{result.headline}</p>
           {result.insights.length > 0 && (
             <div className="flex flex-col gap-2">
               {result.insights.map((insight, i) => (

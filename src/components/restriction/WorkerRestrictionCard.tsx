@@ -36,28 +36,28 @@ function LiftRestrictionDialog({
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.97 }}
         transition={{ duration: 0.18 }}
-        className="bg-white rounded-2xl shadow-2xl max-w-sm w-full mx-4 overflow-hidden"
+        className="bg-card rounded-2xl shadow-2xl max-w-sm w-full mx-4 overflow-hidden"
       >
         <div className="p-6">
           <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center mb-4">
             <ShieldCheck size={18} className="text-emerald-600" />
           </div>
-          <h3 className="text-base font-bold text-slate-900 mb-1.5">Restore full access?</h3>
-          <p className="text-sm text-slate-500 mb-4 leading-relaxed">
+          <h3 className="text-base font-bold text-foreground mb-1.5">Restore full access?</h3>
+          <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
             {workerName} will regain normal access to INPRN.
           </p>
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1.5">Optional reason</label>
+            <label className="block text-xs font-semibold text-foreground mb-1.5">Optional reason</label>
             <input
               value={liftReason}
               onChange={e => setLiftReason(e.target.value)}
               placeholder="Updated document approved"
-              className="w-full h-10 px-3 border border-[#E2E8F0] rounded-xl text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/15 focus:border-[#1E3A5F]/40 transition-all"
+              className="w-full h-10 px-3 border border-[var(--border)] rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/15 focus:border-[var(--primary)]/40 transition-all"
             />
           </div>
         </div>
-        <div className="border-t border-[#E2E8F0] px-6 py-4 flex items-center justify-end gap-2.5">
-          <button onClick={onClose} className="h-9 px-4 text-sm font-semibold text-slate-600 hover:text-slate-800 transition-colors">Cancel</button>
+        <div className="border-t border-[var(--border)] px-6 py-4 flex items-center justify-end gap-2.5">
+          <button onClick={onClose} className="h-9 px-4 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors">Cancel</button>
           <button onClick={() => onConfirm(liftReason)} className="h-9 px-5 text-sm font-bold bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors">Restore access</button>
         </div>
       </motion.div>
@@ -93,31 +93,31 @@ function AppealReviewDialog({
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.97 }}
         transition={{ duration: 0.18 }}
-        className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden"
+        className="bg-card rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden"
       >
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#E2E8F0]">
-          <h3 className="text-base font-bold text-slate-900">Review appeal</h3>
-          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-400 transition-colors"><X size={15} /></button>
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border)]">
+          <h3 className="text-base font-bold text-foreground">Review appeal</h3>
+          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-muted text-muted-foreground transition-colors"><X size={15} /></button>
         </div>
         <div className="p-5 flex flex-col gap-4">
-          <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
-            <p className="text-xs text-slate-500 mb-1">Submitted {appeal.submittedAt ? fmtDate(appeal.submittedAt) : '—'}</p>
-            <p className="text-sm text-slate-700 leading-relaxed italic">"{appeal.message}"</p>
+          <div className="bg-muted border border-border rounded-xl p-4">
+            <p className="text-xs text-muted-foreground mb-1">Submitted {appeal.submittedAt ? fmtDate(appeal.submittedAt) : '—'}</p>
+            <p className="text-sm text-foreground leading-relaxed italic">"{appeal.message}"</p>
           </div>
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1.5">Response to worker</label>
+            <label className="block text-xs font-semibold text-foreground mb-1.5">Response to worker</label>
             <textarea
               value={response}
               onChange={e => setResponse(e.target.value)}
               rows={3}
               placeholder="Write a response for the worker…"
-              className="w-full px-3 py-2.5 border border-[#E2E8F0] rounded-xl text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/15 focus:border-[#1E3A5F]/40 resize-none transition-all"
+              className="w-full px-3 py-2.5 border border-[var(--border)] rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/15 focus:border-[var(--primary)]/40 resize-none transition-all"
             />
           </div>
           <div className="flex gap-2.5">
             <button
               onClick={() => onReject(response)}
-              className="flex-1 h-10 text-sm font-semibold text-slate-700 border border-[#E2E8F0] rounded-xl hover:bg-slate-50 transition-colors"
+              className="flex-1 h-10 text-sm font-semibold text-foreground border border-[var(--border)] rounded-xl hover:bg-muted transition-colors"
             >
               Reject
             </button>
@@ -203,16 +203,16 @@ export function WorkerRestrictionCard({ workerName, restriction, onRestrictionCh
 
   return (
     <>
-      <div className="bg-white border border-[#E2E8F0] rounded-xl p-5">
+      <div className="bg-card border border-[var(--border)] rounded-xl p-5">
         <div className="flex items-start justify-between gap-3 mb-4">
           <div>
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Account access</p>
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Account access</p>
             <RestrictionStatusBadge restriction={restriction} />
           </div>
           {!restriction ? (
             <button
               onClick={() => setShowRestrict(true)}
-              className="h-8 px-3.5 text-xs font-bold text-slate-600 border border-[#E2E8F0] rounded-xl hover:bg-slate-50 transition-colors shrink-0"
+              className="h-8 px-3.5 text-xs font-bold text-muted-foreground border border-[var(--border)] rounded-xl hover:bg-muted transition-colors shrink-0"
             >
               Restrict access
             </button>
@@ -220,7 +220,7 @@ export function WorkerRestrictionCard({ workerName, restriction, onRestrictionCh
             <div className="flex items-center gap-2 shrink-0">
               <button
                 onClick={() => setShowRestrict(true)}
-                className="h-8 px-3.5 text-xs font-bold text-slate-600 border border-[#E2E8F0] rounded-xl hover:bg-slate-50 transition-colors"
+                className="h-8 px-3.5 text-xs font-bold text-muted-foreground border border-[var(--border)] rounded-xl hover:bg-muted transition-colors"
               >
                 Manage
               </button>
@@ -235,27 +235,27 @@ export function WorkerRestrictionCard({ workerName, restriction, onRestrictionCh
         </div>
 
         {!restriction ? (
-          <p className="text-sm text-slate-400">No current restrictions.</p>
+          <p className="text-sm text-muted-foreground">No current restrictions.</p>
         ) : (
           <div className="flex flex-col gap-2.5">
             <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
               <div>
-                <p className="text-[10px] text-slate-400 uppercase tracking-wider">Reason</p>
-                <p className="text-xs font-semibold text-slate-700 mt-0.5">{REASON_LABELS[restriction.reason]}</p>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Reason</p>
+                <p className="text-xs font-semibold text-foreground mt-0.5">{REASON_LABELS[restriction.reason]}</p>
               </div>
               <div>
-                <p className="text-[10px] text-slate-400 uppercase tracking-wider">Started</p>
-                <p className="text-xs font-semibold text-slate-700 mt-0.5">{fmtDate(restriction.startsAt)}</p>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Started</p>
+                <p className="text-xs font-semibold text-foreground mt-0.5">{fmtDate(restriction.startsAt)}</p>
               </div>
               {restriction.expiresAt && (
                 <div>
-                  <p className="text-[10px] text-slate-400 uppercase tracking-wider">Ends</p>
-                  <p className="text-xs font-semibold text-slate-700 mt-0.5">{fmtDate(restriction.expiresAt)}</p>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Ends</p>
+                  <p className="text-xs font-semibold text-foreground mt-0.5">{fmtDate(restriction.expiresAt)}</p>
                 </div>
               )}
               {restriction.accessLevel === 'limited' && blocked.length > 0 && (
                 <div>
-                  <p className="text-[10px] text-slate-400 uppercase tracking-wider">Blocked</p>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Blocked</p>
                   <div className="flex flex-wrap gap-1 mt-0.5">
                     {blocked.slice(0, 3).map(c => (
                       <span key={c} className="text-[10px] font-semibold bg-red-50 text-red-600 px-1.5 py-0.5 rounded">
@@ -263,7 +263,7 @@ export function WorkerRestrictionCard({ workerName, restriction, onRestrictionCh
                       </span>
                     ))}
                     {blocked.length > 3 && (
-                      <span className="text-[10px] font-semibold bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded">+{blocked.length - 3}</span>
+                      <span className="text-[10px] font-semibold bg-muted text-muted-foreground px-1.5 py-0.5 rounded">+{blocked.length - 3}</span>
                     )}
                   </div>
                 </div>

@@ -64,17 +64,17 @@ function InlineSelect({
       <select
         value={value}
         onChange={e => onChange(e.target.value)}
-        className={`h-9 pl-3 pr-8 border border-[#E2E8F0] rounded-lg text-sm text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-[#3B82F6]/30 focus:border-[#3B82F6] appearance-none cursor-pointer transition-all ${className}`}
+        className={`h-9 pl-3 pr-8 border border-[var(--border)] rounded-lg text-sm text-foreground bg-card focus:outline-none focus:ring-2 focus:ring-[#3B82F6]/30 focus:border-[#3B82F6] appearance-none cursor-pointer transition-all ${className}`}
       >
         {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
       </select>
-      <ChevronDown size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+      <ChevronDown size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
     </div>
   )
 }
 
 function RowLabel({ children }: { children: React.ReactNode }) {
-  return <p className="text-sm font-medium text-slate-700 shrink-0">{children}</p>
+  return <p className="text-sm font-medium text-foreground shrink-0">{children}</p>
 }
 
 // ─── Summary builder ──────────────────────────────────────────────────────────
@@ -168,11 +168,11 @@ export function RecurringJobSection({ value: r, onChange, startDate = '', sectio
   }[r.pattern] as string
 
   return (
-    <div className="w-full min-w-0 bg-white rounded-xl border border-[#E2E8F0] overflow-hidden">
+    <div className="w-full min-w-0 bg-card rounded-xl border border-[var(--border)] overflow-hidden">
       {/* ── Section header + toggle ────────────────────────────────────── */}
       <div className="p-6 flex items-center justify-between gap-3 min-w-0">
-        <h2 className="text-sm font-semibold text-slate-800 flex items-center gap-2 min-w-0">
-          <span className="w-5 h-5 rounded-full bg-[#1E3A5F] text-white flex items-center justify-center text-[10px] font-bold shrink-0">
+        <h2 className="text-sm font-semibold text-foreground flex items-center gap-2 min-w-0">
+          <span className="w-5 h-5 rounded-full bg-[var(--primary)] text-white flex items-center justify-center text-[10px] font-bold shrink-0">
             {sectionIndex}
           </span>
           <span className="truncate">Recurring Job</span>
@@ -182,7 +182,7 @@ export function RecurringJobSection({ value: r, onChange, startDate = '', sectio
           {disabled && !r.enabled ? (
             <PlanLockBadge label="Upgrade for recurring jobs" />
           ) : (
-            <span className="text-xs text-slate-500 font-medium">
+            <span className="text-xs text-muted-foreground font-medium">
               {r.enabled ? 'Enabled' : 'Off'}
             </span>
           )}
@@ -193,7 +193,7 @@ export function RecurringJobSection({ value: r, onChange, startDate = '', sectio
             disabled={disabled}
             title={disabled ? 'Upgrade your plan to use recurring jobs' : undefined}
             onClick={() => set({ enabled: !r.enabled })}
-            className={`relative w-11 h-6 rounded-full transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#3B82F6] focus-visible:ring-offset-1 shrink-0 ${disabled ? 'opacity-40 cursor-not-allowed' : ''} ${r.enabled ? 'bg-[#1E3A5F]' : 'bg-slate-200'}`}
+            className={`relative w-11 h-6 rounded-full transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#3B82F6] focus-visible:ring-offset-1 shrink-0 ${disabled ? 'opacity-40 cursor-not-allowed' : ''} ${r.enabled ? 'bg-[var(--primary)]' : 'bg-muted'}`}
           >
             <motion.span
               layout
@@ -219,11 +219,11 @@ export function RecurringJobSection({ value: r, onChange, startDate = '', sectio
           >
             <div className="px-6 pb-6 flex flex-col gap-6 min-w-0 overflow-hidden">
               {/* Divider */}
-              <div className="h-px bg-[#F1F5F9] -mx-6" />
+              <div className="h-px bg-[var(--border)] -mx-6" />
 
               {/* ── Pattern selector ───────────────────────────────────── */}
               <div className="flex flex-col gap-2.5 min-w-0 ">
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
                   Recurrence Pattern
                 </p>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 min-w-0">
@@ -234,19 +234,19 @@ export function RecurringJobSection({ value: r, onChange, startDate = '', sectio
                       onClick={() => set({ pattern: p.id })}
                       className={`relative flex flex-col gap-0.5 text-left px-3.5 py-3 rounded-xl border-2 transition-all duration-150 min-w-0
                         ${r.pattern === p.id
-                          ? 'border-[#1E3A5F] bg-[#1E3A5F]/[0.04]'
-                          : 'border-[#E2E8F0] hover:border-slate-300 bg-white'}`}
+                          ? 'border-[var(--primary)] bg-[var(--primary)]/[0.04]'
+                          : 'border-[var(--border)] hover:border-slate-300 bg-card'}`}
                     >
                       <span className={`absolute top-3 right-3 w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors
-                        ${r.pattern === p.id ? 'border-[#1E3A5F] bg-[#1E3A5F]' : 'border-slate-300 bg-white'}`}>
+                        ${r.pattern === p.id ? 'border-[var(--primary)] bg-[var(--primary)]' : 'border-slate-300 bg-card'}`}>
                         {r.pattern === p.id && (
                           <span className="w-1.5 h-1.5 rounded-full bg-white" />
                         )}
                       </span>
-                      <span className={`text-sm font-semibold pr-5 truncate ${r.pattern === p.id ? 'text-[#1E3A5F]' : 'text-slate-800'}`}>
+                      <span className={`text-sm font-semibold pr-5 truncate ${r.pattern === p.id ? 'text-[var(--primary)]' : 'text-foreground'}`}>
                         {p.label}
                       </span>
-                      <span className="text-[11px] text-slate-400 leading-snug truncate">{p.sub}</span>
+                      <span className="text-[11px] text-muted-foreground leading-snug truncate">{p.sub}</span>
                     </button>
                   ))}
                 </div>
@@ -269,7 +269,7 @@ export function RecurringJobSection({ value: r, onChange, startDate = '', sectio
                     options={repeatEveryOptions}
                     className="w-20"
                   />
-                  <span className="text-sm text-slate-500 shrink-0">{unitLabel}</span>
+                  <span className="text-sm text-muted-foreground shrink-0">{unitLabel}</span>
                 </motion.div>
               )}
 
@@ -283,7 +283,7 @@ export function RecurringJobSection({ value: r, onChange, startDate = '', sectio
                   transition={{ duration: 0.18 }}
                   className="flex flex-col gap-2.5 min-w-0"
                 >
-                  <p className="text-sm font-medium text-slate-700">Repeat on</p>
+                  <p className="text-sm font-medium text-foreground">Repeat on</p>
                   <div className="flex flex-wrap gap-2 min-w-0">
                     {WEEKDAYS.map(day => {
                       const active = r.weekdays.includes(day)
@@ -300,8 +300,8 @@ export function RecurringJobSection({ value: r, onChange, startDate = '', sectio
                           }}
                           className={`h-9 w-12 shrink-0 rounded-xl text-xs font-bold transition-all duration-150 border
                               ${active
-                              ? 'bg-[#1E3A5F] text-white border-[#1E3A5F] shadow-sm shadow-[#1E3A5F]/20'
-                              : 'bg-white text-slate-600 border-[#E2E8F0] hover:border-slate-300'}`}
+                              ? 'bg-[var(--primary)] text-white border-[var(--primary)] shadow-sm shadow-[var(--primary)]/20'
+                              : 'bg-card text-muted-foreground border-[var(--border)] hover:border-slate-300'}`}
                         >
                           {day}
                         </motion.button>
@@ -328,13 +328,13 @@ export function RecurringJobSection({ value: r, onChange, startDate = '', sectio
                 >
                   {/* Option A: Day of month */}
                   <label className={`flex items-center gap-3 h p-3.5 rounded-xl border-2 cursor-pointer transition-all flex-wrap min-w-0
-                      ${r.monthlyMode === 'day-of-month' ? 'border-[#1E3A5F] bg-[#1E3A5F]/[0.03]' : 'border-[#E2E8F0] hover:border-slate-300'}`}>
+                      ${r.monthlyMode === 'day-of-month' ? 'border-[var(--primary)] bg-[var(--primary)]/[0.03]' : 'border-[var(--border)] hover:border-slate-300'}`}>
                     <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors
-                        ${r.monthlyMode === 'day-of-month' ? 'border-[#1E3A5F] bg-[#1E3A5F]' : 'border-slate-300'}`}>
+                        ${r.monthlyMode === 'day-of-month' ? 'border-[var(--primary)] bg-[var(--primary)]' : 'border-slate-300'}`}>
                       {r.monthlyMode === 'day-of-month' && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
                     </span>
                     <Input type="radio" className="sr-only " checked={r.monthlyMode === 'day-of-month'} onChange={() => set({ monthlyMode: 'day-of-month' })} />
-                    <span className="text-sm text-slate-700 font-medium flex-1 min-w-0">Day of month</span>
+                    <span className="text-sm text-foreground font-medium flex-1 min-w-0">Day of month</span>
                     {r.monthlyMode === 'day-of-month' && (
                       <InlineSelect
                         value={String(r.monthlyDay)}
@@ -348,13 +348,13 @@ export function RecurringJobSection({ value: r, onChange, startDate = '', sectio
                   {/* Option B: Day of week */}
                   <label className={`flex items-center gap-3 p-3.5 rounded-xl
                  border-2 cursor-pointer transition-all
-                      ${r.monthlyMode === 'day-of-week' ? 'border-[#1E3A5F] bg-[#1E3A5F]/[0.03]' : 'border-[#E2E8F0] hover:border-slate-300'}`}>
+                      ${r.monthlyMode === 'day-of-week' ? 'border-[var(--primary)] bg-[var(--primary)]/[0.03]' : 'border-[var(--border)] hover:border-slate-300'}`}>
                     <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors
-                        ${r.monthlyMode === 'day-of-week' ? 'border-[#1E3A5F] bg-[#1E3A5F]' : 'border-slate-300'}`}>
+                        ${r.monthlyMode === 'day-of-week' ? 'border-[var(--primary)] bg-[var(--primary)]' : 'border-slate-300'}`}>
                       {r.monthlyMode === 'day-of-week' && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
                     </span>
                     <Input type="radio" className="sr-only" checked={r.monthlyMode === 'day-of-week'} onChange={() => set({ monthlyMode: 'day-of-week' })} />
-                    <span className="text-sm text-slate-700 font-medium shrink-0">The</span>
+                    <span className="text-sm text-foreground font-medium shrink-0">The</span>
                     {r.monthlyMode === 'day-of-week' ? (
                       <div className="flex items-center gap-2 flex-wrap min-w-0">
                         <InlineSelect
@@ -369,10 +369,10 @@ export function RecurringJobSection({ value: r, onChange, startDate = '', sectio
                           options={WEEK_DAYS.map(d => ({ value: d, label: d }))}
                           className="w-32"
                         />
-                        <span className="text-sm text-slate-500 shrink-0">of the month</span>
+                        <span className="text-sm text-muted-foreground shrink-0">of the month</span>
                       </div>
                     ) : (
-                      <span className="text-sm text-slate-400 truncate">first / last weekday of the month</span>
+                      <span className="text-sm text-muted-foreground truncate">first / last weekday of the month</span>
                     )}
                   </label>
                 </motion.div>
@@ -388,7 +388,7 @@ export function RecurringJobSection({ value: r, onChange, startDate = '', sectio
                   transition={{ duration: 0.18 }}
                   className="flex flex-col gap-3 min-w-0"
                 >
-                  <p className="text-sm font-medium text-slate-700">Custom schedule</p>
+                  <p className="text-sm font-medium text-foreground">Custom schedule</p>
                   <div className="flex items-center gap-3 flex-wrap min-w-0">
                     <RowLabel>Repeat every</RowLabel>
                     <InlineSelect
@@ -414,28 +414,28 @@ export function RecurringJobSection({ value: r, onChange, startDate = '', sectio
               {/* ── End condition ────────────────────────────────────────── */}
               {/* error in here */}
               <div className="flex flex-col gap-3 min-w-0 ">
-                <p className="text-sm font-medium text-slate-700">Ends</p>
+                <p className="text-sm font-medium text-foreground">Ends</p>
                 <div className="flex flex-col gap-2 min-w-0">
                   {/* Never */}
                   <label className={`flex items-center gap-3 px-4 py-3 rounded-xl border-2 cursor-pointer transition-all min-w-0
-                    ${r.endType === 'never' ? 'border-[#1E3A5F] bg-[#1E3A5F]/[0.03]' : 'border-[#E2E8F0] hover:border-slate-300'}`}>
+                    ${r.endType === 'never' ? 'border-[var(--primary)] bg-[var(--primary)]/[0.03]' : 'border-[var(--border)] hover:border-slate-300'}`}>
                     <RadioDot active={r.endType === 'never'} />
                     <Input type="radio" className="sr-only" checked={r.endType === 'never'} onChange={() => set({ endType: 'never' })} />
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-slate-800">Never</p>
-                      <p className="text-xs text-slate-400 mt-0.5">This job repeats indefinitely</p>
+                      <p className="text-sm font-semibold text-foreground">Never</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">This job repeats indefinitely</p>
                     </div>
                   </label>
 
                   {/* On Date */}
                   <label className={`flex items-center gap-3 px-4 py-3 rounded-xl border-2 cursor-pointer transition-all min-w-0
-                    ${r.endType === 'on-date' ? 'border-[#1E3A5F] bg-[#1E3A5F]/[0.03]' : 'border-[#E2E8F0] hover:border-slate-300'}`}>
+                    ${r.endType === 'on-date' ? 'border-[var(--primary)] bg-[var(--primary)]/[0.03]' : 'border-[var(--border)] hover:border-slate-300'}`}>
                     <RadioDot active={r.endType === 'on-date'} />
                     <Input type="radio" className="sr-only" checked={r.endType === 'on-date'} onChange={() => set({ endType: 'on-date' })} />
                     <div className="flex-1 flex items-center justify-between gap-3 flex-wrap min-w-0">
                       <div className="min-w-0">
-                        <p className="text-sm font-semibold text-slate-800">On date</p>
-                        <p className="text-xs text-slate-400 mt-0.5">Choose a specific end date</p>
+                        <p className="text-sm font-semibold text-foreground">On date</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">Choose a specific end date</p>
                       </div>
                       {r.endType === 'on-date' && (
                         <Input
@@ -443,7 +443,7 @@ export function RecurringJobSection({ value: r, onChange, startDate = '', sectio
                           value={r.endDate}
                           onClick={e => e.stopPropagation()}
                           onChange={e => set({ endDate: e.target.value })}
-                          className="h-9 px-3 border border-[#E2E8F0] rounded-lg text-sm text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-[#3B82F6]/30 focus:border-[#3B82F6] transition-all shrink-0"
+                          className="h-9 px-3 border border-[var(--border)] rounded-lg text-sm text-foreground bg-card focus:outline-none focus:ring-2 focus:ring-[#3B82F6]/30 focus:border-[#3B82F6] transition-all shrink-0"
                         />
                       )}
                     </div>
@@ -451,13 +451,13 @@ export function RecurringJobSection({ value: r, onChange, startDate = '', sectio
 
                   {/* After N occurrences */}
                   <label className={`flex items-center gap-3 px-4 py-3 rounded-xl border-2 cursor-pointer transition-all min-w-0
-                    ${r.endType === 'after' ? 'border-[#1E3A5F] bg-[#1E3A5F]/[0.03]' : 'border-[#E2E8F0] hover:border-slate-300'}`}>
+                    ${r.endType === 'after' ? 'border-[var(--primary)] bg-[var(--primary)]/[0.03]' : 'border-[var(--border)] hover:border-slate-300'}`}>
                     <RadioDot active={r.endType === 'after'} />
                     <Input type="radio" className="sr-only" checked={r.endType === 'after'} onChange={() => set({ endType: 'after' })} />
                     <div className="flex-1 flex items-center justify-between gap-3 flex-wrap min-w-0">
                       <div className="min-w-0">
-                        <p className="text-sm font-semibold text-slate-800">After</p>
-                        <p className="text-xs text-slate-400 mt-0.5">Stop after a number of runs</p>
+                        <p className="text-sm font-semibold text-foreground">After</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">Stop after a number of runs</p>
                       </div>
                       {r.endType === 'after' && (
                         <div className="flex items-center gap-2 shrink-0" onClick={e => e.stopPropagation()}>
@@ -467,9 +467,9 @@ export function RecurringJobSection({ value: r, onChange, startDate = '', sectio
                             max={999}
                             value={r.endOccurrences}
                             onChange={e => set({ endOccurrences: Math.max(1, Number(e.target.value)) })}
-                            className="w-20 h-9 px-3 border border-[#E2E8F0] rounded-lg text-sm text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-[#3B82F6]/30 focus:border-[#3B82F6] transition-all text-center"
+                            className="w-20 h-9 px-3 border border-[var(--border)] rounded-lg text-sm text-foreground bg-card focus:outline-none focus:ring-2 focus:ring-[#3B82F6]/30 focus:border-[#3B82F6] transition-all text-center"
                           />
-                          <span className="text-sm text-slate-500 shrink-0">
+                          <span className="text-sm text-muted-foreground shrink-0">
                             occurrence{r.endOccurrences !== 1 ? 's' : ''}
                           </span>
                         </div>
@@ -487,14 +487,14 @@ export function RecurringJobSection({ value: r, onChange, startDate = '', sectio
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 6 }}
                   transition={{ duration: 0.2 }}
-                  className="bg-[#1E3A5F]/[0.04] border border-[#1E3A5F]/20 rounded-xl px-4 py-3.5 flex items-start gap-3 min-w-0"
+                  className="bg-[var(--primary)]/[0.04] border border-[var(--primary)]/20 rounded-xl px-4 py-3.5 flex items-start gap-3 min-w-0"
                 >
-                  <div className="w-7 h-7 rounded-lg bg-[#1E3A5F]/10 flex items-center justify-center shrink-0 mt-0.5">
-                    <RefreshCw size={13} className="text-[#1E3A5F]" />
+                  <div className="w-7 h-7 rounded-lg bg-[var(--primary)]/10 flex items-center justify-center shrink-0 mt-0.5">
+                    <RefreshCw size={13} className="text-[var(--primary)]" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-xs font-semibold text-[#1E3A5F] uppercase tracking-wide mb-1">Schedule Summary</p>
-                    <p className="text-sm text-[#1E3A5F]/80 leading-relaxed break-words">{summary}</p>
+                    <p className="text-xs font-semibold text-[var(--primary)] uppercase tracking-wide mb-1">Schedule Summary</p>
+                    <p className="text-sm text-[var(--primary)]/80 leading-relaxed break-words">{summary}</p>
                   </div>
                 </motion.div>
               )}
@@ -510,7 +510,7 @@ export function RecurringJobSection({ value: r, onChange, startDate = '', sectio
 function RadioDot({ active }: { active: boolean }) {
   return (
     <span className={`w-4 h-4 rounded-full border-2  flex hidden items-center justify-center shrink-0 transition-all duration-150
-      ${active ? 'border-[#1E3A5F] bg-[#1E3A5F]' : 'border-slate-300 bg-white'}`}>
+      ${active ? 'border-[var(--primary)] bg-[var(--primary)]' : 'border-slate-300 bg-card'}`}>
       {active && (
         <motion.span
           initial={{ scale: 0 }}
@@ -559,16 +559,16 @@ export function RecurEditModal({ open, onConfirm, onCancel }: RecurEditModalProp
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.96, y: 12 }}
             transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-            className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
+            className="bg-card rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
             onClick={e => e.stopPropagation()}
           >
-            <div className="flex items-start gap-3.5 px-6 pt-6 pb-5 border-b border-[#F1F5F9]">
+            <div className="flex items-start gap-3.5 px-6 pt-6 pb-5 border-b border-[var(--border)]">
               <div className="w-9 h-9 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center shrink-0">
                 <RefreshCw size={16} className="text-amber-600" />
               </div>
               <div className="min-w-0">
-                <h3 className="text-base font-bold text-slate-900 mb-0.5">Edit recurring job</h3>
-                <p className="text-sm text-slate-500">This is a recurring job. Which occurrences should be updated?</p>
+                <h3 className="text-base font-bold text-foreground mb-0.5">Edit recurring job</h3>
+                <p className="text-sm text-muted-foreground">This is a recurring job. Which occurrences should be updated?</p>
               </div>
             </div>
 
@@ -577,16 +577,16 @@ export function RecurEditModal({ open, onConfirm, onCancel }: RecurEditModalProp
                 <label
                   key={opt.id}
                   className={`flex items-start gap-3 px-4 py-3.5 rounded-xl border-2 cursor-pointer transition-all duration-150 min-w-0
-                    ${selected === opt.id ? 'border-[#1E3A5F] bg-[#1E3A5F]/[0.04]' : 'border-[#E2E8F0] hover:border-slate-300'}`}
+                    ${selected === opt.id ? 'border-[var(--primary)] bg-[var(--primary)]/[0.04]' : 'border-[var(--border)] hover:border-slate-300'}`}
                 >
                   <span className={`mt-0.5 w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors
-                    ${selected === opt.id ? 'border-[#1E3A5F] bg-[#1E3A5F]' : 'border-slate-300'}`}>
+                    ${selected === opt.id ? 'border-[var(--primary)] bg-[var(--primary)]' : 'border-slate-300'}`}>
                     {selected === opt.id && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
                   </span>
                   <Input type="radio" className="sr-only" checked={selected === opt.id} onChange={() => setSelected(opt.id)} />
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-slate-800">{opt.label}</p>
-                    <p className="text-xs text-slate-500 mt-0.5">{opt.sub}</p>
+                    <p className="text-sm font-semibold text-foreground">{opt.label}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{opt.sub}</p>
                   </div>
                 </label>
               ))}
@@ -595,7 +595,7 @@ export function RecurEditModal({ open, onConfirm, onCancel }: RecurEditModalProp
             <div className="flex items-center gap-3 px-6 pb-6 pt-2">
               <button
                 onClick={onCancel}
-                className="flex-1 h-10 rounded-xl border border-[#E2E8F0] text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
+                className="flex-1 h-10 rounded-xl border border-[var(--border)] text-sm font-semibold text-muted-foreground hover:bg-muted transition-colors"
               >
                 Cancel
               </button>
@@ -603,7 +603,7 @@ export function RecurEditModal({ open, onConfirm, onCancel }: RecurEditModalProp
                 onClick={() => onConfirm(selected)}
                 whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.98 }}
-                className="flex-1 h-10 rounded-xl bg-[#1E3A5F] text-white text-sm font-bold hover:bg-[#162D4A] transition-colors shadow-sm shadow-[#1E3A5F]/20"
+                className="flex-1 h-10 rounded-xl bg-[var(--primary)] text-white text-sm font-bold hover:bg-primary/90 transition-colors shadow-sm shadow-[var(--primary)]/20"
               >
                 Apply changes
               </motion.button>

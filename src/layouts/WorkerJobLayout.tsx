@@ -20,13 +20,13 @@ const WorkerJobLayout = () => {
         <div>
 
             {/* View toggle */}
-            <div className="flex gap-1 mt-2 bg-slate-100 p-1 rounded-xl">
+            <div className="flex gap-1 mt-2 bg-muted p-1 rounded-xl">
                 {
                     Navs.map((nav) => (<CustomNavLink layoutId='wokerjoblayout' 
                         end
-                        animateClassName='bg-white text-slate-900 shadow-sm size-full' show to={nav.to}
+                        animateClassName='bg-card text-foreground shadow-sm size-full' show to={nav.to}
 
-                        className={`flex-1 h-auto py-2 text-center rounded-lg text-xs font-semibold transition-all  'text-slate-500 hover:text-slate-700'}`}
+                        className={`flex-1 h-auto py-2 text-center rounded-lg text-xs font-semibold transition-all  'text-muted-foreground hover:text-foreground'}`}
                     >
                         {nav.label}
                     </CustomNavLink>))

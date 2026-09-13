@@ -40,13 +40,13 @@ export default function ForgotPasswordPage() {
       <div className="w-full max-w-[440px]">
         <Link
           to="/auth"
-          className="flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors mb-6 w-fit"
+          className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors mb-6 w-fit"
         >
           <ChevronLeft size={16} />
           Back to login
         </Link>
 
-        <div className="bg-white rounded-3xl border border-[#E2E8F0] shadow-xl shadow-slate-200/60 p-7 sm:p-8">
+        <div className="bg-card rounded-3xl border border-[var(--border)] shadow-xl shadow-slate-200/60 p-7 sm:p-8">
           {status === "sent" ? (
             <div className="flex flex-col items-center text-center gap-4 py-2">
               <motion.div
@@ -58,15 +58,15 @@ export default function ForgotPasswordPage() {
                 <Mail size={26} className="text-blue-600" />
               </motion.div>
               <div>
-                <h2 className="text-xl font-bold text-slate-900 mb-1">Check your email</h2>
-                <p className="text-sm text-slate-500 leading-relaxed max-w-xs">
-                  If an account exists for <span className="font-semibold text-slate-700">{email}</span>,
+                <h2 className="text-xl font-bold text-foreground mb-1">Check your email</h2>
+                <p className="text-sm text-muted-foreground leading-relaxed max-w-xs">
+                  If an account exists for <span className="font-semibold text-foreground">{email}</span>,
                   a reset link is on its way — it expires in 30 minutes.
                 </p>
               </div>
               <Link
                 to="/auth"
-                className="w-full h-11 rounded-xl bg-[#1E3A5F] text-white text-sm font-bold flex items-center justify-center hover:bg-[#162D4A] transition-colors mt-2"
+                className="w-full h-11 rounded-xl bg-[var(--primary)] text-white text-sm font-bold flex items-center justify-center hover:bg-primary/90 transition-colors mt-2"
               >
                 Back to login
               </Link>
@@ -74,13 +74,13 @@ export default function ForgotPasswordPage() {
           ) : (
             <>
               <div className="mb-6">
-                <h1 className="text-2xl font-bold text-slate-900 tracking-tight mb-1.5">Forgot password?</h1>
-                <p className="text-sm text-slate-500">Enter your email and we'll send you a reset link.</p>
+                <h1 className="text-2xl font-bold text-foreground tracking-tight mb-1.5">Forgot password?</h1>
+                <p className="text-sm text-muted-foreground">Enter your email and we'll send you a reset link.</p>
               </div>
 
               <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                 <div className="flex flex-col gap-1.5">
-                  <label htmlFor="email" className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
+                  <label htmlFor="email" className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                     Email
                   </label>
                   <input
@@ -91,10 +91,10 @@ export default function ForgotPasswordPage() {
                     placeholder="you@company.com"
                     autoComplete="email"
                     disabled={status === "submitting"}
-                    className={`w-full h-11 px-3.5 rounded-xl border text-sm text-slate-800 bg-white placeholder:text-slate-400 transition-all outline-none
+                    className={`w-full h-11 px-3.5 rounded-xl border text-sm text-foreground bg-card placeholder:text-muted-foreground transition-all outline-none
                       focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500
                       disabled:opacity-60 disabled:cursor-not-allowed
-                      ${fieldError ? "border-red-400 bg-red-50/30 focus:ring-red-400/20 focus:border-red-400" : "border-slate-200 hover:border-slate-300"}`}
+                      ${fieldError ? "border-red-400 bg-red-50/30 focus:ring-red-400/20 focus:border-red-400" : "border-border hover:border-slate-300"}`}
                   />
                   {fieldError && (
                     <p className="text-xs text-red-500 flex items-center gap-1">
@@ -108,7 +108,7 @@ export default function ForgotPasswordPage() {
                   disabled={status === "submitting"}
                   whileHover={{ scale: status === "submitting" ? 1 : 1.01 }}
                   whileTap={{ scale: status === "submitting" ? 1 : 0.98 }}
-                  className="w-full h-11 rounded-xl bg-[#1E3A5F] text-white text-sm font-bold flex items-center justify-center gap-2 shadow-lg shadow-[#1E3A5F]/20 hover:bg-[#162D4A] transition-colors disabled:opacity-70 disabled:cursor-not-allowed mt-1"
+                  className="w-full h-11 rounded-xl bg-[var(--primary)] text-white text-sm font-bold flex items-center justify-center gap-2 shadow-lg shadow-[var(--primary)]/20 hover:bg-primary/90 transition-colors disabled:opacity-70 disabled:cursor-not-allowed mt-1"
                 >
                   {status === "submitting" ? (
                     <><Loader2 size={16} className="animate-spin" />Sending…</>

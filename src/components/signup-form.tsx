@@ -44,7 +44,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       if (role === "worker" && pathname.startsWith("/worker")) {
         return redirect(pathname + fromUrl.search)
       }
-      if ((role === "admin" || role === "manager") && !pathname.startsWith("/worker")) {
+      if ((role === "owner" || role === "admin" || role === "manager") && !pathname.startsWith("/worker")) {
         return redirect(pathname + fromUrl.search)
       }
     }
@@ -109,7 +109,7 @@ function PasswordStrengthBar({ password }: { password: string }) {
     >
       <div className="flex gap-1">
         {[1, 2, 3, 4].map(i => (
-          <motion.div key={i} className="h-1 flex-1 rounded-full overflow-hidden bg-slate-100">
+          <motion.div key={i} className="h-1 flex-1 rounded-full overflow-hidden bg-muted">
             <motion.div
               initial={{ scaleX: 0 }}
               animate={{ scaleX: score >= i ? 1 : 0 }}
@@ -137,11 +137,11 @@ function FormInput({
   return (
     <div className="flex flex-col gap-1.5">
       <div className="flex items-center justify-between">
-        <label htmlFor={name} className="text-xs font-semibold text-slate-600 uppercase tracking-wide flex items-center gap-1.5">
-          {icon && <span className="text-slate-400">{icon}</span>}
+        <label htmlFor={name} className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+          {icon && <span className="text-muted-foreground">{icon}</span>}
           {label}
         </label>
-        {optional && <span className="text-[10px] text-slate-400 font-medium">Optional</span>}
+        {optional && <span className="text-[10px] text-muted-foreground font-medium">Optional</span>}
       </div>
       <div className="relative">
         <input
@@ -152,14 +152,14 @@ function FormInput({
           onChange={e => onChange(e.target.value)}
           placeholder={placeholder}
           autoComplete={autoComplete}
-          className={`w-full h-11 px-3.5 rounded-xl border text-sm text-slate-800 bg-white placeholder:text-slate-400 transition-all outline-none
+          className={`w-full h-11 px-3.5 rounded-xl border text-sm text-foreground bg-card placeholder:text-muted-foreground transition-all outline-none
             focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500
-            ${error ? "border-red-400 bg-red-50/30 focus:ring-red-400/20 focus:border-red-400" : "border-slate-200 hover:border-slate-300"}
+            ${error ? "border-red-400 bg-red-50/30 focus:ring-red-400/20 focus:border-red-400" : "border-border hover:border-slate-300"}
             ${suffix ? "pr-11" : ""}`}
         />
         {suffix && <div className="absolute right-3 top-1/2 -translate-y-1/2">{suffix}</div>}
       </div>
-      {hint && !error && <p className="text-[11px] text-slate-400">{hint}</p>}
+      {hint && !error && <p className="text-[11px] text-muted-foreground">{hint}</p>}
       <AnimatePresence mode="wait">
         {error && (
           <motion.p
@@ -204,8 +204,8 @@ function SearchableSelect({
   return (
     <div className="flex flex-col gap-1.5" ref={ref}>
       <div className="flex items-center justify-between">
-        <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide">{label}</label>
-        {optional && <span className="text-[10px] text-slate-400 font-medium">Optional</span>}
+        <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{label}</label>
+        {optional && <span className="text-[10px] text-muted-foreground font-medium">Optional</span>}
       </div>
       <div className="relative">
         {/* hidden input keeps the value in the FormData collected on submit */}
@@ -215,11 +215,11 @@ function SearchableSelect({
           onClick={() => setOpen(o => !o)}
           className={`w-full h-11 px-3.5 rounded-xl border text-sm text-left flex items-center justify-between transition-all outline-none
             focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500
-            ${error ? "border-red-400 bg-red-50/30" : "border-slate-200 hover:border-slate-300 bg-white"}
-            ${value ? "text-slate-800" : "text-slate-400"}`}
+            ${error ? "border-red-400 bg-red-50/30" : "border-border hover:border-slate-300 bg-card"}
+            ${value ? "text-foreground" : "text-muted-foreground"}`}
         >
           {value || placeholder}
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className={`text-slate-400 shrink-0 transition-transform ${open ? "rotate-180" : ""}`}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className={`text-muted-foreground shrink-0 transition-transform ${open ? "rotate-180" : ""}`}>
             <path d="m6 9 6 6 6-6" />
           </svg>
         </button>
@@ -232,31 +232,31 @@ function SearchableSelect({
               exit={{ opacity: 0, y: -6, scaleY: 0.96 }}
               transition={{ duration: 0.15 }}
               style={{ originY: 0 }}
-              className="absolute top-12 left-0 right-0 bg-white border border-[#E2E8F0] rounded-xl shadow-xl z-50 overflow-hidden"
+              className="absolute top-12 left-0 right-0 bg-card border border-[var(--border)] rounded-xl shadow-xl z-50 overflow-hidden"
             >
               {options.length > 6 && (
-                <div className="p-2 border-b border-[#F1F5F9]">
+                <div className="p-2 border-b border-[var(--border)]">
                   <input
                     type="text"
                     value={query}
                     onChange={e => setQuery(e.target.value)}
                     placeholder="Search..."
                     autoFocus
-                    className="w-full h-8 px-3 bg-slate-50 rounded-lg text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                    className="w-full h-8 px-3 bg-muted rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-blue-200"
                   />
                 </div>
               )}
               <div className="max-h-52 overflow-y-auto py-1">
                 {filtered.length === 0 ? (
-                  <p className="px-3.5 py-3 text-sm text-slate-400">No results</p>
+                  <p className="px-3.5 py-3 text-sm text-muted-foreground">No results</p>
                 ) : (
                   filtered.map(opt => (
                     <button
                       key={opt}
                       type="button"
                       onClick={() => select(opt)}
-                      className={`w-full flex items-center justify-between px-3.5 py-2.5 text-sm text-left hover:bg-slate-50 transition-colors
-                        ${value === opt ? "text-blue-700 font-semibold" : "text-slate-700"}`}
+                      className={`w-full flex items-center justify-between px-3.5 py-2.5 text-sm text-left hover:bg-muted transition-colors
+                        ${value === opt ? "text-blue-700 font-semibold" : "text-foreground"}`}
                     >
                       {opt}
                       {value === opt && <Check size={13} className="text-blue-600" />}
@@ -291,9 +291,9 @@ function StepProgress({ current, total }: { current: number; total: number }) {
   const steps = ["Account", "Company", "Review"]
   return (
     <div className="flex flex-col gap-3 mb-8">
-      <div className="h-1 bg-slate-100 rounded-full overflow-hidden">
+      <div className="h-1 bg-muted rounded-full overflow-hidden">
         <motion.div
-          className="h-full bg-[#1E3A5F] rounded-full"
+          className="h-full bg-[var(--primary)] rounded-full"
           initial={false}
           animate={{ width: `${(current / total) * 100}%` }}
           transition={{ duration: 0.4, ease: "easeInOut" }}
@@ -304,7 +304,7 @@ function StepProgress({ current, total }: { current: number; total: number }) {
           <div key={s} className="flex items-center gap-1.5">
             <motion.div
               animate={{
-                backgroundColor: i < current ? "#10B981" : i === current - 1 ? "#1E3A5F" : "#E2E8F0",
+                backgroundColor: i < current ? "#10B981" : i === current - 1 ? "var(--primary)" : "var(--border)",
                 scale: i === current - 1 ? 1.1 : 1,
               }}
               transition={{ duration: 0.3 }}
@@ -316,7 +316,7 @@ function StepProgress({ current, total }: { current: number; total: number }) {
                 <span className="text-[9px] font-bold text-white">{i + 1}</span>
               )}
             </motion.div>
-            <span className={`text-[10px] font-semibold hidden sm:block ${i === current - 1 ? "text-slate-700" : i < current - 1 ? "text-emerald-600" : "text-slate-400"}`}>
+            <span className={`text-[10px] font-semibold hidden sm:block ${i === current - 1 ? "text-foreground" : i < current - 1 ? "text-emerald-600" : "text-muted-foreground"}`}>
               {s}
             </span>
           </div>
@@ -376,8 +376,8 @@ function Step1({
   return (
     <div className="flex flex-col gap-5">
       <div>
-        <h2 className="text-xl font-bold text-slate-900 mb-1">Create your account</h2>
-        <p className="text-sm text-slate-500">Start your free trial. No credit card required.</p>
+        <h2 className="text-xl font-bold text-foreground mb-1">Create your account</h2>
+        <p className="text-sm text-muted-foreground">Start your free trial. No credit card required.</p>
       </div>
 
       <FormInput
@@ -397,7 +397,7 @@ function Step1({
           placeholder="Min. 8 characters" icon={<Lock size={13} />}
           error={errors.password} autoComplete="new-password"
           suffix={
-            <button type="button" onClick={() => setShowPwd(s => !s)} className="text-slate-400 hover:text-slate-600 transition-colors" tabIndex={-1}>
+            <button type="button" onClick={() => setShowPwd(s => !s)} className="text-muted-foreground hover:text-muted-foreground transition-colors" tabIndex={-1}>
               {showPwd ? <EyeOff size={15} /> : <Eye size={15} />}
             </button>
           }
@@ -412,7 +412,7 @@ function Step1({
         placeholder="Repeat your password" icon={<Lock size={13} />}
         error={errors.confirm} autoComplete="new-password"
         suffix={
-          <button type="button" onClick={() => setShowConfirm(s => !s)} className="text-slate-400 hover:text-slate-600 transition-colors" tabIndex={-1}>
+          <button type="button" onClick={() => setShowConfirm(s => !s)} className="text-muted-foreground hover:text-muted-foreground transition-colors" tabIndex={-1}>
             {showConfirm ? <EyeOff size={15} /> : <Eye size={15} />}
           </button>
         }
@@ -455,8 +455,8 @@ function Step2({
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <h2 className="text-xl font-bold text-slate-900 mb-1">Company information</h2>
-        <p className="text-sm text-slate-500">Tell us about the business you're managing.</p>
+        <h2 className="text-xl font-bold text-foreground mb-1">Company information</h2>
+        <p className="text-sm text-muted-foreground">Tell us about the business you're managing.</p>
       </div>
 
       <FormInput
@@ -479,8 +479,8 @@ function Step2({
         error={errors.companySize}
       />
 
-      <div className="border-t border-[#F1F5F9] pt-4 flex flex-col gap-4">
-        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Optional details</p>
+      <div className="border-t border-[var(--border)] pt-4 flex flex-col gap-4">
+        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Optional details</p>
 
         <FormInput
           label="Company Website" name="website" value={data.website} onChange={v => handleChange("website", v)}
@@ -512,49 +512,49 @@ function Step3({
   return (
     <div className="flex flex-col gap-5">
       <div>
-        <h2 className="text-xl font-bold text-slate-900 mb-1">Review your details</h2>
-        <p className="text-sm text-slate-500">Make sure everything looks right before creating your account.</p>
+        <h2 className="text-xl font-bold text-foreground mb-1">Review your details</h2>
+        <p className="text-sm text-muted-foreground">Make sure everything looks right before creating your account.</p>
       </div>
 
-      <div className="bg-white border border-[#E2E8F0] rounded-2xl overflow-hidden shadow-sm">
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-[#F1F5F9] bg-slate-50/60">
+      <div className="bg-card border border-[var(--border)] rounded-2xl overflow-hidden shadow-sm">
+        <div className="flex items-center justify-between px-5 py-3.5 border-b border-[var(--border)] bg-muted/60">
           <div className="flex items-center gap-2.5">
             <div className="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center">
               <User size={13} className="text-blue-600" />
             </div>
-            <p className="text-sm font-semibold text-slate-800">Personal Information</p>
+            <p className="text-sm font-semibold text-foreground">Personal Information</p>
           </div>
           <button onClick={() => onEdit(1)} className="flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-800 transition-colors">
             <Edit2 size={11} /> Edit
           </button>
         </div>
-        <div className="divide-y divide-[#F8FAFC]">
+        <div className="divide-y divide-border">
           {[
             { label: "Full Name", value: step1.name },
             { label: "Email", value: step1.email },
             { label: "Password", value: "••••••••" },
           ].map(row => (
             <div key={row.label} className="flex items-center px-5 py-3">
-              <p className="text-xs text-slate-400 w-28 font-medium">{row.label}</p>
-              <p className="text-sm text-slate-800 font-medium">{row.value}</p>
+              <p className="text-xs text-muted-foreground w-28 font-medium">{row.label}</p>
+              <p className="text-sm text-foreground font-medium">{row.value}</p>
             </div>
           ))}
         </div>
       </div>
 
-      <div className="bg-white border border-[#E2E8F0] rounded-2xl overflow-hidden shadow-sm">
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-[#F1F5F9] bg-slate-50/60">
+      <div className="bg-card border border-[var(--border)] rounded-2xl overflow-hidden shadow-sm">
+        <div className="flex items-center justify-between px-5 py-3.5 border-b border-[var(--border)] bg-muted/60">
           <div className="flex items-center gap-2.5">
             <div className="w-7 h-7 rounded-lg bg-violet-50 flex items-center justify-center">
               <Building2 size={13} className="text-violet-600" />
             </div>
-            <p className="text-sm font-semibold text-slate-800">Company Information</p>
+            <p className="text-sm font-semibold text-foreground">Company Information</p>
           </div>
           <button onClick={() => onEdit(2)} className="flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-800 transition-colors">
             <Edit2 size={11} /> Edit
           </button>
         </div>
-        <div className="divide-y divide-[#F8FAFC]">
+        <div className="divide-y divide-border">
           {[
             { label: "Company", value: step2.companyName },
             { label: "Business Type", value: step2.businessType },
@@ -564,14 +564,14 @@ function Step3({
             step2.country ? { label: "Country", value: step2.country } : null,
           ].filter(Boolean).map(row => (
             <div key={row!.label} className="flex items-center px-5 py-3">
-              <p className="text-xs text-slate-400 w-28 font-medium">{row!.label}</p>
-              <p className="text-sm text-slate-800 font-medium">{row!.value}</p>
+              <p className="text-xs text-muted-foreground w-28 font-medium">{row!.label}</p>
+              <p className="text-sm text-foreground font-medium">{row!.value}</p>
             </div>
           ))}
         </div>
       </div>
 
-      <p className="text-xs text-slate-400 text-center leading-relaxed px-4">
+      <p className="text-xs text-muted-foreground text-center leading-relaxed px-4">
         By creating an account you agree to our{" "}
         <button className="text-blue-600 font-semibold hover:underline">Terms of Service</button>{" "}
         and{" "}
@@ -583,7 +583,7 @@ function Step3({
         disabled={loading}
         whileHover={{ scale: loading ? 1 : 1.01 }}
         whileTap={{ scale: loading ? 1 : 0.98 }}
-        className="w-full h-11 rounded-xl bg-[#1E3A5F] text-white text-sm font-bold flex items-center justify-center gap-2 shadow-lg shadow-[#1E3A5F]/20 hover:bg-[#162D4A] transition-colors disabled:opacity-70"
+        className="w-full h-11 rounded-xl bg-[var(--primary)] text-white text-sm font-bold flex items-center justify-center gap-2 shadow-lg shadow-[var(--primary)]/20 hover:bg-primary/90 transition-colors disabled:opacity-70"
       >
         {loading ? (
           <><Loader2 size={16} className="animate-spin" />Creating account…</>
@@ -602,7 +602,7 @@ function ContinueButton({ onClick, label }: { onClick: () => void; label: string
       onClick={onClick}
       whileHover={{ scale: 1.01 }}
       whileTap={{ scale: 0.98 }}
-      className="w-full h-11 rounded-xl bg-[#1E3A5F] text-white text-sm font-bold flex items-center justify-center gap-2 shadow-lg shadow-[#1E3A5F]/20 hover:bg-[#162D4A] transition-colors mt-1"
+      className="w-full h-11 rounded-xl bg-[var(--primary)] text-white text-sm font-bold flex items-center justify-center gap-2 shadow-lg shadow-[var(--primary)]/20 hover:bg-primary/90 transition-colors mt-1"
     >
       {label} <ArrowRight size={15} />
     </motion.button>
@@ -685,7 +685,7 @@ export function SignUpForm() {
         <div className="flex items-center justify-between mb-6">
           <button
             onClick={step === 1 ? () => navigate("/auth/login") : () => goTo(step - 1)}
-            className="flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors group"
+            className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors group"
           >
             <ChevronLeft size={16} className="group-hover:-translate-x-0.5 transition-transform" />
             {step === 1 ? "Back to login" : "Back"}
@@ -695,13 +695,13 @@ export function SignUpForm() {
             <div className="w-7 h-7 rounded-lg bg-blue-500 flex items-center justify-center">
               <span className="text-white font-bold text-xs">W</span>
             </div>
-            <span className="text-slate-900 font-semibold tracking-tight">
+            <span className="text-foreground font-semibold tracking-tight">
               work<span className="text-blue-500">.wrk</span>
             </span>
           </div>
 
           <div className="w-20 text-right">
-            <p className="text-xs text-slate-400 font-medium">Step {step} of 3</p>
+            <p className="text-xs text-muted-foreground font-medium">Step {step} of 3</p>
           </div>
         </div>
 
@@ -718,7 +718,7 @@ export function SignUpForm() {
           </motion.div>
         )}
 
-        <div className="bg-white rounded-3xl border border-[#E2E8F0] shadow-xl shadow-slate-200/60 overflow-hidden">
+        <div className="bg-card rounded-3xl border border-[var(--border)] shadow-xl shadow-slate-200/60 overflow-hidden">
           <div className="p-7 sm:p-8">
             <StepProgress current={step} total={3} />
 
@@ -760,7 +760,7 @@ export function SignUpForm() {
           </div>
         </div>
 
-        <p className="text-center text-xs text-slate-400 mt-6">
+        <p className="text-center text-xs text-muted-foreground mt-6">
           Already have an account?{" "}
           <Link to="/auth/login" className="font-semibold text-blue-600 hover:text-blue-800 transition-colors">
             Sign in

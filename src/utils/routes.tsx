@@ -8,6 +8,7 @@ import { queryClient } from "@/lib/queryClient";
 import NotFound from "@/pages/404Page";
 import ForgotPasswordPage from "@/pages/ForgotPasswordPage";
 import ResetPasswordPage from "@/pages/ResetPasswordPage";
+import AppearanceSettings from "@/pages/settings/AppearanceSettings";
 import BillingSettings from "@/pages/settings/BillingSettings";
 import CompanySettings from "@/pages/settings/CompanySettings";
 import NotificationSettings from "@/pages/settings/NotificationSettings";
@@ -265,6 +266,7 @@ export const router = createBrowserRouter([
                             { path: "profile", element: <ProfileSettings /> },
                             { path: "company", element: <CompanySettings /> },
                             { path: "notifications", element: <NotificationSettings /> },
+                            { path: "appearance", element: <AppearanceSettings /> },
                             { path: "security", element: <SecuritySettings /> },
                             { path: "billing", element: <BillingSettings /> },
                             { path: "billing/plans", element: <ChangePlanSettings /> },

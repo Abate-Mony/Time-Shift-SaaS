@@ -82,23 +82,23 @@ export const buildClientPayload = (v: ClientFormValues) => {
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 const inputClass =
-  'w-full h-10 px-3 border border-[#E2E8F0] rounded-xl text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/15 focus:border-[#1E3A5F]/40 transition-all'
+  'w-full h-10 px-3 border border-[var(--border)] rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/15 focus:border-[var(--primary)]/40 transition-all'
 
 function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="block text-xs font-semibold text-slate-700 mb-1.5">{label}</label>
+      <label className="block text-xs font-semibold text-foreground mb-1.5">{label}</label>
       {children}
-      {hint && <p className="text-[11px] text-slate-400 mt-1">{hint}</p>}
+      {hint && <p className="text-[11px] text-muted-foreground mt-1">{hint}</p>}
     </div>
   )
 }
 
 function Section({ title, description, children }: { title: string; description?: string; children: React.ReactNode }) {
   return (
-    <div className="bg-white rounded-xl border border-[#E2E8F0] p-6 min-w-0">
-      <h2 className="text-sm font-bold text-slate-900">{title}</h2>
-      {description && <p className="text-xs text-slate-500 mt-0.5 mb-4">{description}</p>}
+    <div className="bg-card rounded-xl border border-[var(--border)] p-6 min-w-0">
+      <h2 className="text-sm font-bold text-foreground">{title}</h2>
+      {description && <p className="text-xs text-muted-foreground mt-0.5 mb-4">{description}</p>}
       <div className={description ? '' : 'mt-4'}>{children}</div>
     </div>
   )
@@ -151,7 +151,7 @@ export function ClientForm({ onSubmit, submitting, submitLabel = 'Create client'
             <input value={values.phone} onChange={set('phone')} placeholder="020 7946 0001" className={inputClass} />
           </Field>
           <Field label="Status">
-            <select value={values.status} onChange={set('status')} className={`${inputClass} bg-white cursor-pointer`}>
+            <select value={values.status} onChange={set('status')} className={`${inputClass} bg-card cursor-pointer`}>
               <option value="active">Active</option>
               <option value="inactive">Inactive</option>
             </select>
@@ -232,7 +232,7 @@ export function ClientForm({ onSubmit, submitting, submitLabel = 'Create client'
             <label
               key={opt.value}
               className={`flex-1 min-w-0 flex items-start gap-3 p-3.5 rounded-xl border-2 cursor-pointer transition-all ${
-                values.defaultChargeType === opt.value ? 'border-[#1E3A5F] bg-[#1E3A5F]/[0.03]' : 'border-[#E2E8F0] hover:border-slate-300'
+                values.defaultChargeType === opt.value ? 'border-[var(--primary)] bg-[var(--primary)]/[0.03]' : 'border-[var(--border)] hover:border-slate-300'
               }`}
             >
               <input
@@ -244,14 +244,14 @@ export function ClientForm({ onSubmit, submitting, submitLabel = 'Create client'
               />
               <span
                 className={`mt-0.5 w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
-                  values.defaultChargeType === opt.value ? 'border-[#1E3A5F] bg-[#1E3A5F]' : 'border-slate-300'
+                  values.defaultChargeType === opt.value ? 'border-[var(--primary)] bg-[var(--primary)]' : 'border-slate-300'
                 }`}
               >
                 {values.defaultChargeType === opt.value && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
               </span>
               <span className="min-w-0">
-                <span className="block text-sm font-semibold text-slate-800">{opt.label}</span>
-                <span className="block text-[11px] text-slate-400 mt-0.5">{opt.sub}</span>
+                <span className="block text-sm font-semibold text-foreground">{opt.label}</span>
+                <span className="block text-[11px] text-muted-foreground mt-0.5">{opt.sub}</span>
               </span>
             </label>
           ))}
@@ -259,7 +259,7 @@ export function ClientForm({ onSubmit, submitting, submitLabel = 'Create client'
         <div className="max-w-xs min-w-0">
           <Field label={values.defaultChargeType === 'hourly' ? 'Default hourly rate' : 'Default fixed charge'}>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-semibold">£</span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-semibold">£</span>
               <input
                 type="number"
                 step="0.01"
@@ -280,7 +280,7 @@ export function ClientForm({ onSubmit, submitting, submitLabel = 'Create client'
           onChange={set('notes')}
           rows={3}
           placeholder="Internal notes about this client…"
-          className="w-full px-3 py-2.5 border border-[#E2E8F0] rounded-xl text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/15 focus:border-[#1E3A5F]/40 transition-all resize-none"
+          className="w-full px-3 py-2.5 border border-[var(--border)] rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/15 focus:border-[var(--primary)]/40 transition-all resize-none"
         />
       </Section>
 
@@ -294,14 +294,14 @@ export function ClientForm({ onSubmit, submitting, submitLabel = 'Create client'
         <button
           type="button"
           onClick={onCancel}
-          className="h-10 px-5 text-sm font-semibold text-slate-600 border border-[#E2E8F0] rounded-xl hover:bg-slate-50 transition-colors"
+          className="h-10 px-5 text-sm font-semibold text-muted-foreground border border-[var(--border)] rounded-xl hover:bg-muted transition-colors"
         >
           Cancel
         </button>
         <button
           type="submit"
           disabled={submitting}
-          className="h-10 px-6 text-sm font-bold bg-[#1E3A5F] text-white rounded-xl hover:bg-[#162D4A] disabled:opacity-50 transition-colors flex items-center gap-2"
+          className="h-10 px-6 text-sm font-bold bg-[var(--primary)] text-white rounded-xl hover:bg-primary/90 disabled:opacity-50 transition-colors flex items-center gap-2"
         >
           {submitting ? (
             <>

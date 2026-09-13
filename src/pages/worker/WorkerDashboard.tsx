@@ -42,7 +42,7 @@ export default function HomeScreen() {
     return (
         <div className="flex flex-col gap-5 pb-4">
             {/* Header */}
-            <div className="bg-[#1E3A5F] rounded-3xl p-5 text-white relative overflow-hidden">
+            <div className="bg-primary rounded-3xl p-5 text-primary-foreground relative overflow-hidden">
                 {/* Background pattern */}
                 <div className="absolute inset-0 opacity-[0.04]"
                     style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '24px 24px' }} />
@@ -58,13 +58,13 @@ export default function HomeScreen() {
                         </div>
                         <button className="relative w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors">
                             <Bell size={16} className="text-white" />
-                            <span className="absolute top-2 right-2 w-2 h-2 bg-blue-400 rounded-full border-2 border-[#1E3A5F]" />
+                            <span className="absolute top-2 right-2 w-2 h-2 bg-blue-400 rounded-full border-2 border-primary" />
                         </button>
                     </div>
 
                     {/* Stats row */}
                     {/* Earnings card */}
-                    <div className="bg-[#1E3A5F] rounded-2xl p-5 relative overflow-hidden">
+                    <div className="bg-primary rounded-2xl p-5 relative overflow-hidden">
                         <div className="absolute inset-0 opacity-[0.04]"
                             style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '20px 20px' }} />
                         <div className="relative">
@@ -134,7 +134,7 @@ export default function HomeScreen() {
             {/* {pendingJobs.length > 0 && (
                 <div>
                     <div className="flex items-center justify-between mb-3">
-                        <h2 className="text-sm font-bold text-slate-800">Action Required</h2>
+                        <h2 className="text-sm font-bold text-foreground">Action Required</h2>
                         <span className="text-xs font-semibold text-blue-600 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-full">
                             {pendingJobs.length} pending
                         </span>
@@ -155,7 +155,7 @@ export default function HomeScreen() {
             Today's schedule
             <div>
                 <div className="flex items-center justify-between mb-3">
-                    <h2 className="text-sm font-bold text-slate-800">Today's Shift</h2>
+                    <h2 className="text-sm font-bold text-foreground">Today's Shift</h2>
                     <Link to={"/worker/jobs"}>
 
                         <Button variant={"link"} className="text-xs text-blue-600 font-semibold flex items-center gap-1 hover:text-blue-800 transition-colors">
@@ -185,36 +185,36 @@ export default function HomeScreen() {
 
             {/* This week */}
             <div>
-                <h2 className="text-sm font-bold text-slate-800 mb-3">This Week</h2>
-                <div className="bg-white rounded-2xl border border-[#E2E8F0] p-4 shadow-sm">
+                <h2 className="text-sm font-bold text-foreground mb-3">This Week</h2>
+                <div className="bg-card rounded-2xl border border-border p-4 shadow-sm dark:shadow-none">
                     <div className="grid grid-cols-7 gap-1">
                         {weekDays.map((d, i) => (
                             <div key={i} className="flex flex-col items-center gap-1.5">
-                                <span className="text-[10px] font-semibold text-slate-400">{d.day}</span>
+                                <span className="text-[10px] font-semibold text-muted-foreground">{d.day}</span>
                                 <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold relative
-                  ${d.date === 25 ? 'bg-[#1E3A5F] text-white' : d.hasShift ? 'bg-blue-50 text-blue-700' : 'text-slate-400'}`}>
+                  ${d.date === 25 ? 'bg-primary text-primary-foreground' : d.hasShift ? 'bg-blue-50 text-blue-700 dark:bg-blue-500/15 dark:text-blue-400' : 'text-muted-foreground'}`}>
                                     {d.date}
                                     {d.hasShift && d.date !== 25 && (
                                         <span className="absolute -bottom-0.5 w-1.5 h-1.5 bg-blue-400 rounded-full" />
                                     )}
                                 </div>
-                                <span className="text-[9px] text-slate-400 font-medium">{d.hasShift ? `${d.hours}h` : '—'}</span>
+                                <span className="text-[9px] text-muted-foreground font-medium">{d.hasShift ? `${d.hours}h` : '—'}</span>
                             </div>
                         ))}
                     </div>
-                    <div className="mt-4 pt-3 border-t border-[#F1F5F9] flex items-center justify-between">
+                    <div className="mt-4 pt-3 border-t border-border flex items-center justify-between">
                         <div>
-                            <p className="text-xs text-slate-500">Total this week</p>
-                            <p className="text-lg font-bold text-slate-900 mt-0.5">{worker.hoursThisWeek}h <span className="text-sm font-normal text-slate-400">/ 40h target</span></p>
+                            <p className="text-xs text-muted-foreground">Total this week</p>
+                            <p className="text-lg font-bold text-foreground mt-0.5">{worker.hoursThisWeek}h <span className="text-sm font-normal text-muted-foreground">/ 40h target</span></p>
                         </div>
                         <div className="flex-1 max-w-[120px] ml-4">
-                            <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                            <div className="h-2 bg-muted rounded-full overflow-hidden">
                                 <div
-                                    className="h-full bg-[#1E3A5F] rounded-full transition-all"
+                                    className="h-full bg-primary rounded-full transition-all"
                                     style={{ width: `${(worker.hoursThisWeek / 40) * 100}%` }}
                                 />
                             </div>
-                            <p className="text-[10px] text-slate-400 mt-1 text-right">{Math.round((worker.hoursThisWeek / 40) * 100)}%</p>
+                            <p className="text-[10px] text-muted-foreground mt-1 text-right">{Math.round((worker.hoursThisWeek / 40) * 100)}%</p>
                         </div>
                     </div>
                 </div>

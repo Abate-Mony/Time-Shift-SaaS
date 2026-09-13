@@ -42,7 +42,7 @@ const ErrorElement = () => {
 
     const path = user?.role === "worker" ? "/worker" : "/"
     return (
-        <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC] px-4">
+        <div className="min-h-screen flex items-center justify-center bg-background px-4">
             {/* const user=usecont */}
 
             <motion.div
@@ -51,7 +51,7 @@ const ErrorElement = () => {
                 transition={{ duration: 0.4 }}
                 className="w-full max-w-md"
             >
-                <div className="bg-white border border-[#E2E8F0] rounded-3xl shadow-xl shadow-slate-200/60 p-8 flex flex-col items-center text-center">
+                <div className="bg-card border border-[var(--border)] rounded-3xl shadow-xl shadow-slate-200/60 p-8 flex flex-col items-center text-center">
                     {/* Icon */}
                     <motion.div
                         initial={{ scale: 0.6, opacity: 0 }}
@@ -68,7 +68,7 @@ const ErrorElement = () => {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             transition={{ delay: 0.2 }}
-                            className="text-xs font-bold text-slate-400 tracking-widest uppercase mb-2"
+                            className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-2"
                         >
                             Error {status}
                         </motion.p>
@@ -87,7 +87,7 @@ const ErrorElement = () => {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ delay: 0.6 }}
-                        className="text-sm text-slate-500 leading-relaxed mb-7 max-w-xs"
+                        className="text-sm text-muted-foreground leading-relaxed mb-7 max-w-xs"
                     >
                         {message}
                     </motion.p>
@@ -98,7 +98,7 @@ const ErrorElement = () => {
                             whileHover={{ scale: 1.01 }}
                             whileTap={{ scale: 0.98 }}
                             onClick={() => window.location.reload()}
-                            className="flex-1 h-11 rounded-xl border border-[#E2E8F0] text-sm font-semibold text-slate-700 flex items-center justify-center gap-2 hover:bg-slate-50 transition-colors"
+                            className="flex-1 h-11 rounded-xl border border-[var(--border)] text-sm font-semibold text-foreground flex items-center justify-center gap-2 hover:bg-muted transition-colors"
                         >
                             <RotateCcw size={15} />
                             Try again
@@ -108,7 +108,7 @@ const ErrorElement = () => {
                             <motion.div
                                 whileHover={{ scale: 1.01 }}
                                 whileTap={{ scale: 0.98 }}
-                                className="h-11 rounded-xl bg-[#1E3A5F] text-white text-sm font-bold flex items-center justify-center gap-2 shadow-lg shadow-[#1E3A5F]/20 hover:bg-[#162D4A] transition-colors"
+                                className="h-11 rounded-xl bg-[var(--primary)] text-white text-sm font-bold flex items-center justify-center gap-2 shadow-lg shadow-[var(--primary)]/20 hover:bg-primary/90 transition-colors"
                             >
                                 <Home size={15} />
                                 Go home
@@ -118,7 +118,7 @@ const ErrorElement = () => {
                 </div>
 
                 {/* Footer hint */}
-                <p className="text-center text-xs text-slate-400 mt-6">
+                <p className="text-center text-xs text-muted-foreground mt-6">
                     If this keeps happening, contact support and share what you were doing.
                 </p>
             </motion.div>

@@ -11,7 +11,7 @@ import { formatHours } from "../wizardConfig"
 import { FieldError } from "../FieldError"
 
 const PRIORITIES = [
-  { value: "low", label: "Low", className: "text-slate-700" },
+  { value: "low", label: "Low", className: "text-foreground" },
   { value: "medium", label: "Medium", className: "text-amber-600" },
   { value: "high", label: "High", className: "text-orange-600" },
   { value: "urgent", label: "Urgent", className: "text-red-600" },
@@ -43,8 +43,8 @@ export function JobDetailsStep() {
   return (
     <div className="flex flex-col gap-5 min-w-0">
       {/* Job details */}
-      <div className="bg-white rounded-xl border border-[#E2E8F0] p-6 min-w-0">
-        <h2 className="text-sm font-semibold text-slate-800 mb-4">Job details</h2>
+      <div className="bg-card rounded-xl border border-[var(--border)] p-6 min-w-0">
+        <h2 className="text-sm font-semibold text-foreground mb-4">Job details</h2>
 
         <div className="flex flex-col gap-4 min-w-0">
           <div className="min-w-0">
@@ -83,7 +83,7 @@ export function JobDetailsStep() {
           </div>
 
           <div className="min-w-0">
-            <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-2">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
               Priority
             </p>
             <div className="flex flex-wrap gap-2 min-w-0">
@@ -93,8 +93,8 @@ export function JobDetailsStep() {
                   className={cn(
                     "shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl border-2 cursor-pointer transition-all",
                     priority === item.value
-                      ? "border-[#1E3A5F] bg-[#1E3A5F]/[0.03]"
-                      : "border-[#E2E8F0] hover:border-slate-300"
+                      ? "border-[var(--primary)] bg-[var(--primary)]/[0.03]"
+                      : "border-[var(--border)] hover:border-slate-300"
                   )}
                 >
                   <input
@@ -108,7 +108,7 @@ export function JobDetailsStep() {
                   <span
                     className={cn(
                       "w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors",
-                      priority === item.value ? "border-[#1E3A5F] bg-[#1E3A5F]" : "border-slate-300"
+                      priority === item.value ? "border-[var(--primary)] bg-[var(--primary)]" : "border-slate-300"
                     )}
                   >
                     {priority === item.value && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
@@ -123,9 +123,9 @@ export function JobDetailsStep() {
       </div>
 
       {/* Location */}
-      <div className="bg-white rounded-xl border border-[#E2E8F0] p-6 min-w-0">
-        <h2 className="text-sm font-semibold text-slate-800 mb-1">Location</h2>
-        <p className="text-xs text-slate-400 mb-4">
+      <div className="bg-card rounded-xl border border-[var(--border)] p-6 min-w-0">
+        <h2 className="text-sm font-semibold text-foreground mb-1">Location</h2>
+        <p className="text-xs text-muted-foreground mb-4">
           Use a site for places your team visits repeatedly. Use a one-off location for ad-hoc work.
         </p>
 
@@ -137,8 +137,8 @@ export function JobDetailsStep() {
               className={cn(
                 "flex-1 h-9 rounded-lg text-xs font-semibold transition-all border",
                 locationMode === "site"
-                  ? "border-[#1E3A5F] bg-[#1E3A5F]/[0.03] text-[#1E3A5F]"
-                  : "border-[#E2E8F0] text-slate-500 hover:border-slate-300"
+                  ? "border-[var(--primary)] bg-[var(--primary)]/[0.03] text-[var(--primary)]"
+                  : "border-[var(--border)] text-muted-foreground hover:border-slate-300"
               )}
             >
               Existing site
@@ -149,8 +149,8 @@ export function JobDetailsStep() {
               className={cn(
                 "flex-1 h-9 rounded-lg text-xs font-semibold transition-all border",
                 locationMode === "custom"
-                  ? "border-[#1E3A5F] bg-[#1E3A5F]/[0.03] text-[#1E3A5F]"
-                  : "border-[#E2E8F0] text-slate-500 hover:border-slate-300"
+                  ? "border-[var(--primary)] bg-[var(--primary)]/[0.03] text-[var(--primary)]"
+                  : "border-[var(--border)] text-muted-foreground hover:border-slate-300"
               )}
             >
               One-off location
@@ -177,11 +177,11 @@ export function JobDetailsStep() {
 
         {locationMode === "custom" && address && (
           <>
-            <p className="mt-2 flex items-center gap-1.5 text-xs text-slate-500 min-w-0">
-              <MapPin size={12} className="text-slate-400 shrink-0" />
+            <p className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground min-w-0">
+              <MapPin size={12} className="text-muted-foreground shrink-0" />
               <span className="truncate">{address}</span>
             </p>
-            <p className="mt-1 text-[11px] text-slate-400">
+            <p className="mt-1 text-[11px] text-muted-foreground">
               Only the general area is shown to workers before they're assigned — the exact
               address is used for directions once someone is.
             </p>
@@ -190,8 +190,8 @@ export function JobDetailsStep() {
       </div>
 
       {/* Date & time */}
-      <div className="bg-white rounded-xl border border-[#E2E8F0] p-6 min-w-0">
-        <h2 className="text-sm font-semibold text-slate-800 mb-4">Date & time</h2>
+      <div className="bg-card rounded-xl border border-[var(--border)] p-6 min-w-0">
+        <h2 className="text-sm font-semibold text-foreground mb-4">Date & time</h2>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 min-w-0">
           <div className="min-w-0">

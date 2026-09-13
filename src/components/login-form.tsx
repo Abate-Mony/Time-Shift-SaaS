@@ -31,7 +31,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       if (role === "worker" && pathname.startsWith("/worker")) {
         return redirect(pathname + fromUrl.search)
       }
-      if ((role === "admin" || role === "manager") && !pathname.startsWith("/worker")) {
+      if ((role === "owner" || role === "admin" || role === "manager") && !pathname.startsWith("/worker")) {
         return redirect(pathname + fromUrl.search)
       }
     }
@@ -180,7 +180,7 @@ function AuthInput({
 }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label htmlFor={name} className="text-xs font-semibold text-slate-600 uppercase tracking-wide">{label}</label>
+      <label htmlFor={name} className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{label}</label>
       <div className="relative">
         <input
           id={name}
@@ -191,10 +191,10 @@ function AuthInput({
           placeholder={placeholder}
           autoComplete={autoComplete}
           disabled={disabled}
-          className={`w-full h-11 px-3.5 ${suffix ? "pr-11" : "pr-3.5"} rounded-xl border text-sm text-slate-800 bg-white placeholder:text-slate-400 transition-all outline-none
+          className={`w-full h-11 px-3.5 ${suffix ? "pr-11" : "pr-3.5"} rounded-xl border text-sm text-foreground bg-card placeholder:text-muted-foreground transition-all outline-none
             focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500
             disabled:opacity-60 disabled:cursor-not-allowed
-            ${error ? "border-red-400 bg-red-50/30 focus:ring-red-400/20 focus:border-red-400" : "border-slate-200 hover:border-slate-300"}`}
+            ${error ? "border-red-400 bg-red-50/30 focus:ring-red-400/20 focus:border-red-400" : "border-border hover:border-slate-300"}`}
         />
         {suffix && <div className="absolute right-3 top-1/2 -translate-y-1/2">{suffix}</div>}
       </div>
@@ -271,12 +271,12 @@ export function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen flex bg-[#F8FAFC]">
+    <div className="min-h-screen flex bg-background">
       <div className="hidden lg:flex lg:w-[52%] xl:w-[55%]">
         <BrandPanel />
       </div>
 
-      <div className="flex-1 flex items-center justify-center p-6 lg:p-10 bg-white">
+      <div className="flex-1 flex items-center justify-center p-6 lg:p-10 bg-card">
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -287,14 +287,14 @@ export function LoginForm() {
             <div className="w-8 h-8 rounded-lg bg-blue-500 flex items-center justify-center">
               <span className="text-white font-bold text-sm">W</span>
             </div>
-            <span className="text-slate-900 font-semibold text-lg tracking-tight">
+            <span className="text-foreground font-semibold text-lg tracking-tight">
               work<span className="text-blue-500">.wrk</span>
             </span>
           </div>
 
           <div className="mb-7">
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight mb-1.5">Welcome back</h1>
-            <p className="text-sm text-slate-500">Sign in to your account to continue</p>
+            <h1 className="text-2xl font-bold text-foreground tracking-tight mb-1.5">Welcome back</h1>
+            <p className="text-sm text-muted-foreground">Sign in to your account to continue</p>
           </div>
 
           <AnimatePresence>
@@ -338,7 +338,7 @@ export function LoginForm() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(s => !s)}
-                  className="text-slate-400 hover:text-slate-600 transition-colors"
+                  className="text-muted-foreground hover:text-muted-foreground transition-colors"
                   tabIndex={-1}
                 >
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -349,7 +349,7 @@ export function LoginForm() {
             <div className="flex items-center justify-between">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" className="w-3.5 h-3.5 rounded accent-blue-600" />
-                <span className="text-xs text-slate-500">Remember me</span>
+                <span className="text-xs text-muted-foreground">Remember me</span>
               </label>
               <Link to="/auth/forgot-password" className="text-xs font-semibold text-blue-600 hover:text-blue-800 transition-colors">
                 Forgot password?
@@ -361,7 +361,7 @@ export function LoginForm() {
               disabled={loading}
               whileHover={{ scale: loading ? 1 : 1.01 }}
               whileTap={{ scale: loading ? 1 : 0.98 }}
-              className="w-full h-11 rounded-xl bg-[#1E3A5F] text-white text-sm font-bold flex items-center justify-center gap-2 shadow-lg shadow-[#1E3A5F]/20 hover:bg-[#162D4A] transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+              className="w-full h-11 rounded-xl bg-[var(--primary)] text-white text-sm font-bold flex items-center justify-center gap-2 shadow-lg shadow-[var(--primary)]/20 hover:bg-primary/90 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <>
@@ -378,9 +378,9 @@ export function LoginForm() {
           </Form>
 
           <div className="flex items-center gap-3 mb-4">
-            <div className="flex-1 h-px bg-slate-200" />
-            <span className="text-xs text-slate-400 font-medium">or</span>
-            <div className="flex-1 h-px bg-slate-200" />
+            <div className="flex-1 h-px bg-muted" />
+            <span className="text-xs text-muted-foreground font-medium">or</span>
+            <div className="flex-1 h-px bg-muted" />
           </div>
 
           <motion.button
@@ -389,13 +389,13 @@ export function LoginForm() {
             whileTap={{ scale: 0.98 }}
             disabled={loading}
             onClick={() => login()}
-            className="w-full h-11 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-700 flex items-center justify-center gap-2.5 hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm disabled:opacity-60 mb-6"
+            className="w-full h-11 rounded-xl border border-border bg-card text-sm font-semibold text-foreground flex items-center justify-center gap-2.5 hover:bg-muted hover:border-slate-300 transition-all shadow-sm disabled:opacity-60 mb-6"
           >
             <GoogleIcon />
             Continue with Google
           </motion.button>
 
-          <p className="text-center text-sm text-slate-500">
+          <p className="text-center text-sm text-muted-foreground">
             Don't have an account?{" "}
             <Link to="/auth/signup" className="font-semibold text-blue-600 hover:text-blue-800 transition-colors">
               Create account

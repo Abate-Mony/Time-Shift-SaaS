@@ -15,7 +15,7 @@ function BottomNav() {
   ]
 
   return (
-    <div className="bg-white border-t max-w-md px-2 rounded-t-lg w-full fixed bottom-0 border-[#E2E8F0] pb-3 grid grid-cols-5 shrink-0 shadow-[0_-4px_16px_-4px_rgba(15,23,42,0.06)]">
+    <div className="bg-card border-t max-w-md px-2 rounded-t-lg w-full fixed bottom-0 border-border pb-3 grid grid-cols-5 shrink-0 shadow-[0_-4px_16px_-4px_rgba(15,23,42,0.06)] dark:shadow-none">
       {tabs.map(t => (
         <CustomNavLink
         showPendingBar
@@ -24,7 +24,7 @@ function BottomNav() {
           key={t.id}
           className={({ isActive, isPending }) =>
             cn(
-              "flex flex-col justify-center items-center rounded-t-full h-auto gap-1 py-1.5 px-2 transition-transform duration-300 bg-white",
+              "flex flex-col justify-center items-center rounded-t-full h-auto gap-1 py-1.5 px-2 transition-transform duration-300 bg-card",
               isActive && "-translate-y-3",
               isPending && "cursor-wait",
               // t.id === "clock" ? "pointer-events-none" : "pointer-events-auto"
@@ -37,14 +37,14 @@ function BottomNav() {
               <motion.div
                 className={cn(
                   "relative size-9 rounded-xl flex items-center justify-center",
-                  !isActive && !isPending && "hover:bg-slate-100"
+                  !isActive && !isPending && "hover:bg-muted"
                 )}
               >
                 {/* Sliding active pill — shared layoutId morphs between tabs */}
                 {isActive && (
                   <motion.div
                     layoutId="bottomNavActivePill"
-                    className="absolute inset-0 rounded-xl bg-[#1E3A5F] shadow-lg shadow-[#1E3A5F]/25 z-0 "
+                    className="absolute inset-0 rounded-xl bg-primary shadow-lg shadow-primary/25 z-0 "
                     transition={{ type: "spring", stiffness: 400, damping: 32 }}
                   />
                 )}
@@ -55,7 +55,7 @@ function BottomNav() {
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0 }}
-                    className="absolute inset-0 rounded-xl bg-slate-100 z-0"
+                    className="absolute inset-0 rounded-xl bg-muted z-0"
                   />
                 )}
 
@@ -69,26 +69,28 @@ function BottomNav() {
                       size={17}
                       className={cn(
                         "animate-spin",
-                        isActive ? "text-white" : "text-slate-400"
+                        isActive ? "text-primary-foreground" : "text-muted-foreground"
                       )}
                     />
                   ) : (
-                    <t.Icon size={17} className={isActive ? "text-white" : "text-slate-400"} />
+                    <t.Icon size={17} className={isActive ? "text-primary-foreground" : "text-muted-foreground"} />
                   )}
                 </motion.div>
               </motion.div>
 
-              <motion.span
-              
-                animate={{
-                  color: isActive ? "#1E3A5F" : "#94A3B8",
-                  opacity: isPending ? 0.6 : 1,
-                }}
-                transition={{ duration: 0.25 }}
-                className="text-[10px] font-semibold text-center! "
+              {/* Plain classes + CSS transition instead of framer's `animate={{color}}` —
+                  motion can't interpolate CSS custom properties (bg-primary/text-primary
+                  resolve through var()), so an explicit hex pair would silently stop
+                  tracking the theme. transition-colors gets the same fade with zero JS. */}
+              <span
+                className={cn(
+                  "text-[10px] font-semibold text-center! transition-colors duration-250",
+                  isActive ? "text-primary" : "text-muted-foreground",
+                  isPending && "opacity-60"
+                )}
               >
                 {t.label}
-              </motion.span>
+              </span>
             </>
         </div>
           )}

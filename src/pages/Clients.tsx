@@ -41,7 +41,7 @@ function ClientStatusBadge({ status }: { status: ClientStatus }) {
     return (
         <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${status === 'active'
                 ? 'bg-emerald-50 text-emerald-700'
-                : 'bg-slate-100 text-slate-500'
+                : 'bg-muted text-muted-foreground'
             }`}>
             {status === 'active' ? 'Active' : 'Inactive'}
         </span>
@@ -66,7 +66,7 @@ function ClientActionsMenu({
         <div className="relative" onClick={e => e.stopPropagation()}>
             <button
                 onClick={() => setOpen(o => !o)}
-                className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-colors"
+                className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
             >
                 <MoreHorizontal size={15} />
             </button>
@@ -79,7 +79,7 @@ function ClientActionsMenu({
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: -4 }}
                             transition={{ duration: 0.1 }}
-                            className="absolute right-0 top-9 z-20 w-48 bg-white rounded-xl border border-[#E2E8F0] shadow-lg py-1 overflow-hidden"
+                            className="absolute right-0 top-9 z-20 w-48 bg-card rounded-xl border border-[var(--border)] shadow-lg py-1 overflow-hidden"
                         >
                             <MenuItem icon={Pencil} label="Edit client" onClick={() => { setOpen(false); onEdit() }} />
                             {client.status === 'active' ? (
@@ -87,7 +87,7 @@ function ClientActionsMenu({
                             ) : (
                                 <MenuItem icon={RefreshCw} label="Reactivate" onClick={() => { setOpen(false); onStatusChange() }} />
                             )}
-                            <div className="border-t border-slate-100 my-1" />
+                            <div className="border-t border-border my-1" />
                             <MenuItem icon={Trash2} label="Delete client" onClick={() => { setOpen(false); onDelete() }} danger />
                         </motion.div>
                     </>
@@ -101,7 +101,7 @@ function MenuItem({ icon: Icon, label, onClick, danger }: { icon: React.FC<{ siz
     return (
         <Button
             onClick={onClick}
-            className={`w-full flex items-center gap-2.5 px-3.5 py-2 text-sm transition-colors ${danger ? 'text-red-600 hover:bg-red-50' : 'text-slate-700 hover:bg-slate-50'
+            className={`w-full flex items-center gap-2.5 px-3.5 py-2 text-sm transition-colors ${danger ? 'text-red-600 hover:bg-red-50' : 'text-foreground hover:bg-muted'
                 }`}
         >
             <Icon size={13} className="shrink-0" />
@@ -130,30 +130,30 @@ function ClientCard({
         <motion.div
             whileHover={{ y: -1 }}
             transition={{ duration: 0.12 }}
-            className="bg-white border border-[#E2E8F0] rounded-xl p-4 cursor-pointer hover:border-slate-300 hover:shadow-sm transition-all"
+            className="bg-card border border-[var(--border)] rounded-xl p-4 cursor-pointer hover:border-slate-300 hover:shadow-sm transition-all"
             onClick={onClick}
         >
             <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[#1E3A5F]/8 flex items-center justify-center shrink-0">
-                    <span className="text-sm font-bold text-[#1E3A5F]">{initials}</span>
+                <div className="w-10 h-10 rounded-xl bg-[var(--primary)]/8 flex items-center justify-center shrink-0">
+                    <span className="text-sm font-bold text-[var(--primary)]">{initials}</span>
                 </div>
                 <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap mb-0.5">
-                        <span className="text-sm font-bold text-slate-900 min-w-0 truncate">{client.name}</span>
+                        <span className="text-sm font-bold text-foreground min-w-0 truncate">{client.name}</span>
                         <ClientStatusBadge status={client.status} />
                     </div>
                     {client.primaryContact?.name && (
-                        <p className="text-xs text-slate-500 truncate">{client.primaryContact.name}</p>
+                        <p className="text-xs text-muted-foreground truncate">{client.primaryContact.name}</p>
                     )}
                     {client.formattedAddress && (
-                        <p className="text-xs text-slate-400 flex items-center gap-1 mt-1 min-w-0 truncate">
+                        <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1 min-w-0 truncate">
                             <MapPin size={10} className="shrink-0" />
                             {client.formattedAddress}
                         </p>
                     )}
                     <div className="flex items-center gap-3 mt-2">
-                        <span className="text-xs text-slate-500"><span className="font-semibold text-slate-700">{client.jobCount ?? 0}</span> jobs</span>
-                        <span className="text-xs text-slate-500">
+                        <span className="text-xs text-muted-foreground"><span className="font-semibold text-foreground">{client.jobCount ?? 0}</span> jobs</span>
+                        <span className="text-xs text-muted-foreground">
                             {client.defaultChargeType === 'hourly' ? `£${client.defaultChargeRate}/hr` : `£${client.defaultChargeRate} fixed`}
                         </span>
                     </div>
@@ -182,36 +182,36 @@ function ClientRow({
     const initials = client.name.split(' ').map(w => w[0]).slice(0, 2).join('')
     return (
         <tr
-            className="hover:bg-slate-50/60 cursor-pointer transition-colors group"
+            className="hover:bg-muted/60 cursor-pointer transition-colors group"
             onClick={onClick}
         >
             <td className="px-5 py-3.5">
                 <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-[#1E3A5F]/8 flex items-center justify-center shrink-0">
-                        <span className="text-xs font-bold text-[#1E3A5F]">{initials}</span>
+                    <div className="w-8 h-8 rounded-lg bg-[var(--primary)]/8 flex items-center justify-center shrink-0">
+                        <span className="text-xs font-bold text-[var(--primary)]">{initials}</span>
                     </div>
                     <div className="min-w-0">
-                        <p className="text-sm font-semibold text-slate-900 truncate">{client.name}</p>
+                        <p className="text-sm font-semibold text-foreground truncate">{client.name}</p>
                         {client.primaryContact?.name && (
-                            <p className="text-xs text-slate-400 truncate">{client.primaryContact.name}</p>
+                            <p className="text-xs text-muted-foreground truncate">{client.primaryContact.name}</p>
                         )}
                     </div>
                 </div>
             </td>
             <td className="px-4 py-3.5 hidden md:table-cell">
-                <p className="text-sm text-slate-600 truncate max-w-[180px]">{client.formattedAddress || '—'}</p>
+                <p className="text-sm text-muted-foreground truncate max-w-[180px]">{client.formattedAddress || '—'}</p>
             </td>
             <td className="px-4 py-3.5 hidden lg:table-cell">
                 <div className="flex flex-col gap-0.5">
                     {client.primaryContact?.email && (
-                        <span className="text-xs text-slate-500 flex items-center gap-1 min-w-0">
-                            <Mail size={10} className="shrink-0 text-slate-400" />
+                        <span className="text-xs text-muted-foreground flex items-center gap-1 min-w-0">
+                            <Mail size={10} className="shrink-0 text-muted-foreground" />
                             <span className="truncate max-w-[160px]">{client.primaryContact.email}</span>
                         </span>
                     )}
                     {(client.phone || client.primaryContact?.phone) && (
-                        <span className="text-xs text-slate-500 flex items-center gap-1">
-                            <Phone size={10} className="shrink-0 text-slate-400" />
+                        <span className="text-xs text-muted-foreground flex items-center gap-1">
+                            <Phone size={10} className="shrink-0 text-muted-foreground" />
                             {client.phone || client.primaryContact?.phone}
                         </span>
                     )}
@@ -220,10 +220,10 @@ function ClientRow({
             <td className="px-4 py-3.5 hidden sm:table-cell">
                 <ClientStatusBadge status={client.status} />
             </td>
-            <td className="px-4 py-3.5 hidden lg:table-cell text-sm text-slate-600">
+            <td className="px-4 py-3.5 hidden lg:table-cell text-sm text-muted-foreground">
                 {client.jobCount ?? 0}
             </td>
-            <td className="px-4 py-3.5 text-sm text-slate-600 hidden md:table-cell">
+            <td className="px-4 py-3.5 text-sm text-muted-foreground hidden md:table-cell">
                 {client.defaultChargeType === 'hourly'
                     ? `£${client.defaultChargeRate.toFixed(2)}/hr`
                     : `£${client.defaultChargeRate.toFixed(2)}`}
@@ -240,27 +240,27 @@ function ClientRow({
 function ClientsEmptyState({ filter, onAdd }: { filter: FilterType; onAdd: () => void }) {
     if (filter !== 'all') {
         return (
-            <div className="bg-white border border-[#E2E8F0] rounded-xl flex flex-col items-center justify-center py-16 text-center px-8">
-                <div className="w-11 h-11 rounded-2xl bg-slate-100 flex items-center justify-center mb-3">
-                    <Building2 size={20} className="text-slate-400" />
+            <div className="bg-card border border-[var(--border)] rounded-xl flex flex-col items-center justify-center py-16 text-center px-8">
+                <div className="w-11 h-11 rounded-2xl bg-muted flex items-center justify-center mb-3">
+                    <Building2 size={20} className="text-muted-foreground" />
                 </div>
-                <p className="text-sm font-bold text-slate-700 mb-1">No {filter} clients</p>
-                <p className="text-sm text-slate-400">Try a different filter.</p>
+                <p className="text-sm font-bold text-foreground mb-1">No {filter} clients</p>
+                <p className="text-sm text-muted-foreground">Try a different filter.</p>
             </div>
         )
     }
     return (
-        <div className="bg-white border border-[#E2E8F0] rounded-xl flex flex-col items-center justify-center py-20 text-center px-8">
-            <div className="w-14 h-14 rounded-2xl bg-[#1E3A5F]/8 flex items-center justify-center mb-4">
-                <Building2 size={26} className="text-[#1E3A5F]" />
+        <div className="bg-card border border-[var(--border)] rounded-xl flex flex-col items-center justify-center py-20 text-center px-8">
+            <div className="w-14 h-14 rounded-2xl bg-[var(--primary)]/8 flex items-center justify-center mb-4">
+                <Building2 size={26} className="text-[var(--primary)]" />
             </div>
-            <h3 className="text-base font-bold text-slate-800 mb-1.5">No clients yet</h3>
-            <p className="text-sm text-slate-500 leading-relaxed max-w-xs mb-6">
+            <h3 className="text-base font-bold text-foreground mb-1.5">No clients yet</h3>
+            <p className="text-sm text-muted-foreground leading-relaxed max-w-xs mb-6">
                 Add the organisations your company works with so jobs, locations and invoices can be organised properly.
             </p>
             <button
                 onClick={onAdd}
-                className="h-9 px-5 bg-[#1E3A5F] text-white text-sm font-bold rounded-xl hover:bg-[#162D4A] transition-colors flex items-center gap-2"
+                className="h-9 px-5 bg-[var(--primary)] text-white text-sm font-bold rounded-xl hover:bg-primary/90 transition-colors flex items-center gap-2"
             >
                 <Plus size={13} /> Add your first client
             </button>
@@ -282,27 +282,27 @@ function ClientStatusDialog({
     const isActive = client.status === 'active'
     return (
         <DialogBackdrop onClose={onClose}>
-            <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full mx-4 overflow-hidden">
+            <div className="bg-card rounded-2xl shadow-2xl max-w-sm w-full mx-4 overflow-hidden">
                 <div className="p-6">
                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-4 ${isActive ? 'bg-amber-50' : 'bg-emerald-50'}`}>
                         {isActive ? <Archive size={18} className="text-amber-600" /> : <RefreshCw size={18} className="text-emerald-600" />}
                     </div>
-                    <h3 className="text-base font-bold text-slate-900 mb-2">
+                    <h3 className="text-base font-bold text-foreground mb-2">
                         {isActive ? `Mark ${client.name} as inactive?` : 'Reactivate client'}
                     </h3>
                     {isActive ? (
-                        <p className="text-sm text-slate-500 leading-relaxed">
+                        <p className="text-sm text-muted-foreground leading-relaxed">
                             Existing jobs, invoices and history will remain.<br />
                             You can reactivate this client later.
                         </p>
                     ) : (
-                        <p className="text-sm text-slate-500 leading-relaxed">
-                            <span className="font-semibold text-slate-700">{client.name}</span> will be restored to active status and appear in client suggestions for new jobs.
+                        <p className="text-sm text-muted-foreground leading-relaxed">
+                            <span className="font-semibold text-foreground">{client.name}</span> will be restored to active status and appear in client suggestions for new jobs.
                         </p>
                     )}
                 </div>
-                <div className="border-t border-[#E2E8F0] px-6 py-4 flex items-center justify-end gap-2.5">
-                    <button onClick={onClose} className="h-9 px-4 text-sm font-semibold text-slate-600 hover:text-slate-800 transition-colors">
+                <div className="border-t border-[var(--border)] px-6 py-4 flex items-center justify-end gap-2.5">
+                    <button onClick={onClose} className="h-9 px-4 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors">
                         Cancel
                     </button>
                     <button
@@ -339,39 +339,39 @@ function DeleteClientDialog({
 }) {
     return (
         <DialogBackdrop onClose={onClose}>
-            <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full mx-4 overflow-hidden">
+            <div className="bg-card rounded-2xl shadow-2xl max-w-sm w-full mx-4 overflow-hidden">
                 <div className="p-6">
                     <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center mb-4">
                         {blocked ? <AlertTriangle size={18} className="text-red-500" /> : <Trash2 size={18} className="text-red-500" />}
                     </div>
                     {blocked ? (
                         <>
-                            <h3 className="text-base font-bold text-slate-900 mb-2">Client can't be deleted</h3>
-                            <p className="text-sm text-slate-500 leading-relaxed">
-                                {message ?? <><span className="font-semibold text-slate-700">{client.name}</span> is linked to existing records. Mark the client inactive instead.</>}
+                            <h3 className="text-base font-bold text-foreground mb-2">Client can't be deleted</h3>
+                            <p className="text-sm text-muted-foreground leading-relaxed">
+                                {message ?? <><span className="font-semibold text-foreground">{client.name}</span> is linked to existing records. Mark the client inactive instead.</>}
                             </p>
                         </>
                     ) : (
                         <>
-                            <h3 className="text-base font-bold text-slate-900 mb-2">Delete {client.name}?</h3>
-                            <p className="text-sm text-slate-500 leading-relaxed mb-2">
+                            <h3 className="text-base font-bold text-foreground mb-2">Delete {client.name}?</h3>
+                            <p className="text-sm text-muted-foreground leading-relaxed mb-2">
                                 This client will be removed from active client lists. Existing historical jobs and invoices will remain intact.
                             </p>
-                            <p className="text-sm text-slate-500 leading-relaxed">
+                            <p className="text-sm text-muted-foreground leading-relaxed">
                                 If you simply no longer work with this client, mark them inactive instead.
                             </p>
                         </>
                     )}
                 </div>
-                <div className="border-t border-[#E2E8F0] px-6 py-4 flex items-center justify-end gap-2.5">
+                <div className="border-t border-[var(--border)] px-6 py-4 flex items-center justify-end gap-2.5">
                     {blocked ? (
                         <>
-                            <button onClick={onClose} className="h-9 px-4 text-sm font-semibold text-slate-600 hover:text-slate-800 transition-colors">Close</button>
+                            <button onClick={onClose} className="h-9 px-4 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors">Close</button>
                             <button onClick={onMarkInactive} className="h-9 px-5 text-sm font-bold rounded-xl bg-amber-500 text-white hover:bg-amber-600 transition-colors">Mark inactive</button>
                         </>
                     ) : (
                         <>
-                            <button onClick={onClose} className="h-9 px-4 text-sm font-semibold text-slate-600 hover:text-slate-800 transition-colors">Cancel</button>
+                            <button onClick={onClose} className="h-9 px-4 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors">Cancel</button>
                             <button onClick={onConfirm} className="h-9 px-5 text-sm font-bold rounded-xl bg-red-600 text-white hover:bg-red-700 transition-colors">Delete client</button>
                         </>
                     )}
@@ -445,11 +445,11 @@ function ClientForm({
 
     return (
         <DialogBackdrop onClose={onClose}>
-            <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full mx-4 max-h-[90vh] flex flex-col overflow-hidden">
+            <div className="bg-card rounded-2xl shadow-2xl max-w-lg w-full mx-4 max-h-[90vh] flex flex-col overflow-hidden">
                 {/* Header */}
-                <div className="flex items-center justify-between px-6 py-5 border-b border-[#E2E8F0] shrink-0">
-                    <h2 className="text-base font-bold text-slate-900">{initial ? 'Edit client' : 'Add new client'}</h2>
-                    <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-400 transition-colors">
+                <div className="flex items-center justify-between px-6 py-5 border-b border-[var(--border)] shrink-0">
+                    <h2 className="text-base font-bold text-foreground">{initial ? 'Edit client' : 'Add new client'}</h2>
+                    <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-muted text-muted-foreground transition-colors">
                         <X size={15} />
                     </button>
                 </div>
@@ -458,14 +458,14 @@ function ClientForm({
                 <div className="overflow-y-auto flex-1 px-6 py-5 flex flex-col gap-5">
                     {/* Client name */}
                     <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">Client name <span className="text-red-400">*</span></label>
+                        <label className="block text-xs font-semibold text-foreground mb-1.5">Client name <span className="text-red-400">*</span></label>
                         <input value={form.name} onChange={set('name')} placeholder="e.g. ABC Property Management"
-                            className="w-full h-10 px-3 border border-[#E2E8F0] rounded-xl text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/15 focus:border-[#1E3A5F]/40 transition-all" />
+                            className="w-full h-10 px-3 border border-[var(--border)] rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/15 focus:border-[var(--primary)]/40 transition-all" />
                     </div>
 
                     {/* Primary contact */}
                     <div>
-                        <p className="text-xs font-semibold text-slate-700 mb-2">Primary contact</p>
+                        <p className="text-xs font-semibold text-foreground mb-2">Primary contact</p>
                         <div className="grid grid-cols-2 gap-3">
                             <FormInput label="Name" value={form.contactName} onChange={set('contactName')} placeholder="Sarah Williams" />
                             <FormInput label="Role" value={form.contactRole} onChange={set('contactRole')} placeholder="Facilities Manager" />
@@ -482,12 +482,12 @@ function ClientForm({
 
                     {/* Default charges */}
                     <div>
-                        <p className="text-xs font-semibold text-slate-700 mb-2">Default charge settings</p>
+                        <p className="text-xs font-semibold text-foreground mb-2">Default charge settings</p>
                         <div className="grid grid-cols-2 gap-3">
                             <div>
-                                <label className="block text-[11px] text-slate-500 mb-1">Charge type</label>
+                                <label className="block text-[11px] text-muted-foreground mb-1">Charge type</label>
                                 <select value={form.defaultChargeType} onChange={set('defaultChargeType')}
-                                    className="w-full h-10 px-3 border border-[#E2E8F0] rounded-xl text-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/15 focus:border-[#1E3A5F]/40 transition-all">
+                                    className="w-full h-10 px-3 border border-[var(--border)] rounded-xl text-sm text-foreground bg-card focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/15 focus:border-[var(--primary)]/40 transition-all">
                                     <option value="hourly">Hourly</option>
                                     <option value="fixed">Fixed</option>
                                 </select>
@@ -509,7 +509,7 @@ function ClientForm({
                     <button
                         type="button"
                         onClick={() => setShowBilling(b => !b)}
-                        className="text-sm font-semibold text-[#1E3A5F] flex items-center gap-1.5 hover:opacity-75 transition-opacity"
+                        className="text-sm font-semibold text-[var(--primary)] flex items-center gap-1.5 hover:opacity-75 transition-opacity"
                     >
                         <span className="text-base leading-none">{showBilling ? '−' : '+'}</span>
                         {showBilling ? 'Hide' : 'Add'} address &amp; VAT details
@@ -538,19 +538,19 @@ function ClientForm({
 
                     {/* Notes */}
                     <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">Internal notes</label>
+                        <label className="block text-xs font-semibold text-foreground mb-1.5">Internal notes</label>
                         <textarea value={form.notes} onChange={set('notes')} rows={2} placeholder="Quarterly invoicing preferred…"
-                            className="w-full px-3 py-2.5 border border-[#E2E8F0] rounded-xl text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/15 focus:border-[#1E3A5F]/40 transition-all resize-none" />
+                            className="w-full px-3 py-2.5 border border-[var(--border)] rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/15 focus:border-[var(--primary)]/40 transition-all resize-none" />
                     </div>
                 </div>
 
                 {/* Footer */}
-                <div className="border-t border-[#E2E8F0] px-6 py-4 flex items-center justify-end gap-2.5 shrink-0">
-                    <button onClick={onClose} className="h-9 px-4 text-sm font-semibold text-slate-600 hover:text-slate-800 transition-colors">Cancel</button>
+                <div className="border-t border-[var(--border)] px-6 py-4 flex items-center justify-end gap-2.5 shrink-0">
+                    <button onClick={onClose} className="h-9 px-4 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors">Cancel</button>
                     <button
                         onClick={() => valid && onSave(form)}
                         disabled={!valid}
-                        className="h-9 px-5 text-sm font-bold rounded-xl bg-[#1E3A5F] text-white hover:bg-[#162D4A] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                        className="h-9 px-5 text-sm font-bold rounded-xl bg-[var(--primary)] text-white hover:bg-primary/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                     >
                         {initial ? 'Save changes' : 'Create client'}
                     </button>
@@ -567,9 +567,9 @@ function FormInput({ label, value, onChange, placeholder, type = 'text' }: {
 }) {
     return (
         <div>
-            <label className="block text-[11px] text-slate-500 mb-1">{label}</label>
+            <label className="block text-[11px] text-muted-foreground mb-1">{label}</label>
             <input value={value} onChange={onChange} placeholder={placeholder} type={type}
-                className="w-full h-10 px-3 border border-[#E2E8F0] rounded-xl text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/15 focus:border-[#1E3A5F]/40 transition-all" />
+                className="w-full h-10 px-3 border border-[var(--border)] rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/15 focus:border-[var(--primary)]/40 transition-all" />
         </div>
     )
 }
@@ -720,12 +720,12 @@ export function Clients() {
             {/* Header */}
             <div className="flex items-start justify-between mb-6 flex-wrap gap-4">
                 <div>
-                    <h2 className="text-lg font-bold text-slate-900 tracking-tight">Clients</h2>
-                    <p className="text-sm text-slate-500 mt-0.5">Organisations your company works with.</p>
+                    <h2 className="text-lg font-bold text-foreground tracking-tight">Clients</h2>
+                    <p className="text-sm text-muted-foreground mt-0.5">Organisations your company works with.</p>
                 </div>
                 <button
                     onClick={() => onNavigate('/clients/create')}
-                    className="h-9 px-4 bg-[#1E3A5F] text-white text-sm font-bold rounded-xl hover:bg-[#162D4A] transition-colors flex items-center gap-2"
+                    className="h-9 px-4 bg-[var(--primary)] text-white text-sm font-bold rounded-xl hover:bg-primary/90 transition-colors flex items-center gap-2"
                 >
                     <Plus size={13} /> Add client
                 </button>
@@ -738,13 +738,13 @@ export function Clients() {
                     { label: 'Active', value: counts.active, icon: Users },
                     { label: 'Inactive', value: counts.inactive, icon: Archive },
                 ].map(({ label, value, icon: Icon }) => (
-                    <div key={label} className="bg-white border border-[#E2E8F0] rounded-xl p-4 flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-lg bg-[#1E3A5F]/6 flex items-center justify-center shrink-0">
-                            <Icon size={16} className="text-[#1E3A5F]" />
+                    <div key={label} className="bg-card border border-[var(--border)] rounded-xl p-4 flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-lg bg-[var(--primary)]/6 flex items-center justify-center shrink-0">
+                            <Icon size={16} className="text-[var(--primary)]" />
                         </div>
                         <div>
-                            <p className="text-lg font-bold text-slate-900 leading-none">{value}</p>
-                            <p className="text-xs text-slate-500 mt-0.5">{label}</p>
+                            <p className="text-lg font-bold text-foreground leading-none">{value}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">{label}</p>
                         </div>
                     </div>
                 ))}
@@ -752,12 +752,12 @@ export function Clients() {
 
             {/* Filters + search */}
             <div className="flex items-center justify-between gap-3 mb-5 flex-wrap">
-                <div className="flex items-center gap-1 bg-slate-100 rounded-xl p-1">
+                <div className="flex items-center gap-1 bg-muted rounded-xl p-1">
                     {(['all', 'active', 'inactive'] as FilterType[]).map(f => (
                         <button
                             key={f}
                             onClick={() => setFilter(f)}
-                            className={`h-8 px-4 rounded-lg text-sm font-semibold capitalize transition-all ${filter === f ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                            className={`h-8 px-4 rounded-lg text-sm font-semibold capitalize transition-all ${filter === f ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
                                 }`}
                         >
                             {f === 'all' ? `All (${counts.all})` : f === 'active' ? `Active (${counts.active})` : `Inactive (${counts.inactive})`}
@@ -765,12 +765,12 @@ export function Clients() {
                     ))}
                 </div>
                 <div className="relative min-w-[220px]">
-                    <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                     <input
                         value={search}
                         onChange={e => setSearch(e.target.value)}
                         placeholder="Search clients…"
-                        className="w-full h-9 pl-8 pr-3 border border-[#E2E8F0] rounded-xl text-sm text-slate-700 bg-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/15 focus:border-[#1E3A5F]/40 transition-all"
+                        className="w-full h-9 pl-8 pr-3 border border-[var(--border)] rounded-xl text-sm text-foreground bg-card placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/15 focus:border-[var(--primary)]/40 transition-all"
                     />
                 </div>
             </div>
@@ -781,20 +781,20 @@ export function Clients() {
             ) : (
                 <>
                     {/* Desktop table */}
-                    <div className="hidden sm:block bg-white border border-[#E2E8F0] rounded-xl overflow-hidden">
+                    <div className="hidden sm:block bg-card border border-[var(--border)] rounded-xl overflow-hidden">
                         <table className="w-full">
                             <thead>
-                                <tr className="border-b border-[#E2E8F0] bg-slate-50/60">
-                                    <th className="px-5 py-3 text-left text-xs font-semibold text-slate-500">Client</th>
-                                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 hidden md:table-cell">Location</th>
-                                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 hidden lg:table-cell">Contact</th>
-                                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 hidden sm:table-cell">Status</th>
-                                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 hidden lg:table-cell">Jobs</th>
-                                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 hidden md:table-cell">Rate</th>
+                                <tr className="border-b border-[var(--border)] bg-muted/60">
+                                    <th className="px-5 py-3 text-left text-xs font-semibold text-muted-foreground">Client</th>
+                                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground hidden md:table-cell">Location</th>
+                                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground hidden lg:table-cell">Contact</th>
+                                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground hidden sm:table-cell">Status</th>
+                                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground hidden lg:table-cell">Jobs</th>
+                                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground hidden md:table-cell">Rate</th>
                                     <th className="px-3 py-3" />
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-[#E2E8F0]">
+                            <tbody className="divide-y divide-[var(--border)]">
                                 {filtered.map(client => (
                                     <ClientRow
                                         key={client._id}
@@ -824,12 +824,12 @@ export function Clients() {
                     </div>
 
                     {/* Pagination hint */}
-                    <div className="flex items-center justify-between pt-4 text-xs text-slate-400">
+                    <div className="flex items-center justify-between pt-4 text-xs text-muted-foreground">
                         <span>Showing 1–{filtered.length} of {filtered.length}</span>
                         <div className="flex items-center gap-1">
-                            <button disabled className="h-7 px-3 rounded-lg border border-slate-200 text-slate-300 cursor-not-allowed">‹ Previous</button>
-                            <button className="h-7 px-3 rounded-lg border border-[#1E3A5F]/20 text-[#1E3A5F] bg-[#1E3A5F]/5 font-semibold">1</button>
-                            <button disabled className="h-7 px-3 rounded-lg border border-slate-200 text-slate-300 cursor-not-allowed">Next ›</button>
+                            <button disabled className="h-7 px-3 rounded-lg border border-border text-slate-300 cursor-not-allowed">‹ Previous</button>
+                            <button className="h-7 px-3 rounded-lg border border-[var(--primary)]/20 text-[var(--primary)] bg-[var(--primary)]/5 font-semibold">1</button>
+                            <button disabled className="h-7 px-3 rounded-lg border border-border text-slate-300 cursor-not-allowed">Next ›</button>
                         </div>
                     </div>
                 </>

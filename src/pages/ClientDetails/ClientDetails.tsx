@@ -64,14 +64,14 @@ const TABS: { to: string; label: string }[] = [
 
 function TabBar() {
     return (
-        <div className="flex items-center gap-0 border-b border-[#E2E8F0] mb-5">
+        <div className="flex items-center gap-0 border-b border-[var(--border)] mb-5">
             {TABS.map(t => (
                 <NavLink
                     key={t.to}
                     to={t.to}
                     className={({ isActive }) => `px-4 py-2.5 text-sm font-semibold border-b-2 -mb-px transition-colors ${isActive
-                        ? 'border-[#1E3A5F] text-[#1E3A5F]'
-                        : 'border-transparent text-slate-500 hover:text-slate-700'
+                        ? 'border-[var(--primary)] text-[var(--primary)]'
+                        : 'border-transparent text-muted-foreground hover:text-foreground'
                         }`}
                 >
                     {t.label}
@@ -91,24 +91,24 @@ function TabBar() {
 //                 <SectionCard>
 //                     <SectionLabel>Primary contact</SectionLabel>
 //                     <div className="flex items-center gap-3 mb-3">
-//                         <div className="w-9 h-9 rounded-xl bg-[#1E3A5F]/8 flex items-center justify-center shrink-0">
-//                             <User size={15} className="text-[#1E3A5F]" />
+//                         <div className="w-9 h-9 rounded-xl bg-[var(--primary)]/8 flex items-center justify-center shrink-0">
+//                             <User size={15} className="text-[var(--primary)]" />
 //                         </div>
 //                         <div className="min-w-0">
-//                             <p className="text-sm font-bold text-slate-900 truncate">{client.primaryContact.name}</p>
-//                             {client.primaryContact.role && <p className="text-xs text-slate-500">{client.primaryContact.role}</p>}
+//                             <p className="text-sm font-bold text-foreground truncate">{client.primaryContact.name}</p>
+//                             {client.primaryContact.role && <p className="text-xs text-muted-foreground">{client.primaryContact.role}</p>}
 //                         </div>
 //                     </div>
 //                     <div className="flex flex-col gap-1.5">
 //                         {client.primaryContact.email && (
-//                             <a href={`mailto:${client.primaryContact.email}`} className="flex items-center gap-2 text-xs text-slate-600 hover:text-[#1E3A5F] transition-colors min-w-0">
-//                                 <Mail size={12} className="shrink-0 text-slate-400" />
+//                             <a href={`mailto:${client.primaryContact.email}`} className="flex items-center gap-2 text-xs text-muted-foreground hover:text-[var(--primary)] transition-colors min-w-0">
+//                                 <Mail size={12} className="shrink-0 text-muted-foreground" />
 //                                 <span className="truncate">{client.primaryContact.email}</span>
 //                             </a>
 //                         )}
 //                         {client.primaryContact.phone && (
-//                             <span className="flex items-center gap-2 text-xs text-slate-600 min-w-0">
-//                                 <Phone size={12} className="shrink-0 text-slate-400" />
+//                             <span className="flex items-center gap-2 text-xs text-muted-foreground min-w-0">
+//                                 <Phone size={12} className="shrink-0 text-muted-foreground" />
 //                                 {client.primaryContact.phone}
 //                             </span>
 //                         )}
@@ -120,16 +120,16 @@ function TabBar() {
 //             <SectionCard>
 //                 <SectionLabel>Address</SectionLabel>
 //                 {client.formattedAddress ? (
-//                     <div className="flex items-start gap-2 text-sm text-slate-700">
-//                         <MapPin size={14} className="shrink-0 text-slate-400 mt-0.5" />
+//                     <div className="flex items-start gap-2 text-sm text-foreground">
+//                         <MapPin size={14} className="shrink-0 text-muted-foreground mt-0.5" />
 //                         <span className="leading-relaxed">{client.formattedAddress}</span>
 //                     </div>
 //                 ) : (
-//                     <p className="text-sm text-slate-400 italic">No address on file</p>
+//                     <p className="text-sm text-muted-foreground italic">No address on file</p>
 //                 )}
 //                 {client.phone && (
-//                     <div className="flex items-center gap-2 text-xs text-slate-500 mt-3">
-//                         <Phone size={12} className="shrink-0 text-slate-400" />
+//                     <div className="flex items-center gap-2 text-xs text-muted-foreground mt-3">
+//                         <Phone size={12} className="shrink-0 text-muted-foreground" />
 //                         {client.phone}
 //                     </div>
 //                 )}
@@ -138,7 +138,7 @@ function TabBar() {
 //             {/* Default charges */}
 //             <SectionCard>
 //                 <SectionLabel>Default charge settings</SectionLabel>
-//                 <div className="divide-y divide-slate-100">
+//                 <div className="divide-y divide-border">
 //                     <DataRow label="Charge type" value={client.defaultChargeType === 'hourly' ? 'Hourly' : 'Fixed'} />
 //                     <DataRow
 //                         label="Default rate"
@@ -154,7 +154,7 @@ function TabBar() {
 //             {/* Activity */}
 //             <SectionCard>
 //                 <SectionLabel>Activity</SectionLabel>
-//                 <div className="divide-y divide-slate-100">
+//                 <div className="divide-y divide-border">
 //                     <DataRow label="Total jobs" value={String(client.jobCount ?? 0)} />
 //                     <DataRow label="Active jobs" value={String(client.activeJobCount ?? 0)} />
 //                     <DataRow label="Client since" value={new Date(client.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })} />
@@ -166,7 +166,7 @@ function TabBar() {
 //             {client.notes && (
 //                 <SectionCard className="md:col-span-2">
 //                     <SectionLabel>Internal notes</SectionLabel>
-//                     <p className="text-sm text-slate-600 leading-relaxed">{client.notes}</p>
+//                     <p className="text-sm text-muted-foreground leading-relaxed">{client.notes}</p>
 //                 </SectionCard>
 //             )}
 //         </div>
@@ -178,10 +178,10 @@ function TabBar() {
 // function ContactsTab({ client }: { client: Client }) {
 //     if (client.contacts.length === 0) {
 //         return (
-//             <div className="bg-white border border-[#E2E8F0] rounded-xl flex flex-col items-center justify-center py-14 text-center">
+//             <div className="bg-card border border-[var(--border)] rounded-xl flex flex-col items-center justify-center py-14 text-center">
 //                 <User size={22} className="text-slate-300 mb-3" />
-//                 <p className="text-sm font-semibold text-slate-500">No contacts yet</p>
-//                 <p className="text-xs text-slate-400 mt-1">Add contacts when editing this client.</p>
+//                 <p className="text-sm font-semibold text-muted-foreground">No contacts yet</p>
+//                 <p className="text-xs text-muted-foreground mt-1">Add contacts when editing this client.</p>
 //             </div>
 //         )
 //     }
@@ -190,27 +190,27 @@ function TabBar() {
 //             {client.contacts.map((c, i) => (
 //                 <SectionCard key={i}>
 //                     <div className="flex items-start gap-3">
-//                         <div className="w-9 h-9 rounded-xl bg-[#1E3A5F]/8 flex items-center justify-center shrink-0">
-//                             <User size={15} className="text-[#1E3A5F]" />
+//                         <div className="w-9 h-9 rounded-xl bg-[var(--primary)]/8 flex items-center justify-center shrink-0">
+//                             <User size={15} className="text-[var(--primary)]" />
 //                         </div>
 //                         <div className="flex-1 min-w-0">
 //                             <div className="flex items-center gap-2 flex-wrap mb-0.5">
-//                                 <span className="text-sm font-bold text-slate-900">{c.name}</span>
+//                                 <span className="text-sm font-bold text-foreground">{c.name}</span>
 //                                 {c.isPrimary && (
-//                                     <span className="text-[10px] font-semibold bg-[#1E3A5F]/8 text-[#1E3A5F] px-2 py-0.5 rounded-full">Primary</span>
+//                                     <span className="text-[10px] font-semibold bg-[var(--primary)]/8 text-[var(--primary)] px-2 py-0.5 rounded-full">Primary</span>
 //                                 )}
 //                             </div>
-//                             {c.role && <p className="text-xs text-slate-500 mb-2">{c.role}</p>}
+//                             {c.role && <p className="text-xs text-muted-foreground mb-2">{c.role}</p>}
 //                             <div className="flex flex-col gap-1">
 //                                 {c.email && (
-//                                     <a href={`mailto:${c.email}`} className="flex items-center gap-2 text-xs text-slate-600 hover:text-[#1E3A5F] transition-colors">
-//                                         <Mail size={11} className="shrink-0 text-slate-400" />
+//                                     <a href={`mailto:${c.email}`} className="flex items-center gap-2 text-xs text-muted-foreground hover:text-[var(--primary)] transition-colors">
+//                                         <Mail size={11} className="shrink-0 text-muted-foreground" />
 //                                         {c.email}
 //                                     </a>
 //                                 )}
 //                                 {c.phone && (
-//                                     <span className="flex items-center gap-2 text-xs text-slate-600">
-//                                         <Phone size={11} className="shrink-0 text-slate-400" />
+//                                     <span className="flex items-center gap-2 text-xs text-muted-foreground">
+//                                         <Phone size={11} className="shrink-0 text-muted-foreground" />
 //                                         {c.phone}
 //                                     </span>
 //                                 )}
@@ -237,10 +237,10 @@ function TabBar() {
 //     return (
 //         <div>
 //             <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
-//                 <div className="flex items-center gap-1 bg-slate-100 rounded-xl p-1">
+//                 <div className="flex items-center gap-1 bg-muted rounded-xl p-1">
 //                     {(['upcoming', 'past', 'all'] as const).map(f => (
 //                         <button key={f} onClick={() => setJobFilter(f)}
-//                             className={`h-7 px-3 rounded-lg text-xs font-semibold capitalize transition-all ${jobFilter === f ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+//                             className={`h-7 px-3 rounded-lg text-xs font-semibold capitalize transition-all ${jobFilter === f ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
 //                                 }`}>
 //                             {f === 'all' ? `All (${jobs.length})` : f === 'upcoming' ? `Upcoming (${jobs.filter(j => j.status === 'upcoming').length})` : `Past (${jobs.filter(j => j.status !== 'upcoming').length})`}
 //                         </button>
@@ -248,28 +248,28 @@ function TabBar() {
 //                 </div>
 //                 <button
 //                     onClick={() => onJobNavigate('create-job')}
-//                     className="h-8 px-3.5 bg-[#1E3A5F] text-white text-xs font-bold rounded-xl hover:bg-[#162D4A] transition-colors flex items-center gap-1.5"
+//                     className="h-8 px-3.5 bg-[var(--primary)] text-white text-xs font-bold rounded-xl hover:bg-primary/90 transition-colors flex items-center gap-1.5"
 //                 >
 //                     <Plus size={12} /> Create job
 //                 </button>
 //             </div>
 
 //             {filtered.length === 0 ? (
-//                 <div className="bg-white border border-[#E2E8F0] rounded-xl flex flex-col items-center justify-center py-12 text-center">
+//                 <div className="bg-card border border-[var(--border)] rounded-xl flex flex-col items-center justify-center py-12 text-center">
 //                     <Briefcase size={20} className="text-slate-300 mb-2" />
-//                     <p className="text-sm text-slate-500">No {jobFilter} jobs for this client</p>
+//                     <p className="text-sm text-muted-foreground">No {jobFilter} jobs for this client</p>
 //                 </div>
 //             ) : (
-//                 <div className="bg-white border border-[#E2E8F0] rounded-xl overflow-hidden">
+//                 <div className="bg-card border border-[var(--border)] rounded-xl overflow-hidden">
 //                     {filtered.map((job, i) => (
 //                         <button
 //                             key={job._id}
 //                             onClick={() => onJobNavigate(job._id)}
-//                             className={`w-full flex items-center justify-between gap-4 px-5 py-3.5 hover:bg-slate-50/70 transition-colors text-left ${i > 0 ? 'border-t border-[#E2E8F0]' : ''}`}
+//                             className={`w-full flex items-center justify-between gap-4 px-5 py-3.5 hover:bg-muted/70 transition-colors text-left ${i > 0 ? 'border-t border-[var(--border)]' : ''}`}
 //                         >
 //                             <div className="flex-1 min-w-0">
-//                                 <p className="text-sm font-semibold text-slate-900 truncate">{job.title}</p>
-//                                 <div className="flex items-center gap-3 mt-0.5 text-xs text-slate-500 flex-wrap">
+//                                 <p className="text-sm font-semibold text-foreground truncate">{job.title}</p>
+//                                 <div className="flex items-center gap-3 mt-0.5 text-xs text-muted-foreground flex-wrap">
 //                                     <span className="flex items-center gap-1"><Calendar size={10} /> {fmtDate(job.date)}</span>
 //                                     <span>{job.time}</span>
 //                                     <span className="flex items-center gap-1 min-w-0"><MapPin size={10} className="shrink-0" /><span className="truncate">{job.location}</span></span>
@@ -296,7 +296,7 @@ function TabBar() {
 //         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 //             <SectionCard>
 //                 <SectionLabel>Billing details</SectionLabel>
-//                 <div className="divide-y divide-slate-100">
+//                 <div className="divide-y divide-border">
 //                     <DataRow label="Billing email" value={client.billingEmail} />
 //                     <DataRow label="VAT number" value={client.vatNumber} />
 //                     <DataRow label="Payment terms" value={`${client.paymentTermsDays} days`} />
@@ -304,7 +304,7 @@ function TabBar() {
 //             </SectionCard>
 //             <SectionCard>
 //                 <SectionLabel>Default charge</SectionLabel>
-//                 <div className="divide-y divide-slate-100">
+//                 <div className="divide-y divide-border">
 //                     <DataRow label="Charge type" value={client.defaultChargeType === 'hourly' ? 'Hourly rate' : 'Fixed price'} />
 //                     <DataRow
 //                         label="Rate"
@@ -313,7 +313,7 @@ function TabBar() {
 //                             : `£${client.defaultChargeRate.toFixed(2)}`}
 //                     />
 //                 </div>
-//                 <p className="text-xs text-slate-400 mt-3 leading-relaxed">
+//                 <p className="text-xs text-muted-foreground mt-3 leading-relaxed">
 //                     These values prefill new jobs for this client. Managers can override per job.
 //                 </p>
 //             </SectionCard>
@@ -330,9 +330,9 @@ function FormInput({ label, value, onChange, placeholder, type = 'text' }: {
 }) {
     return (
         <div>
-            <label className="block text-[11px] text-slate-500 mb-1">{label}</label>
+            <label className="block text-[11px] text-muted-foreground mb-1">{label}</label>
             <input value={value} onChange={onChange} placeholder={placeholder} type={type}
-                className="w-full h-10 px-3 border border-[#E2E8F0] rounded-xl text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/15 focus:border-[#1E3A5F]/40 transition-all" />
+                className="w-full h-10 px-3 border border-[var(--border)] rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/15 focus:border-[var(--primary)]/40 transition-all" />
         </div>
     )
 }
@@ -363,21 +363,21 @@ function EditClientForm({ client, onSave, onClose }: { client: Client; onSave: (
 
     return (
         <DialogBackdrop onClose={onClose}>
-            <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full mx-4 max-h-[90vh] flex flex-col overflow-hidden">
-                <div className="flex items-center justify-between px-6 py-5 border-b border-[#E2E8F0] shrink-0">
-                    <h2 className="text-base font-bold text-slate-900">Edit client</h2>
-                    <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-400 transition-colors">
+            <div className="bg-card rounded-2xl shadow-2xl max-w-lg w-full mx-4 max-h-[90vh] flex flex-col overflow-hidden">
+                <div className="flex items-center justify-between px-6 py-5 border-b border-[var(--border)] shrink-0">
+                    <h2 className="text-base font-bold text-foreground">Edit client</h2>
+                    <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-muted text-muted-foreground transition-colors">
                         <span className="text-lg leading-none">×</span>
                     </button>
                 </div>
                 <div className="overflow-y-auto flex-1 px-6 py-5 flex flex-col gap-5">
                     <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">Client name <span className="text-red-400">*</span></label>
+                        <label className="block text-xs font-semibold text-foreground mb-1.5">Client name <span className="text-red-400">*</span></label>
                         <input value={form.name} onChange={set('name')} placeholder="Client name"
-                            className="w-full h-10 px-3 border border-[#E2E8F0] rounded-xl text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/15 focus:border-[#1E3A5F]/40 transition-all" />
+                            className="w-full h-10 px-3 border border-[var(--border)] rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/15 focus:border-[var(--primary)]/40 transition-all" />
                     </div>
                     <div>
-                        <p className="text-xs font-semibold text-slate-700 mb-2">Primary contact</p>
+                        <p className="text-xs font-semibold text-foreground mb-2">Primary contact</p>
                         <div className="grid grid-cols-2 gap-3">
                             <FormInput label="Name" value={form.contactName} onChange={set('contactName')} placeholder="Sarah Williams" />
                             <FormInput label="Role" value={form.contactRole} onChange={set('contactRole')} placeholder="Facilities Manager" />
@@ -390,12 +390,12 @@ function EditClientForm({ client, onSave, onClose }: { client: Client; onSave: (
                         <FormInput label="Billing email" value={form.billingEmail} onChange={set('billingEmail')} placeholder="accounts@client.co.uk" type="email" />
                     </div>
                     <div>
-                        <p className="text-xs font-semibold text-slate-700 mb-2">Default charges</p>
+                        <p className="text-xs font-semibold text-foreground mb-2">Default charges</p>
                         <div className="grid grid-cols-2 gap-3">
                             <div>
-                                <label className="block text-[11px] text-slate-500 mb-1">Charge type</label>
+                                <label className="block text-[11px] text-muted-foreground mb-1">Charge type</label>
                                 <select value={form.defaultChargeType} onChange={set('defaultChargeType')}
-                                    className="w-full h-10 px-3 border border-[#E2E8F0] rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/15 focus:border-[#1E3A5F]/40 transition-all">
+                                    className="w-full h-10 px-3 border border-[var(--border)] rounded-xl text-sm bg-card focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/15 focus:border-[var(--primary)]/40 transition-all">
                                     <option value="hourly">Hourly</option>
                                     <option value="fixed">Fixed</option>
                                 </select>
@@ -407,7 +407,7 @@ function EditClientForm({ client, onSave, onClose }: { client: Client; onSave: (
                         </div>
                     </div>
                     <button type="button" onClick={() => setShowBilling(b => !b)}
-                        className="text-sm font-semibold text-[#1E3A5F] flex items-center gap-1.5 hover:opacity-75 transition-opacity">
+                        className="text-sm font-semibold text-[var(--primary)] flex items-center gap-1.5 hover:opacity-75 transition-opacity">
                         <span className="text-base leading-none">{showBilling ? '−' : '+'}</span>
                         {showBilling ? 'Hide' : 'Edit'} address &amp; VAT
                     </button>
@@ -426,14 +426,14 @@ function EditClientForm({ client, onSave, onClose }: { client: Client; onSave: (
                         )}
                     </AnimatePresence>
                     <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">Internal notes</label>
+                        <label className="block text-xs font-semibold text-foreground mb-1.5">Internal notes</label>
                         <textarea value={form.notes} onChange={set('notes')} rows={2}
-                            className="w-full px-3 py-2.5 border border-[#E2E8F0] rounded-xl text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/15 focus:border-[#1E3A5F]/40 transition-all resize-none" />
+                            className="w-full px-3 py-2.5 border border-[var(--border)] rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/15 focus:border-[var(--primary)]/40 transition-all resize-none" />
                     </div>
                 </div>
-                <div className="border-t border-[#E2E8F0] px-6 py-4 flex items-center justify-end gap-2.5 shrink-0">
-                    <button onClick={onClose} className="h-9 px-4 text-sm font-semibold text-slate-600 hover:text-slate-800 transition-colors">Cancel</button>
-                    <button onClick={handleSave} className="h-9 px-5 text-sm font-bold rounded-xl bg-[#1E3A5F] text-white hover:bg-[#162D4A] transition-colors">Save changes</button>
+                <div className="border-t border-[var(--border)] px-6 py-4 flex items-center justify-end gap-2.5 shrink-0">
+                    <button onClick={onClose} className="h-9 px-4 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors">Cancel</button>
+                    <button onClick={handleSave} className="h-9 px-5 text-sm font-bold rounded-xl bg-[var(--primary)] text-white hover:bg-primary/90 transition-colors">Save changes</button>
                 </div>
             </div>
         </DialogBackdrop>
@@ -446,22 +446,22 @@ function StatusDialog({ client, onConfirm, onClose }: { client: Client; onConfir
     const isActive = client.status === 'active'
     return (
         <DialogBackdrop onClose={onClose}>
-            <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full mx-4 overflow-hidden">
+            <div className="bg-card rounded-2xl shadow-2xl max-w-sm w-full mx-4 overflow-hidden">
                 <div className="p-6">
                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-4 ${isActive ? 'bg-amber-50' : 'bg-emerald-50'}`}>
                         {isActive ? <Archive size={18} className="text-amber-600" /> : <RefreshCw size={18} className="text-emerald-600" />}
                     </div>
-                    <h3 className="text-base font-bold text-slate-900 mb-2">
+                    <h3 className="text-base font-bold text-foreground mb-2">
                         {isActive ? `Mark ${client.name} as inactive?` : 'Reactivate client'}
                     </h3>
-                    <p className="text-sm text-slate-500 leading-relaxed">
+                    <p className="text-sm text-muted-foreground leading-relaxed">
                         {isActive
                             ? 'Existing jobs, invoices and history will remain. You can reactivate this client later.'
                             : `${client.name} will be restored to active status.`}
                     </p>
                 </div>
-                <div className="border-t border-[#E2E8F0] px-6 py-4 flex items-center justify-end gap-2.5">
-                    <button onClick={onClose} className="h-9 px-4 text-sm font-semibold text-slate-600 hover:text-slate-800 transition-colors">Cancel</button>
+                <div className="border-t border-[var(--border)] px-6 py-4 flex items-center justify-end gap-2.5">
+                    <button onClick={onClose} className="h-9 px-4 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors">Cancel</button>
                     <button onClick={onConfirm} className={`h-9 px-5 text-sm font-bold rounded-xl transition-colors ${isActive ? 'bg-amber-500 text-white hover:bg-amber-600' : 'bg-emerald-600 text-white hover:bg-emerald-700'}`}>
                         {isActive ? 'Mark inactive' : 'Reactivate client'}
                     </button>
@@ -475,33 +475,33 @@ function DeleteDialog({ client, blockedMessage, onConfirm, onMarkInactive, onClo
     const blocked = !!blockedMessage
     return (
         <DialogBackdrop onClose={onClose}>
-            <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full mx-4 overflow-hidden">
+            <div className="bg-card rounded-2xl shadow-2xl max-w-sm w-full mx-4 overflow-hidden">
                 <div className="p-6">
                     <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center mb-4">
                         {blocked ? <AlertTriangle size={18} className="text-red-500" /> : <Trash2 size={18} className="text-red-500" />}
                     </div>
                     {blocked ? (
                         <>
-                            <h3 className="text-base font-bold text-slate-900 mb-2">Client can't be deleted</h3>
-                            <p className="text-sm text-slate-500 leading-relaxed">{blockedMessage}</p>
+                            <h3 className="text-base font-bold text-foreground mb-2">Client can't be deleted</h3>
+                            <p className="text-sm text-muted-foreground leading-relaxed">{blockedMessage}</p>
                         </>
                     ) : (
                         <>
-                            <h3 className="text-base font-bold text-slate-900 mb-2">Delete {client.name}?</h3>
-                            <p className="text-sm text-slate-500 leading-relaxed mb-2">This client will be removed from active client lists. Existing historical jobs and invoices will remain intact.</p>
-                            <p className="text-sm text-slate-500 leading-relaxed">If you simply no longer work with this client, mark them inactive instead.</p>
+                            <h3 className="text-base font-bold text-foreground mb-2">Delete {client.name}?</h3>
+                            <p className="text-sm text-muted-foreground leading-relaxed mb-2">This client will be removed from active client lists. Existing historical jobs and invoices will remain intact.</p>
+                            <p className="text-sm text-muted-foreground leading-relaxed">If you simply no longer work with this client, mark them inactive instead.</p>
                         </>
                     )}
                 </div>
-                <div className="border-t border-[#E2E8F0] px-6 py-4 flex items-center justify-end gap-2.5">
+                <div className="border-t border-[var(--border)] px-6 py-4 flex items-center justify-end gap-2.5">
                     {blocked ? (
                         <>
-                            <button onClick={onClose} className="h-9 px-4 text-sm font-semibold text-slate-600 hover:text-slate-800 transition-colors">Close</button>
+                            <button onClick={onClose} className="h-9 px-4 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors">Close</button>
                             <button onClick={onMarkInactive} className="h-9 px-5 text-sm font-bold rounded-xl bg-amber-500 text-white hover:bg-amber-600 transition-colors">Mark inactive</button>
                         </>
                     ) : (
                         <>
-                            <button onClick={onClose} className="h-9 px-4 text-sm font-semibold text-slate-600 hover:text-slate-800 transition-colors">Cancel</button>
+                            <button onClick={onClose} className="h-9 px-4 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors">Cancel</button>
                             <button onClick={onConfirm} className="h-9 px-5 text-sm font-bold rounded-xl bg-red-600 text-white hover:bg-red-700 transition-colors">Delete client</button>
                         </>
                     )}
@@ -588,29 +588,29 @@ export function ClientDetail() {
     return (
         <div className="p-6 max-w-8xl">
             {/* Back */}
-            <Link to={back.to} className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition-colors mb-5">
+            <Link to={back.to} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-5">
                 <ChevronLeft size={14} /> Back to {back.label}
             </Link>
 
             {/* Header */}
-            <div className="bg-white border border-[#E2E8F0] rounded-xl p-5 mb-5">
+            <div className="bg-card border border-[var(--border)] rounded-xl p-5 mb-5">
                 <div className="flex items-start gap-4 flex-wrap">
-                    <div className="w-12 h-12 rounded-xl bg-[#1E3A5F]/8 flex items-center justify-center shrink-0">
-                        <span className="text-base font-bold text-[#1E3A5F]">{initials}</span>
+                    <div className="w-12 h-12 rounded-xl bg-[var(--primary)]/8 flex items-center justify-center shrink-0">
+                        <span className="text-base font-bold text-[var(--primary)]">{initials}</span>
                     </div>
                     <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2.5 flex-wrap mb-1">
-                            <h1 className="text-lg font-bold text-slate-900 truncate">{client.name}</h1>
+                            <h1 className="text-lg font-bold text-foreground truncate">{client.name}</h1>
                             <ClientStatusBadge status={client.status} />
                         </div>
-                        <div className="flex items-center gap-4 flex-wrap text-xs text-slate-500">
+                        <div className="flex items-center gap-4 flex-wrap text-xs text-muted-foreground">
                             {client.primaryContact?.name && (
-                                <span className="flex items-center gap-1"><User size={10} className="text-slate-400" />{client.primaryContact.name}</span>
+                                <span className="flex items-center gap-1"><User size={10} className="text-muted-foreground" />{client.primaryContact.name}</span>
                             )}
                             {client.formattedAddress && (
-                                <span className="flex items-center gap-1"><MapPin size={10} className="text-slate-400" />{client.formattedAddress}</span>
+                                <span className="flex items-center gap-1"><MapPin size={10} className="text-muted-foreground" />{client.formattedAddress}</span>
                             )}
-                            <span className="flex items-center gap-1"><Briefcase size={10} className="text-slate-400" />{stats.totalJobs} jobs</span>
+                            <span className="flex items-center gap-1"><Briefcase size={10} className="text-muted-foreground" />{stats.totalJobs} jobs</span>
                         </div>
                     </div>
 
@@ -618,12 +618,12 @@ export function ClientDetail() {
                     <div className="flex items-center gap-2 shrink-0">
                         <button
                             onClick={() => onNavigate('create-job')}
-                            className="h-9 px-4 bg-[#1E3A5F] text-white text-sm font-bold rounded-xl hover:bg-[#162D4A] transition-colors flex items-center gap-1.5"
+                            className="h-9 px-4 bg-[var(--primary)] text-white text-sm font-bold rounded-xl hover:bg-primary/90 transition-colors flex items-center gap-1.5"
                         >
                             <Plus size={13} /> Create job
                         </button>
                         <div className="relative">
-                            <button onClick={() => setMoreOpen(o => !o)} className="h-9 w-9 flex items-center justify-center border border-[#E2E8F0] rounded-xl hover:bg-slate-50 text-slate-500 transition-colors">
+                            <button onClick={() => setMoreOpen(o => !o)} className="h-9 w-9 flex items-center justify-center border border-[var(--border)] rounded-xl hover:bg-muted text-muted-foreground transition-colors">
                                 <MoreHorizontal size={16} />
                             </button>
                             <AnimatePresence>
@@ -635,24 +635,24 @@ export function ClientDetail() {
                                             animate={{ opacity: 1, scale: 1, y: 0 }}
                                             exit={{ opacity: 0, scale: 0.95, y: -4 }}
                                             transition={{ duration: 0.1 }}
-                                            className="absolute right-0 top-10 z-20 w-48 bg-white rounded-xl border border-[#E2E8F0] shadow-lg py-1"
+                                            className="absolute right-0 top-10 z-20 w-48 bg-card rounded-xl border border-[var(--border)] shadow-lg py-1"
                                         >
                                             <button onClick={() => { setMoreOpen(false); setShowEdit(true) }}
-                                                className="w-full flex items-center gap-2.5 px-3.5 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors">
+                                                className="w-full flex items-center gap-2.5 px-3.5 py-2 text-sm text-foreground hover:bg-muted transition-colors">
                                                 <Pencil size={13} /> Edit client
                                             </button>
                                             {client.status === 'active' ? (
                                                 <button onClick={() => { setMoreOpen(false); setShowStatus(true) }}
-                                                    className="w-full flex items-center gap-2.5 px-3.5 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors">
+                                                    className="w-full flex items-center gap-2.5 px-3.5 py-2 text-sm text-foreground hover:bg-muted transition-colors">
                                                     <Archive size={13} /> Mark inactive
                                                 </button>
                                             ) : (
                                                 <button onClick={() => { setMoreOpen(false); setShowStatus(true) }}
-                                                    className="w-full flex items-center gap-2.5 px-3.5 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors">
+                                                    className="w-full flex items-center gap-2.5 px-3.5 py-2 text-sm text-foreground hover:bg-muted transition-colors">
                                                     <RefreshCw size={13} /> Reactivate
                                                 </button>
                                             )}
-                                            <div className="border-t border-slate-100 my-1" />
+                                            <div className="border-t border-border my-1" />
                                             <button onClick={() => { setMoreOpen(false); setShowDelete(true) }}
                                                 className="w-full flex items-center gap-2.5 px-3.5 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
                                                 <Trash2 size={13} /> Delete client

@@ -26,21 +26,21 @@ export default function InvitationSummary({
     ];
 
     return (
-        <div className="bg-slate-50 border border-slate-200 rounded-xl px-5 py-4 mb-6">
+        <div className="bg-muted border border-border rounded-xl px-5 py-4 mb-6">
             {rows.map((row, i) => (
                 <div
                     key={row.label}
                     className={`flex items-center justify-between py-2 ${
                         i < rows.length - 1
-                            ? "border-b border-slate-100"
+                            ? "border-b border-border"
                             : ""
                     }`}
                 >
-                    <span className="text-sm text-slate-500">
+                    <span className="text-sm text-muted-foreground">
                         {row.label}
                     </span>
 
-                    <span className="text-sm font-semibold text-slate-800">
+                    <span className="text-sm font-semibold text-foreground">
                         {/* {row.value} */}
                     </span>
                 </div>

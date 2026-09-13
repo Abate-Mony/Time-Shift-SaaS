@@ -465,8 +465,8 @@ export function CommandPalette({
               overflow-hidden
               rounded-2xl
               border
-              border-slate-200/80
-              bg-white
+              border-border
+              bg-card
               shadow-[0_24px_80px_-20px_rgba(15,23,42,0.35)]
             "
           >
@@ -474,7 +474,7 @@ export function CommandPalette({
             <div
               className="
                 flex items-center gap-3
-                border-b border-slate-100
+                border-b border-border
                 px-5
               "
             >
@@ -483,7 +483,7 @@ export function CommandPalette({
                 strokeWidth={1.8}
                 className="
                   shrink-0
-                  text-slate-400
+                  text-muted-foreground
                 "
               />
 
@@ -501,8 +501,8 @@ export function CommandPalette({
               border-0
               bg-transparent
               text-[15px]
-              text-slate-900
-              placeholder:text-slate-400
+              text-foreground
+              placeholder:text-muted-foreground
               outline-none
               ring-0!
               
@@ -539,7 +539,7 @@ export function CommandPalette({
                   className="
                     shrink-0
                     animate-spin
-                    text-[#1E3A5F]
+                    text-primary
                   "
                 />
               ) : (
@@ -550,12 +550,12 @@ export function CommandPalette({
                     h-6
                     items-center
                     rounded-md
-                    border border-slate-200
-                    bg-slate-50
+                    border border-border
+                    bg-muted
                     px-2
                     text-[10px]
                     font-medium
-                    text-slate-400
+                    text-muted-foreground
                     shadow-[0_1px_1px_rgba(15,23,42,0.04)]
                   "
                 >
@@ -594,12 +594,12 @@ export function CommandPalette({
                       items-center
                       justify-center
                       rounded-xl
-                      bg-slate-100
+                      bg-muted
                     "
                   >
                     <Search
                       size={17}
-                      className="text-slate-400"
+                      className="text-muted-foreground"
                     />
                   </div>
 
@@ -607,7 +607,7 @@ export function CommandPalette({
                     className="
                       text-sm
                       font-semibold
-                      text-slate-700
+                      text-foreground
                     "
                   >
                     No results found
@@ -619,7 +619,7 @@ export function CommandPalette({
                       max-w-xs
                       text-xs
                       leading-relaxed
-                      text-slate-400
+                      text-muted-foreground
                     "
                   >
                     We couldn't find anything matching "
@@ -648,7 +648,7 @@ export function CommandPalette({
                             font-bold
                             uppercase
                             tracking-[0.08em]
-                            text-slate-400
+                            text-muted-foreground
                           "
                         >
                           {group.label}
@@ -689,8 +689,8 @@ export function CommandPalette({
 
                                 ${
                                   isActive
-                                    ? 'bg-[#1E3A5F]/[0.07]'
-                                    : 'hover:bg-slate-50'
+                                    ? 'bg-primary/[0.07]'
+                                    : 'hover:bg-muted'
                                 }
                               `}
                             >
@@ -708,8 +708,8 @@ export function CommandPalette({
 
                                   ${
                                     isActive
-                                      ? 'bg-[#1E3A5F] text-white'
-                                      : 'bg-slate-100 text-slate-500 group-hover:bg-slate-200/70'
+                                      ? 'bg-primary text-primary-foreground'
+                                      : 'bg-muted text-muted-foreground group-hover:bg-muted/70 dark:group-hover:bg-slate-700/70'
                                   }
                                 `}
                               >
@@ -731,8 +731,8 @@ export function CommandPalette({
 
                                     ${
                                       isActive
-                                        ? 'text-[#1E3A5F]'
-                                        : 'text-slate-800'
+                                        ? 'text-primary'
+                                        : 'text-foreground'
                                     }
                                   `}
                                 >
@@ -745,7 +745,7 @@ export function CommandPalette({
                                       mt-0.5
                                       truncate
                                       text-xs
-                                      text-slate-400
+                                      text-muted-foreground
                                     "
                                   >
                                     {item.subtitle}
@@ -762,7 +762,7 @@ export function CommandPalette({
                                     gap-1.5
                                     text-[10px]
                                     font-medium
-                                    text-slate-400
+                                    text-muted-foreground
                                     sm:flex
                                   "
                                 >
@@ -777,8 +777,8 @@ export function CommandPalette({
                                       justify-center
                                       rounded
                                       border
-                                      border-slate-200
-                                      bg-white
+                                      border-border
+                                      bg-card
                                       px-1
                                     "
                                   >
@@ -803,8 +803,8 @@ export function CommandPalette({
                 items-center
                 justify-between
                 border-t
-                border-slate-100
-                bg-slate-50/60
+                border-border
+                bg-muted/60
                 px-5
                 py-2.5
                 sm:flex
@@ -813,7 +813,7 @@ export function CommandPalette({
               <p
                 className="
                   text-[11px]
-                  text-slate-400
+                  text-muted-foreground
                 "
               >
                 Search jobs, workers, clients and invoices
@@ -832,7 +832,7 @@ export function CommandPalette({
                     items-center
                     gap-1.5
                     text-[10px]
-                    text-slate-400
+                    text-muted-foreground
                   "
                 >
                   <div className="flex gap-1">
@@ -849,7 +849,7 @@ export function CommandPalette({
                     items-center
                     gap-1.5
                     text-[10px]
-                    text-slate-400
+                    text-muted-foreground
                   "
                 >
                   <Key>
@@ -865,7 +865,7 @@ export function CommandPalette({
                     items-center
                     gap-1.5
                     text-[10px]
-                    text-slate-400
+                    text-muted-foreground
                   "
                 >
                   <Key>Esc</Key>
@@ -896,12 +896,12 @@ function Key({
         justify-center
         rounded
         border
-        border-slate-200
-        bg-white
+        border-border
+        bg-card
         px-1
         text-[9px]
         font-medium
-        text-slate-400
+        text-muted-foreground
         shadow-sm
       "
     >

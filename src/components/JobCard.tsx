@@ -31,7 +31,7 @@ export default function JobCard({
         accepted: "bg-green-500",
     }
 
-    const accent = statusColor[job.status || "completed"] ?? "bg-slate-400"
+    const accent = statusColor[job.status || "completed"] ?? "bg-muted-foreground"
 
     const navigate = useNavigate()
 
@@ -155,7 +155,7 @@ export default function JobCard({
         <>
             <div
                 onClick={() => navigate(`/worker/jobs/${job._id}`)}
-                className="bg-white rounded-2xl border border-[#E2E8F0] overflow-hidden shadow-sm hover:shadow-md hover:border-slate-300 transition-all cursor-pointer"
+                className="bg-card rounded-2xl border border-border overflow-hidden shadow-sm dark:shadow-none hover:shadow-md dark:hover:shadow-none hover:border-slate-300 dark:hover:border-slate-600 transition-all cursor-pointer"
             >
                 {/* Accent stripe */}
                 <div className={`h-1 ${accent}`} />
@@ -163,12 +163,12 @@ export default function JobCard({
                 <div className="p-4">
                     <div className="flex items-start justify-between gap-2 mb-3">
                         <div className="flex-1 min-w-0">
-                            <p className="text-sm font-semibold text-slate-900 leading-snug">
+                            <p className="text-sm font-semibold text-foreground leading-snug">
                                 {job.title}
                             </p>
 
                             {job.client?.name && (
-                                <p className="text-xs text-slate-400 mt-0.5 font-medium">
+                                <p className="text-xs text-muted-foreground mt-0.5 font-medium">
                                     {job.client.name}
                                 </p>
                             )}
@@ -178,44 +178,44 @@ export default function JobCard({
                     </div>
 
                     <div className="grid grid-cols-2 gap-y-2 gap-x-3">
-                        <div className="flex items-center gap-1.5 text-xs text-slate-500">
-                            <div className="w-5 h-5 rounded-md bg-slate-50 flex items-center justify-center shrink-0">
+                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                            <div className="w-5 h-5 rounded-md bg-muted flex items-center justify-center shrink-0">
                                 <CalendarDays
                                     size={11}
-                                    className="text-slate-400"
+                                    className="text-muted-foreground"
                                 />
                             </div>
 
                             {formatDate(job.date, "ddd, D MMM")}
                         </div>
 
-                        <div className="flex items-center gap-1.5 text-xs text-slate-500">
-                            <div className="w-5 h-5 rounded-md bg-slate-50 flex items-center justify-center shrink-0">
+                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                            <div className="w-5 h-5 rounded-md bg-muted flex items-center justify-center shrink-0">
                                 <Clock
                                     size={11}
-                                    className="text-slate-400"
+                                    className="text-muted-foreground"
                                 />
                             </div>
 
                             {job.startTime} – {job.endTime}
                         </div>
 
-                        <div className="flex items-center gap-1.5 text-xs text-slate-500 col-span-2">
-                            <div className="w-5 h-5 rounded-md bg-slate-50 flex items-center justify-center shrink-0">
+                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground col-span-2">
+                            <div className="w-5 h-5 rounded-md bg-muted flex items-center justify-center shrink-0">
                                 <Timer
                                     size={11}
-                                    className="text-slate-400"
+                                    className="text-muted-foreground"
                                 />
                             </div>
 
                             {formatDuration(job.minutes)} shift
                         </div>
 
-                        <div className="flex items-center gap-1.5 text-xs text-slate-500 col-span-2">
-                            <div className="w-5 h-5 rounded-md bg-slate-50 flex items-center justify-center shrink-0">
+                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground col-span-2">
+                            <div className="w-5 h-5 rounded-md bg-muted flex items-center justify-center shrink-0">
                                 <MapPin
                                     size={11}
-                                    className="text-slate-400"
+                                    className="text-muted-foreground"
                                 />
                             </div>
 
@@ -226,13 +226,13 @@ export default function JobCard({
                     </div>
 
                     {job.description && (
-                        <div className="mt-3 flex items-start gap-2 bg-amber-50 border border-amber-100 rounded-xl px-3 py-2">
+                        <div className="mt-3 flex items-start gap-2 bg-amber-50 border border-amber-100 dark:bg-amber-500/10 dark:border-amber-500/25 rounded-xl px-3 py-2">
                             <AlertCircle
                                 size={12}
-                                className="text-amber-500 shrink-0 mt-0.5"
+                                className="text-amber-500 dark:text-amber-400 shrink-0 mt-0.5"
                             />
 
-                            <p className="text-xs text-amber-700 leading-relaxed">
+                            <p className="text-xs text-amber-700 dark:text-amber-300 leading-relaxed">
                                 {job.description}
                             </p>
                         </div>
@@ -240,21 +240,21 @@ export default function JobCard({
 
                     {actionError && (
                         <div
-                            className="mt-3 rounded-xl bg-red-50 border border-red-100 overflow-hidden"
+                            className="mt-3 rounded-xl bg-red-50 border border-red-100 dark:bg-red-500/10 dark:border-red-500/25 overflow-hidden"
                             onClick={(e) => e.stopPropagation()}
                         >
                             <div className="flex items-start gap-2 px-3 py-2">
                                 <AlertCircle
                                     size={12}
-                                    className="text-red-500 shrink-0 mt-0.5"
+                                    className="text-red-500 dark:text-red-400 shrink-0 mt-0.5"
                                 />
 
-                                <p className="text-xs text-red-600 leading-relaxed">
+                                <p className="text-xs text-red-600 dark:text-red-300 leading-relaxed">
                                     {actionError}
                                 </p>
                             </div>
 
-                            <div className="h-0.5 bg-red-100">
+                            <div className="h-0.5 bg-red-100 dark:bg-red-500/20">
                                 <div
                                     key={errorNonce}
                                     className="h-full bg-red-400 animate-shrink-5s"
@@ -273,7 +273,7 @@ export default function JobCard({
                                 type="button"
                                 onClick={openDeclineModal}
                                 disabled={loadingAction !== null}
-                                className="h-11 px-5 rounded-xl bg-white border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-slate-50 hover:border-slate-300 hover:text-slate-800 transition-colors flex items-center justify-center gap-1.5 disabled:opacity-60 disabled:cursor-not-allowed"
+                                className="h-11 px-5 rounded-xl bg-card border border-border text-muted-foreground text-sm font-semibold hover:bg-muted hover:border-slate-300 dark:hover:border-slate-600 hover:text-foreground transition-colors flex items-center justify-center gap-1.5 disabled:opacity-60 disabled:cursor-not-allowed"
                             >
                                 <X size={14} />
                                 Decline
@@ -309,7 +309,7 @@ export default function JobCard({
                                 e.preventDefault()
                                 navigate("/worker/clock")
                             }}
-                            className="mt-4 w-full h-11 rounded-xl bg-[#1E3A5F] text-center text-white text-sm font-bold hover:bg-[#162D4A] active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-sm shadow-[#1E3A5F]/25"
+                            className="mt-4 w-full h-11 rounded-xl bg-primary text-center text-primary-foreground text-sm font-bold hover:bg-primary/90 active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-sm shadow-primary/25"
                         >
                             <Dot
                                 className="text-green-400 animate-ping"
@@ -329,7 +329,7 @@ export default function JobCard({
                                     e.preventDefault()
                                     startWorking()
                                 }}
-                                className="mt-4 w-full h-11 rounded-xl bg-[#1b7b3d] text-white text-sm font-bold hover:bg-[#13a166] active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-sm shadow-[#1E3A5F]/25 disabled:opacity-60 disabled:cursor-not-allowed"
+                                className="mt-4 w-full h-11 rounded-xl bg-emerald-700 dark:bg-emerald-600 text-white text-sm font-bold hover:bg-emerald-600 dark:hover:bg-emerald-500 active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-sm shadow-emerald-700/25 disabled:opacity-60 disabled:cursor-not-allowed"
                             >
                                 {loadingAction === "start" ? (
                                     <Loader2
@@ -347,11 +347,11 @@ export default function JobCard({
                         ) : (
                             <div
                                 onClick={(e) => e.stopPropagation()}
-                                className="mt-4 w-full h-11 rounded-xl bg-slate-100 text-slate-500 text-sm font-semibold flex items-center justify-center gap-2 cursor-not-allowed"
+                                className="mt-4 w-full h-11 rounded-xl bg-muted text-muted-foreground text-sm font-semibold flex items-center justify-center gap-2 cursor-not-allowed"
                             >
                                 <Timer
                                     size={14}
-                                    className="text-slate-400"
+                                    className="text-muted-foreground"
                                 />
 
                                 {hasExpired
@@ -378,7 +378,7 @@ export default function JobCard({
                         role="dialog"
                         aria-modal="true"
                         aria-labelledby={`decline-job-${job._id}`}
-                        className="w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-2xl border border-slate-200 shadow-2xl overflow-hidden"
+                        className="w-full sm:max-w-md bg-card rounded-t-3xl sm:rounded-2xl border border-border shadow-2xl overflow-hidden"
                         onClick={(e) => e.stopPropagation()}
                     >
                         <div className="px-5 pt-5 pb-4">
@@ -386,12 +386,12 @@ export default function JobCard({
                                 <div>
                                     <p
                                         id={`decline-job-${job._id}`}
-                                        className="text-base font-semibold text-slate-900"
+                                        className="text-base font-semibold text-foreground"
                                     >
                                         Decline this shift?
                                     </p>
 
-                                    <p className="mt-1 text-sm text-slate-500">
+                                    <p className="mt-1 text-sm text-muted-foreground">
                                         Your manager will see that you are not
                                         available for this assignment.
                                     </p>
@@ -402,18 +402,18 @@ export default function JobCard({
                                     onClick={closeDeclineModal}
                                     disabled={loadingAction === "reject"}
                                     aria-label="Close decline confirmation"
-                                    className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors disabled:opacity-50"
+                                    className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-50"
                                 >
                                     <X size={16} />
                                 </button>
                             </div>
 
-                            <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-3">
-                                <p className="text-sm font-semibold text-slate-800 truncate">
+                            <div className="mt-4 rounded-xl border border-border bg-muted px-3.5 py-3">
+                                <p className="text-sm font-semibold text-foreground truncate">
                                     {job.title}
                                 </p>
 
-                                <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
+                                <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
                                     <span>
                                         {formatDate(job.date, "ddd, D MMM")}
                                     </span>
@@ -424,10 +424,10 @@ export default function JobCard({
                                 </div>
 
                                 {job.location && (
-                                    <div className="mt-2 flex items-center gap-1.5 text-xs text-slate-500">
+                                    <div className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
                                         <MapPin
                                             size={12}
-                                            className="shrink-0 text-slate-400"
+                                            className="shrink-0 text-muted-foreground"
                                         />
                                         <span className="truncate">
                                             {job.location}
@@ -439,10 +439,10 @@ export default function JobCard({
                             <div className="mt-4">
                                 <label
                                     htmlFor={`decline-reason-${job._id}`}
-                                    className="text-sm font-medium text-slate-700"
+                                    className="text-sm font-medium text-foreground"
                                 >
                                     Reason{" "}
-                                    <span className="font-normal text-slate-400">
+                                    <span className="font-normal text-muted-foreground">
                                         (optional)
                                     </span>
                                 </label>
@@ -457,23 +457,23 @@ export default function JobCard({
                                     }
                                     placeholder="Tell your manager why you can't attend this shift..."
                                     rows={4}
-                                    className="mt-2 w-full resize-none rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-sm text-slate-800 placeholder:text-slate-400 outline-none transition focus:border-[#1E3A5F]/50 focus:ring-4 focus:ring-[#1E3A5F]/5"
+                                    className="mt-2 w-full resize-none rounded-xl border border-border bg-background px-3.5 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none transition focus:border-primary/50 focus:ring-4 focus:ring-primary/5"
                                 />
 
                                 <div className="mt-1.5 flex justify-end">
-                                    <span className="text-[11px] text-slate-400">
+                                    <span className="text-[11px] text-muted-foreground">
                                         {declineReason.length}/300
                                     </span>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-3 border-t border-slate-100 bg-slate-50/70 px-5 py-4">
+                        <div className="flex items-center gap-3 border-t border-border bg-muted/70 px-5 py-4">
                             <button
                                 type="button"
                                 onClick={closeDeclineModal}
                                 disabled={loadingAction === "reject"}
-                                className="flex-1 h-11 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                                className="flex-1 h-11 rounded-xl border border-border bg-card text-sm font-semibold text-foreground hover:bg-muted transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                             >
                                 Keep shift
                             </button>

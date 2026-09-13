@@ -25,13 +25,13 @@ export default function OpenShiftsPage() {
     return (
         <div className="flex flex-col gap-4 pb-4">
             <div>
-                <h2 className="text-lg font-bold text-slate-900">Open Shifts</h2>
-                <p className="text-xs text-slate-400 mt-0.5">Unassigned shifts you can pick up</p>
+                <h2 className="text-lg font-bold text-foreground">Open Shifts</h2>
+                <p className="text-xs text-muted-foreground mt-0.5">Unassigned shifts you can pick up</p>
             </div>
 
             {isPending ? (
                 <div className="flex items-center justify-center py-16">
-                    <Loader2 size={20} className="animate-spin text-slate-400" />
+                    <Loader2 size={20} className="animate-spin text-muted-foreground" />
                 </div>
             ) : isError ? (
                 <EmptyState

@@ -45,13 +45,13 @@ export function ReportsOverviewPage() {
   const monthLabel = dayjs(dateRange.start).format('MMMM YYYY')
   const { data, isPending, isError } = useQuery(reportsOverviewQuery(dateRange))
 
-  if (isPending) return <p className="text-sm text-slate-400">Loading overview…</p>
+  if (isPending) return <p className="text-sm text-muted-foreground">Loading overview…</p>
   if (isError) return <p className="text-sm text-red-500">Failed to load the overview report.</p>
 
   const pieData = data.jobStatusBreakdown.map(s => ({
     name: s.label,
     value: s.count,
-    color: STATUS_COLORS[s.status] ?? '#94A3B8',
+    color: STATUS_COLORS[s.status] ?? 'var(--muted-foreground)',
   }))
 
   return (
@@ -77,14 +77,14 @@ export function ReportsOverviewPage() {
       <div className="grid grid-cols-[repeat(auto-fit,minmax(min(20rem,calc(100%-0.3rem)),1fr))] gap-5">
         <div className="col-span-2">
           <Card className="p-5">
-            <h3 className="text-sm font-semibold text-slate-900 mb-4">Monthly Hours Trend</h3>
+            <h3 className="text-sm font-semibold text-foreground mb-4">Monthly Hours Trend</h3>
             <ResponsiveContainer width="100%" height={200}>
               <LineChart data={data.monthlyTrend}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
-                <XAxis dataKey="label" tick={{ fontSize: 12, fill: '#94A3B8' }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 11, fill: '#94A3B8' }} axisLine={false} tickLine={false} width={35} />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+                <XAxis dataKey="label" tick={{ fontSize: 12, fill: 'var(--muted-foreground)' }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: 'var(--muted-foreground)' }} axisLine={false} tickLine={false} width={35} />
                 <Tooltip content={<CustomTooltip />} />
-                <Line type="monotone" dataKey="hours" stroke="#1E3A5F" strokeWidth={2.5} dot={{ fill: '#1E3A5F', r: 4 }} name="Hours" />
+                <Line type="monotone" dataKey="hours" stroke="var(--primary)" strokeWidth={2.5} dot={{ fill: 'var(--primary)', r: 4 }} name="Hours" />
                 <Line type="monotone" dataKey="jobs" stroke="#3B82F6" strokeWidth={2} strokeDasharray="5 3" dot={{ fill: '#3B82F6', r: 3 }} name="Jobs" />
               </LineChart>
             </ResponsiveContainer>
@@ -92,7 +92,7 @@ export function ReportsOverviewPage() {
         </div>
 
         <Card className="p-5">
-          <h3 className="text-sm font-semibold text-slate-900 mb-4">Job Status Split</h3>
+          <h3 className="text-sm font-semibold text-foreground mb-4">Job Status Split</h3>
           <ResponsiveContainer width="100%" height={160}>
             <PieChart>
               <Pie data={pieData} cx="50%" cy="50%" innerRadius={45} outerRadius={75} paddingAngle={3} dataKey="value">
@@ -108,9 +108,9 @@ export function ReportsOverviewPage() {
               <div key={d.name} className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="w-2.5 h-2.5 rounded-full" style={{ background: d.color }} />
-                  <span className="text-xs text-slate-600">{d.name}</span>
+                  <span className="text-xs text-muted-foreground">{d.name}</span>
                 </div>
-                <span className="text-xs font-semibold text-slate-800">{d.value}</span>
+                <span className="text-xs font-semibold text-foreground">{d.value}</span>
               </div>
             ))}
           </div>
@@ -119,14 +119,14 @@ export function ReportsOverviewPage() {
 
       {/* Weekly breakdown */}
       <Card className="p-5">
-        <h3 className="text-sm font-semibold text-slate-900 mb-4">Daily Hours This Week</h3>
+        <h3 className="text-sm font-semibold text-foreground mb-4">Daily Hours This Week</h3>
         <ResponsiveContainer width="100%" height={160}>
           <BarChart data={data.dailyHours} barCategoryGap="35%">
-            <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
-            <XAxis dataKey="day" tick={{ fontSize: 12, fill: '#94A3B8' }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fontSize: 11, fill: '#94A3B8' }} axisLine={false} tickLine={false} width={28} />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+            <XAxis dataKey="day" tick={{ fontSize: 12, fill: 'var(--muted-foreground)' }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fontSize: 11, fill: 'var(--muted-foreground)' }} axisLine={false} tickLine={false} width={28} />
             <Tooltip content={<CustomTooltip />} />
-            <Bar dataKey="hours" fill="#1E3A5F" radius={[4, 4, 0, 0]} name="Hours" />
+            <Bar dataKey="hours" fill="var(--primary)" radius={[4, 4, 0, 0]} name="Hours" />
           </BarChart>
         </ResponsiveContainer>
       </Card>

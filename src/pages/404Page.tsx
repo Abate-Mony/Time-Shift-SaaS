@@ -16,14 +16,14 @@ const NotFound = () => {
         }
     }
     return (
-        <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC] px-4">
+        <div className="min-h-screen flex items-center justify-center bg-background px-4">
             <motion.div
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4 }}
                 className="w-full max-w-md"
             >
-                <div className="bg-white border border-[#E2E8F0] rounded-3xl shadow-xl shadow-slate-200/60 p-8 flex flex-col items-center text-center overflow-hidden">
+                <div className="bg-card border border-[var(--border)] rounded-3xl shadow-xl shadow-slate-200/60 p-8 flex flex-col items-center text-center overflow-hidden">
                     {/* Icon */}
                     <motion.div
                         initial={{ scale: 0.6, opacity: 0, rotate: -8 }}
@@ -50,14 +50,14 @@ const NotFound = () => {
                         transition={{ delay: 0.25, duration: 0.4 }}
                         className="mb-1"
                     >
-                        <span className="text-6xl font-black tracking-tight text-[#1E3A5F]">404</span>
+                        <span className="text-6xl font-black tracking-tight text-[var(--primary)]">404</span>
                     </motion.div>
 
                     <motion.h1
                         initial={{ opacity: 0, y: 8 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.35, duration: 0.4 }}
-                        className="text-xl font-bold text-slate-900 mb-2"
+                        className="text-xl font-bold text-foreground mb-2"
                     >
                         Page not found
                     </motion.h1>
@@ -66,7 +66,7 @@ const NotFound = () => {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ delay: 0.45, duration: 0.4 }}
-                        className="text-sm text-slate-500 leading-relaxed mb-7 max-w-xs"
+                        className="text-sm text-muted-foreground leading-relaxed mb-7 max-w-xs"
                     >
                         The page you're looking for doesn't exist or may have been moved.
                     </motion.p>
@@ -82,7 +82,7 @@ const NotFound = () => {
                             whileHover={{ scale: 1.01 }}
                             whileTap={{ scale: 0.98 }}
                             onClick={handleBack}
-                            className="flex-1 h-11 rounded-xl border border-[#E2E8F0] text-sm font-semibold text-slate-700 flex items-center justify-center gap-2 hover:bg-slate-50 transition-colors"
+                            className="flex-1 h-11 rounded-xl border border-[var(--border)] text-sm font-semibold text-foreground flex items-center justify-center gap-2 hover:bg-muted transition-colors"
                         >
                             <ArrowLeft size={15} />
                             Go back
@@ -92,7 +92,7 @@ const NotFound = () => {
                             <motion.div
                                 whileHover={{ scale: 1.01 }}
                                 whileTap={{ scale: 0.98 }}
-                                className="h-11 rounded-xl bg-[#1E3A5F] text-white text-sm font-bold flex items-center justify-center gap-2 shadow-lg shadow-[#1E3A5F]/20 hover:bg-[#162D4A] transition-colors"
+                                className="h-11 rounded-xl bg-[var(--primary)] text-white text-sm font-bold flex items-center justify-center gap-2 shadow-lg shadow-[var(--primary)]/20 hover:bg-primary/90 transition-colors"
                             >
                                 <Home size={15} />
                                 {user ? "Dashboard" : "Login"}

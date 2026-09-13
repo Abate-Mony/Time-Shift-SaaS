@@ -16,8 +16,8 @@ export function PlanUpgradeNotice({ feature }: { feature: string }) {
                 <Lock size={16} className="text-amber-600" />
             </div>
             <div>
-                <p className="text-sm font-semibold text-slate-800">{feature} isn't on your plan</p>
-                <p className="text-sm text-slate-500 mt-1 max-w-sm">
+                <p className="text-sm font-semibold text-foreground">{feature} isn't on your plan</p>
+                <p className="text-sm text-muted-foreground mt-1 max-w-sm">
                     Upgrade to a plan that includes {feature.toLowerCase()} to unlock this.
                 </p>
             </div>

@@ -92,11 +92,11 @@ export default function InvitationLayout() {
     };
 
     return (
-        <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center px-4 py-10">
+        <div className="min-h-screen bg-background flex items-center justify-center px-4 py-10">
             <div className="w-full max-w-sm">
                 {/* Logo */}
                 <div className="flex items-center gap-2.5 justify-center mb-8">
-                    <div className="w-8 h-8 rounded-xl bg-[#1E3A5F] flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-xl bg-[var(--primary)] flex items-center justify-center">
                         <svg
                             viewBox="0 0 16 16"
                             width="14"
@@ -144,7 +144,7 @@ export default function InvitationLayout() {
                         </svg>
                     </div>
 
-                    <span className="text-base font-bold text-slate-800">
+                    <span className="text-base font-bold text-foreground">
                         work
                         <span className="text-slate-300">
                             .wrk
@@ -158,20 +158,20 @@ export default function InvitationLayout() {
                     invite.status ===
                     "pending" && (
                         <div className="text-center mb-6">
-                            <div className="w-12 h-12 rounded-full bg-[#1E3A5F]/8 flex items-center justify-center mx-auto mb-4">
+                            <div className="w-12 h-12 rounded-full bg-[var(--primary)]/8 flex items-center justify-center mx-auto mb-4">
                                 <Mail
                                     size={20}
-                                    className="text-[#1E3A5F]"
+                                    className="text-[var(--primary)]"
                                 />
                             </div>
 
-                            <p className="text-xs font-bold uppercase tracking-widest text-[#1E3A5F] mb-1">
+                            <p className="text-xs font-bold uppercase tracking-widest text-[var(--primary)] mb-1">
                                 You're invited
                             </p>
 
-                            <h1 className="text-xl font-bold text-slate-900">
+                            <h1 className="text-xl font-bold text-foreground">
                                 Join{" "}
-                                <span className="text-[#1E3A5F]">
+                                <span className="text-[var(--primary)]">
                                     {
                                         invite
                                             .company
@@ -180,14 +180,14 @@ export default function InvitationLayout() {
                                 </span>
                             </h1>
 
-                            <p className="text-sm text-slate-500 mt-1.5">
+                            <p className="text-sm text-muted-foreground mt-1.5">
                                 {
                                     invite
                                         .invitedBy
                                         .fullname
                                 }{" "}
                                 invited you as a{" "}
-                                <span className="font-semibold text-slate-700">
+                                <span className="font-semibold text-foreground">
                                     {invite.role ===
                                         "worker"
                                         ? "Worker"
@@ -198,15 +198,15 @@ export default function InvitationLayout() {
                         </div>
                     )}
 
-                <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+                <div className="bg-card border border-border rounded-2xl shadow-sm p-6">
                     <Outlet
                         context={context}
                     />
                 </div>
 
-                <p className="text-xs text-slate-400 text-center mt-6">
+                <p className="text-xs text-muted-foreground text-center mt-6">
                     Powered by{" "}
-                    <span className="font-semibold text-slate-600">
+                    <span className="font-semibold text-muted-foreground">
                         INPRN
                     </span>
                 </p>
