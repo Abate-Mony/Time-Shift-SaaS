@@ -3,7 +3,7 @@ import { Bell, Briefcase, Building2, ChevronDown, PanelLeft, Plus, Receipt, Sear
 import { Button } from './ui/button'
 import { Link } from 'react-router'
 import { useQuery } from '@tanstack/react-query'
-import { Avatar, AvatarFallback } from './ui/avatar'
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar'
 import type { User } from '@/utils/types'
 import {
   DropdownMenu,
@@ -145,6 +145,7 @@ export function TopBar({ user, onToggleSidebar, onNavigate, onNewJob }: TopBarPr
           <DropdownMenuTrigger asChild>
             <div className="flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2 hover:bg-slate-50 transition-colors">
               <Avatar className="h-9 w-9">
+                {user?.profilePhoto?.url && <AvatarImage src={user.profilePhoto.url} alt={user.fullname} />}
                 <AvatarFallback className="bg-[#1E3A5F] text-white text-xs font-semibold">
                   {
                     getInitials(user?.fullname)

@@ -21,6 +21,7 @@ export const RD_PAGES: Record<string, BackLinkTarget> = {
   invoices: { to: "/invoices", label: "Invoices" },
   reports: { to: "/reports", label: "Reports" },
   "recurring-jobs": { to: "/jobs/recurring", label: "Recurring Jobs" },
+  help: { to: "/help", label: "Help Centre" },
 }
 
 /**

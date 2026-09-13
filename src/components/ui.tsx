@@ -1,3 +1,4 @@
+import { cn } from '@/lib/utils';
 import { type ReactNode, type ButtonHTMLAttributes, type InputHTMLAttributes } from 'react'
 
 // ── Badge ──────────────────────────────────────────────────────────────────
@@ -61,9 +62,12 @@ const avatarColors = [
   'bg-cyan-100 text-cyan-700',
 ]
 
-export function Avatar({ initials, size = 'md', index = 0 }: { initials: string; size?: 'sm' | 'md' | 'lg' | 'xl'; index?: number }) {
+export function Avatar({ initials, size = 'md', index = 0, src }: { initials: string; size?: 'sm' | 'md' | 'lg' | 'xl'; index?: number; src?: string | null }) {
   const color = avatarColors[index % avatarColors.length]
   const sz = { sm: 'w-7 h-7 text-xs', md: 'w-9 h-9 text-sm', lg: 'w-11 h-11 text-base', xl: 'w-14 h-14 text-lg' }[size]
+  if (src) {
+    return <img src={src} alt={initials} className={`${sz} rounded-full object-cover shrink-0 select-none`} />
+  }
   return (
     <div className={`${sz} ${color} rounded-full flex items-center justify-center font-semibold shrink-0 select-none`}>
       {initials}
@@ -165,9 +169,13 @@ export function Card({ children, className = '', onClick }: { children: ReactNod
 }
 
 // ── Stat Card ──────────────────────────────────────────────────────────────
-export function StatCard({ label, value, sub, icon, trend, trendUp }: { label: string; value: string | number; sub?: string; icon?: ReactNode; trend?: string; trendUp?: boolean }) {
+export function StatCard({ label, value, sub, icon, trend, trendUp,className }: { label: string; value: string | number; sub?: string; icon?: ReactNode; trend?: string; trendUp?: boolean,className?:string }) {
   return (
-    <Card className="p-5">
+    <Card className={
+      cn("p-5",
+        className
+      )
+    }>
       <div className="flex items-start justify-between mb-3">
         <p className="text-sm font-medium text-slate-500">{label}</p>
         {icon && <div className="w-9 h-9 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-500">{icon}</div>}

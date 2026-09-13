@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils"
 import dayjs from "dayjs"
 import SearchLocation from "@/components/locationSearchComponent"
 import { ApplyRatePrompt, ClientCombobox } from "@/components/client/ClientCombobox"
+import { SiteCombobox } from "@/components/site/SiteCombobox"
 import { useCreateJob } from "../CreateJobContext"
 import { formatHours } from "../wizardConfig"
 import { FieldError } from "../FieldError"
@@ -25,6 +26,10 @@ export function JobDetailsStep() {
     previousChargeRate,
     applyClientRate,
     keepCurrentRate,
+    locationMode,
+    setLocationMode,
+    selectedSite,
+    handleSiteSelect,
     shiftHours,
   } = useCreateJob()
 
@@ -119,22 +124,58 @@ export function JobDetailsStep() {
 
       {/* Location */}
       <div className="bg-white rounded-xl border border-[#E2E8F0] p-6 min-w-0">
-        <h2 className="text-sm font-semibold text-slate-800 mb-4">Location</h2>
+        <h2 className="text-sm font-semibold text-slate-800 mb-1">Location</h2>
+        <p className="text-xs text-slate-400 mb-4">
+          Use a site for places your team visits repeatedly. Use a one-off location for ad-hoc work.
+        </p>
 
-        <SearchLocation
-          onSelect={location => {
-            setValue("location", location.siteName, { shouldValidate: true })
-            setValue(
-              "address",
-              [location.address, location.city, location.postcode].filter(Boolean).join(", "),
-              { shouldValidate: true }
-            )
-            setValue("coordinates", { lat: location.lat, lng: location.lng }, { shouldValidate: true })
-          }}
-        />
+        {selectedClient && (
+          <div className="flex gap-2 mb-4">
+            <button
+              type="button"
+              onClick={() => setLocationMode("site")}
+              className={cn(
+                "flex-1 h-9 rounded-lg text-xs font-semibold transition-all border",
+                locationMode === "site"
+                  ? "border-[#1E3A5F] bg-[#1E3A5F]/[0.03] text-[#1E3A5F]"
+                  : "border-[#E2E8F0] text-slate-500 hover:border-slate-300"
+              )}
+            >
+              Existing site
+            </button>
+            <button
+              type="button"
+              onClick={() => { setLocationMode("custom"); handleSiteSelect(null) }}
+              className={cn(
+                "flex-1 h-9 rounded-lg text-xs font-semibold transition-all border",
+                locationMode === "custom"
+                  ? "border-[#1E3A5F] bg-[#1E3A5F]/[0.03] text-[#1E3A5F]"
+                  : "border-[#E2E8F0] text-slate-500 hover:border-slate-300"
+              )}
+            >
+              One-off location
+            </button>
+          </div>
+        )}
+
+        {selectedClient && locationMode === "site" ? (
+          <SiteCombobox clientId={selectedClient._id} value={selectedSite} onChange={handleSiteSelect} />
+        ) : (
+          <SearchLocation
+            onSelect={location => {
+              setValue("location", location.siteName, { shouldValidate: true })
+              setValue(
+                "address",
+                [location.address, location.city, location.postcode].filter(Boolean).join(", "),
+                { shouldValidate: true }
+              )
+              setValue("coordinates", { lat: location.lat, lng: location.lng }, { shouldValidate: true })
+            }}
+          />
+        )}
         <FieldError message={errors.location?.message as string} />
 
-        {address && (
+        {locationMode === "custom" && address && (
           <>
             <p className="mt-2 flex items-center gap-1.5 text-xs text-slate-500 min-w-0">
               <MapPin size={12} className="text-slate-400 shrink-0" />
@@ -146,13 +187,6 @@ export function JobDetailsStep() {
             </p>
           </>
         )}
-
-        {/* <div className="mt-3 h-36 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center overflow-hidden">
-          <div className="text-center">
-            <MapPin size={20} className="text-slate-400 mx-auto mb-1" />
-            <p className="text-xs text-slate-400">Map preview will appear here</p>
-          </div>
-        </div> */}
       </div>
 
       {/* Date & time */}

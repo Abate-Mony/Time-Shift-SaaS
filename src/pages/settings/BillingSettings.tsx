@@ -10,6 +10,8 @@ const FEATURE_LABEL = {
     recurringJobs: 'Recurring job templates',
     openShifts: 'Open shifts & approval workflows',
     advancedReports: 'Advanced reports & analytics',
+    aiJobAssistant: 'AI job-creation assistant',
+    aiDashboardInsights: 'AI dashboard insights',
 } as const
 
 export default function BillingSettings() {

@@ -117,7 +117,7 @@ const SelectedWorkerCard = ({ selectedWorker, setSelected, users, scope, workerJ
       className="w-full sm:w-80 shrink-0  ">
       <Card className="p-5 relative md:sticky sm:top-19">
         <div className="flex items-start justify-between mb-4">
-          <Avatar initials={selectedWorker?.fullname?.slice(0, 2)} size="xl" index={users.findIndex(w => w._id === selectedWorker._id)} />
+          <Avatar initials={selectedWorker?.fullname?.slice(0, 2)} size="xl" index={users.findIndex(w => w._id === selectedWorker._id)} src={selectedWorker?.profilePhoto?.url} />
           <button onClick={() => setSelected(null)} className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-100 transition-colors">
             <X size={14} />
           </button>
@@ -288,7 +288,7 @@ export function Workers() {
                   <div className={cn("flex items-center gap-4",
 
                   )}>
-                    <Avatar initials={worker?.fullname.slice(0, 2)} size="lg" index={i} />
+                    <Avatar initials={worker?.fullname.slice(0, 2)} size="lg" index={i} src={worker?.profilePhoto?.url} />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-0.5">
                         <p className="text-sm font-semibold text-slate-900">{worker?.fullname}</p>

@@ -16,6 +16,7 @@ import { queryClient } from '@/lib/queryClient'
 import toast from 'react-hot-toast'
 import { StatusBadge as JobStatusBadge } from '@/components/ui'
 import { shiftHoursFrom, formatHours } from '@/components/create-job/wizardConfig'
+import type { FileRef } from '@/utils/types'
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
@@ -542,7 +543,7 @@ function SchedulePatternCard({ schedule }: { schedule: RecurringDetail }) {
 
 // ─── Default workers card ─────────────────────────────────────────────────────
 
-function DefaultWorkersCard({ workers }: { workers: { _id: string; fullname: string; email: string }[] }) {
+function DefaultWorkersCard({ workers }: { workers: { _id: string; fullname: string; email: string; profilePhoto?: FileRef | null }[] }) {
     const COLORS = ['#1E3A5F', '#0D9488', '#7C3AED', '#B45309']
     return (
         <div className="bg-white rounded-xl border border-[#E2E8F0] p-6">
@@ -554,12 +555,16 @@ function DefaultWorkersCard({ workers }: { workers: { _id: string; fullname: str
                 <div className="flex flex-col gap-3">
                     {workers.map((w, i) => (
                         <div key={w._id} className="flex items-center gap-3">
-                            <div
-                                className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold text-white shrink-0"
-                                style={{ background: COLORS[i % COLORS.length] }}
-                            >
-                                {w.fullname.split(' ').map(n => n[0]).join('').slice(0, 2)}
-                            </div>
+                            {w.profilePhoto?.url ? (
+                                <img src={w.profilePhoto.url} alt={w.fullname} className="w-8 h-8 rounded-full object-cover shrink-0" />
+                            ) : (
+                                <div
+                                    className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold text-white shrink-0"
+                                    style={{ background: COLORS[i % COLORS.length] }}
+                                >
+                                    {w.fullname.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                                </div>
+                            )}
                             <div className="min-w-0">
                                 <p className="text-sm font-semibold text-slate-800 truncate">{w.fullname}</p>
                                 <p className="text-xs text-slate-400 truncate">{w.email}</p>

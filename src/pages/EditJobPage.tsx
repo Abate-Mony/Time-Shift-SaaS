@@ -569,7 +569,7 @@ export function EditJob() {
                                         onClick={() => toggleWorker(w.email)}
                                         className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 transition-colors border-b border-[#F1F5F9] last:border-0 ${selected ? 'bg-blue-50/40' : ''}`}
                                     >
-                                        <Avatar initials={w.fullname.slice(0, 2)} size="sm" index={i} />
+                                        <Avatar initials={w.fullname.slice(0, 2)} size="sm" index={i} src={w.profilePhoto?.url} />
                                         <div className="flex-1 text-left">
                                             <p className="text-sm font-medium text-slate-800">{w.fullname}</p>
                                             <p className="text-xs text-slate-400">{w.role}</p>

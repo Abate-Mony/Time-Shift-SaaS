@@ -1,9 +1,13 @@
+import { useRef } from "react"
 import { Avatar, Input } from "@/components/ui"
-import { updateWorkerProfile } from "@/utils/api-request-functions"
+import { deleteProfilePhoto, updateWorkerProfile, uploadProfilePhoto } from "@/utils/api-request-functions"
 import { editProfileSchema } from "@/utils/schemas"
 import type { EditProfileForm, EditProfileFormInput, User } from "@/utils/types"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { ChevronLeft, Loader2 } from "lucide-react"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { isAxiosError } from "axios"
+import { Camera, ChevronLeft, Loader2 } from "lucide-react"
+import toast from "react-hot-toast"
 import { useForm } from "react-hook-form"
 import { useNavigate, useOutletContext } from "react-router"
 
@@ -17,6 +21,29 @@ const FieldError = ({ message }: { message?: string }) => {
 export default function EditProfileScreen() {
     const navigate = useNavigate()
     const user = useOutletContext<{ user: User }>()?.user
+    const queryClient = useQueryClient()
+    const photoInputRef = useRef<HTMLInputElement>(null)
+
+    const uploadPhotoMutation = useMutation({
+        mutationFn: uploadProfilePhoto,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["user"] })
+            toast.success("Profile photo updated")
+        },
+        onError: (error) => {
+            const message = isAxiosError(error) ? error.response?.data?.msg ?? "Couldn't upload — try again." : "Couldn't upload — try again."
+            toast.error(message)
+        },
+    })
+
+    const deletePhotoMutation = useMutation({
+        mutationFn: deleteProfilePhoto,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["user"] })
+            toast.success("Profile photo removed")
+        },
+        onError: () => toast.error("Couldn't remove the photo — try again."),
+    })
 
     const {
         register,
@@ -54,10 +81,45 @@ export default function EditProfileScreen() {
 
             <div className="bg-white rounded-2xl border border-[#E2E8F0] p-5 shadow-sm">
                 <div className="flex items-center gap-3 mb-5">
-                    <Avatar initials={user?.fullname?.slice(0, 3)} size="xl" index={0} />
-                    <div>
+                    <input
+                        ref={photoInputRef}
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        className="sr-only"
+                        onChange={e => {
+                            const file = e.target.files?.[0]
+                            if (file) uploadPhotoMutation.mutate(file)
+                            e.target.value = ""
+                        }}
+                    />
+                    <button
+                        type="button"
+                        onClick={() => photoInputRef.current?.click()}
+                        disabled={uploadPhotoMutation.isPending}
+                        className="relative shrink-0"
+                    >
+                        <Avatar initials={user?.fullname?.slice(0, 3)} size="xl" index={0} src={user?.profilePhoto?.url} />
+                        <span className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full bg-[#1E3A5F] border-2 border-white flex items-center justify-center">
+                            {uploadPhotoMutation.isPending ? (
+                                <Loader2 size={9} className="text-white animate-spin" />
+                            ) : (
+                                <Camera size={9} className="text-white" />
+                            )}
+                        </span>
+                    </button>
+                    <div className="min-w-0">
                         <p className="text-sm font-semibold text-slate-800">{user?.fullname}</p>
                         <p className="text-xs text-slate-400 mt-0.5">{user?.email}</p>
+                        {user?.profilePhoto && (
+                            <button
+                                type="button"
+                                onClick={() => deletePhotoMutation.mutate()}
+                                disabled={deletePhotoMutation.isPending}
+                                className="text-xs font-medium text-rose-500 hover:text-rose-700 mt-1"
+                            >
+                                Remove photo
+                            </button>
+                        )}
                     </div>
                 </div>
 

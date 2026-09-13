@@ -36,7 +36,7 @@ import NewUserInvitePage from "@/pages/acceptInvites/NewUserInvitePage";
 import RecurringAssignmentPage, { loader as recurringAssignmentsLoader } from "@/pages/worker/RecurringAssignmentPage";
 import { createBrowserRouter, Navigate } from "react-router";
 import DashboardLayout from "../layouts/dashboardlayout";
-import { Analytics, analyticsLoader, Calendar, calendarLoader, ClentBillingPage, ClientDetail, clientDetailLoader, ClientDetailsaJobsPage, ClientDetailsContactsPage, ClientDetailsOverviewPage, Clients, clientsLoader, clockLoader, CreateClientPage, CreateInvoicePage, createInvoiceLoader, CreateJob, createjobAction, Dashboard, dashboardLoader, DownloadTimesheetScreen, EditJob, editJobAction, InvoiceDetail, invoiceDetailLoader, InvoiceForm, invoiceFormLoader, Invoices, invoicesLoader, JobDetail, Jobs, jobsLoader, Locations, loginAction, openShiftsLoader, ProfileScreen, RecurringJobDetail, recurringJobDetailLoader, RecurringJobs, recurringJobsLoader, ReportLayout, ReportsOverviewPage, ReportsPayrollPage, ReportsTimesheetsPage, ReportsPerformancePage, ReportsProfitabilityPage, Settings, settingsLoader, signupAction, singleJobLoader, singleWorkerJobLoader, SuspendedAccountPage, Team, teamLoader, workerLoader, WorkerProfile, workerProfileLoader, workerStatsLoader, Workers, workersLoader, CheckOutSettings, ChangePlanSettings, Notifications, TeamsCreatepage, teamsCreateLoader } from "../pages";
+import { Analytics, analyticsLoader, Calendar, calendarLoader, ClentBillingPage, ClientDetail, clientDetailLoader, ClientDetailsaJobsPage, ClientDetailsContactsPage, ClientDetailsOverviewPage, ClientDetailsSitesPage, Clients, clientsLoader, clockLoader, CreateClientPage, CreateInvoicePage, createInvoiceLoader, CreateJob, createjobAction, CreateSitePage, Dashboard, dashboardLoader, DownloadTimesheetScreen, EditJob, editJobAction, HelpArticlePage, HelpArticleScreen, HelpCentre, HelpCentreScreen, InvoiceDetail, invoiceDetailLoader, InvoiceForm, invoiceFormLoader, Invoices, invoicesLoader, JobDetail, Jobs, jobsLoader, loginAction, openShiftsLoader, ProfileScreen, RecurringJobDetail, recurringJobDetailLoader, RecurringJobs, recurringJobsLoader, ReportLayout, ReportsOverviewPage, ReportsPayrollPage, ReportsTimesheetsPage, ReportsPerformancePage, ReportsProfitabilityPage, Settings, settingsLoader, signupAction, singleJobLoader, singleWorkerJobLoader, SiteDetailPage, siteDetailLoader, Sites, sitesLoader, SuspendedAccountPage, Team, teamLoader, workerLoader, WorkerProfile, workerProfileLoader, workerStatsLoader, Workers, workersLoader, CheckOutSettings, ChangePlanSettings, Notifications, TeamsCreatepage, teamsCreateLoader, WorkerDocumentsScreen } from "../pages";
 
 export const router = createBrowserRouter([
     {
@@ -99,6 +99,10 @@ export const router = createBrowserRouter([
                             {
                                 path: "jobs",
                                 element: <ClientDetailsaJobsPage />
+                            },
+                            {
+                                path: "sites",
+                                element: <ClientDetailsSitesPage />
                             },
                             {
                                 path: "billing",
@@ -197,8 +201,18 @@ export const router = createBrowserRouter([
                         element: <Calendar />,
                     },
                     {
-                        path: "locations",
-                        element: <Locations />,
+                        path: "sites",
+                        element: <Sites />,
+                        loader: sitesLoader(queryClient),
+                    },
+                    {
+                        path: "sites/create",
+                        element: <CreateSitePage />,
+                    },
+                    {
+                        path: "sites/:id",
+                        element: <SiteDetailPage />,
+                        loader: siteDetailLoader(queryClient),
                     },
                     {
                         path: "reports",
@@ -256,6 +270,14 @@ export const router = createBrowserRouter([
                             { path: "billing/plans", element: <ChangePlanSettings /> },
                             { path: "billing/checkout", element: <CheckOutSettings /> }
                         ],
+                    },
+                    {
+                        path: "help",
+                        element: <HelpCentre />
+                    },
+                    {
+                        path: "help/:articleSlug",
+                        element: <HelpArticlePage />
                     },
                     {
                         path: "*",
@@ -401,6 +423,10 @@ export const router = createBrowserRouter([
                         element: <DownloadTimesheetScreen />
                     },
                     {
+                        path: "profile/documents",
+                        element: <WorkerDocumentsScreen />
+                    },
+                    {
                         path: "schedule",
                         element: <ScheduleScreen />
                     },
@@ -420,6 +446,14 @@ export const router = createBrowserRouter([
                     }, {
                         path: "clock/no-active-job",
                         element: <NoActiveShift />
+                    },
+                    {
+                        path: "help",
+                        element: <HelpCentreScreen />
+                    },
+                    {
+                        path: "help/:articleSlug",
+                        element: <HelpArticleScreen />
                     },
                     {
                         path: "*",

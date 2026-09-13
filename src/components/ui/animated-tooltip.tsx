@@ -11,6 +11,8 @@ import { useRef, useState } from "react";
 import { Avatar } from "../ui";
 import { Link } from "react-router";
 import { backLinkState } from "@/hooks/useBackLink";
+import { Avatar as ImageAvatar, AvatarFallback, AvatarImage } from '../../components/ui/avatar'
+import { getInitials } from "@/utils/getInitials";
 
 export const AnimatedTooltip = ({
   items,
@@ -94,17 +96,22 @@ export const AnimatedTooltip = ({
             )}
           </AnimatePresence>
           <div className="rounded-full ring-2 ring-white">
+            {
+              item.image ?
+                  <ImageAvatar className="h-9 w-9">
+                {item?.image && <AvatarImage src={item.image} alt={item.name} />}
+                <AvatarFallback className="bg-[#1E3A5F] text-white text-xs font-semibold">
+                  {
+                    getInitials(item.name)
+                  }
+                </AvatarFallback>
+              </ImageAvatar> :
+                <Avatar initials={item?.name.slice(0, 2)} />
 
-            <Avatar initials={item?.name.slice(0, 2)} />
+            }
+
           </div>
-          {/* <img
-            onMouseMove={handleMouseMove}
-            height={100}
-            width={100}
-            src={"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQQchi5sg7mUmbWbRUeVh1Mus0NYioqXle1nMqVk5dcUQ&s=10"}
-            alt={item.name}
-            className="relative !m-0 h-14 w-14 rounded-full border-2 border-white object-cover object-top !p-0 transition duration-500 group-hover:z-30 group-hover:scale-105"
-          /> */}
+  
         </div>
       ))}
     </>

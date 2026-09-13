@@ -89,13 +89,13 @@ export default function JobsScreen() {
         totalPages: number
     }
 
-    const tabs: { id: CreateJobForm["status"] | "all"; label: string; count: number }[] = [
-        { id: 'all', label: 'All', count: jobs.length },
-        { id: 'accepted', label: 'Accepted', count: jobs.filter(job => job.status == "accepted").length },
-        { id: 'completed', label: 'Completed', count: jobs.filter(job => job.status == "completed").length },
-        { id: 'in-progress', label: 'inprogress', count: jobs.filter(job => job.status == "cancelled").length },
-        { id: 'cancelled', label: 'Cancelled', count: jobs.filter(job => job.status == "in-progress").length },
-        { id: 'declined', label: 'Decline', count: jobs.filter(job => job.status == "declined").length },
+    const tabs: { id: CreateJobForm["status"] | "all"; label: string; }[] = [
+        { id: 'all', label: 'All',  },
+        { id: 'accepted', label: 'Accepted', },
+        { id: 'pending', label: 'Pending', },
+        { id: 'completed', label: 'Completed', },
+        { id: 'cancelled', label: 'Cancelled', },
+        { id: 'declined', label: 'Decline', },
     ]
     return (
         <div className="flex flex-col gap-4 pb-4">
@@ -186,13 +186,6 @@ export default function JobsScreen() {
                             >
                                 <div className="flex items-center justify-center gap-x-1.5">
                                     {t.label}
-                                    {t.count > 0 && (
-                                        <span className={`w-4 h-4 rounded-full text-[10px] font-bold flex items-center justify-center
-                            ${tab === t.id ? (t.id === 'assigned' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700') : 'bg-slate-00 text-slate-500'}`}>
-                                            {t.count}
-                                        </span>
-                                    )}
-
                                 </div>
                             </FilterButton>
 

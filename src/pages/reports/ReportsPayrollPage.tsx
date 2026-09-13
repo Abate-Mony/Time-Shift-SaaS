@@ -39,7 +39,7 @@ export function ReportsPayrollPage() {
           data.workers.map((w, i) => (
             <div key={w.workerId} className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-4 px-5 py-3.5 border-b border-[#F1F5F9] items-center hover:bg-slate-50/50 transition-colors">
               <div className="flex items-center gap-3">
-                <Avatar initials={w.fullname.split(' ').map(n => n[0]).slice(0, 2).join('')} size="sm" index={i} />
+                <Avatar initials={w.fullname.split(' ').map(n => n[0]).slice(0, 2).join('')} size="sm" index={i} src={w.profilePhoto?.url} />
                 <div>
                   <p className="text-sm font-medium text-slate-900">{w.fullname}</p>
                   <p className="text-xs text-slate-400">{w.email}</p>

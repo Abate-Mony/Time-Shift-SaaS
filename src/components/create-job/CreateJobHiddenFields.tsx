@@ -13,7 +13,7 @@ import { mapRecurringStateToPayload } from "@/utils/mapRecurringStateToPayload"
  * container div, which lays out even when type="hidden".
  */
 export function CreateJobHiddenFields() {
-  const { form, selectedClient, selectedWorkers, recurring, generateInvoice, invoiceDueDate, invoiceLineItems } =
+  const { form, selectedClient, selectedSite, selectedWorkers, recurring, generateInvoice, invoiceDueDate, invoiceLineItems } =
     useCreateJob()
 
   const { watch } = form
@@ -29,8 +29,9 @@ export function CreateJobHiddenFields() {
 
   return (
     <>
-      {/* Client — held in component state, not RHF */}
+      {/* Client / Site — held in component state, not RHF */}
       <input type="hidden" name="client" value={selectedClient?._id ?? ""} />
+      <input type="hidden" name="site" value={selectedSite?._id ?? ""} />
 
       {/* Location */}
       <input type="hidden" name="address" value={address ?? ""} />

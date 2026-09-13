@@ -7,6 +7,7 @@ import { useQuery } from '@tanstack/react-query'
 import dayjs from 'dayjs'
 import { Avatar, Badge, Card, StatCard, StatusBadge } from '../components/ui'
 import { getAnalytics, getDashboardStats, type DashboardStatsActivity } from '@/utils/api-request-functions'
+import { AIDashboardInsights } from '@/components/dashboard/AIDashboardInsights'
 import { getInitials } from '@/utils/getInitials'
 import { recordFormatUI } from './JobDetailPage'
 import type { ActivityType } from '@/utils/types'
@@ -150,6 +151,10 @@ export function Dashboard() {
         </div>
       )}
 
+      <div className="mb-6">
+        <AIDashboardInsights />
+      </div>
+
       {/* Stats */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-6">
         <StatCard
@@ -221,7 +226,7 @@ export function Dashboard() {
           <div className="flex flex-col gap-3">
             {stats.workingNow.map((w, i) => (
               <div key={w.assignmentId} className="flex items-start gap-3">
-                <Avatar initials={getInitials(w.worker?.fullname ?? '?')} size="sm" index={i} />
+                <Avatar initials={getInitials(w.worker?.fullname ?? '?')} size="sm" index={i} src={w.worker?.profilePhoto?.url} />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-slate-800">{w.worker?.fullname ?? 'Unknown worker'}</p>
                   <p className="text-xs text-slate-400 truncate">{w.job?.title ?? 'On site'}</p>

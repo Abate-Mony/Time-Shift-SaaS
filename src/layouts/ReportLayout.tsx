@@ -5,6 +5,7 @@ import { Download, FileText, Lock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import CustomNavLink from '@/components/ui/link'
 import { useCompanyPlan } from '@/hooks/useCompanyPlan'
+import { Scrollable } from '@/components/ui/scrollable'
 
 export interface DateRange {
   start: string
@@ -98,7 +99,7 @@ export default function ReportLayout() {
         </div>
       </div>
 
-      <div className="flex items-center gap-1.5 border-b border-[#E2E8F0]">
+      <Scrollable direction='row' className="flex items-center gap-1.5 border-b border-[#E2E8F0]">
         {NAV_LINKS.map(link => (
           link.gated && !canViewAdvancedReports ? (
             // Not a real link — clicking would just land on a locked page
@@ -126,7 +127,7 @@ export default function ReportLayout() {
             </CustomNavLink>
           )
         ))}
-      </div>
+      </Scrollable>
 
       <div className="mt-6">
         <Outlet context={context} />

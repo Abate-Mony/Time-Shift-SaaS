@@ -11,7 +11,7 @@ import { backLinkState } from '@/hooks/useBackLink'
 import toast from 'react-hot-toast'
 import customFetch from '@/utils/customFetch'
 import { queryClient } from '@/lib/queryClient'
-import type { User as AppUser } from '@/utils/types'
+import type { FileRef, User as AppUser } from '@/utils/types'
 import { RestrictUserDialog } from '@/components/restriction/RestrictUserDialog'
 import { ACCESS_LEVEL_LABELS, type AccessLevel, type AccountRestriction } from '@/data/restrictionMockData'
 import {
@@ -57,6 +57,7 @@ interface Row {
   invitationId?: string
   // Present only when this member currently has an active UserRestriction.
   restriction?: AccountRestriction
+  profilePhoto?: FileRef | null
 }
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
@@ -110,6 +111,9 @@ function MemberAvatar({ row, size = 'md' }: { row: Row; size?: 'sm' | 'md' | 'lg
         <Mail size={size === 'sm' ? 10 : 13} className="text-slate-400" />
       </div>
     )
+  }
+  if (row.profilePhoto?.url) {
+    return <img src={row.profilePhoto.url} alt={row.fullname ?? row.email} className={`${sz} rounded-full object-cover shrink-0`} />
   }
   const color = AVATAR_COLORS[row.key.charCodeAt(1) % AVATAR_COLORS.length]
   return (
@@ -431,6 +435,7 @@ export function Team() {
         status: restriction ? 'suspended' : (u.isActive ? 'active' : 'suspended'),
         lastActive: u.lastLogin,
         restriction,
+        profilePhoto: u.profilePhoto,
       }
     }),
     ...invitations.map((inv): Row => ({

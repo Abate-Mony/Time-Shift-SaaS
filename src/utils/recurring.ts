@@ -1,4 +1,4 @@
-import type { AssignmentStatus } from "./types"
+import type { AssignmentStatus, FileRef } from "./types"
 
 export type Frequency = 'daily' | 'weekly' | 'monthly'
 
@@ -36,7 +36,7 @@ export interface RecurringOccurrence {
 }
 
 export interface RecurringDetail extends RecurringSchedule {
-  defaultWorkers: { _id: string; fullname: string; email: string }[]
+  defaultWorkers: { _id: string; fullname: string; email: string; profilePhoto?: FileRef | null }[]
   createdBy: { _id: string; fullname: string }
   createdAt: string
   occurrences: {

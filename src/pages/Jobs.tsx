@@ -23,6 +23,7 @@ import { useState } from 'react'
 import toast from 'react-hot-toast'
 import { useLoaderData, useNavigate, type LoaderFunctionArgs, type Params } from 'react-router'
 import { backLinkState } from '@/hooks/useBackLink'
+import SearchComponent from '@/components/Search'
 
 
 const jobsQuery = (params: Params) => {
@@ -147,7 +148,11 @@ export function Jobs() {
     <div className=" animate-fade-in">
 
 
-
+      <div className='mr-auto max-w-md my-2'>
+        <SearchComponent 
+        placeholder='search jobs ...'
+        />
+      </div>
       <div className="flex items-center gap-1 gap-x-0 border-b flex-wrap border-[#E2E8F0]">
         {tabs.map((tab, idx) => (
           <AnimatedHeadLessUi

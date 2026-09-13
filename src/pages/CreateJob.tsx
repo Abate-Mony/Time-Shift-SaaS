@@ -23,9 +23,13 @@ import customFetch from "@/utils/customFetch"
 import { createJobSchema } from "@/utils/schemas"
 import type { User } from "@/utils/types"
 import type { ComboboxClient } from "@/components/client/ClientCombobox"
+import type { ComboboxSite } from "@/components/site/SiteCombobox"
 import { defaultRecurring, type RecurringState } from "@/components/RecurringJobSection"
 
 import { CreateJobProvider, type SelectedWorker } from "@/components/create-job/CreateJobContext"
+import { AIJobDraftDialog } from "@/components/create-job/AIJobDraftDialog"
+import { JobAttachmentField } from "@/components/create-job/JobAttachmentField"
+import type { AIJobDraftResponse } from "@/utils/api-request-functions"
 import { CreateJobStepper } from "@/components/create-job/CreateJobStepper"
 import { CreateJobHiddenFields } from "@/components/create-job/CreateJobHiddenFields"
 import { WizardFooter } from "@/components/create-job/WizardFooter"
@@ -82,6 +86,12 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   delete payload.invoiceDueDate
   delete payload.invoiceLineItems
 
+  // The attachment is a File, not JSON-serialisable — uploaded separately
+  // below, after the job (and its id) exist. An untouched file input still
+  // submits an empty File (name "", size 0), so only a real selection counts.
+  const attachmentFile = formData.get("attachment")
+  delete payload.attachment
+
   // FormData is all strings — restore the real types
   payload.isRecurring = raw.isRecurring === "true"
   payload.openToClaims = raw.openToClaims === "true"
@@ -117,6 +127,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   if (!raw.endDate) delete payload.endDate
   if (!raw.frequency) delete payload.frequency
   if (!raw.client) delete payload.client
+  if (!raw.site) delete payload.site
   if (!raw.supervisor) delete payload.supervisor
   if (!raw.geofenceMode) delete payload.geofenceMode
 
@@ -126,6 +137,19 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     toast.success(
       raw.status === "draft" ? "Draft saved" : "Job created successfully!"
     )
+
+    if (attachmentFile instanceof File && attachmentFile.size > 0) {
+      try {
+        const jobId = data?.job?._id ?? data?.templateJob?._id ?? data?._id
+        const attachmentData = new FormData()
+        attachmentData.append("attachment", attachmentFile)
+        await customFetch.post(`/jobs/${jobId}/attachment`, attachmentData)
+      } catch {
+        toast.error(
+          "Job created, but the attachment could not be uploaded. You can add it from the job page."
+        )
+      }
+    }
 
     if (raw.generateInvoice === "true" && raw.invoiceLineItems) {
       try {
@@ -199,6 +223,9 @@ export function CreateJob() {
     dayjs().add(14, "day").format("YYYY-MM-DD")
   )
   const [invoiceRates, setInvoiceRates] = useState<Record<string, number>>({})
+  const [aiAssumptions, setAiAssumptions] = useState<string[]>([])
+  const [locationMode, setLocationMode] = useState<"site" | "custom">("custom")
+  const [selectedSite, setSelectedSite] = useState<ComboboxSite | null>(null)
 
   const form = useForm({
     resolver: zodResolver(createJobSchema),
@@ -361,6 +388,12 @@ export function CreateJob() {
     setSelectedClient(client)
     setShowApplyRate(false)
 
+    // A Site belongs to exactly one client — switching clients invalidates
+    // whatever site was picked for the old one.
+    if (selectedSite && client?._id !== selectedClient?._id) {
+      handleSiteSelect(null)
+    }
+
     if (!client?.defaultChargeRate) return
 
     const current = getValues("chargeRate") ?? 0
@@ -394,6 +427,72 @@ export function CreateJob() {
   }
 
   const keepCurrentRate = () => setShowApplyRate(false)
+
+  // ── Site selection ────────────────────────────────────────
+  // Picking a Site prefills location/address/coordinates/geofence from it —
+  // the same fields SearchLocation (one-off) sets, so the two paths stay
+  // interchangeable right up to submit. Clearing it doesn't blank those
+  // fields back out; the manager can still edit them as a one-off from there.
+  const handleSiteSelect = (site: ComboboxSite | null) => {
+    setSelectedSite(site)
+    if (!site) return
+
+    setValue("location", site.name, { shouldValidate: true })
+    if (site.formattedAddress) setValue("address", site.formattedAddress, { shouldValidate: true })
+    if (site.coordinates?.lat != null) setValue("coordinates", site.coordinates, { shouldValidate: true })
+    if (site.geofenceRadiusMeters != null) {
+      setValue("geofenceRadiusMeters", site.geofenceRadiusMeters, { shouldValidate: true })
+    }
+    if (site.geofenceMode) setValue("geofenceMode", site.geofenceMode, { shouldValidate: true })
+  }
+
+  // ── AI draft ───────────────────────────────────────────────
+  // Merges only the fields the AI actually returned — never blanks out
+  // something the manager already typed. The manager still reviews and
+  // submits through the normal wizard; nothing here is auto-saved.
+  const applyAIDraft = (response: AIJobDraftResponse) => {
+    const { draft, matchedClient, unmatchedClientName } = response
+
+    const setIfPresent = <K extends keyof typeof draft>(field: K, formField: string) => {
+      const value = draft[field]
+      if (value !== null && value !== undefined) {
+        setValue(formField as any, value as any, { shouldValidate: true })
+      }
+    }
+
+    setIfPresent("title", "title")
+    setIfPresent("description", "description")
+    setIfPresent("priority", "priority")
+    setIfPresent("date", "date")
+    setIfPresent("startTime", "startTime")
+    setIfPresent("endTime", "endTime")
+    setIfPresent("location", "location")
+    setIfPresent("address", "address")
+    setIfPresent("requiredWorkers", "requiredWorkers")
+    setIfPresent("payRate", "payRate")
+    setIfPresent("chargeType", "chargeType")
+    setIfPresent("chargeRate", "chargeRate")
+    setIfPresent("chargeAmount", "chargeAmount")
+    setIfPresent("instructions", "instructions")
+    setIfPresent("notes", "notes")
+    setIfPresent("openToClaims", "openToClaims")
+    setIfPresent("requiresApproval", "requiresApproval")
+
+    if (matchedClient) {
+      handleClientSelect({ _id: matchedClient.id, name: matchedClient.name })
+    }
+
+    setAiAssumptions(draft.assumptions ?? [])
+    if (currentStep !== 1) goToStep(1)
+
+    if (unmatchedClientName) {
+      toast(
+        `AI mentioned "${unmatchedClientName}", which doesn't match a client on file — add them or pick one manually.`,
+        { icon: "⚠️" }
+      )
+    }
+    toast.success("Draft generated — review each step before publishing.")
+  }
 
   // ── Workers ────────────────────────────────────────────────
 
@@ -443,6 +542,10 @@ export function CreateJob() {
     previousChargeRate,
     applyClientRate,
     keepCurrentRate,
+    locationMode,
+    setLocationMode,
+    selectedSite,
+    handleSiteSelect,
     generateInvoice,
     setGenerateInvoice,
     invoiceDueDate,
@@ -469,7 +572,7 @@ export function CreateJob() {
           >
             <ChevronLeft size={16} />
           </button>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <h1 className="text-xl font-semibold text-slate-900 tracking-tight truncate">
               Create new job
             </h1>
@@ -477,7 +580,21 @@ export function CreateJob() {
               Fill in the details to assign work to your team
             </p>
           </div>
+          <AIJobDraftDialog onDraftReady={applyAIDraft} />
         </div>
+
+        {aiAssumptions.length > 0 && (
+          <div className="mb-6 -mt-2 bg-[#1E3A5F]/[0.04] border border-[#1E3A5F]/15 rounded-xl px-4 py-3 min-w-0">
+            <p className="text-xs font-semibold text-[#1E3A5F] uppercase tracking-wide mb-1.5">
+              AI draft — double-check these
+            </p>
+            <ul className="text-sm text-slate-600 space-y-1 list-disc list-inside">
+              {aiAssumptions.map((note, i) => (
+                <li key={i}>{note}</li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         <CreateJobStepper
           currentStep={currentStep}
@@ -497,6 +614,7 @@ export function CreateJob() {
           {/* Rendered once, outside the steps, so unmounting a step can't
               silently drop values from the submitted FormData */}
           <CreateJobHiddenFields />
+          <JobAttachmentField />
 
           <AnimatePresence mode="wait" custom={dir}>
             <motion.div

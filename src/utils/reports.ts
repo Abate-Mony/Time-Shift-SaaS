@@ -1,5 +1,6 @@
 import customFetch from "@/utils/customFetch"
 import type { DateRange } from "@/layouts/ReportLayout"
+import type { FileRef } from "@/utils/types"
 
 export interface ReportsOverviewResponse {
   stats: {
@@ -21,6 +22,7 @@ export interface ReportsPayrollWorker {
   rate: number
   overtimeHours: number
   totalPay: number
+  profilePhoto?: FileRef | null
 }
 
 export interface ReportsPayrollResponse {
@@ -30,7 +32,9 @@ export interface ReportsPayrollResponse {
 
 export interface ReportsTimesheetRow {
   assignmentId: string
+  workerId?: string
   worker: string
+  profilePhoto?: FileRef | null
   job: string
   date: string | null
   start: string

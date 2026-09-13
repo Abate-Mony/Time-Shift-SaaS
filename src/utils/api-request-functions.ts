@@ -2,7 +2,7 @@ import { queryClient } from "@/lib/queryClient";
 import { isAxiosError } from "axios";
 import toast from "react-hot-toast";
 import customFetch from "./customFetch";
-import type { ClientBillingInfo, CompanyPlanId, CompanyPlanInfo, CreateJobForm, EditProfileForm, EligibleWorkResponse, EventNotificationPreference, Invoice, InvoiceAdjustmentInput, InvoiceCompanyInfo, InvoiceStatus, NotificationEvent, NotificationPreferences, PlanCatalogEntry, PlanCatalogResponse, TimesheetSummaryResponse } from "./types";
+import type { ClientBillingInfo, CompanyPlanId, CompanyPlanInfo, CreateJobForm, EditProfileForm, EligibleWorkResponse, EventNotificationPreference, FileRef, Invoice, InvoiceAdjustmentInput, InvoiceCompanyInfo, InvoiceStatus, JobAttachment, NotificationEvent, NotificationPreferences, PlanCatalogEntry, PlanCatalogResponse, TimesheetSummaryResponse, User, WorkerDocument } from "./types";
 import type {
     AccessLevel,
     AccountRestriction,
@@ -13,10 +13,150 @@ import type {
 
 import { getCurrentPosition } from "./getPosition";
 
+// Shape of POST /ai/job-draft's response. Every field on `draft` is a
+// best-effort guess the model made from a free-text prompt — nothing here
+// is written to the database; CreateJob.tsx only uses it to prefill the
+// normal wizard for the manager to review and submit themselves.
+export type AIJobDraft = {
+    title: string | null;
+    description: string | null;
+    clientName: string | null;
+    // priority/chargeType/openToClaims/requiresApproval are never null on
+    // the wire — the backend schema falls back to this app's own form
+    // defaults ("medium"/"hourly"/false/true) rather than emitting null,
+    // to stay under the structured-output API's nullable-field limit.
+    priority: "low" | "medium" | "high" | "urgent";
+    date: string | null;
+    startTime: string | null;
+    endTime: string | null;
+    location: string | null;
+    address: string | null;
+    requiredWorkers: number | null;
+    payRate: number | null;
+    chargeType: "hourly" | "fixed";
+    chargeRate: number | null;
+    chargeAmount: number | null;
+    instructions: string | null;
+    notes: string | null;
+    openToClaims: boolean;
+    requiresApproval: boolean;
+    assumptions: string[];
+};
+
+export type AIJobDraftResponse = {
+    draft: AIJobDraft;
+    matchedClient: { id: string; name: string } | null;
+    unmatchedClientName: string | null;
+};
+
+// POST /ai/job-draft — turns a free-text prompt into a structured job draft.
+// AI-only, no side effects: nothing is saved until the manager reviews and
+// submits it through the normal CreateJob wizard.
+export const generateJobDraftAI = async (prompt: string): Promise<AIJobDraftResponse> => {
+    const { data } = await customFetch.post<AIJobDraftResponse>("/ai/job-draft", { prompt });
+    return data;
+};
+
+export type AIDashboardInsight = {
+    severity: "info" | "warning" | "critical";
+    title: string;
+    detail: string;
+};
+
+export type AIDashboardInsightsResponse = {
+    headline: string;
+    insights: AIDashboardInsight[];
+};
+
+// GET /ai/dashboard-insights — manager-triggered only (never auto-runs on
+// dashboard load, since each call is a real billed request). Re-derives its
+// summary server-side from the same numbers the dashboard cards show.
+export const getDashboardInsightsAI = async (): Promise<AIDashboardInsightsResponse> => {
+    const { data } = await customFetch.get<AIDashboardInsightsResponse>("/ai/dashboard-insights");
+    return data;
+};
+
+// ── Worker documents ────────────────────────────────────────────────────
+// Self-service — a worker uploads/removes their own documents (ID,
+// right-to-work, certifications, ...). Entirely optional everywhere.
+
+export const getMyDocuments = async (): Promise<WorkerDocument[]> => {
+    const { data } = await customFetch.get<{ documents: WorkerDocument[] }>("/documents/me");
+    return data.documents;
+};
+
+export const uploadMyDocument = async ({ name, file }: { name: string; file: File }): Promise<WorkerDocument[]> => {
+    const formData = new FormData();
+    formData.append("name", name);
+    formData.append("document", file);
+    const { data } = await customFetch.post<{ documents: WorkerDocument[] }>("/documents/me", formData);
+    return data.documents;
+};
+
+export const deleteMyDocument = async (documentId: string): Promise<WorkerDocument[]> => {
+    const { data } = await customFetch.delete<{ documents: WorkerDocument[] }>(`/documents/me/${documentId}`);
+    return data.documents;
+};
+
+// Admin/manager view of one worker's documents.
+export const getWorkerDocuments = async (workerId: string): Promise<{ documents: WorkerDocument[]; workerName: string }> => {
+    const { data } = await customFetch.get<{ documents: WorkerDocument[]; workerName: string }>(
+        `/documents/worker/${workerId}`
+    );
+    return data;
+};
+
+// ── Job attachment ──────────────────────────────────────────────────────
+// Optional single file a manager attaches to a job (e.g. a photo of a door
+// passcode) — uploaded separately from the JSON create/update payload since
+// it needs multipart/form-data.
+
+export const uploadJobAttachment = async ({ jobId, file }: { jobId: string; file: File }): Promise<JobAttachment> => {
+    const formData = new FormData();
+    formData.append("attachment", file);
+    const { data } = await customFetch.post<{ attachment: JobAttachment }>(`/jobs/${jobId}/attachment`, formData);
+    return data.attachment;
+};
+
+export const deleteJobAttachment = async (jobId: string): Promise<void> => {
+    await customFetch.delete(`/jobs/${jobId}/attachment`);
+};
+
+// ── Profile photo ────────────────────────────────────────────────────────
+// A personal account setting — any role can set their own. Invalidate the
+// shared ["user"] query key after either call so the header/sidebar avatar
+// (which reads the same cached user object) picks it up immediately.
+
+export const uploadProfilePhoto = async (file: File): Promise<User> => {
+    const formData = new FormData();
+    formData.append("photo", file);
+    const { data } = await customFetch.post<{ user: User }>("/users/current-user/photo", formData);
+    return data.user;
+};
+
+export const deleteProfilePhoto = async (): Promise<User> => {
+    const { data } = await customFetch.delete<{ user: User }>("/users/current-user/photo");
+    return data.user;
+};
+
+// ── Company logo ─────────────────────────────────────────────────────────
+// Admin-only — a company's logo is a shared, account-wide asset.
+
+export const uploadCompanyLogo = async (file: File): Promise<FileRef> => {
+    const formData = new FormData();
+    formData.append("logo", file);
+    const { data } = await customFetch.post<{ logo: FileRef }>("/companies/logo", formData);
+    return data.logo;
+};
+
+export const deleteCompanyLogo = async (): Promise<void> => {
+    await customFetch.delete("/companies/logo");
+};
+
 export const changeWorkerJobStaus = async (
     jobId: string,
     status: "accepted" | "declined" | "in-progress" | "completed" | "cancelled",
-    opts?: { reason?: string }
+    opts?: { reason?: string; release?: boolean }
 ): Promise<{ success: boolean; message?: string }> => {
     try {
         // Only clock-in and clock-out are worth locating. Asking for GPS on
@@ -28,13 +168,17 @@ export const changeWorkerJobStaus = async (
             status,
             ...(location ? { location } : {}),
             ...(opts?.reason ? { reason: opts.reason } : {}),
+            ...(opts?.release ? { release: true } : {}),
         });
 
-        toast.success("Job updated successfully");
+        toast.success(opts?.release ? "Shift released back to open shifts" : "Job updated successfully");
 
         await queryClient.invalidateQueries({ queryKey: ["jobs"] });
         await queryClient.invalidateQueries({ queryKey: ["job", jobId] });
         await queryClient.invalidateQueries({ queryKey: ["worker-stats"] });
+        if (opts?.release) {
+            await queryClient.invalidateQueries({ queryKey: ["open-shifts"] });
+        }
 
         // The shift is over — clear the active job immediately rather than
         // waiting on a refetch, or the clock screen keeps showing a finished shift
@@ -812,7 +956,7 @@ export interface DashboardStatsResponse {
     hoursByDay: { day: string; hours: number }[]
     workingNow: {
         assignmentId: string
-        worker: { _id: string; fullname: string } | null
+        worker: { _id: string; fullname: string; profilePhoto?: FileRef | null } | null
         job: { _id: string; title: string; location: string; startTime: string; endTime: string } | null
         checkedInAt: string
     }[]

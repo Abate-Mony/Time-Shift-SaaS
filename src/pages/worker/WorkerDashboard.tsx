@@ -50,7 +50,7 @@ export default function HomeScreen() {
                 <div className="relative">
                     <div className="flex items-center justify-between mb-5">
                         <div className="flex items-center gap-3">
-                            <Avatar initials={user?.fullname?.slice(0, 2)} size="md" index={0} />
+                            <Avatar initials={user?.fullname?.slice(0, 2)} size="md" index={0} src={user?.profilePhoto?.url} />
                             <div>
                                 <p className="text-xs text-white/50 font-medium">{greeting}</p>
                                 <p className="text-base font-bold text-white leading-tight">{user?.fullname.split(' ')[0]}</p>

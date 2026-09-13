@@ -17,7 +17,7 @@ import { logoutUser } from "@/utils/logout";
 import type { User } from "@/utils/types";
 import type { WorkerDashboardStats } from "@/utils/types/workerType";
 import { useQuery } from "@tanstack/react-query";
-import { Bell, CheckCircle2, ChevronRight, Clock, Download, LogOut, MapPin, Phone, Star, Zap } from "lucide-react";
+import { Bell, CheckCircle2, ChevronRight, Clock, Download, HelpCircle, LogOut, MapPin, Paperclip, Phone, Star, Zap } from "lucide-react";
 import { useNavigate, useOutletContext, type LoaderFunctionArgs } from "react-router";
 
 export const workerDashboardstats = () => {
@@ -56,7 +56,7 @@ export function ProfileScreen() {
         <div className="px-5 pb-5">
           <div className="-mt-8 mb-4 flex items-end justify-between">
             <div className="ring-4 ring-white rounded-full">
-              <Avatar initials={user?.fullname?.slice(0, 3)} size="xl" index={0} />
+              <Avatar initials={user?.fullname?.slice(0, 3)} size="xl" index={0} src={user?.profilePhoto?.url} />
             </div>
             <button
               type="button"
@@ -136,7 +136,9 @@ export function ProfileScreen() {
       <div className="bg-white rounded-2xl border border-[#E2E8F0] shadow-sm overflow-hidden">
         {[
           { label: 'Download Timesheet', icon: Download, sub: 'July 2025', to: "/worker/profile/download-time-sheet" },
+          { label: 'My Documents', icon: Paperclip, sub: 'ID, right-to-work, certifications', to: "/worker/profile/documents" },
           { label: 'Notification Preferences', icon: Bell, sub: 'Job alerts, reminders', to: '/worker/profile/notifications' },
+          { label: 'Help Centre', icon: HelpCircle, sub: 'Guides and answers', to: '/worker/help' },
           { label: 'Contact Manager', icon: Phone, sub: 'Get in touch', to: undefined },
         ].map((item) => (
           <button

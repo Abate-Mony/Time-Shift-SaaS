@@ -57,6 +57,7 @@ const buildClientPayload = (data: ClientFormData) => ({
 const TABS: { to: string; label: string }[] = [
     { to: 'overview', label: 'Overview' },
     { to: 'contacts', label: 'Contacts' },
+    { to: 'sites', label: 'Sites' },
     { to: 'jobs', label: 'Jobs' },
     { to: 'billing', label: 'Billing' },
 ]

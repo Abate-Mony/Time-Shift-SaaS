@@ -2,6 +2,7 @@ import { createContext, useContext } from "react"
 import type { UseFormReturn } from "react-hook-form"
 import type { RecurringState } from "@/components/RecurringJobSection"
 import type { ComboboxClient } from "@/components/client/ClientCombobox"
+import type { ComboboxSite } from "@/components/site/SiteCombobox"
 import type { CreateJobForm, User } from "@/utils/types"
 
 export type SelectedWorker = {
@@ -36,6 +37,14 @@ export interface CreateJobContextValue {
   previousChargeRate: number | null
   applyClientRate: () => void
   keepCurrentRate: () => void
+
+  // "site" = pick a reusable Site belonging to the selected client; "custom"
+  // = the existing one-off address search. Sites are optional — a job never
+  // requires one.
+  locationMode: "site" | "custom"
+  setLocationMode: (mode: "site" | "custom") => void
+  selectedSite: ComboboxSite | null
+  handleSiteSelect: (site: ComboboxSite | null) => void
 
   generateInvoice: boolean
   setGenerateInvoice: (on: boolean) => void

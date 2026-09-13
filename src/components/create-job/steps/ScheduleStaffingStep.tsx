@@ -7,6 +7,7 @@ import { PlanLockBadge } from "@/components/billing/PlanLockBadge"
 import { useCompanyPlan } from "@/hooks/useCompanyPlan"
 import { useCreateJob } from "../CreateJobContext"
 import { FieldError } from "../FieldError"
+import SearchComponent from "@/components/Search"
 
 export function ScheduleStaffingStep() {
   const {
@@ -59,7 +60,7 @@ export function ScheduleStaffingStep() {
         <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-2">
           Assign workers
         </p>
-
+  
         <button
           type="button"
           onClick={() => setWorkerOpen(!workerOpen)}
@@ -80,7 +81,13 @@ export function ScheduleStaffingStep() {
         </button>
 
         <FieldError message={errors.workers?.message as string} />
-
+      {
+          workerOpen && <div className='mr-auto  my-2'>
+            <SearchComponent
+              placeholder='search workers'
+            />
+          </div>
+        }
         {workerOpen && (
           <div className="mt-2 border border-[#E2E8F0] rounded-xl overflow-hidden min-w-0">
             {users.length === 0 && (
@@ -98,7 +105,7 @@ export function ScheduleStaffingStep() {
                     selected && "bg-blue-50/40"
                   )}
                 >
-                  <Avatar initials={w.fullname.slice(0, 2)} size="sm" index={i} />
+                  <Avatar initials={w.fullname.slice(0, 2)} size="sm" index={i} src={w.profilePhoto?.url} />
                   <div className="flex-1 text-left min-w-0">
                     <p className="text-sm font-medium text-slate-800 truncate">{w.fullname}</p>
                     <p className="text-xs text-slate-400">{w.role}</p>

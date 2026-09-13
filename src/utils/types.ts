@@ -51,7 +51,38 @@ export type User = {
   password?: string;
   confirmPassword?: string;
   notificationPreferences?: NotificationPreferences;
+  // Personal account setting — any role can set their own.
+  profilePhoto?: FileRef | null;
 };
+
+// A single uploaded file reference with no display filename — a profile
+// photo or company logo, as opposed to JobAttachment/WorkerDocument which
+// are shown to the user by name.
+export interface FileRef {
+  url: string;
+  mimeType?: string;
+  uploadedAt: string;
+}
+
+// A worker's self-uploaded document (ID, right-to-work, certifications,
+// ...). Optional everywhere it's used — nothing in this app requires a
+// worker to have any on file.
+export interface WorkerDocument {
+  _id: string;
+  name: string;
+  url: string;
+  mimeType?: string;
+  uploadedAt: string;
+}
+
+// Optional single file a manager attaches to a job — e.g. a photo of a door
+// passcode or access instructions — visible to assigned workers.
+export interface JobAttachment {
+  url: string;
+  filename: string;
+  mimeType?: string;
+  uploadedAt: string;
+}
 
 // export const defaultNotificationPreferences: NotificationPreferences = {
 //   jobAssigned: true,
@@ -71,6 +102,14 @@ export type CreateJobForm = Omit<z.infer<typeof createJobSchema>, "client" | "wo
   workers: (Worker & { billingStatus?: BillingStatus; invoice?: string | null })[];
   billingStatus?: BillingStatus;
   invoice?: string | null;
+  // Not a form field — server-populated once a manager uploads a file via
+  // its own endpoint (see uploadJobAttachment).
+  attachment?: JobAttachment | null;
+  // Optional reusable Site this job was scheduled against. `site` is just
+  // the id; `siteSnapshot` is the historical name/contact/instructions as
+  // they were at scheduling time — never re-synced if the Site changes later.
+  site?: string | null;
+  siteSnapshot?: import("./types/site").JobSiteSnapshot | null;
 };
 // Payload shape sent to the API (post-transform: no empty-string gender).
 export type EditProfileForm = z.output<typeof editProfileSchema>;
@@ -200,6 +239,8 @@ export interface PlanLimits {
     recurringJobs: boolean;
     openShifts: boolean;
     advancedReports: boolean;
+    aiJobAssistant: boolean;
+    aiDashboardInsights: boolean;
   };
 }
 

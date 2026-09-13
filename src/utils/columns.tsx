@@ -190,9 +190,9 @@ export const jobsColumns: ColumnDef<CreateJobForm>[] = [
               items={workers?.slice(0, 3)?.map((w, idx) => ({
                 id: idx,
                 designation: w.email || "no email",
-                image: "",
                 name: w.fullname || "debug later",
-                user_id: w!.worker
+                user_id: w!.worker,
+                image: w.profilePhoto?.url ?? "",
               }))}
             />
             {workers.length > 3 && (

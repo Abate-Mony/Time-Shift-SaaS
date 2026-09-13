@@ -100,6 +100,17 @@ export const workerSchema = z.object({
         .number()
         .default(0),
 
+    // Not a form field — server-populated from the worker's User doc
+    // wherever this assignment is returned (getJob, getAllJobs, calendar).
+    profilePhoto: z
+        .object({
+            url: z.string(),
+            mimeType: z.string().optional(),
+            uploadedAt: z.string(),
+        })
+        .nullable()
+        .optional(),
+
 });
 
 export type Worker = z.infer<typeof workerSchema>;

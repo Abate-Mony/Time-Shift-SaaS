@@ -139,7 +139,7 @@ export default function AssignWorkersModal({
                                         isSelected && "bg-blue-50/40"
                                     )}
                                 >
-                                    <Avatar initials={w.fullname.slice(0, 2)} size="sm" index={i} />
+                                    <Avatar initials={w.fullname.slice(0, 2)} size="sm" index={i} src={w.profilePhoto?.url} />
                                     <div className="flex-1 text-left min-w-0">
                                         <p className="text-sm font-medium text-slate-800 truncate">{w.fullname}</p>
                                         <p className="text-xs text-slate-400">

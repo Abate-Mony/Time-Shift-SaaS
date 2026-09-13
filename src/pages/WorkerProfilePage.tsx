@@ -2,7 +2,8 @@ import { useState } from 'react'
 import {
     ChevronLeft, Mail, Phone, Calendar, Clock,
     Briefcase, TrendingUp, CheckCircle2, AlertCircle,
-    Edit, UserMinus, ShieldCheck, MessageSquare, Plus, Download, MoreHorizontal
+    Edit, UserMinus, ShieldCheck, MessageSquare, Plus, Download, MoreHorizontal,
+    FileText, Image as ImageIcon,
 } from 'lucide-react'
 import {
     AreaChart, Area, XAxis, YAxis, Tooltip,
@@ -13,11 +14,13 @@ import { Button } from '@/components/ui/button'
 import { useNavigate, useParams, type LoaderFunctionArgs } from 'react-router'
 import { useQuery, type QueryClient } from '@tanstack/react-query'
 import customFetch from '@/utils/customFetch'
+import type { FileRef } from '@/utils/types'
 import { RestrictUserDialog } from '@/components/restriction/RestrictUserDialog'
 import {
     createRestriction,
     downloadWorkerTimesheet,
     getActiveRestrictions,
+    getWorkerDocuments,
     getWorkerTimesheet,
     liftRestriction,
     type CreateRestrictionPayload,
@@ -37,6 +40,7 @@ interface WorkerStatsResponse {
         role: string
         isActive: boolean
         createdAt: string
+        profilePhoto?: FileRef | null
     }
     stats: {
         hoursThisWeek: number
@@ -159,6 +163,11 @@ export function WorkerProfile() {
         queryFn: () => getWorkerTimesheet({ workerId, period: timesheetPeriod }),
     })
 
+    const { data: workerDocuments } = useQuery({
+        queryKey: ['worker-documents', workerId],
+        queryFn: () => getWorkerDocuments(workerId),
+    })
+
     if (!data) return null
     const { worker, stats, hoursTrend, jobHistory, recentActivity } = data
 
@@ -234,7 +243,7 @@ export function WorkerProfile() {
                 <div className="px-6 pb-6 relative z-10">
                     <div className="flex items-end justify-between -mt-7 mb-5">
                         <div className="ring-4 ring-white rounded-full shadow-lg">
-                            <Avatar initials={initials} size="xl" index={workerIndex} />
+                            <Avatar initials={initials} size="xl" index={workerIndex} src={worker.profilePhoto?.url} />
                         </div>
                         <div className="flex items-center gap-2 mb-1">
                             <Button variant="outline" size="sm">
@@ -598,6 +607,33 @@ export function WorkerProfile() {
                                 </button>
                             )}
                         </div>
+                    </Card>
+
+                    {/* Documents — worker-uploaded, view-only from here */}
+                    <Card className="p-5">
+                        <h3 className="text-sm font-semibold text-slate-900 mb-3">Documents</h3>
+                        {!workerDocuments?.documents.length ? (
+                            <p className="text-xs text-slate-400">No documents uploaded.</p>
+                        ) : (
+                            <div className="flex flex-col gap-2">
+                                {workerDocuments.documents.map(doc => (
+                                    <a
+                                        key={doc._id}
+                                        href={doc.url}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl hover:bg-slate-50 border border-[#E2E8F0] transition-colors min-w-0"
+                                    >
+                                        {doc.mimeType === "application/pdf" ? (
+                                            <FileText size={14} className="text-slate-400 shrink-0" />
+                                        ) : (
+                                            <ImageIcon size={14} className="text-slate-400 shrink-0" />
+                                        )}
+                                        <span className="text-sm font-medium text-slate-700 truncate">{doc.name}</span>
+                                    </a>
+                                ))}
+                            </div>
+                        )}
                     </Card>
                 </div>
             </div>

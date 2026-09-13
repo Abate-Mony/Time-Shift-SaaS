@@ -17,7 +17,9 @@ export { ReportsProfitabilityPage } from "./reports/ReportsProfitabilityPage"
 export { Notifications } from './Notifications'
 export { Settings, loader as settingsLoader } from './Settings'
 export { WorkerApp } from './WorkerApp'
-export { Locations } from './Locations'
+export { Sites, loader as sitesLoader } from './Sites'
+export { CreateSitePage } from './CreateSitePage'
+export { SiteDetailPage, loader as siteDetailLoader } from './SiteDetailPage'
 export { EditJob, loader as singleJobLoader, action as editJobAction } from './EditJobPage'
 export { Invoices, loader as invoicesLoader } from './Invoices'
 export { InvoiceForm, loader as invoiceFormLoader } from './InvoiceForm'
@@ -35,6 +37,7 @@ export { action as signupAction } from "../components/signup-form"
 export { ProfileScreen, loader as workerProfileLoader } from "./worker/WorkerProfilepage"
 export { loader as clockLoader } from "./worker/ClockScreenPage"
 export { default as DownloadTimesheetScreen } from "./worker/DownloadTimesheet"
+export { default as WorkerDocumentsScreen } from "./worker/WorkerDocumentsScreen"
 export { Analytics, loader as analyticsLoader } from "./AnalyticsPage"
 export { Team, loader as teamLoader } from "./TeamPage"
 export { RecurringJobDetail, loader as recurringJobDetailLoader } from "./recurringJobDetailsPage"
@@ -45,8 +48,13 @@ export { ClientDetail, loader as clientDetailLoader } from "./ClientDetails/Clie
 export { ClientDetailsOverviewPage } from "./ClientDetails/ClientDetailsOverViewPage"
 export { ClientDetailsContactsPage } from "./ClientDetails/ClientDetailsContactsPage"
 export { ClientDetailsaJobsPage } from "./ClientDetails/ClientDetailsJobsPage"
+export { ClientDetailsSitesPage } from "./ClientDetails/ClientDetailsSitesPage"
 export { default as ClentBillingPage } from "./ClientDetails/ClientDetailsBillingPage"
 export { SuspendedAccountPage } from "./SuspendedAccountPage"
 export { default as CheckOutSettings } from "./settings/CheckOutSettings"
 export { default as ChangePlanSettings } from "./settings/ChangePlanSettings"
 export { default as TeamsCreatepage, loader as teamsCreateLoader } from "./teams/teamsCreatepage"
+export { HelpCentre } from "./help/HelpCentre"
+export { HelpArticlePage } from "./help/HelpArticlePage"
+export { default as HelpCentreScreen } from "./worker/HelpCentreScreen"
+export { default as HelpArticleScreen } from "./worker/HelpArticleScreen"

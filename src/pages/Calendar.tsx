@@ -168,6 +168,7 @@ const DisplayCalendar = ({
                           initials={w?.fullname?.slice(0, 2) ?? '?'}
                           size="sm"
                           index={i}
+                          src={w?.profilePhoto?.url}
                         />
                       ))}
                       {assignedWorkers.length > 4 && (
@@ -543,6 +544,7 @@ export function Calendar() {
                                 initials={w?.fullname?.slice(0, 2) ?? '?'}
                                 size="sm"
                                 index={i}
+                                src={w?.profilePhoto?.url}
                               />
                             ))}
                             {assignedWorkers.length > 4 && (

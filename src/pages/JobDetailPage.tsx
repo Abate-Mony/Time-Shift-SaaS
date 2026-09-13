@@ -2,7 +2,7 @@ import customFetch from '@/utils/customFetch'
 import { formatCurrency } from '@/utils/format'
 import { formatDate, formatDuration, getShiftProgress } from '@/utils/date'
 import { queryClient } from '@/lib/queryClient'
-import { deleteJob, duplicateJob, reviewAssignmentOvertime, reviewOpenShiftClaim, updateJobWorkers } from '@/utils/api-request-functions'
+import { deleteJob, deleteJobAttachment, duplicateJob, reviewAssignmentOvertime, reviewOpenShiftClaim, updateJobWorkers, uploadJobAttachment } from '@/utils/api-request-functions'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import dayjs from 'dayjs'
 import toast from 'react-hot-toast'
@@ -25,6 +25,7 @@ import {
     MapPinOff,
     MoreHorizontal,
     Navigation,
+    Paperclip,
     Play,
     Plus,
     Receipt,
@@ -42,7 +43,7 @@ import {
     LogIn, LogOut, Coffee,
     Ban, Bot, StickyNote, CircleCheck,
 } from "lucide-react"
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { useBackLink, backLinkState } from '@/hooks/useBackLink'
 import AssignWorkersModal from '@/components/AssignWorkersModal'
@@ -244,6 +245,7 @@ export function JobDetail() {
     const navigate = useNavigate()
     const onNavigate = (path: string, state?: object) => navigate(path, state ? { state } : undefined)
     const job = useQuery(singleJob(id))?.data?.job!
+    const attachmentInputRef = useRef<HTMLInputElement>(null)
 
     // Which invoice(s), if any, already cover this job's billable work.
     // Fixed-price jobs track billing on the Job itself; hourly jobs track it
@@ -311,6 +313,24 @@ export function JobDetail() {
             console.error(error)
             toast.error("Failed to duplicate job")
         },
+    })
+
+    const uploadAttachmentMutation = useMutation({
+        mutationFn: (file: File) => uploadJobAttachment({ jobId: id!, file }),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["job", id] })
+            toast.success("Attachment uploaded")
+        },
+        onError: () => toast.error("Couldn't upload the attachment — try again."),
+    })
+
+    const deleteAttachmentMutation = useMutation({
+        mutationFn: () => deleteJobAttachment(id!),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["job", id] })
+            toast.success("Attachment removed")
+        },
+        onError: () => toast.error("Couldn't remove the attachment — try again."),
     })
 
     const removeWorkerMutation = useMutation({
@@ -614,7 +634,7 @@ export function JobDetail() {
                                     return (
                                         <div key={w._id} className="bg-white border border-amber-200 rounded-xl p-3.5 flex flex-col gap-2.5">
                                             <div className="flex items-center gap-2 min-w-0">
-                                                <Avatar initials={getInitials(w.fullname)} size="sm" index={0} />
+                                                <Avatar initials={getInitials(w.fullname)} size="sm" index={0} src={w.profilePhoto?.url} />
                                                 <div className="min-w-0">
                                                     <p className="text-sm font-semibold text-slate-800 truncate">{w.fullname}</p>
                                                     <p className="text-[11px] text-amber-700">
@@ -632,7 +652,7 @@ export function JobDetail() {
 
                                             {isAdjusting ? (
                                                 <div className="flex items-center gap-2">
-                                                    <input
+                                                    <Input
                                                         type="number"
                                                         step="0.25"
                                                         min="0"
@@ -769,6 +789,62 @@ export function JobDetail() {
                                 </div>
                             </div>
                         )}
+
+                        {/* Attachment — optional file for assigned workers, e.g. a photo of
+                            a door passcode or access instructions. */}
+                        <div className="mx-5 mb-5 mt-2">
+                            <Input
+                            
+                                ref={attachmentInputRef}
+                                type="file"
+                                accept="image/jpeg,image/png,image/webp,application/pdf"
+                                className="sr-only block relative max-w-0 items-center"
+                                onChange={e => {
+                                    const file = e.target.files?.[0]
+                                    if (file) uploadAttachmentMutation.mutate(file)
+                                    e.target.value = ""
+                                }}
+                            />
+                            {job.attachment ? (
+                                <div className="flex items-center gap-2.5 bg-slate-50 border border-[#E2E8F0] rounded-xl px-4 py-3">
+                                    <FileText size={16} className="text-slate-400 shrink-0" />
+                                    <a
+                                        href={job.attachment.url}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="text-sm font-medium text-slate-700 hover:text-slate-900 underline underline-offset-2 truncate flex-1 min-w-0"
+                                    >
+                                        {job.attachment.filename}
+                                    </a>
+                                    <button
+                                        type="button"
+                                        onClick={() => attachmentInputRef.current?.click()}
+                                        disabled={uploadAttachmentMutation.isPending}
+                                        className="text-xs font-semibold text-slate-500 hover:text-slate-800 shrink-0"
+                                    >
+                                        Replace
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => deleteAttachmentMutation.mutate()}
+                                        disabled={deleteAttachmentMutation.isPending}
+                                        className="text-xs font-semibold text-rose-500 hover:text-rose-700 shrink-0"
+                                    >
+                                        Remove
+                                    </button>
+                                </div>
+                            ) : (
+                                <button
+                                    type="button"
+                                    onClick={() => attachmentInputRef.current?.click()}
+                                    disabled={uploadAttachmentMutation.isPending}
+                                    className="flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-800 border border-dashed border-[#CBD5E1] rounded-xl px-4 py-3 w-full justify-center hover:bg-slate-50 transition-colors"
+                                >
+                                    <Paperclip size={14} />
+                                    {uploadAttachmentMutation.isPending ? "Uploading…" : "Add attachment (optional)"}
+                                </button>
+                            )}
+                        </div>
                     </Card>
 
                     {/* Worker time logs */}
@@ -816,7 +892,7 @@ export function JobDetail() {
                                             onClick={() => onNavigate(`/workers/${w.worker}/worker-profile`, backLinkState(job.title))}
                                         >
                                             <div className="flex items-center gap-2.5">
-                                                <Avatar initials={getInitials(w.fullname)} size="sm" index={i} />
+                                                <Avatar initials={getInitials(w.fullname)} size="sm" index={i} src={w.profilePhoto?.url} />
                                                 <div>
                                                     <p className="text-sm font-medium text-slate-800">{w.fullname}</p>
                                                     <p className="text-[10px] text-slate-400">{w.email}</p>
@@ -1179,7 +1255,7 @@ export function JobDetail() {
                                             </Tooltip>
                                         )}
 
-                                        <Avatar initials={w.fullname?.slice(0, 2)} size="sm" index={i} />
+                                        <Avatar initials={w.fullname?.slice(0, 2)} size="sm" index={i} src={w.profilePhoto?.url} />
                                         <div className="flex-1 min-w-0">
                                             <p className="text-sm font-medium text-slate-800 group-hover:text-blue-700 transition-colors">{w.fullname}</p>
                                             <p className="text-[10px] text-slate-400">{w.email}</p>

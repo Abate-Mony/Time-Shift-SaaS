@@ -9,7 +9,8 @@ import { ensurePushSubscription } from "@/utils/pushSubscription"
 import { buildMapUrl, MAP_SERVICES, type MapService } from "@/utils/mapLinks"
 import type { CreateJobForm } from "@/utils/types"
 import { useQuery } from "@tanstack/react-query"
-import { AlertCircle, AlertTriangle, Briefcase, CalendarDays, Check, CheckCircle2, ChevronLeft, Clock, Dot, Loader2, MapPin, Navigation, Timer, X } from "lucide-react"
+import { AlertCircle, AlertTriangle, Briefcase, CalendarDays, Check, CheckCircle2, ChevronLeft, Clock, Dot, Loader2, MapPin, Navigation, Paperclip, RefreshCw, Timer, X } from "lucide-react"
+import { useCompanyPlan } from "@/hooks/useCompanyPlan"
 import { useNavigate, useParams, type LoaderFunctionArgs } from "react-router"
 import { useState } from "react"
 import {
@@ -88,6 +89,29 @@ export default function JobDetailScreen() {
         if (result.success) {
             setCancellationReason('')
             setOpen(false)
+        }
+    }
+
+    // "Release" — same underlying cancel, but also reopens the shift for
+    // another worker to self-claim instead of leaving the manager to
+    // reassign it. Gated behind the same plan feature as open shifts
+    // generally, since that's what makes the release actually visible.
+    const { hasFeature } = useCompanyPlan()
+    const canRelease = hasFeature('openShifts')
+    const [releaseOpen, setReleaseOpen] = useState(false)
+    const [releaseReason, setReleaseReason] = useState('')
+    const [isReleasing, setIsReleasing] = useState(false)
+
+    const handleReleaseShift = async () => {
+        setIsReleasing(true)
+        const result = await changeWorkerJobStaus(job!._id!, "cancelled", {
+            reason: releaseReason.trim() || undefined,
+            release: true,
+        })
+        setIsReleasing(false)
+        if (result.success) {
+            setReleaseReason('')
+            setReleaseOpen(false)
         }
     }
 
@@ -184,6 +208,49 @@ export default function JobDetailScreen() {
                 </div>
             )}
 
+            {job?.attachment && (
+                <a
+                    href={job.attachment.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center gap-2.5 bg-white border border-[#E2E8F0] rounded-2xl p-4 hover:bg-slate-50 transition-colors"
+                >
+                    <Paperclip size={14} className="text-slate-400 shrink-0" />
+                    <div className="flex-1 min-w-0">
+                        <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide">Attachment</p>
+                        <p className="text-sm text-slate-800 font-medium truncate underline underline-offset-2">
+                            {job.attachment.filename}
+                        </p>
+                    </div>
+                </a>
+            )}
+
+            {job?.siteSnapshot && (job.siteSnapshot.contact?.name || job.siteSnapshot.accessInstructions || job.siteSnapshot.parkingInstructions) && (
+                <div className="bg-white border border-[#E2E8F0] rounded-2xl p-4 flex flex-col gap-3">
+                    {job.siteSnapshot.contact?.name && (
+                        <div>
+                            <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide mb-1">Site contact</p>
+                            <p className="text-sm font-medium text-slate-800">{job.siteSnapshot.contact.name}</p>
+                            {job.siteSnapshot.contact.phone && (
+                                <a href={`tel:${job.siteSnapshot.contact.phone}`} className="text-xs text-slate-500">{job.siteSnapshot.contact.phone}</a>
+                            )}
+                        </div>
+                    )}
+                    {job.siteSnapshot.accessInstructions && (
+                        <div>
+                            <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide mb-1">Access instructions</p>
+                            <p className="text-sm text-slate-700 leading-relaxed">{job.siteSnapshot.accessInstructions}</p>
+                        </div>
+                    )}
+                    {job.siteSnapshot.parkingInstructions && (
+                        <div>
+                            <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide mb-1">Parking</p>
+                            <p className="text-sm text-slate-700 leading-relaxed">{job.siteSnapshot.parkingInstructions}</p>
+                        </div>
+                    )}
+                </div>
+            )}
+
             {job?.status === 'completed' && (
                 <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
@@ -271,6 +338,124 @@ export default function JobDetailScreen() {
                         {hasExpired ? "Shift window missed" : `Starts in ${formatTimeUntil(minutesUntilStart ?? 0)}`}
                     </div>
                 )
+            )}
+            {job?.status === 'accepted' && !hasExpired && canRelease && (
+                <>
+                    <Drawer open={releaseOpen} onOpenChange={o => { setReleaseOpen(o); if (!o) setReleaseReason('') }}>
+                        <DrawerTrigger asChild className="hidden">
+                            <Button variant="outline">Open</Button>
+                        </DrawerTrigger>
+                        <DrawerContent className="max-w-md mx-auto">
+                            <DrawerHeader className="text-left">
+                                <DrawerDescription />
+                            </DrawerHeader>
+                            <div className="px-4">
+                                <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                                    <div className="mb-4">
+                                        <h3 className="text-sm font-bold text-slate-900">
+                                            Release shift
+                                        </h3>
+                                        <p className="mt-1 text-xs leading-relaxed text-slate-500">
+                                            Can't work this shift? Release it and it goes straight into open
+                                            shifts for another worker to pick up — no need to wait on your manager.
+                                        </p>
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="releaseReason">
+                                                Reason
+                                                <span className="ml-1 font-normal text-slate-400">
+                                                    optional
+                                                </span>
+                                            </Label>
+
+                                            <Textarea
+                                                id="releaseReason"
+                                                value={releaseReason}
+                                                onChange={(e) => setReleaseReason(e.target.value)}
+                                                placeholder="e.g. I'm unwell, transport issue, personal emergency..."
+                                                className="min-h-[100px] resize-none"
+                                                maxLength={300}
+                                            />
+
+                                            <div className="flex justify-end">
+                                                <span className="text-[11px] text-slate-400">
+                                                    {releaseReason.length}/300
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <div className="rounded-xl border border-blue-200 bg-blue-50 p-3">
+                                            <div className="flex items-start gap-2">
+                                                <RefreshCw
+                                                    size={16}
+                                                    className="mt-0.5 shrink-0 text-blue-600"
+                                                />
+
+                                                <p className="text-xs leading-relaxed text-blue-800">
+                                                    You'll be removed from this shift and it becomes an open shift
+                                                    for any eligible worker to claim. Your manager is notified either way.
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex gap-2">
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                className="flex-1"
+                                                disabled={isReleasing}
+                                                onClick={() => setReleaseOpen(false)}
+                                            >
+                                                Keep shift
+                                            </Button>
+
+                                            <Button
+                                                type="button"
+                                                className="flex-1"
+                                                disabled={isReleasing}
+                                                onClick={handleReleaseShift}
+                                            >
+                                                {isReleasing ? (
+                                                    <>
+                                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                        Releasing...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <RefreshCw className="mr-2 h-4 w-4" />
+                                                        Release shift
+                                                    </>
+                                                )}
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <DrawerFooter className="pt-2">
+                                <DrawerClose asChild>
+                                    <Button variant="outline">Close</Button>
+                                </DrawerClose>
+                            </DrawerFooter>
+                        </DrawerContent>
+                    </Drawer>
+                    <button
+                        type="button"
+                        onClick={() => setReleaseOpen(o => !o)}
+                        className="
+        w-full h-10 rounded-xl
+        border border-blue-200
+        bg-blue-50
+        text-blue-700
+        text-sm font-semibold
+        hover:bg-blue-100
+        transition-colors
+      "
+                    >
+                        Release Shift
+                    </button>
+                </>
             )}
             {job?.status === 'accepted' && !hasExpired && (
                 <>

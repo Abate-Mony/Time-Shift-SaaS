@@ -75,7 +75,7 @@ export function ReportsProfitabilityPage() {
       ) : (
         <>
           {/* Stats */}
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(min(20rem,calc(100%-0.3rem)),1fr))] gap-4">
             <StatCard
               label="Revenue"
               value={formatCurrency(data.summary.revenue)}

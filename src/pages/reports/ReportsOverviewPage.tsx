@@ -6,6 +6,33 @@ import { Card, StatCard } from '@/components/ui'
 import { CustomTooltip } from './shared'
 import { useReportsContext } from '@/layouts/ReportLayout'
 import { reportsOverviewQuery } from '@/utils/reports'
+import * as React from "react"
+// import Image from "next/image"
+
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
+import { Scrollbar } from '@radix-ui/react-scroll-area'
+
+export interface Artwork {
+  artist: string
+  art: string
+}
+
+export const works: Artwork[] = [
+  {
+    artist: "Ornella Binni",
+    art: "https://images.unsplash.com/photo-1465869185982-5a1a7522cbcb?auto=format&fit=crop&w=300&q=80",
+  },
+  {
+    artist: "Tom Byrom",
+    art: "https://images.unsplash.com/photo-1548516173-3cabfa4607e9?auto=format&fit=crop&w=300&q=80",
+  },
+  {
+    artist: "Vladimir Malyavko",
+    art: "https://images.unsplash.com/photo-1494337480532-3725c85fd2ab?auto=format&fit=crop&w=300&q=80",
+  },
+]
+
+
 
 const STATUS_COLORS: Record<string, string> = {
   completed: '#10B981',
@@ -30,7 +57,16 @@ export function ReportsOverviewPage() {
   return (
     <div className="flex flex-col gap-5">
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-4">
+    <ScrollArea>
+  <div className='flex space-x-4 pb-4 lg:hidden'> {/* Added bottom padding so the scrollbar doesn't overlap text */}
+    <StatCard className='w-[250px] max-w-[calc(100%-1rem)] shrink-0' label="Total Hours" value={data.stats.totalHours} sub={monthLabel} icon={<Clock size={16} />} />
+    <StatCard className='w-[250px] max-w-[calc(100%-1rem)] shrink-0' label="Jobs Completed" value={data.stats.jobsCompleted} sub="this month" icon={<Briefcase size={16} />} />
+    <StatCard className='w-[250px] max-w-[calc(100%-1rem)] shrink-0' label="Active Workers" value={data.stats.activeWorkers} sub="clocked in this month" icon={<Users size={16} />} />
+    <StatCard className='w-[250px] max-w-[calc(100%-1rem)] shrink-0' label="Avg Hours/Worker" value={data.stats.avgHoursPerWorker} sub="per active worker" icon={<TrendingUp size={16} />} />
+  </div>
+  <Scrollbar orientation='horizontal' className='bg-black'/>
+</ScrollArea>
+      <div className="lg:grid grid-cols-4 gap-4 hidden">
         <StatCard label="Total Hours" value={data.stats.totalHours} sub={monthLabel} icon={<Clock size={16} />} />
         <StatCard label="Jobs Completed" value={data.stats.jobsCompleted} sub="this month" icon={<Briefcase size={16} />} />
         <StatCard label="Active Workers" value={data.stats.activeWorkers} sub="clocked in this month" icon={<Users size={16} />} />
@@ -38,7 +74,7 @@ export function ReportsOverviewPage() {
       </div>
 
       {/* Charts row */}
-      <div className="grid grid-cols-3 gap-5">
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(min(20rem,calc(100%-0.3rem)),1fr))] gap-5">
         <div className="col-span-2">
           <Card className="p-5">
             <h3 className="text-sm font-semibold text-slate-900 mb-4">Monthly Hours Trend</h3>

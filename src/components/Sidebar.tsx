@@ -22,6 +22,7 @@ import {
 } from 'lucide-react'
 import { Avatar } from './ui'
 import CustomNavLink from './ui/link'
+import { Button } from './ui/button'
 
 const navItems = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -30,7 +31,7 @@ const navItems = [
   { id: 'clients', label: 'Client', icon: SquareUser },
   { id: 'team', label: 'Teams', icon: MapPin },
   { id: 'calendar', label: 'Calendar', icon: Calendar },
-  { id: 'locations', label: 'Locations', icon: MapPin },
+  { id: 'sites', label: 'Sites', icon: MapPin },
   // { id: 'messages', label: 'Messages', icon: MessageSquare, badge: 2 },
 ]
 
@@ -56,7 +57,7 @@ interface SidebarProps {
   user: iUser
 }
 
-export function Sidebar({ active, collapsed, onToggleSidebar, user }: SidebarProps) {
+export function Sidebar({  collapsed, onToggleSidebar, user }: SidebarProps) {
 
   const fullname = user?.fullname
   const role = user?.role
@@ -67,109 +68,111 @@ export function Sidebar({ active, collapsed, onToggleSidebar, user }: SidebarPro
           onClick={onToggleSidebar}
         />
       }
-      <aside className={`${collapsed ? 'lg:w-16 w-0 overflow-hidden' : 'w-[240px]'} z-30 h-screen bg-[#0F172A] border flex flex-col fixed left-0 top-0 overflow-y-auto transition-all duration-200`}>
+      <aside className={`${collapsed ? 'lg:w-16 w-0 overflow-hidden' : 'w-60'} z-30 h-dvh bg-[#0F172A] border flex flex-col fixed left-0 top-0 transition-all duration-200`}>
         {/* Logo */}
-        <div className="h-[60px] flex items-center px-5 border-b border-white/[0.06] shrink-0 hidden">
-          {collapsed ? (
-            <div className="w-7 h-7 rounded-lg bg-blue-500 flex items-center justify-center">
-              <span className="text-white font-bold text-xs">W</span>
-            </div>
-          ) : (
-            <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-blue-500 flex items-center justify-center shrink-0">
+        <div className='flex flex-1 min-h-0 flex-col'>
+          <div className="h-[60px] flex items-center px-5 border-b border-white/6 shrink-0 hidden">
+            {collapsed ? (
+              <div className="w-7 h-7 rounded-lg bg-blue-500 flex items-center justify-center">
                 <span className="text-white font-bold text-xs">W</span>
               </div>
-              <span className="text-white font-semibold text-base tracking-tight">{user.company.name}<span className="text-blue-400 hidden">.wrk</span></span>
+            ) : (
+              <div className="flex items-center gap-2.5">
+                <div className="w-7 h-7 rounded-lg bg-blue-500 flex items-center justify-center shrink-0">
+                  <span className="text-white font-bold text-xs">W</span>
+                </div>
+                <span className="text-white font-semibold text-base tracking-tight">{user.company.name}<span className="text-blue-400 hidden">.wrk</span></span>
+              </div>
+            )}
+          </div>
+
+          {/* Company selector */}
+          {!collapsed && (
+            <div className="px-3 py-3 border-b border-white/[0.06]">
+              <button className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-white/[0.05] transition-colors group">
+                <div className="w-6 h-6 rounded bg-blue-500/20 flex items-center justify-center shrink-0">
+                  <Building2 size={12} className="text-blue-400" />
+                </div>
+                <div className="flex-1 min-w-0 text-left">
+                  <p className="text-xs font-medium text-white/90 truncate">{user.company.name}</p>
+                  <p className="text-[10px] text-white/40">Enterprise</p>
+                </div>
+                <ChevronDown size={12} className="text-white/30 group-hover:text-white/50 transition-colors" />
+              </button>
             </div>
           )}
-        </div>
 
-        {/* Company selector */}
-        {!collapsed && (
-          <div className="px-3 py-3 border-b border-white/[0.06]">
-            <button className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-white/[0.05] transition-colors group">
-              <div className="w-6 h-6 rounded bg-blue-500/20 flex items-center justify-center shrink-0">
-                <Building2 size={12} className="text-blue-400" />
-              </div>
-              <div className="flex-1 min-w-0 text-left">
-                <p className="text-xs font-medium text-white/90 truncate">{user.company.name}</p>
-                <p className="text-[10px] text-white/40">Enterprise</p>
-              </div>
-              <ChevronDown size={12} className="text-white/30 group-hover:text-white/50 transition-colors" />
-            </button>
-          </div>
-        )}
+          {/* Main nav */}
+          <nav className="flex-1 min-h-0 overflow-y-auto py-3 px-3 flex flex-col gap-0.5">
+            {!collapsed && <p className="text-[10px] font-semibold text-white/25 uppercase tracking-widest px-2 mb-1 mt-1">Main</p>}
+            {navItems.map(item => (
+              <CustomNavLink
+                to={item.id}
+                layoutId='side-bar-items'
 
-        {/* Main nav */}
-        <nav className="flex-1 overflow-y-auto py-3 px-3 flex flex-col gap-0.5">
-          {!collapsed && <p className="text-[10px] font-semibold text-white/25 uppercase tracking-widest px-2 mb-1 mt-1">Main</p>}
-          {navItems.map(item => (
-            <CustomNavLink
-              to={item.id}
-              layoutId='side-bar-items'
+                show
+                selectedClassName=''
+                animateClassName="inset-0 size-full bg-gray-500/15"
+                className={`w-full  text-white/50 hover:text-white/75 px-2.5 hover:bg-white/3  justify-center  h-auto items-center gap-2.5  py-2 rounded-lg text-sm transition-colors relative group`}
 
-              show
-              selectedClassName=''
-              animateClassName="inset-0 size-full bg-gray-500/15"
-              className={`w-full  text-white/50 hover:text-white/75 px-2.5 hover:bg-white/3  justify-center  h-auto items-center gap-2.5  py-2 rounded-lg text-sm transition-colors relative group`}
+              >
+                <div className='w-full flex items-center  space-x-1.5 h-full justify-between '>
+                  <item.icon size={16} className={cn('text-blue-400 group-[.slide-active]:text-current')} />
+                  {!collapsed && <span className="flex-1 text-left font-medium">{item.label}</span>}
+                </div>
+              </CustomNavLink>
+            ))}
 
-            >
-              <div className='w-full flex items-center  space-x-1.5 h-full justify-between '>
-                <item.icon size={16} className={cn('text-blue-400 group-[.slide-active]:text-current')} />
-                {!collapsed && <span className="flex-1 text-left font-medium">{item.label}</span>}
-              </div>
-            </CustomNavLink>
-          ))}
+            {!collapsed && <p className="text-[10px] font-semibold text-white/25 uppercase tracking-widest px-2 mb-1 mt-4">Reporting</p>}
+            {collapsed && <div className="my-2 border-t border-white/[0.06]" />}
+            {secondaryItems.map(item => (
+              <CustomNavLink
+                layoutId='side-bar-items'
 
-          {!collapsed && <p className="text-[10px] font-semibold text-white/25 uppercase tracking-widest px-2 mb-1 mt-4">Reporting</p>}
-          {collapsed && <div className="my-2 border-t border-white/[0.06]" />}
-          {secondaryItems.map(item => (
-            <CustomNavLink
-              layoutId='side-bar-items'
-
-              to={item.id}
-              show
-              selectedClassName=''
-              animateClassName="inset-0 size-full bg-gray-500/15 shadow-sm"
-              className={`w-full  text-white/50 hover:text-white/75  justify-between
+                to={item.id}
+                show
+                selectedClassName=''
+                animateClassName="inset-0 size-full bg-gray-500/15 shadow-sm"
+                className={`w-full  text-white/50 hover:text-white/75  justify-between
                 h-auto hover:bg-white/3 flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm transition-colors relative group`}
 
-            >
-              <div className='flex items-center  space-x-1.5'>
+              >
+                <div className='flex items-center  space-x-1.5'>
 
-                <item.icon size={16} className={cn('text-blue-400 group-[.slide-active]:text-current')} />
-                {!collapsed && <span className="flex-1 text-left font-medium">{item.label}</span>}
-              </div>
+                  <item.icon size={16} className={cn('text-blue-400 group-[.slide-active]:text-current')} />
+                  {!collapsed && <span className="flex-1 text-left font-medium">{item.label}</span>}
+                </div>
 
 
-            </CustomNavLink>
-          ))}
-        </nav>
+              </CustomNavLink>
+            ))}
+          </nav>
 
-        {/* Bottom nav */}
-        <div className="border-t border-white/6 px-3 py-3 flex- flex-col gap-0.5 ">
-          {bottomItems.map(item => (
-            <CustomNavLink
-              to={item.id}
-              show
-              layoutId='side-bar-items'
-              selectedClassName=''
-              animateClassName="inset-0 size-full bg-gray-500/15"
-              className={`w-full  text-white/50 hover:text-white/75 px-2.5 hover:bg-white/3  justify-center  h-auto items-center gap-2.5  py-2 rounded-lg text-sm transition-colors relative group`}
+          {/* Bottom nav */}
+          <div className="border-t border-white/6 px-3 py-3 flex- flex-col gap-0.5  ">
+            {bottomItems.map(item => (
+              <CustomNavLink
+                to={item.id}
+                show
+                layoutId='side-bar-items'
+                selectedClassName=''
+                animateClassName="inset-0 size-full bg-gray-500/15"
+                className={`w-full  text-white/50 hover:text-white/75 px-2.5 hover:bg-white/3  justify-center  h-auto items-center gap-2.5  py-2 rounded-lg text-sm transition-colors relative group`}
 
-            >
-              <div className='w-full flex items-center  space-x-1.5 h-full justify-between '>
-                <item.icon size={16} className={cn('text-blue-400 group-[.slide-active]:text-current')} />
-                {!collapsed && <span className="flex-1 text-left font-medium">{item.label}</span>}
-              </div>
-            </CustomNavLink>
-          ))}
+              >
+                <div className='w-full flex items-center  space-x-1.5 h-full justify-between '>
+                  <item.icon size={16} className={cn('text-blue-400 group-[.slide-active]:text-current')} />
+                  {!collapsed && <span className="flex-1 text-left font-medium">{item.label}</span>}
+                </div>
+              </CustomNavLink>
+            ))}
+          </div>
         </div>
         {/* User */}
 
-        {/* <div className="border-t border-white/6 p-3 flex-none">
+        <div className="border-t  lg:hidden border-white/6 p-3 flex-none h-fit">
           <button className="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-white/5 transition-colors group">
-            <Avatar initials={getInitials(fullname)} size="sm" index={0} />
+            <Avatar initials={getInitials(fullname)} size="sm" index={0} src={user?.profilePhoto?.url} />
             {!collapsed && (
               <>
                 <div className="flex-1 min-w-0 text-left">
@@ -183,7 +186,7 @@ export function Sidebar({ active, collapsed, onToggleSidebar, user }: SidebarPro
               </>
             )}
           </button>
-        </div> */}
+        </div>
       </aside></>
   )
 }
