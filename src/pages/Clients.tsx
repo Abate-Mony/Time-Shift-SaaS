@@ -25,6 +25,7 @@ import customFetch from '@/utils/customFetch'
 import { queryClient } from '@/lib/queryClient'
 import { clientsQuery } from '@/utils/clients'
 import type { Client, ClientStatus } from '@/utils/types/client'
+import { Scrollable } from '@/components/ui/scrollable'
 
 export const loader = (queryClient: QueryClient) => async () => {
     await queryClient.ensureQueryData(clientsQuery())
@@ -732,15 +733,15 @@ export function Clients() {
             </div>
 
             {/* Stats row */}
-            <div className="grid grid-cols-3 gap-3 mb-5">
+            <Scrollable className="md:grid! grid-cols-3 gap-3 mb-5">
                 {[
                     { label: 'Total clients', value: clients.length, icon: Building2 },
                     { label: 'Active', value: counts.active, icon: Users },
                     { label: 'Inactive', value: counts.inactive, icon: Archive },
                 ].map(({ label, value, icon: Icon }) => (
-                    <div key={label} className="bg-card border border-[var(--border)] rounded-xl p-4 flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-lg bg-[var(--primary)]/6 flex items-center justify-center shrink-0">
-                            <Icon size={16} className="text-[var(--primary)]" />
+                    <div key={label} className="w-52  md:w-full! flex-none   max-w-[calc(100%-1rem)] bg-card border border-border rounded-xl p-4 flex items-center gap-4">
+                        <div className="w-9 h-9 rounded-lg bg-(--primary)/6 flex items-center justify-center shrink-0">
+                            <Icon size={16} className="text-primary" />
                         </div>
                         <div>
                             <p className="text-lg font-bold text-foreground leading-none">{value}</p>
@@ -748,7 +749,7 @@ export function Clients() {
                         </div>
                     </div>
                 ))}
-            </div>
+            </Scrollable>
 
             {/* Filters + search */}
             <div className="flex items-center justify-between gap-3 mb-5 flex-wrap">

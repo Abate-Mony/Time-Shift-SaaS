@@ -1,10 +1,3 @@
-import { useEffect, useState } from 'react'
-import { Bell, Briefcase, Building2, ChevronDown, Moon, PanelLeft, Plus, Receipt, Search, Sun } from 'lucide-react'
-import { Button } from './ui/button'
-import { Link } from 'react-router'
-import { useQuery } from '@tanstack/react-query'
-import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar'
-import type { User } from '@/utils/types'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,14 +8,23 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { logoutUser } from '@/utils/logout'
-import { getInitials } from '@/utils/getInitials'
+import { cn } from '@/lib/utils'
 import { getNotifications } from '@/utils/api-request-functions'
+import { getInitials } from '@/utils/getInitials'
+import { logoutUser } from '@/utils/logout'
+import type { User } from '@/utils/types'
+import { useQuery } from '@tanstack/react-query'
+import { Bell, Briefcase, Building2, ChevronDown, Landmark, PanelLeft, Plus, Receipt, Search } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Link } from 'react-router'
 import { CommandPalette } from './CommandPalette'
-import { useTheme } from '@/providers/ThemeProvider'
+import ToggleTheme from './ToggleTheme'
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar'
+import { Button } from './ui/button'
+import CustomNavLink from './ui/link'
 
 interface TopBarProps {
-  onNewJob: () => void
+  // onNewJob: () => void
   onToggleSidebar: () => void
   onNavigate: (id: string) => void
   user: User
@@ -32,11 +34,12 @@ const NEW_ITEMS = [
   { label: 'Job', to: '/create-job', icon: Briefcase },
   { label: 'Invoice', to: '/invoices/create', icon: Receipt },
   { label: 'Client', to: '/clients/create', icon: Building2 },
+  { label: 'Sites', to: '/sites/create', icon: Landmark },
 ]
 
-export function TopBar({ user, onToggleSidebar, onNavigate, onNewJob }: TopBarProps) {
+export function TopBar({ user, onToggleSidebar, onNavigate }: TopBarProps) {
   const [paletteOpen, setPaletteOpen] = useState(false)
-  const { resolvedTheme, setTheme } = useTheme()
+  // const { resolvedTheme, setTheme } = useTheme()
 
   // Real unread count, not the decorative static dot this used to be —
   // refetched periodically so it doesn't need a full page reload to update.
@@ -78,7 +81,7 @@ export function TopBar({ user, onToggleSidebar, onNavigate, onNewJob }: TopBarPr
     },
   ]
   return (
-    <header className="h-[60px] bg-card border-b border-border flex items-center px-5 gap-4 sticky top-0 z-20">
+    <header className="h-[60px] pr-5 bg-card border-b border-border flex items-center px-5 gap-4 sticky top-0 z-20">
       <button
         onClick={onToggleSidebar}
         className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
@@ -95,7 +98,7 @@ export function TopBar({ user, onToggleSidebar, onNavigate, onNewJob }: TopBarPr
       <button
         type="button"
         onClick={() => setPaletteOpen(true)}
-        className="flex-1 max-w-md flex items-center gap-2.5 h-9 px-3 rounded-lg border border-border bg-muted text-left text-muted-foreground hover:bg-muted/70 hover:border-slate-300 dark:hover:border-slate-600 transition-colors"
+        className="flex-1 hidden max-w-md md:flex items-center gap-2.5 h-9 px-3 rounded-lg border border-border bg-muted text-left text-muted-foreground hover:bg-muted/70 hover:border-slate-300 dark:hover:border-slate-600 transition-colors"
       >
         <Search size={14} className="shrink-0" />
         <span className="flex-1 text-sm truncate">Search jobs, workers, clients, invoices…</span>
@@ -105,14 +108,7 @@ export function TopBar({ user, onToggleSidebar, onNavigate, onNewJob }: TopBarPr
       </button>
 
       <div className="flex items-center gap-2 ml-auto">
-
-        <button
-          onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
-          title={resolvedTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-          className="w-9 h-9 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-        >
-          {resolvedTheme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
-        </button>
+        <ToggleTheme />
 
         <button
           onClick={() => onNavigate('/notifications')}
@@ -130,22 +126,28 @@ export function TopBar({ user, onToggleSidebar, onNavigate, onNewJob }: TopBarPr
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="lg">
               <Plus size={14} />
-              New
+              <span className="hidden md:block">
+                New
+              </span>
               <ChevronDown size={12} className="text-muted-foreground" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-44">
             {NEW_ITEMS.map(item => (
               <DropdownMenuItem key={item.to} asChild>
-                {item.to === '/create-job' ? (
-                  <button type="button" onClick={onNewJob} className="flex w-full items-center gap-2">
+
+                <CustomNavLink show animateClassName={
+                  cn('bg-black/12 rounded-none h-full')
+                } to={item.to} className={
+                  cn(
+                    "flex cursor-pointer w-full items-center gap-2"
+                  )
+                }>
+                  <span className='gap-2.5 flex items-center'>
                     <item.icon size={13} className="text-muted-foreground" /> {item.label}
-                  </button>
-                ) : (
-                  <Link to={item.to} className="flex w-full items-center gap-2">
-                    <item.icon size={13} className="text-muted-foreground" /> {item.label}
-                  </Link>
-                )}
+                  </span>
+                </CustomNavLink>
+
               </DropdownMenuItem>
             ))}
           </DropdownMenuContent>
@@ -154,8 +156,8 @@ export function TopBar({ user, onToggleSidebar, onNavigate, onNewJob }: TopBarPr
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <div className="flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2 hover:bg-muted transition-colors">
-              <Avatar className="h-9 w-9">
-                {user?.profilePhoto?.url && <AvatarImage src={user.profilePhoto.url} alt={user.fullname} />}
+              <Avatar className="size-8 ring-white/70 ring-2">
+                {user?.profilePhoto?.url && <AvatarImage className='bg-blend-soft-light' src={user.profilePhoto.url} alt={user.fullname} />}
                 <AvatarFallback className="bg-primary text-primary-foreground text-xs font-semibold">
                   {
                     getInitials(user?.fullname)
@@ -209,7 +211,13 @@ export function TopBar({ user, onToggleSidebar, onNavigate, onNewJob }: TopBarPr
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+        <button className="flex md:hidden" 
+        onClick={() => setPaletteOpen(true)}
+        
+        >
+          <Search size={16} className="shrink-0" />
 
+        </button>
 
       </div>
 

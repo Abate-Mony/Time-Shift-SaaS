@@ -19,9 +19,9 @@ export const Scrollable = ({
       className={cn(
         // Combine the base classes with conditional ones based on the direction.
         "flex flex-nowrap overflow-x-auto scrollto gap-x-4 md:gap-x-2 overflow-y-hidden pb-2", 
-        className, // Add any additional class names passed via props.
         direction == "row" && "flex-nowrap", // For horizontal scrolling.
-        direction == "column" && "flex-wrap" // For vertical scrolling.
+        direction == "column" && "flex-wrap", // For vertical scrolling.,
+        className, // Add any additional class names passed via props.
       )}
     >
       {children} {/* Render the children inside the div. */}

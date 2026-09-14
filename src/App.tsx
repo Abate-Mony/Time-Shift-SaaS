@@ -19,7 +19,7 @@ const App = () => {
       {/* <ScrollToTop */}
 
       <QueryClientProvider client={queryClient}>
-        <ReactQueryDevtools initialIsOpen={false} position="left" buttonPosition="top-right" />
+        <ReactQueryDevtools initialIsOpen={false} position="left" buttonPosition="bottom-left" />
         <TooltipProvider>
           <RouterProvider
 
