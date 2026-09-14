@@ -114,7 +114,6 @@ export default function DashboardLayout() {
                         <>
                             <TopBar
                                 user={user}
-                                onNewJob={() => navigate('/create-job')}
                                 onToggleSidebar={() => setSidebarCollapsed(c => !c)}
                                 onNavigate={navigate}
                             />

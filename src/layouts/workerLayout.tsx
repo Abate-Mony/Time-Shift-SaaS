@@ -1,4 +1,5 @@
 import { RestrictionBanner } from '@/components/restriction/RestrictionBanner'
+import ToggleTheme from '@/components/ToggleTheme'
 import BottomNav from '@/components/ui/BottomNav'
 import { isRestricted } from '@/data/restrictionMockData'
 import { activeWorkerJob } from '@/pages/worker/ClockScreenPage'
@@ -172,6 +173,9 @@ export function WorkerAppLayout() {
             )}
       <div className="  max-w-md mx-auto ">
 
+        {/* Theme toggle — worker app has no persistent top bar like the
+            admin/manager layout does, so this gets its own thin row. */}
+        
 
         {/* Content area */}
         <div className="px-2 pb-44 ">

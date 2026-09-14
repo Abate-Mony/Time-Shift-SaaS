@@ -1,3 +1,4 @@
+import ToggleTheme from "@/components/ToggleTheme";
 import { Avatar, StatusBadge } from "@/components/ui";
 import {
   AlertDialog,
@@ -23,7 +24,7 @@ import { useNavigate, useOutletContext, type LoaderFunctionArgs } from "react-ro
 export const workerDashboardstats = () => {
   return ({
     queryKey: ["worker-dashboard-stats"],
-    queryFn: async ()=> {
+    queryFn: async () => {
       const { data } = await customFetch.get<WorkerDashboardStats>(`/workers/stats`)
       return data
     }
@@ -58,13 +59,18 @@ export function ProfileScreen() {
             <div className="ring-4 ring-white rounded-full">
               <Avatar initials={user?.fullname?.slice(0, 3)} size="xl" index={0} src={user?.profilePhoto?.url} />
             </div>
-            <button
+            <div className="flex items-center gap-x-1.5">
+              <button
               type="button"
               onClick={() => navigate('/worker/profile/edit')}
               className="h-8 px-3.5 rounded-lg border border-[var(--border)] text-xs font-semibold text-muted-foreground hover:bg-muted transition-colors"
             >
               Edit Profile
             </button>
+            <div className="px-2 pt-2 flex justify-end">
+              <ToggleTheme />
+            </div>
+            </div>
           </div>
           <h2 className="text-base font-bold text-foreground">{user?.fullname}</h2>
           <p className="text-sm text-muted-foreground mt-0.5">{user?.role}</p>
