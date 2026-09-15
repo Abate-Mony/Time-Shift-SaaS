@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { Input } from '@/components/ui'
 import { Button } from '@/components/ui/button'
 import type { iUser } from '@/layouts/dashboardlayout'
@@ -9,12 +9,15 @@ import toast from 'react-hot-toast'
 import { useOutletContext } from 'react-router'
 import { deleteCompanyLogo, uploadCompanyLogo } from '@/utils/api-request-functions'
 import { isAdminRole } from '@/utils/roles'
+import { MAX_AVATAR_FILE_SIZE } from '@/utils/constants/upload'
+import { compressAvatarImage } from '@/utils/imageCompression'
 
 export default function CompanySettings() {
     const { user } = useOutletContext<{ user: iUser }>()
     const isAdmin = isAdminRole(user?.role)
     const queryClient = useQueryClient()
     const logoInputRef = useRef<HTMLInputElement>(null)
+    const [compressing, setCompressing] = useState(false)
 
     const uploadLogoMutation = useMutation({
         mutationFn: uploadCompanyLogo,
@@ -36,6 +39,26 @@ export default function CompanySettings() {
         },
         onError: () => toast.error("Couldn't remove the logo — try again."),
     })
+
+    const handleLogoSelected = async (file: File) => {
+        setCompressing(true)
+        let toUpload = file
+        try {
+            toUpload = await compressAvatarImage(file)
+        } catch (err) {
+            console.error('Failed to compress company logo:', err)
+            toast.error("Couldn't process that image — try a different file.")
+            setCompressing(false)
+            return
+        }
+        setCompressing(false)
+
+        if (toUpload.size > MAX_AVATAR_FILE_SIZE) {
+            toast.error('That logo is too large — max 500KB.')
+            return
+        }
+        uploadLogoMutation.mutate(toUpload)
+    }
 
     if (!isAdmin) {
         return (
@@ -60,7 +83,7 @@ export default function CompanySettings() {
                         className="sr-only"
                         onChange={e => {
                             const file = e.target.files?.[0]
-                            if (file) uploadLogoMutation.mutate(file)
+                            if (file) handleLogoSelected(file)
                             e.target.value = ''
                         }}
                     />
@@ -72,16 +95,16 @@ export default function CompanySettings() {
                         )}
                     </div>
                     <div className="min-w-0">
-                        <p className="text-xs text-muted-foreground mb-2">JPG, PNG or WEBP. Max 10MB.</p>
+                        <p className="text-xs text-muted-foreground mb-2">JPG, PNG or WEBP. Max 500KB.</p>
                         <div className="flex items-center gap-3">
                             <Button
                                 variant="outline"
                                 size="sm"
                                 onClick={() => logoInputRef.current?.click()}
-                                disabled={uploadLogoMutation.isPending}
+                                disabled={compressing || uploadLogoMutation.isPending}
                             >
-                                {uploadLogoMutation.isPending && <Loader2 size={13} className="animate-spin" />}
-                                {uploadLogoMutation.isPending ? 'Uploading…' : 'Upload Logo'}
+                                {(compressing || uploadLogoMutation.isPending) && <Loader2 size={13} className="animate-spin" />}
+                                {compressing ? 'Processing…' : uploadLogoMutation.isPending ? 'Uploading…' : 'Upload Logo'}
                             </Button>
                             {user?.company?.logo && (
                                 <button

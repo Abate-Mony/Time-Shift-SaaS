@@ -57,7 +57,7 @@ interface SidebarProps {
   user: iUser
 }
 
-export function Sidebar({  collapsed, onToggleSidebar, user }: SidebarProps) {
+export function Sidebar({ collapsed, onToggleSidebar, user }: SidebarProps) {
 
   const fullname = user?.fullname
   const role = user?.role
@@ -71,15 +71,24 @@ export function Sidebar({  collapsed, onToggleSidebar, user }: SidebarProps) {
       <aside className={`${collapsed ? 'lg:w-16 w-0 overflow-hidden' : 'w-60'} z-30 h-dvh bg-[#0F172A] border flex flex-col fixed left-0 top-0 transition-all duration-200`}>
         {/* Logo */}
         <div className='flex flex-1 min-h-0 flex-col'>
-          <div className="h-[60px] flex items-center px-5 border-b border-white/6 shrink-0 hidden">
+          <div className="h-[60px] flex items-center px-5 border-b border-white/6 shrink-0 ">
             {collapsed ? (
               <div className="w-7 h-7 rounded-lg bg-blue-500 flex items-center justify-center">
-                <span className="text-white font-bold text-xs">W</span>
+                <span className="text-white font-bold text-xs">{
+                  getInitials((user.company.name || ""),1)
+                }</span>
               </div>
             ) : (
               <div className="flex items-center gap-2.5">
-                <div className="w-7 h-7 rounded-lg bg-blue-500 flex items-center justify-center shrink-0">
-                  <span className="text-white font-bold text-xs">W</span>
+                <div className="w-7 h-7 rounded-lg bg-blue-500 overflow-hidden flex items-center justify-center shrink-0">
+                  <span className="text-white font-bold text-xs">
+                    <img
+                      src={typeof user?.company?.logo === 'string'
+                        ? user.company.logo
+                        : user?.company?.logo?.url}
+                      alt=""
+                    />
+                  </span>
                 </div>
                 <span className="text-white font-semibold text-base tracking-tight">{user.company.name}<span className="text-blue-400 hidden">.wrk</span></span>
               </div>
@@ -88,7 +97,7 @@ export function Sidebar({  collapsed, onToggleSidebar, user }: SidebarProps) {
 
           {/* Company selector */}
           {!collapsed && (
-            <div className="px-3 py-3 border-b border-white/[0.06]">
+            <div className="px-3 py-3 border-b border-white/[0.06] hidden">
               <button className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-white/[0.05] transition-colors group">
                 <div className="w-6 h-6 rounded bg-blue-500/20 flex items-center justify-center shrink-0">
                   <Building2 size={12} className="text-blue-400" />

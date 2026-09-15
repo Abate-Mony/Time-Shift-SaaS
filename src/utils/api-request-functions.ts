@@ -200,6 +200,40 @@ export const changeWorkerJobStaus = async (
     }
 };
 
+// ── Shift-completion note & photos ───────────────────────────────────────
+// Both operate on the assignment, not the job — reached from the "shift
+// complete" summary screen after the job has already been marked completed
+// (and the active-job cache cleared), so ClockScreenPage.tsx must hang onto
+// the assignment id itself rather than reading it off the (by then null)
+// active job.
+
+export const saveAssignmentNote = async (assignmentId: string, note: string): Promise<boolean> => {
+    try {
+        await customFetch.patch(`/workers/assignments/${assignmentId}/note`, { note });
+        return true;
+    } catch (err) {
+        const message = isAxiosError(err) ? err.response?.data?.msg ?? "Couldn't save your note." : "Couldn't save your note.";
+        toast.error(message);
+        return false;
+    }
+};
+
+export const uploadAssignmentPhoto = async (assignmentId: string, file: File): Promise<FileRef[] | null> => {
+    try {
+        const formData = new FormData();
+        formData.append("photo", file);
+        const { data } = await customFetch.post<{ completionPhotos: FileRef[] }>(
+            `/workers/assignments/${assignmentId}/photos`,
+            formData
+        );
+        return data.completionPhotos;
+    } catch (err) {
+        const message = isAxiosError(err) ? err.response?.data?.msg ?? "Couldn't upload that photo." : "Couldn't upload that photo.";
+        toast.error(message);
+        return null;
+    }
+};
+
 export const startWorkerBreak = async (jobId: string): Promise<boolean> => {
     try {
         const { data } = await customFetch.patch(`/workers/${jobId}/break/start`);

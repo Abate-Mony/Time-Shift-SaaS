@@ -9,12 +9,15 @@ import { Avatar, Divider, Input } from '@/components/ui'
 import { Button } from '@/components/ui/button'
 import { deleteProfilePhoto, uploadProfilePhoto } from '@/utils/api-request-functions'
 import { getInitials } from '@/utils/getInitials'
+import { MAX_AVATAR_FILE_SIZE } from '@/utils/constants/upload'
+import { compressAvatarImage } from '@/utils/imageCompression'
 
 export default function ProfileSettings() {
     const { user } = useOutletContext<{ user: iUser }>()
     const queryClient = useQueryClient()
     const photoInputRef = useRef<HTMLInputElement>(null)
     const [saved, setSaved] = useState(false)
+    const [compressing, setCompressing] = useState(false)
 
     const uploadPhotoMutation = useMutation({
         mutationFn: uploadProfilePhoto,
@@ -42,6 +45,26 @@ export default function ProfileSettings() {
         setTimeout(() => setSaved(false), 2000)
     }
 
+    const handlePhotoSelected = async (file: File) => {
+        setCompressing(true)
+        let toUpload = file
+        try {
+            toUpload = await compressAvatarImage(file)
+        } catch (err) {
+            console.error('Failed to compress profile photo:', err)
+            toast.error("Couldn't process that image — try a different file.")
+            setCompressing(false)
+            return
+        }
+        setCompressing(false)
+
+        if (toUpload.size > MAX_AVATAR_FILE_SIZE) {
+            toast.error('That photo is too large — max 500KB.')
+            return
+        }
+        uploadPhotoMutation.mutate(toUpload)
+    }
+
     return (
         <div className="p-6 max-w-3xl mx-auto animate-fade-in">
             <div className="bg-card rounded-xl border border-[var(--border)] p-6 flex flex-col gap-5 min-w-0">
@@ -53,23 +76,23 @@ export default function ProfileSettings() {
                         className="sr-only"
                         onChange={e => {
                             const file = e.target.files?.[0]
-                            if (file) uploadPhotoMutation.mutate(file)
+                            if (file) handlePhotoSelected(file)
                             e.target.value = ''
                         }}
                     />
                     <Avatar initials={getInitials(user?.fullname)} size="xl" index={0} src={user?.profilePhoto?.url} />
                     <div className="min-w-0">
                         <p className="text-sm font-semibold text-foreground">Profile Photo</p>
-                        <p className="text-xs text-muted-foreground mt-0.5 mb-2">JPG, PNG or WEBP. Max 10MB.</p>
+                        <p className="text-xs text-muted-foreground mt-0.5 mb-2">JPG, PNG or WEBP. Max 500KB.</p>
                         <div className="flex items-center gap-3">
                             <Button
                                 variant="outline"
                                 size="sm"
                                 onClick={() => photoInputRef.current?.click()}
-                                disabled={uploadPhotoMutation.isPending}
+                                disabled={compressing || uploadPhotoMutation.isPending}
                             >
-                                {uploadPhotoMutation.isPending && <Loader2 size={13} className="animate-spin" />}
-                                {uploadPhotoMutation.isPending ? 'Uploading…' : 'Upload Photo'}
+                                {(compressing || uploadPhotoMutation.isPending) && <Loader2 size={13} className="animate-spin" />}
+                                {compressing ? 'Processing…' : uploadPhotoMutation.isPending ? 'Uploading…' : 'Upload Photo'}
                             </Button>
                             {user?.profilePhoto && (
                                 <button

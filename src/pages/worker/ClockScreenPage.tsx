@@ -1,16 +1,18 @@
 import { Button } from "@/components/ui/button"
 import GradientBorder from "@/components/ui/gradient-border"
 import { queryClient } from "@/lib/queryClient"
-import { changeWorkerJobStaus, endWorkerBreak, startWorkerBreak } from "@/utils/api-request-functions"
+import { changeWorkerJobStaus, endWorkerBreak, saveAssignmentNote, startWorkerBreak, uploadAssignmentPhoto } from "@/utils/api-request-functions"
 import customFetch from "@/utils/customFetch"
 import { formatSecondsAsClock, formatSecondsAsDuration } from "@/utils/date"
-import type { CreateJobForm } from "@/utils/types"
+import { compressSitePhoto } from "@/utils/imageCompression"
+import type { CreateJobForm, FileRef } from "@/utils/types"
 import { useQuery } from "@tanstack/react-query"
 import dayjs from "dayjs"
 import { AnimatePresence, motion } from "framer-motion"
 import { Briefcase, Camera, CheckCircle2, Coffee, FileText, Loader2, MapPin, RotateCcw, Square } from "lucide-react"
-import { useEffect, useState } from "react"
-import { redirect } from "react-router"
+import { useEffect, useRef, useState } from "react"
+import { redirect, useNavigate } from "react-router"
+import toast from "react-hot-toast"
 type ClockState = 'working' | 'break' | 'done'
 
 export const loader = async () => {
@@ -80,6 +82,7 @@ interface workerJobWithDetails extends CreateJobForm {
   }
 }
 export default function ClockScreen() {
+  const navigate = useNavigate()
 
   const job = useQuery(activeWorkerJob()).data?.job as workerJobWithDetails
 
@@ -102,9 +105,22 @@ export default function ClockScreen() {
   const [note, setNote] = useState('')
   const [showNote, setShowNote] = useState(false)
   const [isBreakActionLoading, setIsBreakActionLoading] = useState(false)
-  // Snapshot of the counters at the moment the shift is finished, so the
-  // summary screen stops ticking once the job is done.
-  const [doneSnapshot, setDoneSnapshot] = useState<{ elapsedSeconds: number; breakSeconds: number; breaksTaken: number } | null>(null)
+  const [photos, setPhotos] = useState<FileRef[]>([])
+  const [uploadingPhoto, setUploadingPhoto] = useState(false)
+  const [finishing, setFinishing] = useState(false)
+  const photoInputRef = useRef<HTMLInputElement>(null)
+  // Snapshot of the counters (and the assignment id/title) at the moment the
+  // shift is finished, so the summary screen stops ticking once the job is
+  // done — and, critically, so the note/photo actions below still have an
+  // assignment to attach to even after changeWorkerJobStaus("completed")
+  // clears the active-job query out from under `job` a moment later.
+  const [doneSnapshot, setDoneSnapshot] = useState<{
+    elapsedSeconds: number
+    breakSeconds: number
+    breaksTaken: number
+    assignmentId: string
+    title: string
+  } | null>(null)
 
   // A 1s heartbeat so elapsed/break time re-derive from real timestamps every
   // tick, instead of being tracked as counters that reset on remount.
@@ -146,8 +162,45 @@ export default function ClockScreen() {
   }
 
   const finish = () => {
-    setDoneSnapshot({ elapsedSeconds, breakSeconds, breaksTaken: breaksList.length })
+    setDoneSnapshot({
+      elapsedSeconds,
+      breakSeconds,
+      breaksTaken: breaksList.length,
+      assignmentId: workerJobDetails.assignmentId,
+      title: job?.title ?? "",
+    })
     onFinish()
+  }
+
+  const handlePhotoSelected = async (file: File) => {
+    if (!doneSnapshot) return
+    setUploadingPhoto(true)
+    let toUpload = file
+    try {
+      toUpload = await compressSitePhoto(file)
+    } catch (err) {
+      console.error("Failed to compress site photo:", err)
+      toast.error("Couldn't process that image — try a different file.")
+      setUploadingPhoto(false)
+      return
+    }
+
+    const result = await uploadAssignmentPhoto(doneSnapshot.assignmentId, toUpload)
+    setUploadingPhoto(false)
+    if (result) {
+      setPhotos(result)
+      toast.success("Photo added")
+    }
+  }
+
+  const handleDone = async () => {
+    if (!doneSnapshot) return
+    setFinishing(true)
+    if (note.trim()) {
+      await saveAssignmentNote(doneSnapshot.assignmentId, note.trim())
+    }
+    setFinishing(false)
+    navigate("/worker")
   }
 
   if (clockState === 'done') {
@@ -162,7 +215,7 @@ export default function ClockScreen() {
                 <CheckCircle2 size={32} className="text-white" />
               </div>
               <h2 className="text-2xl font-bold text-white mb-1">Shift Complete!</h2>
-              <p className="text-sm text-white/70">{job?.title.split('—')[0].trim()}</p>
+              <p className="text-sm text-white/70">{doneSnapshot!.title.split('—')[0].trim()}</p>
             </div>
           </div>
 
@@ -185,9 +238,40 @@ export default function ClockScreen() {
             </p>
 
             <div className="flex flex-col gap-2.5">
-              <button className="w-full h-11 rounded-xl border border-border text-sm font-semibold text-foreground hover:bg-muted transition-colors flex items-center justify-center gap-2">
-                <Camera size={15} className="text-muted-foreground" /> Upload Site Photos
+              <input
+                ref={photoInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="sr-only"
+                onChange={e => {
+                  const file = e.target.files?.[0]
+                  if (file) handlePhotoSelected(file)
+                  e.target.value = ''
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => photoInputRef.current?.click()}
+                disabled={uploadingPhoto}
+                className="w-full h-11 rounded-xl border border-border text-sm font-semibold text-foreground hover:bg-muted transition-colors flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {uploadingPhoto ? <Loader2 size={15} className="animate-spin text-muted-foreground" /> : <Camera size={15} className="text-muted-foreground" />}
+                {uploadingPhoto ? 'Uploading…' : photos.length ? `Add Another Photo (${photos.length} added)` : 'Upload Site Photos'}
               </button>
+
+              {photos.length > 0 && (
+                <div className="grid grid-cols-4 gap-2">
+                  {photos.map((photo, i) => (
+                    <img
+                      key={photo.url + i}
+                      src={photo.url}
+                      alt={`Site photo ${i + 1}`}
+                      className="w-full aspect-square object-cover rounded-lg border border-border"
+                    />
+                  ))}
+                </div>
+              )}
+
               {!showNote ? (
                 <Button
                   onClick={() => setShowNote(true)}
@@ -207,8 +291,11 @@ export default function ClockScreen() {
                 </div>
               )}
               <Button
+                onClick={handleDone}
+                disabled={finishing}
                 className="w-full h-12 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors mt-1"
               >
+                {finishing && <Loader2 size={15} className="animate-spin" />}
                 Done
               </Button>
             </div>

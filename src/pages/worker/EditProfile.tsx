@@ -1,8 +1,10 @@
-import { useRef } from "react"
+import { useRef, useState } from "react"
 import { Avatar, Input } from "@/components/ui"
 import { deleteProfilePhoto, updateWorkerProfile, uploadProfilePhoto } from "@/utils/api-request-functions"
 import { editProfileSchema } from "@/utils/schemas"
 import type { EditProfileForm, EditProfileFormInput, User } from "@/utils/types"
+import { MAX_AVATAR_FILE_SIZE } from "@/utils/constants/upload"
+import { compressAvatarImage } from "@/utils/imageCompression"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { isAxiosError } from "axios"
@@ -23,6 +25,7 @@ export default function EditProfileScreen() {
     const user = useOutletContext<{ user: User }>()?.user
     const queryClient = useQueryClient()
     const photoInputRef = useRef<HTMLInputElement>(null)
+    const [compressing, setCompressing] = useState(false)
 
     const uploadPhotoMutation = useMutation({
         mutationFn: uploadProfilePhoto,
@@ -44,6 +47,26 @@ export default function EditProfileScreen() {
         },
         onError: () => toast.error("Couldn't remove the photo — try again."),
     })
+
+    const handlePhotoSelected = async (file: File) => {
+        setCompressing(true)
+        let toUpload = file
+        try {
+            toUpload = await compressAvatarImage(file)
+        } catch (err) {
+            console.error("Failed to compress profile photo:", err)
+            toast.error("Couldn't process that image — try a different file.")
+            setCompressing(false)
+            return
+        }
+        setCompressing(false)
+
+        if (toUpload.size > MAX_AVATAR_FILE_SIZE) {
+            toast.error("That photo is too large — max 500KB.")
+            return
+        }
+        uploadPhotoMutation.mutate(toUpload)
+    }
 
     const {
         register,
@@ -88,19 +111,19 @@ export default function EditProfileScreen() {
                         className="sr-only"
                         onChange={e => {
                             const file = e.target.files?.[0]
-                            if (file) uploadPhotoMutation.mutate(file)
+                            if (file) handlePhotoSelected(file)
                             e.target.value = ""
                         }}
                     />
                     <button
                         type="button"
                         onClick={() => photoInputRef.current?.click()}
-                        disabled={uploadPhotoMutation.isPending}
+                        disabled={compressing || uploadPhotoMutation.isPending}
                         className="relative shrink-0"
                     >
                         <Avatar initials={user?.fullname?.slice(0, 3)} size="xl" index={0} src={user?.profilePhoto?.url} />
                         <span className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full bg-[var(--primary)] border-2 border-white flex items-center justify-center">
-                            {uploadPhotoMutation.isPending ? (
+                            {(compressing || uploadPhotoMutation.isPending) ? (
                                 <Loader2 size={9} className="text-white animate-spin" />
                             ) : (
                                 <Camera size={9} className="text-white" />
