@@ -6,10 +6,11 @@ import { formatCurrency } from '@/utils/format'
 import type { Invoice, InvoiceCompanyInfo, InvoiceLineItemDisplay } from '@/utils/types'
 import { useQuery, type QueryClient } from '@tanstack/react-query'
 import dayjs from 'dayjs'
-import { ChevronLeft, Mail, Pencil, Printer, Trash2 } from 'lucide-react'
+import { ChevronLeft, Download, Loader2, Mail, Pencil, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate, useParams, type LoaderFunctionArgs } from 'react-router'
 import { useBackLink } from '@/hooks/useBackLink'
+import toast from 'react-hot-toast'
 
 const STATUS_STYLES: Record<string, string> = {
     draft: 'bg-muted text-muted-foreground',
@@ -51,6 +52,7 @@ export function InvoiceDetail() {
     const [sending, setSending] = useState(false)
     const [markingPaid, setMarkingPaid] = useState(false)
     const [cancelling, setCancelling] = useState(false)
+    const [downloading, setDownloading] = useState(false)
 
     if (!invoice) return null
 
@@ -66,6 +68,28 @@ export function InvoiceDetail() {
         setSending(true)
         await sendInvoice(invoice._id)
         setSending(false)
+    }
+
+    // Hits the real pdfkit-rendered, template-aware PDF (GET /invoices/:id/pdf)
+    // — not window.print(), which only screenshots this page's own React UI
+    // and has no relationship to the invoice template the company picked.
+    const handleDownloadPdf = async () => {
+        setDownloading(true)
+        try {
+            const response = await customFetch.get(`/invoices/${invoice._id}/pdf`, { responseType: 'blob' })
+            const url = window.URL.createObjectURL(new Blob([response.data]))
+            const link = document.createElement('a')
+            link.href = url
+            link.download = `${invoice.invoiceNumber}.pdf`
+            document.body.appendChild(link)
+            link.click()
+            link.remove()
+            window.URL.revokeObjectURL(url)
+        } catch {
+            toast.error("Couldn't download the PDF — try again.")
+        } finally {
+            setDownloading(false)
+        }
     }
 
     const handleMarkPaid = async () => {
@@ -143,8 +167,8 @@ export function InvoiceDetail() {
                             <Pencil size={13} /> Edit
                         </Button>
                     )}
-                    <Button variant="outline" size="sm" onClick={() => window.print()}>
-                        <Printer size={13} /> Print / Download
+                    <Button variant="outline" size="sm" disabled={downloading} onClick={handleDownloadPdf}>
+                        {downloading ? <Loader2 size={13} className="animate-spin" /> : <Download size={13} />} Download PDF
                     </Button>
                     {(invoice.status === 'draft' || invoice.status === 'sent' || invoice.status === 'overdue') && (
                         <Button

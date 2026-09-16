@@ -9,7 +9,9 @@ const NAV_LINKS = [
     { to: '/settings/company', label: 'Company' },
     { to: '/settings/notifications', label: 'Notifications' },
     { to: '/settings/appearance', label: 'Appearance' },
+    { to: '/settings/invoicing', label: 'Invoicing' },
     { to: '/settings/security', label: 'Security' },
+    { to: '/settings/email', label: 'Email & Sending' },
     { to: '/settings/billing', label: 'Billing' },
 ]
 
@@ -21,7 +23,7 @@ export default function SettingsLayout() {
             {/* Chrome only — page content brings its own p-6 max-w-3xl mx-auto
                 wrapper (matching Settings.tsx's existing convention), so this
                 stays a sibling rather than nesting and doubling padding. */}
-            <div className="p-6 pb-0 max-w-3xl mx-auto">
+            <div className="p-6 pb-0 max-w-6xl mx-auto">
                 <div className="mb-6">
                     <h1 className="text-xl font-semibold text-foreground tracking-tight">Settings</h1>
                     <p className="text-sm text-muted-foreground mt-0.5">Manage your account preferences</p>

@@ -12,6 +12,9 @@ import type {
 } from "@/data/restrictionMockData";
 
 import { getCurrentPosition } from "./getPosition";
+import type { InvoiceTemplate } from "./types/invoiceTemplate";
+import type { Quote, QuoteFormInput } from "./types/quote";
+import type { EmailSettings, EmailSettingsResponse, SendTestEmailResult } from "./types/emailSettings";
 
 // Shape of POST /ai/job-draft's response. Every field on `draft` is a
 // best-effort guess the model made from a free-text prompt — nothing here
@@ -151,6 +154,130 @@ export const uploadCompanyLogo = async (file: File): Promise<FileRef> => {
 
 export const deleteCompanyLogo = async (): Promise<void> => {
     await customFetch.delete("/companies/logo");
+};
+
+// ── Invoice templates ────────────────────────────────────────────────────
+// Same pool the quote picker reads from too — see quoteModel.ts's comment
+// on why templates aren't split per document type.
+
+export const getInvoiceTemplates = async (): Promise<InvoiceTemplate[]> => {
+    const { data } = await customFetch.get<{ templates: InvoiceTemplate[] }>("/invoice-templates");
+    return data.templates;
+};
+
+export const setDefaultInvoiceTemplate = async (templateId: string | null): Promise<string | null> => {
+    const { data } = await customFetch.patch<{ defaultInvoiceTemplate: string | null }>("/companies/invoice-template", { templateId });
+    return data.defaultInvoiceTemplate;
+};
+
+// ── Email & Sending ──────────────────────────────────────────────────────
+// Left throwing (not toast-wrapped) for get/update/connect/verify — the
+// Email Settings page shows richer inline feedback (DNS record states,
+// step errors) than a toast alone, so the caller decides how to surface a
+// failure. remove/test are simple one-shot actions, so those keep the
+// toast+boolean pattern used elsewhere in this file (cancelInvoice, etc).
+
+export const getEmailSettings = async (): Promise<EmailSettingsResponse> => {
+    const { data } = await customFetch.get<EmailSettingsResponse>("/companies/email-settings");
+    return data;
+};
+
+export const updateEmailSettings = async (payload: {
+    senderName?: string;
+    replyToEmail?: string;
+    senderLocalPart?: string;
+}): Promise<EmailSettings> => {
+    const { data } = await customFetch.patch<{ settings: EmailSettings }>("/companies/email-settings", payload);
+    return data.settings;
+};
+
+export const connectEmailDomain = async (domain: string): Promise<EmailSettingsResponse> => {
+    const { data } = await customFetch.post<EmailSettingsResponse>("/companies/email-domain", { domain });
+    return data;
+};
+
+export const verifyEmailDomain = async (): Promise<EmailSettingsResponse> => {
+    const { data } = await customFetch.post<EmailSettingsResponse>("/companies/email-domain/verify");
+    return data;
+};
+
+export const removeEmailDomain = async (): Promise<boolean> => {
+    try {
+        await customFetch.delete("/companies/email-domain");
+        toast.success("Sending domain removed — INPRN emails will use the fallback address");
+        await queryClient.invalidateQueries({ queryKey: ["email-settings"] });
+        return true;
+    } catch (err) {
+        toast.error(getApiErrorMessage(err));
+        return false;
+    }
+};
+
+export const sendTestEmail = async (email: string): Promise<SendTestEmailResult | null> => {
+    try {
+        const { data } = await customFetch.post<SendTestEmailResult>("/companies/email-domain/test", { email });
+        toast.success("Test email sent");
+        return data;
+    } catch (err) {
+        toast.error(getApiErrorMessage(err));
+        return null;
+    }
+};
+
+// ── Quotes ────────────────────────────────────────────────────────────────
+
+export const createQuote = async (payload: QuoteFormInput): Promise<Quote> => {
+    const { data } = await customFetch.post<{ quote: Quote }>("/quotes", payload);
+    return data.quote;
+};
+
+// Draft-only on the backend — the caller is responsible for only offering
+// this while the quote is still a draft (see quoteController.ts's
+// updateQuote).
+export const updateQuote = async (quoteId: string, payload: Partial<QuoteFormInput>): Promise<Quote> => {
+    const { data } = await customFetch.patch<{ quote: Quote }>(`/quotes/${quoteId}`, payload);
+    return data.quote;
+};
+
+export const deleteQuote = async (quoteId: string): Promise<boolean> => {
+    try {
+        await customFetch.delete(`/quotes/${quoteId}`);
+        toast.success("Quote deleted");
+        await queryClient.invalidateQueries({ queryKey: ["quotes"] });
+        return true;
+    } catch (err) {
+        toast.error(getApiErrorMessage(err));
+        return false;
+    }
+};
+
+// Emails the quote (PDF attached) to the client and flips draft -> sent —
+// see quoteController.ts's sendQuoteHandler. Takes no body: send whatever
+// is currently saved, so callers must persist edits (updateQuote) first.
+export const sendQuote = async (quoteId: string): Promise<boolean> => {
+    try {
+        await customFetch.post(`/quotes/${quoteId}/send`);
+        toast.success("Quote sent to client");
+        await queryClient.invalidateQueries({ queryKey: ["quotes"] });
+        await queryClient.invalidateQueries({ queryKey: ["quote", quoteId] });
+        return true;
+    } catch (err) {
+        toast.error(getApiErrorMessage(err));
+        return false;
+    }
+};
+
+export const cancelQuote = async (quoteId: string, cancellationReason?: string): Promise<boolean> => {
+    try {
+        await customFetch.patch(`/quotes/${quoteId}/cancel`, { cancellationReason });
+        toast.success("Quote cancelled");
+        await queryClient.invalidateQueries({ queryKey: ["quotes"] });
+        await queryClient.invalidateQueries({ queryKey: ["quote", quoteId] });
+        return true;
+    } catch (err) {
+        toast.error(getApiErrorMessage(err));
+        return false;
+    }
 };
 
 export const changeWorkerJobStaus = async (

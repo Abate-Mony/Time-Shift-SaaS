@@ -343,6 +343,11 @@ export interface CompanySettings {
   generateAheadDays: number;
   openShiftsEnabled: boolean;
   openShiftsRequireApproval: boolean;
+
+  // Read-only here — see companyController.ts's COMPANY_READ_ONLY_EXTRA_FIELDS.
+  // Written via setDefaultInvoiceTemplate (PATCH /companies/invoice-template),
+  // not the bulk settings PATCH this type otherwise mirrors.
+  defaultInvoiceTemplate?: string | null;
 }
 export type NotificationChannel =
   | "email"

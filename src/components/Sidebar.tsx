@@ -14,6 +14,7 @@ import {
   LayoutDashboard,
   LogOut,
   MapPin,
+  Quote,
   Receipt,
   Settings,
   SquareUser,
@@ -38,9 +39,9 @@ const navItems = [
 const secondaryItems = [
   { id: 'reports', label: 'Reports', icon: BarChart3 },
   { id: 'invoices', label: 'Invoices', icon: Receipt },
-  { id: 'timesheets', label: 'Timesheets', icon: FileText },
+  // { id: 'timesheets', label: 'Timesheets', icon: FileText },
   { id: 'analytics', label: 'Analytics', icon: Zap },
-  // { id: 'billing', label: 'Billing', icon: CreditCard },
+  { id: 'quotes', label: 'Qoutes', icon: Quote },
 ]
 
 const bottomItems = [

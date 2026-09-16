@@ -11,6 +11,8 @@ import ResetPasswordPage from "@/pages/ResetPasswordPage";
 import AppearanceSettings from "@/pages/settings/AppearanceSettings";
 import BillingSettings from "@/pages/settings/BillingSettings";
 import CompanySettings from "@/pages/settings/CompanySettings";
+import EmailSettings from "@/pages/settings/EmailSettings";
+import InvoicingSettings from "@/pages/settings/InvoicingSettings";
 import NotificationSettings from "@/pages/settings/NotificationSettings";
 import ProfileSettings from "@/pages/settings/ProfileSettings";
 import SecuritySettings from "@/pages/settings/SecuritySettings";
@@ -35,9 +37,10 @@ import InvitationStatusPage from "@/pages/acceptInvites/InvitationStatusPage";
 import InvitationSuccessPage from "@/pages/acceptInvites/InvitationSuccessPage";
 import NewUserInvitePage from "@/pages/acceptInvites/NewUserInvitePage";
 import RecurringAssignmentPage, { loader as recurringAssignmentsLoader } from "@/pages/worker/RecurringAssignmentPage";
+import PublicQuotePage from "@/pages/PublicQuotePage";
 import { createBrowserRouter, Navigate } from "react-router";
 import DashboardLayout from "../layouts/dashboardlayout";
-import { Analytics, analyticsLoader, Calendar, calendarLoader, ClentBillingPage, ClientDetail, clientDetailLoader, ClientDetailsaJobsPage, ClientDetailsContactsPage, ClientDetailsOverviewPage, ClientDetailsSitesPage, Clients, clientsLoader, clockLoader, CreateClientPage, CreateInvoicePage, createInvoiceLoader, CreateJob, createjobAction, CreateSitePage, Dashboard, dashboardLoader, DownloadTimesheetScreen, EditJob, editJobAction, HelpArticlePage, HelpArticleScreen, HelpCentre, HelpCentreScreen, InvoiceDetail, invoiceDetailLoader, InvoiceForm, invoiceFormLoader, Invoices, invoicesLoader, JobDetail, Jobs, jobsLoader, loginAction, openShiftsLoader, ProfileScreen, RecurringJobDetail, recurringJobDetailLoader, RecurringJobs, recurringJobsLoader, ReportLayout, ReportsOverviewPage, ReportsPayrollPage, ReportsTimesheetsPage, ReportsPerformancePage, ReportsProfitabilityPage, Settings, settingsLoader, signupAction, singleJobLoader, singleWorkerJobLoader, SiteDetailPage, siteDetailLoader, Sites, sitesLoader, SuspendedAccountPage, Team, teamLoader, workerLoader, WorkerProfile, workerProfileLoader, workerStatsLoader, Workers, workersLoader, CheckOutSettings, ChangePlanSettings, Notifications, TeamsCreatepage, teamsCreateLoader, WorkerDocumentsScreen } from "../pages";
+import { Analytics, analyticsLoader, Calendar, calendarLoader, ClentBillingPage, ClientDetail, clientDetailLoader, ClientDetailsaJobsPage, ClientDetailsContactsPage, ClientDetailsOverviewPage, ClientDetailsSitesPage, Clients, clientsLoader, clockLoader, CreateClientPage, CreateInvoicePage, createInvoiceLoader, CreateJob, createjobAction, CreateQuote, createQuoteLoader, CreateSitePage, Dashboard, dashboardLoader, DownloadTimesheetScreen, EditJob, editJobAction, HelpArticlePage, HelpArticleScreen, HelpCentre, HelpCentreScreen, InvoiceDetail, invoiceDetailLoader, InvoiceForm, invoiceFormLoader, Invoices, invoicesLoader, JobDetail, Jobs, jobsLoader, loginAction, openShiftsLoader, ProfileScreen, Quotes, quotesLoader, RecurringJobDetail, recurringJobDetailLoader, RecurringJobs, recurringJobsLoader, ReportLayout, ReportsOverviewPage, ReportsPayrollPage, ReportsTimesheetsPage, ReportsPerformancePage, ReportsProfitabilityPage, Settings, settingsLoader, signupAction, singleJobLoader, singleWorkerJobLoader, SiteDetailPage, siteDetailLoader, Sites, sitesLoader, SuspendedAccountPage, Team, teamLoader, workerLoader, WorkerProfile, workerProfileLoader, workerStatsLoader, Workers, workersLoader, CheckOutSettings, ChangePlanSettings, Notifications, TeamsCreatepage, teamsCreateLoader, WorkerDocumentsScreen } from "../pages";
 
 export const router = createBrowserRouter([
     {
@@ -189,6 +192,24 @@ export const router = createBrowserRouter([
                         element: <InvoiceForm />,
                         loader: invoiceFormLoader(queryClient),
                     },
+                    {
+                        path: "quotes",
+                        element: <Quotes />,
+                        loader: quotesLoader(queryClient),
+                        errorElement: <ErrorElement />,
+                    },
+                    {
+                        // Create, edit-draft and view-sent all share one page —
+                        // see CreateQuote.tsx's readOnly logic.
+                        path: "quotes/create",
+                        element: <CreateQuote />,
+                        loader: createQuoteLoader(queryClient),
+                    },
+                    {
+                        path: "quotes/:id",
+                        element: <CreateQuote />,
+                        loader: createQuoteLoader(queryClient),
+                    },
 
                     {
                         path: "calendar",
@@ -267,10 +288,18 @@ export const router = createBrowserRouter([
                             { path: "company", element: <CompanySettings /> },
                             { path: "notifications", element: <NotificationSettings /> },
                             { path: "appearance", element: <AppearanceSettings /> },
+                            { path: "invoicing", element: <InvoicingSettings /> },
                             { path: "security", element: <SecuritySettings /> },
+                            { path: "email", element: <EmailSettings /> },
                             { path: "billing", element: <BillingSettings /> },
                             { path: "billing/plans", element: <ChangePlanSettings /> },
-                            { path: "billing/checkout", element: <CheckOutSettings /> }
+                            { path: "billing/checkout", element: <CheckOutSettings /> },
+                            {
+                                path: "*",
+
+                                element: <NotFound />,
+
+                            }
                         ],
                     },
                     {
@@ -325,6 +354,13 @@ export const router = createBrowserRouter([
                 ]
             },
 
+            {
+                // No auth, no dashboard chrome — a client opens this straight
+                // from an emailed link. Sibling of /invite/auth/worker below,
+                // all direct children of the bare RootLayout.
+                path: "q/:token",
+                element: <PublicQuotePage />,
+            },
             {
                 path: "/invite",
                 element: <InvitationLayout />,
