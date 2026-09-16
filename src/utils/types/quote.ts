@@ -51,6 +51,10 @@ export interface Quote {
   // Display name, not an id — the backend's serializeQuote overrides this
   // to clientSnapshot.name, same convention as Invoice.client.
   client: string
+  // The real Client ObjectId, additive alongside `client` above — used by
+  // CreateJob.tsx's quote-prefill flow, which needs a real id to select
+  // (not just display) the client.
+  clientId?: string | null
   clientSnapshot?: QuoteClientSnapshot
   site?: string | null
   siteSnapshot?: QuoteSiteSnapshot

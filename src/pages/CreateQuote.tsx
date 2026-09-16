@@ -13,11 +13,22 @@ import type { Quote, QuoteLineItemInput } from '@/utils/types/quote'
 import { useQuery, type QueryClient } from '@tanstack/react-query'
 import { isAxiosError } from 'axios'
 import dayjs from 'dayjs'
-import { ChevronLeft, Download, Loader2, Lock, Plus, Send, Trash2 } from 'lucide-react'
+import { Briefcase, ChevronLeft, ChevronRight, Download, Loader2, Lock, Plus, Send, Trash2 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
-import { useNavigate, useParams, type LoaderFunctionArgs } from 'react-router'
+import { Link, useNavigate, useParams, type LoaderFunctionArgs } from 'react-router'
 import { QuoteStatusBadge } from './Quotes'
+
+// A job created from this quote — only the fields the "Jobs created from
+// this quote" section actually renders, not the full Job shape.
+interface QuoteJobSummary {
+    _id: string
+    title: string
+    date: string
+    startTime: string
+    endTime: string
+    status: string
+}
 
 // ─── Query ──────────────────────────────────────────────────────────────────
 
@@ -195,6 +206,19 @@ export function CreateQuote() {
     const sitesQueryResult = useQuery({ ...clientSitesQuery(client?._id ?? ''), enabled: !!client })
     const sites = sitesQueryResult.data?.sites ?? []
 
+    // "Jobs created from this quote" — one Quote can produce several Jobs
+    // (e.g. a recurring contract), so this is never assumed to be at most
+    // one. Tenant-scoped server-side same as every other /jobs query.
+    const jobsFromQuoteQuery = useQuery({
+        queryKey: ['jobs', { sourceQuote: quote?._id }],
+        queryFn: async (): Promise<{ jobs: QuoteJobSummary[] }> => {
+            const { data } = await customFetch.get('/jobs', { params: { sourceQuote: quote!._id, limit: 50 } })
+            return data
+        },
+        enabled: !!quote && quote.status === 'accepted',
+    })
+    const jobsFromQuote = jobsFromQuoteQuery.data?.jobs ?? []
+
     const taxRate = presetToRate(vatPreset, customVatRate)
     const totalQty = items.reduce((s, li) => s + (li.quantity || 0), 0)
     const subtotal = items.reduce((s, li) => s + (li.quantity || 0) * (li.unitPrice || 0), 0)
@@ -370,6 +394,11 @@ export function CreateQuote() {
                     {!!quote && quote.status === 'draft' && (
                         <Button variant="outline" size="sm" disabled={deleting} className="text-red-600 hover:text-red-600 hover:bg-red-50" onClick={handleDeleteDraft}>
                             {deleting ? 'Deleting…' : 'Delete'}
+                        </Button>
+                    )}
+                    {!!quote && quote.status === 'accepted' && (
+                        <Button size="sm" onClick={() => navigate(`/create-job?quote=${quote._id}`)}>
+                            <Briefcase size={13} /> {jobsFromQuote.length > 0 ? 'Create another job' : 'Create job'}
                         </Button>
                     )}
                     {!readOnly && (
@@ -615,6 +644,53 @@ export function CreateQuote() {
                             </label>
                         </div>
                     </Card>
+
+                    {quote?.status === 'accepted' && (
+                        <Card
+                            label="Jobs created from this quote"
+                            aside={jobsFromQuote.length > 0 && (
+                                <span className="text-xs text-muted-foreground">{jobsFromQuote.length} job{jobsFromQuote.length === 1 ? '' : 's'}</span>
+                            )}
+                        >
+                            {jobsFromQuoteQuery.isLoading ? (
+                                <div className="flex justify-center py-6 text-muted-foreground">
+                                    <Loader2 size={16} className="animate-spin" />
+                                </div>
+                            ) : jobsFromQuote.length === 0 ? (
+                                <div className="text-center py-4">
+                                    <p className="text-sm text-muted-foreground mb-3">The client has approved this quote. Create a job to schedule and assign the work.</p>
+                                    <Button size="sm" onClick={() => navigate(`/create-job?quote=${quote._id}`)}>
+                                        <Briefcase size={13} /> Create job
+                                    </Button>
+                                </div>
+                            ) : (
+                                <div className="flex flex-col gap-2">
+                                    {jobsFromQuote.map(job => (
+                                        <Link
+                                            key={job._id}
+                                            to={`/jobs/${job._id}`}
+                                            className="flex items-center justify-between gap-3 p-3 rounded-xl border border-[var(--border)] hover:bg-muted/40 transition-colors"
+                                        >
+                                            <div className="min-w-0">
+                                                <p className="text-sm font-semibold text-foreground truncate">{job.title}</p>
+                                                <p className="text-xs text-muted-foreground mt-0.5">
+                                                    {formatDate(job.date, 'D MMM YYYY')} · {job.startTime}–{job.endTime} · <span className="capitalize">{job.status}</span>
+                                                </p>
+                                            </div>
+                                            <ChevronRight size={14} className="text-muted-foreground shrink-0" />
+                                        </Link>
+                                    ))}
+                                    <button
+                                        type="button"
+                                        onClick={() => navigate(`/create-job?quote=${quote._id}`)}
+                                        className="flex items-center justify-center gap-1.5 h-9 text-sm font-semibold text-[var(--primary)] border border-dashed border-[var(--border)] rounded-xl hover:bg-muted/40 transition-colors mt-1"
+                                    >
+                                        <Plus size={13} /> Create another job
+                                    </button>
+                                </div>
+                            )}
+                        </Card>
+                    )}
 
                     {quote?.status === 'declined' && quote.declineReason && (
                         <div className="bg-rose-50 border border-rose-200 rounded-xl p-4">

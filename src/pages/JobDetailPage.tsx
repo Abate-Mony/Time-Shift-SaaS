@@ -740,6 +740,19 @@ export function JobDetail() {
                                 { icon: Timer, label: 'Shift Duration', value: `${formatDuration(job.minutes)} per worker` },
                                 { icon: Briefcase, label: 'Client / Company', value: job.client?.name ?? 'No client' },
                                 { icon: Flag, label: 'Priority', value: <PriorityBadge priority={job.priority} /> },
+                                ...(job.sourceQuote ? [{
+                                    icon: FileText,
+                                    label: 'Source Quote',
+                                    value: typeof job.sourceQuote === 'object' ? job.sourceQuote.quoteNumber : 'Accepted quote',
+                                    action: (
+                                        <Link
+                                            to={`/quotes/${typeof job.sourceQuote === 'object' ? job.sourceQuote._id : job.sourceQuote}`}
+                                            className="flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-800 transition-colors"
+                                        >
+                                            View quote
+                                        </Link>
+                                    ),
+                                }] : []),
                             ].map((row, i) => (
                                 <div key={i} className="flex items-center gap-4 px-5 py-3.5">
                                     <div className="w-8 h-8 rounded-xl bg-muted border border-border flex items-center justify-center shrink-0">

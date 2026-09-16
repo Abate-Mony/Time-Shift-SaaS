@@ -1,10 +1,10 @@
-import { useMemo, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useQuery } from "@tanstack/react-query"
 import { AnimatePresence, motion } from "framer-motion"
 import { isAxiosError } from "axios"
-import { ChevronLeft } from "lucide-react"
+import { AlertTriangle, ChevronLeft, FileText, Loader2 } from "lucide-react"
 import toast from "react-hot-toast"
 import dayjs from "dayjs"
 import {
@@ -32,6 +32,7 @@ import { JobAttachmentField } from "@/components/create-job/JobAttachmentField"
 import type { AIJobDraftResponse } from "@/utils/api-request-functions"
 import { CreateJobStepper } from "@/components/create-job/CreateJobStepper"
 import { CreateJobHiddenFields } from "@/components/create-job/CreateJobHiddenFields"
+import { singleQuote } from "@/pages/CreateQuote"
 import { WizardFooter } from "@/components/create-job/WizardFooter"
 import { JobDetailsStep } from "@/components/create-job/steps/JobDetailsStep"
 import { ScheduleStaffingStep } from "@/components/create-job/steps/ScheduleStaffingStep"
@@ -133,10 +134,15 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
   try {
     const { data } = await customFetch.post("/jobs", payload)
+    const jobId = data?.job?._id ?? data?.templateJob?._id ?? data?._id
 
-    toast.success(
-      raw.status === "draft" ? "Draft saved" : "Job created successfully!"
-    )
+    if (raw.status !== "draft" && raw.sourceQuote && data?.job?._id) {
+      toast.success(`Job created from ${raw.sourceQuoteNumber || "quote"}`)
+    } else {
+      toast.success(
+        raw.status === "draft" ? "Draft saved" : "Job created successfully!"
+      )
+    }
 
     if (attachmentFile instanceof File && attachmentFile.size > 0) {
       try {
@@ -171,6 +177,12 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       }
     }
 
+    // A quote-sourced, real (non-template) job goes straight to its own
+    // page — same "traceability" reasoning the Source-quote link on Job
+    // Detail exists for. Every other path keeps the existing behaviour.
+    if (raw.sourceQuote && data?.job?._id) {
+      return redirect(`/jobs/${data.job._id}`)
+    }
     return redirect("/jobs")
   } catch (err) {
     let errorM
@@ -226,6 +238,21 @@ export function CreateJob() {
   const [aiAssumptions, setAiAssumptions] = useState<string[]>([])
   const [locationMode, setLocationMode] = useState<"site" | "custom">("custom")
   const [selectedSite, setSelectedSite] = useState<ComboboxSite | null>(null)
+
+  // ── Accepted-quote prefill ──────────────────────────────────
+  // /create-job?quote=<id> — reuses CreateQuote.tsx's own authenticated
+  // GET /quotes/:id query rather than a bespoke conversion endpoint (the
+  // Quote is tenant-scoped there already). The quote id survives a
+  // refresh via the URL, never navigation state — see CreateJob's own
+  // "must remain refresh-safe" requirement.
+  const quoteId = searchParams.get("quote")
+  const { data: quoteData, isLoading: quoteLoading, isError: quoteLoadError } = useQuery({
+    ...singleQuote(quoteId ?? ""),
+    enabled: !!quoteId,
+  })
+  const sourceQuoteDoc = quoteData?.quote
+  const [lockedFromQuote, setLockedFromQuote] = useState<{ quoteId: string; quoteNumber: string; quoteTitle: string } | null>(null)
+  const appliedQuoteRef = useRef(false)
 
   const form = useForm({
     resolver: zodResolver(createJobSchema),
@@ -446,6 +473,47 @@ export function CreateJob() {
     if (site.geofenceMode) setValue("geofenceMode", site.geofenceMode, { shouldValidate: true })
   }
 
+  // Applies the accepted Quote's commercial terms exactly once, the moment
+  // it first becomes available — never on every refetch/render, or a
+  // manager's in-progress schedule edits would get silently clobbered.
+  // Only fires once the Quote is confirmed accepted; a draft/sent/declined/
+  // expired/cancelled Quote is left alone (see the banner below instead).
+  useEffect(() => {
+    if (!sourceQuoteDoc || appliedQuoteRef.current) return
+    if (sourceQuoteDoc.status !== "accepted") return
+    appliedQuoteRef.current = true
+
+    if (sourceQuoteDoc.clientId) {
+      handleClientSelect({ _id: sourceQuoteDoc.clientId, name: sourceQuoteDoc.client })
+    }
+
+    if (sourceQuoteDoc.site) {
+      const addr = sourceQuoteDoc.siteSnapshot?.address
+      const formattedAddress = addr
+        ? [addr.line1, addr.line2, addr.city, addr.postcode].filter(Boolean).join(", ")
+        : undefined
+      handleSiteSelect({
+        _id: sourceQuoteDoc.site,
+        name: sourceQuoteDoc.siteSnapshot?.name ?? "Site",
+        formattedAddress,
+      })
+    }
+
+    setValue("title", sourceQuoteDoc.title, { shouldValidate: true })
+    setValue("description", sourceQuoteDoc.description ?? "", { shouldValidate: true })
+    setValue("chargeType", sourceQuoteDoc.chargeType, { shouldValidate: true })
+    if (sourceQuoteDoc.chargeType === "hourly") {
+      setValue("chargeRate", sourceQuoteDoc.chargeRate ?? 0, { shouldValidate: true })
+      setValue("chargeAmount", 0, { shouldValidate: true })
+    } else {
+      setValue("chargeAmount", sourceQuoteDoc.chargeAmount ?? 0, { shouldValidate: true })
+      setValue("chargeRate", 0, { shouldValidate: true })
+    }
+
+    setLockedFromQuote({ quoteId: sourceQuoteDoc._id, quoteNumber: sourceQuoteDoc.quoteNumber, quoteTitle: sourceQuoteDoc.title })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sourceQuoteDoc])
+
   // ── AI draft ───────────────────────────────────────────────
   // Merges only the fields the AI actually returned — never blanks out
   // something the manager already typed. The manager still reviews and
@@ -546,6 +614,7 @@ export function CreateJob() {
     setLocationMode,
     selectedSite,
     handleSiteSelect,
+    lockedFromQuote,
     generateInvoice,
     setGenerateInvoice,
     invoiceDueDate,
@@ -567,7 +636,7 @@ export function CreateJob() {
         <div className="flex items-center gap-3 mb-6 min-w-0">
           <button
             type="button"
-            onClick={() => navigate("/jobs")}
+            onClick={() => navigate(lockedFromQuote ? `/quotes/${lockedFromQuote.quoteId}` : "/jobs")}
             className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors shrink-0"
           >
             <ChevronLeft size={16} />
@@ -582,6 +651,69 @@ export function CreateJob() {
           </div>
           <AIJobDraftDialog onDraftReady={applyAIDraft} />
         </div>
+
+        {quoteId && (
+          <div className="mb-6 -mt-2 min-w-0">
+            {quoteLoading ? (
+              <div className="bg-muted/50 border border-[var(--border)] rounded-xl px-4 py-3 flex items-center gap-2">
+                <Loader2 size={14} className="animate-spin text-muted-foreground shrink-0" />
+                <p className="text-sm text-muted-foreground">Loading quote details…</p>
+              </div>
+            ) : quoteLoadError || !sourceQuoteDoc ? (
+              <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 flex items-start gap-2.5">
+                <AlertTriangle size={15} className="text-red-500 shrink-0 mt-0.5" />
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-red-800">Quote unavailable</p>
+                  <p className="text-xs text-red-700 mt-0.5">We couldn't use this quote to create a job.</p>
+                  <button
+                    type="button"
+                    onClick={() => setSearchParams(prev => { prev.delete("quote"); return prev })}
+                    className="text-xs font-semibold text-red-700 underline mt-1.5"
+                  >
+                    Create job without quote
+                  </button>
+                </div>
+              </div>
+            ) : sourceQuoteDoc.status !== "accepted" ? (
+              <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 flex items-start gap-2.5">
+                <AlertTriangle size={15} className="text-amber-500 shrink-0 mt-0.5" />
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-amber-800">This quote hasn't been accepted yet</p>
+                  <p className="text-xs text-amber-700 mt-0.5">Only accepted quotes can be converted into jobs.</p>
+                  <div className="flex items-center gap-3 mt-1.5">
+                    <button type="button" onClick={() => navigate(`/quotes/${sourceQuoteDoc._id}`)} className="text-xs font-semibold text-amber-800 underline">
+                      View quote
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSearchParams(prev => { prev.delete("quote"); return prev })}
+                      className="text-xs font-semibold text-amber-800 underline"
+                    >
+                      Create job without quote
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-[var(--primary)]/[0.04] border border-[var(--primary)]/15 rounded-xl px-4 py-3 flex items-start gap-2.5">
+                <FileText size={15} className="text-[var(--primary)] shrink-0 mt-0.5" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-foreground">Creating job from accepted quote</p>
+                  <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                    {sourceQuoteDoc.quoteNumber} · {sourceQuoteDoc.title} — client and billing details have been prefilled from the accepted quote.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => navigate(`/quotes/${sourceQuoteDoc._id}`)}
+                  className="text-xs font-semibold text-[var(--primary)] shrink-0 hover:underline"
+                >
+                  View quote
+                </button>
+              </div>
+            )}
+          </div>
+        )}
 
         {aiAssumptions.length > 0 && (
           <div className="mb-6 -mt-2 bg-[var(--primary)]/[0.04] border border-[var(--primary)]/15 rounded-xl px-4 py-3 min-w-0">
@@ -643,7 +775,7 @@ export function CreateJob() {
             onNext={goNext}
             onSaveDraft={() => doSubmit("draft")}
             onPublish={() => doSubmit("published")}
-            onCancel={() => navigate("/jobs")}
+            onCancel={() => navigate(lockedFromQuote ? `/quotes/${lockedFromQuote.quoteId}` : "/jobs")}
           />
         </Form>
       </div>

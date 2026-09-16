@@ -13,7 +13,7 @@ const CHARGE_TYPES = [
 ] as const
 
 export function BillingStep() {
-  const { form, selectedClient, selectedWorkers, shiftHours, totalCost, totalCharge, margin } =
+  const { form, selectedClient, selectedWorkers, shiftHours, totalCost, totalCharge, margin, lockedFromQuote } =
     useCreateJob()
 
   const { register, setValue, watch, formState: { errors } } = form
@@ -68,122 +68,134 @@ export function BillingStep() {
       <div className="bg-card rounded-xl border border-[var(--border)] p-6 min-w-0">
         <h2 className="text-sm font-semibold text-foreground mb-1">What you charge the client</h2>
 
-        {selectedClient && clientDefaultRate !== null && onClientDefault ? (
-          <div className="mt-3 flex items-center justify-between gap-3 p-3.5 rounded-xl bg-muted border border-border min-w-0">
-            <div className="min-w-0">
-              <p className="text-sm font-semibold text-foreground truncate">{selectedClient.name}</p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                {clientDefaultType === "fixed"
-                  ? `${formatCurrency(clientDefaultRate)} fixed per job`
-                  : `${formatCurrency(clientDefaultRate)}/hour`}{" "}
-                · Client default
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => {
-                setRateOverridden(true)
-                // Reset whichever field is actually in play for the current
-                // charge type — resetting chargeRate while on "fixed" (or
-                // vice versa) wouldn't clear onClientDefault above, leaving
-                // the "default" banner stuck showing with no way out.
-                setValue(chargeType === "fixed" ? "chargeAmount" : "chargeRate", 0, { shouldValidate: false })
-              }}
-              className="shrink-0 flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-800 transition-colors"
-            >
-              <Pencil size={12} /> Override
-            </button>
+        {lockedFromQuote ? (
+          <div className="mt-3 p-3.5 rounded-xl bg-muted/40 border border-[var(--border)] min-w-0">
+            <p className="text-sm font-bold text-foreground">
+              {chargeType === "fixed" ? `${formatCurrency(chargeAmount)} fixed` : `${formatCurrency(chargeRate)}/hour`}
+            </p>
+            <p className="text-xs text-muted-foreground mt-0.5">Locked from accepted quote {lockedFromQuote.quoteNumber}</p>
+            <p className="text-[11px] text-muted-foreground mt-1">To change the agreed client pricing, revise the quote instead.</p>
           </div>
         ) : (
-          <p className="text-[11px] text-muted-foreground mb-4">
-            {selectedClient
-              ? `Overriding ${selectedClient.name}'s default for this job only.`
-              : "Pick a client on step 1 to use their default rate."}
-          </p>
-        )}
-
-        <div className="mt-4 min-w-0">
-          <div className="flex flex-col sm:flex-row gap-3 mb-4 min-w-0">
-            {CHARGE_TYPES.map(opt => (
-              <label
-                key={opt.value}
-                className={cn(
-                  "flex-1 min-w-0 flex items-start gap-3 p-3.5 rounded-xl border-2 cursor-pointer transition-all",
-                  chargeType === opt.value
-                    ? "border-[var(--primary)] bg-[var(--primary)]/[0.03]"
-                    : "border-[var(--border)] hover:border-slate-300"
-                )}
-              >
-                <input
-                  type="radio"
-                  name="chargeType"
-                  className="sr-only"
-                  value={opt.value}
-                  checked={chargeType === opt.value}
-                  onChange={() => setValue("chargeType", opt.value, { shouldValidate: true })}
-                />
-                <span
-                  className={cn(
-                    "mt-0.5 w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors",
-                    chargeType === opt.value ? "border-[var(--primary)] bg-[var(--primary)]" : "border-slate-300"
-                  )}
+          <>
+            {selectedClient && clientDefaultRate !== null && onClientDefault ? (
+              <div className="mt-3 flex items-center justify-between gap-3 p-3.5 rounded-xl bg-muted border border-border min-w-0">
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-foreground truncate">{selectedClient.name}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {clientDefaultType === "fixed"
+                      ? `${formatCurrency(clientDefaultRate)} fixed per job`
+                      : `${formatCurrency(clientDefaultRate)}/hour`}{" "}
+                    · Client default
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRateOverridden(true)
+                    // Reset whichever field is actually in play for the current
+                    // charge type — resetting chargeRate while on "fixed" (or
+                    // vice versa) wouldn't clear onClientDefault above, leaving
+                    // the "default" banner stuck showing with no way out.
+                    setValue(chargeType === "fixed" ? "chargeAmount" : "chargeRate", 0, { shouldValidate: false })
+                  }}
+                  className="shrink-0 flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-800 transition-colors"
                 >
-                  {chargeType === opt.value && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
-                </span>
-                <span className="min-w-0">
-                  <span className="block text-sm font-semibold text-foreground">{opt.label}</span>
-                  <span className="block text-[11px] text-muted-foreground mt-0.5">{opt.sub}</span>
-                </span>
-              </label>
-            ))}
-          </div>
-
-          <AnimatePresence mode="wait">
-            {chargeType === "fixed" ? (
-              <motion.div
-                key="fixed"
-                initial={{ opacity: 0, y: -6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }}
-                transition={{ duration: 0.18 }}
-                className="max-w-xs min-w-0"
-              >
-                <Input
-                  label="Fixed price"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  placeholder="0.00"
-                  icon={<span className="text-muted-foreground text-xs font-semibold">£</span>}
-                  {...register("chargeAmount", { valueAsNumber: true })}
-                  className={cn(errors.chargeAmount && "border-red-500!")}
-                />
-                <FieldError message={errors.chargeAmount?.message as string} />
-              </motion.div>
+                  <Pencil size={12} /> Override
+                </button>
+              </div>
             ) : (
-              <motion.div
-                key="hourly"
-                initial={{ opacity: 0, y: -6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }}
-                transition={{ duration: 0.18 }}
-                className="max-w-xs min-w-0"
-              >
-                <Input
-                  label="Charge rate"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  placeholder="0.00"
-                  icon={<span className="text-muted-foreground text-xs font-semibold">£</span>}
-                  {...register("chargeRate", { valueAsNumber: true })}
-                  className={cn(errors.chargeRate && "border-red-500!")}
-                />
-                <FieldError message={errors.chargeRate?.message as string} />
-              </motion.div>
+              <p className="text-[11px] text-muted-foreground mb-4">
+                {selectedClient
+                  ? `Overriding ${selectedClient.name}'s default for this job only.`
+                  : "Pick a client on step 1 to use their default rate."}
+              </p>
             )}
-          </AnimatePresence>
-        </div>
+
+            <div className="mt-4 min-w-0">
+              <div className="flex flex-col sm:flex-row gap-3 mb-4 min-w-0">
+                {CHARGE_TYPES.map(opt => (
+                  <label
+                    key={opt.value}
+                    className={cn(
+                      "flex-1 min-w-0 flex items-start gap-3 p-3.5 rounded-xl border-2 cursor-pointer transition-all",
+                      chargeType === opt.value
+                        ? "border-[var(--primary)] bg-[var(--primary)]/[0.03]"
+                        : "border-[var(--border)] hover:border-slate-300"
+                    )}
+                  >
+                    <input
+                      type="radio"
+                      name="chargeType"
+                      className="sr-only"
+                      value={opt.value}
+                      checked={chargeType === opt.value}
+                      onChange={() => setValue("chargeType", opt.value, { shouldValidate: true })}
+                    />
+                    <span
+                      className={cn(
+                        "mt-0.5 w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors",
+                        chargeType === opt.value ? "border-[var(--primary)] bg-[var(--primary)]" : "border-slate-300"
+                      )}
+                    >
+                      {chargeType === opt.value && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block text-sm font-semibold text-foreground">{opt.label}</span>
+                      <span className="block text-[11px] text-muted-foreground mt-0.5">{opt.sub}</span>
+                    </span>
+                  </label>
+                ))}
+              </div>
+
+              <AnimatePresence mode="wait">
+                {chargeType === "fixed" ? (
+                  <motion.div
+                    key="fixed"
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    transition={{ duration: 0.18 }}
+                    className="max-w-xs min-w-0"
+                  >
+                    <Input
+                      label="Fixed price"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="0.00"
+                      icon={<span className="text-muted-foreground text-xs font-semibold">£</span>}
+                      {...register("chargeAmount", { valueAsNumber: true })}
+                      className={cn(errors.chargeAmount && "border-red-500!")}
+                    />
+                    <FieldError message={errors.chargeAmount?.message as string} />
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="hourly"
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    transition={{ duration: 0.18 }}
+                    className="max-w-xs min-w-0"
+                  >
+                    <Input
+                      label="Charge rate"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="0.00"
+                      icon={<span className="text-muted-foreground text-xs font-semibold">£</span>}
+                      {...register("chargeRate", { valueAsNumber: true })}
+                      className={cn(errors.chargeRate && "border-red-500!")}
+                    />
+                    <FieldError message={errors.chargeRate?.message as string} />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </>
+        )}
 
         {shiftHours > 0 && (payRate > 0 || totalCharge > 0) && (
           <div className="mt-5 pt-5 border-t border-[var(--border)] min-w-0">

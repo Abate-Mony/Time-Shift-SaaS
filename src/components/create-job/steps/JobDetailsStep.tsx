@@ -3,9 +3,12 @@ import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui"
 import { cn } from "@/lib/utils"
 import dayjs from "dayjs"
+import { useState } from "react"
+import { useQuery } from "@tanstack/react-query"
 import SearchLocation from "@/components/locationSearchComponent"
 import { ApplyRatePrompt, ClientCombobox } from "@/components/client/ClientCombobox"
 import { SiteCombobox } from "@/components/site/SiteCombobox"
+import { clientSitesQuery } from "@/utils/sites"
 import { useCreateJob } from "../CreateJobContext"
 import { formatHours } from "../wizardConfig"
 import { FieldError } from "../FieldError"
@@ -31,6 +34,7 @@ export function JobDetailsStep() {
     selectedSite,
     handleSiteSelect,
     shiftHours,
+    lockedFromQuote,
   } = useCreateJob()
 
   const { register, setValue, watch, formState: { errors } } = form
@@ -39,6 +43,18 @@ export function JobDetailsStep() {
   const address = watch("address")
   const startTime = watch("startTime")
   const endTime = watch("endTime")
+
+  // Quote-conversion only: the accepted quote itself had no Site, but the
+  // (locked) client might still have one on file worth suggesting — asked,
+  // not applied automatically, same "ask before overriding" precedent as
+  // ApplyRatePrompt above for the charge rate.
+  const [siteSuggestionDismissed, setSiteSuggestionDismissed] = useState(false)
+  const suggestedSitesQuery = useQuery({
+    ...clientSitesQuery(selectedClient?._id ?? ""),
+    enabled: !!lockedFromQuote && !!selectedClient && !selectedSite,
+  })
+  const suggestedSites = suggestedSitesQuery.data?.sites ?? []
+  const showSiteSuggestion = !!lockedFromQuote && !selectedSite && !siteSuggestionDismissed && suggestedSites.length > 0
 
   return (
     <div className="flex flex-col gap-5 min-w-0">
@@ -67,8 +83,21 @@ export function JobDetailsStep() {
           </div>
 
           <div className="min-w-0">
-            <ClientCombobox value={selectedClient} onChange={handleClientSelect} />
-            <FieldError message={errors.client?.message as string} />
+            {lockedFromQuote ? (
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">Client</p>
+                <div className="p-3.5 border border-[var(--border)] rounded-xl bg-muted/40">
+                  <p className="text-sm font-bold text-foreground">{selectedClient?.name}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Locked from accepted quote {lockedFromQuote.quoteNumber}</p>
+                </div>
+                <p className="text-[11px] text-muted-foreground mt-1">To change the client, revise the quote instead.</p>
+              </div>
+            ) : (
+              <>
+                <ClientCombobox value={selectedClient} onChange={handleClientSelect} />
+                <FieldError message={errors.client?.message as string} />
+              </>
+            )}
 
             {showApplyRate && selectedClient && previousChargeRate !== null && (
               <div className="mt-2 min-w-0">
@@ -129,6 +158,48 @@ export function JobDetailsStep() {
           Use a site for places your team visits repeatedly. Use a one-off location for ad-hoc work.
         </p>
 
+        {lockedFromQuote && selectedSite ? (
+          <div>
+            <div className="p-3.5 border border-[var(--border)] rounded-xl bg-muted/40">
+              <p className="text-sm font-bold text-foreground">{selectedSite.name}</p>
+              {selectedSite.formattedAddress && <p className="text-xs text-muted-foreground mt-0.5">{selectedSite.formattedAddress}</p>}
+              <p className="text-xs text-muted-foreground mt-1">Locked from accepted quote {lockedFromQuote.quoteNumber}</p>
+            </div>
+            <p className="text-[11px] text-muted-foreground mt-1">To change the site, revise the quote instead.</p>
+          </div>
+        ) : (
+          <>
+        {showSiteSuggestion && (
+          <div className="mb-4 flex items-start gap-3 bg-blue-50 border border-blue-100 rounded-xl p-3.5">
+            <MapPin size={14} className="text-blue-500 shrink-0 mt-0.5" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm text-blue-900">
+                {selectedClient?.name} has {suggestedSites.length === 1 ? `a site on file: ${suggestedSites[0].name}` : `${suggestedSites.length} sites on file`}.
+                {" "}Use {suggestedSites.length === 1 ? "it" : "one"} for this job?
+              </p>
+              <div className="flex items-center gap-2 mt-2">
+                <button
+                  type="button"
+                  onClick={() => setSiteSuggestionDismissed(true)}
+                  className="h-7 px-3 text-xs font-semibold text-blue-700 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
+                >
+                  Skip
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLocationMode("site")
+                    if (suggestedSites.length === 1) handleSiteSelect(suggestedSites[0])
+                    setSiteSuggestionDismissed(true)
+                  }}
+                  className="h-7 px-3 text-xs font-bold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  {suggestedSites.length === 1 ? "Use this site" : "Choose a site"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
         {selectedClient && (
           <div className="flex gap-2 mb-4">
             <button
@@ -185,6 +256,8 @@ export function JobDetailsStep() {
               Only the general area is shown to workers before they're assigned — the exact
               address is used for directions once someone is.
             </p>
+          </>
+        )}
           </>
         )}
       </div>

@@ -110,6 +110,10 @@ export type CreateJobForm = Omit<z.infer<typeof createJobSchema>, "client" | "wo
   // they were at scheduling time — never re-synced if the Site changes later.
   site?: string | null;
   siteSnapshot?: import("./types/site").JobSiteSnapshot | null;
+  // Set when this Job was created from an accepted Quote — see
+  // jobController.ts's resolveSourceQuote. Read-only once a Job exists;
+  // only ever written by CreateJob.tsx's quote-prefill flow.
+  sourceQuote?: string | { _id: string; quoteNumber: string } | null;
 };
 // Payload shape sent to the API (post-transform: no empty-string gender).
 export type EditProfileForm = z.output<typeof editProfileSchema>;

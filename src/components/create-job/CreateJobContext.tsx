@@ -46,6 +46,13 @@ export interface CreateJobContextValue {
   selectedSite: ComboboxSite | null
   handleSiteSelect: (site: ComboboxSite | null) => void
 
+  // Set once an accepted Quote's defaults have been applied (see
+  // CreateJob.tsx's quote-prefill effect) — locks Client/Site/Billing type/
+  // rate in JobDetailsStep and BillingStep so a Job created from a Quote
+  // can't silently diverge from what the client actually accepted. The
+  // backend enforces the same rule independently either way.
+  lockedFromQuote: { quoteId: string; quoteNumber: string; quoteTitle: string } | null
+
   generateInvoice: boolean
   setGenerateInvoice: (on: boolean) => void
   invoiceDueDate: string
