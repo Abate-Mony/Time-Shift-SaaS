@@ -76,10 +76,10 @@ export interface Quote {
   notes?: string
   terms?: string
   // Checkbox set at creation/edit time — whether accepting this quote
-  // triggers a thank-you email to the client. thankYouMessage exists on
-  // the backend schema too but has no UI yet (future custom-message
-  // update), so it's deliberately not exposed here.
+  // triggers a thank-you email to the client, plus an optional extra
+  // paragraph appended to that email's default copy.
   sendThankYouEmailOnAccept?: boolean
+  thankYouMessage?: string
   sentAt?: string | null
   viewedAt?: string | null
   acceptedAt?: string | null
@@ -115,6 +115,7 @@ export interface QuoteFormInput {
   notes?: string
   terms?: string
   sendThankYouEmailOnAccept?: boolean
+  thankYouMessage?: string
 }
 
 export interface QuoteListResponse {

@@ -174,6 +174,7 @@ export function CreateQuote() {
     const [notes, setNotes] = useState('')
     const [terms, setTerms] = useState('This quote is valid for 30 days from the date of issue.')
     const [sendThankYouEmail, setSendThankYouEmail] = useState(true)
+    const [thankYouMessage, setThankYouMessage] = useState('')
     const [errors, setErrors] = useState<Record<string, string>>({})
 
     const [saving, setSaving] = useState(false)
@@ -203,6 +204,7 @@ export function CreateQuote() {
         setNotes(quote.notes ?? '')
         setTerms(quote.terms ?? '')
         setSendThankYouEmail(quote.sendThankYouEmailOnAccept ?? true)
+        setThankYouMessage(quote.thankYouMessage ?? '')
     }, [quote])
 
     const sitesQueryResult = useQuery({ ...clientSitesQuery(client?._id ?? ''), enabled: !!client })
@@ -277,6 +279,7 @@ export function CreateQuote() {
             notes: notes.trim() || undefined,
             terms: terms.trim() || undefined,
             sendThankYouEmailOnAccept: sendThankYouEmail,
+            thankYouMessage: sendThankYouEmail ? (thankYouMessage.trim() || undefined) : undefined,
         }
         if (isEditingExisting) {
             return updateQuote(quote!._id, common)
@@ -678,6 +681,20 @@ export function CreateQuote() {
                                     <p className="text-xs text-muted-foreground mt-0.5">Sent automatically the moment they click Accept on the public quote page.</p>
                                 </div>
                             </label>
+                            {sendThankYouEmail && (
+                                <div className="pl-[26px]">
+                                    <FieldLabel text="Extra message (optional)" optional />
+                                    <Textarea
+                                        value={thankYouMessage}
+                                        onChange={e => setThankYouMessage(e.target.value)}
+                                        rows={3}
+                                        maxLength={1000}
+                                        placeholder="Add a personal note to include in the thank-you email…"
+                                        disabled={readOnly}
+                                    />
+                                    <p className="text-xs text-muted-foreground mt-1">Appended below the default thank-you message.</p>
+                                </div>
+                            )}
                         </div>
                     </Card>
 
