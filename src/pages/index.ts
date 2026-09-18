@@ -8,12 +8,11 @@ export { Jobs } from './Jobs'
 export { CreateJob } from './CreateJob'
 export { Workers } from './Workers'
 export { Calendar, loader as calendarLoader } from './Calendar'
-export { default as ReportLayout } from "@/layouts/ReportLayout"
-export { ReportsOverviewPage } from "./reports/ReportsOverviewPage"
-export { ReportsPayrollPage } from "./reports/ReportsPayrollPage"
-export { ReportsTimesheetsPage } from "./reports/ReportsTimesheetsPage"
-export { ReportsPerformancePage } from "./reports/ReportsPerformancePage"
-export { ReportsProfitabilityPage } from "./reports/ReportsProfitabilityPage"
+// ReportLayout, the five Reports/* pages, and Analytics (below) are
+// deliberately NOT re-exported here — they're lazy-loaded directly from
+// their own files in routes.tsx (they pull in recharts, a large charting
+// lib). Re-exporting them from this barrel would pull them back into the
+// main chunk, since this barrel itself is imported eagerly.
 export { Notifications } from './Notifications'
 export { Settings, loader as settingsLoader } from './Settings'
 export { WorkerApp } from './WorkerApp'
@@ -40,7 +39,6 @@ export { ProfileScreen, loader as workerProfileLoader } from "./worker/WorkerPro
 export { loader as clockLoader } from "./worker/ClockScreenPage"
 export { default as DownloadTimesheetScreen } from "./worker/DownloadTimesheet"
 export { default as WorkerDocumentsScreen } from "./worker/WorkerDocumentsScreen"
-export { Analytics, loader as analyticsLoader } from "./AnalyticsPage"
 export { DataAssistant } from "./DataAssistant"
 export { Team, loader as teamLoader } from "./TeamPage"
 export { RecurringJobDetail, loader as recurringJobDetailLoader } from "./recurringJobDetailsPage"

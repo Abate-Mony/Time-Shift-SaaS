@@ -40,7 +40,7 @@ import RecurringAssignmentPage, { loader as recurringAssignmentsLoader } from "@
 import PublicQuotePage from "@/pages/PublicQuotePage";
 import { createBrowserRouter, Navigate } from "react-router";
 import DashboardLayout from "../layouts/dashboardlayout";
-import { Analytics, analyticsLoader, Calendar, calendarLoader, ClentBillingPage, ClientDetail, clientDetailLoader, ClientDetailsaJobsPage, ClientDetailsContactsPage, ClientDetailsOverviewPage, ClientDetailsSitesPage, Clients, clientsLoader, clockLoader, CreateClientPage, CreateInvoicePage, createInvoiceLoader, CreateJob, createjobAction, CreateQuote, createQuoteLoader, CreateSitePage, DataAssistant, Dashboard, dashboardLoader, DownloadTimesheetScreen, EditJob, editJobAction, HelpArticlePage, HelpArticleScreen, HelpCentre, HelpCentreScreen, InvoiceDetail, invoiceDetailLoader, InvoiceForm, invoiceFormLoader, Invoices, invoicesLoader, JobDetail, Jobs, jobsLoader, loginAction, openShiftsLoader, ProfileScreen, Quotes, quotesLoader, RecurringJobDetail, recurringJobDetailLoader, RecurringJobs, recurringJobsLoader, ReportLayout, ReportsOverviewPage, ReportsPayrollPage, ReportsTimesheetsPage, ReportsPerformancePage, ReportsProfitabilityPage, Settings, settingsLoader, signupAction, singleJobLoader, singleWorkerJobLoader, SiteDetailPage, siteDetailLoader, Sites, sitesLoader, SuspendedAccountPage, Team, teamLoader, workerLoader, WorkerProfile, workerProfileLoader, workerStatsLoader, Workers, workersLoader, CheckOutSettings, ChangePlanSettings, Notifications, TeamsCreatepage, teamsCreateLoader, WorkerDocumentsScreen } from "../pages";
+import { Calendar, calendarLoader, ClentBillingPage, ClientDetail, clientDetailLoader, ClientDetailsaJobsPage, ClientDetailsContactsPage, ClientDetailsOverviewPage, ClientDetailsSitesPage, Clients, clientsLoader, clockLoader, CreateClientPage, CreateInvoicePage, createInvoiceLoader, CreateJob, createjobAction, CreateQuote, createQuoteLoader, CreateSitePage, DataAssistant, Dashboard, dashboardLoader, DownloadTimesheetScreen, EditJob, editJobAction, HelpArticlePage, HelpArticleScreen, HelpCentre, HelpCentreScreen, InvoiceDetail, invoiceDetailLoader, InvoiceForm, invoiceFormLoader, Invoices, invoicesLoader, JobDetail, Jobs, jobsLoader, loginAction, openShiftsLoader, ProfileScreen, Quotes, quotesLoader, RecurringJobDetail, recurringJobDetailLoader, RecurringJobs, recurringJobsLoader, Settings, settingsLoader, signupAction, singleJobLoader, singleWorkerJobLoader, SiteDetailPage, siteDetailLoader, Sites, sitesLoader, SuspendedAccountPage, Team, teamLoader, workerLoader, WorkerProfile, workerProfileLoader, workerStatsLoader, Workers, workersLoader, CheckOutSettings, ChangePlanSettings, Notifications, TeamsCreatepage, teamsCreateLoader, WorkerDocumentsScreen } from "../pages";
 
 export const router = createBrowserRouter([
     {
@@ -238,13 +238,17 @@ export const router = createBrowserRouter([
                     },
                     {
                         path: "reports",
-                        element: <ReportLayout />,
+                        // Lazy: Reports/Analytics pull in recharts (a large
+                        // charting lib) that the rest of the app never
+                        // needs — split into their own chunk instead of
+                        // shipping it to every visitor on every page load.
+                        lazy: () => import("@/layouts/ReportLayout").then(m => ({ Component: m.default })),
                         children: [
-                            { index: true, element: <ReportsOverviewPage /> },
-                            { path: "payroll", element: <ReportsPayrollPage /> },
-                            { path: "timesheets", element: <ReportsTimesheetsPage /> },
-                            { path: "performance", element: <ReportsPerformancePage /> },
-                            { path: "profitability", element: <ReportsProfitabilityPage /> },
+                            { index: true, lazy: () => import("@/pages/reports/ReportsOverviewPage").then(m => ({ Component: m.ReportsOverviewPage })) },
+                            { path: "payroll", lazy: () => import("@/pages/reports/ReportsPayrollPage").then(m => ({ Component: m.ReportsPayrollPage })) },
+                            { path: "timesheets", lazy: () => import("@/pages/reports/ReportsTimesheetsPage").then(m => ({ Component: m.ReportsTimesheetsPage })) },
+                            { path: "performance", lazy: () => import("@/pages/reports/ReportsPerformancePage").then(m => ({ Component: m.ReportsPerformancePage })) },
+                            { path: "profitability", lazy: () => import("@/pages/reports/ReportsProfitabilityPage").then(m => ({ Component: m.ReportsProfitabilityPage })) },
                         ],
                     },
                     {
@@ -257,8 +261,7 @@ export const router = createBrowserRouter([
                     },
                     {
                         path: "analytics",
-                        element: <Analytics />,
-                        loader: analyticsLoader(queryClient),
+                        lazy: () => import("@/pages/AnalyticsPage").then(m => ({ Component: m.Analytics, loader: m.loader(queryClient) })),
                         errorElement: <ErrorElement />,
                     },
                     {

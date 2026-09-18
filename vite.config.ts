@@ -65,4 +65,25 @@ export default defineConfig({
       },
     },
   },
+
+  build: {
+    rollupOptions: {
+      output: {
+        // Splits the single ~2.4MB app bundle into cacheable vendor chunks
+        // instead of one giant file every visitor has to re-download on
+        // every deploy. Grouped by how often each library actually changes/
+        // is needed, not just alphabetically — react/react-dom essentially
+        // never change between deploys, recharts is only pulled in by a
+        // handful of chart-heavy pages, etc.
+        manualChunks(id) {
+          if (!id.includes("node_modules")) return undefined;
+          if (/[\\/](react|react-dom|react-router)[\\/]/.test(id)) return "vendor-react";
+          if (id.includes("framer-motion")) return "vendor-motion";
+          if (id.includes("recharts") || id.includes("d3-")) return "vendor-charts";
+          if (id.includes("@tanstack")) return "vendor-query";
+          return "vendor";
+        },
+      },
+    },
+  },
 });
