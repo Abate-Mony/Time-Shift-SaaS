@@ -70,6 +70,7 @@ const settingsFormSchema = z.object({
     openShiftsEnabled: z.boolean(),
     openShiftsRequireApproval: z.boolean(),
     paymentRemindersEnabled: z.boolean(),
+    autoGenerateRecurringInvoices: z.boolean(),
 })
 
 type FormValues = z.infer<typeof settingsFormSchema>
@@ -96,6 +97,7 @@ const DEFAULT_FORM_VALUES: FormValues = {
     openShiftsEnabled: false,
     openShiftsRequireApproval: true,
     paymentRemindersEnabled: true,
+    autoGenerateRecurringInvoices: false,
 }
 
 function toFormValues(s: CompanySettings): FormValues {
@@ -681,7 +683,20 @@ export function Settings() {
                     </AnimatePresenceField>
                 </SectionCard>
 
-                <SectionCard icon={Receipt} title="Invoicing" description="Automated communication around unpaid invoices">
+                <SectionCard icon={Receipt} title="Invoicing" description="Automated invoice generation and payment reminders">
+                    <Controller
+                        control={control}
+                        name="autoGenerateRecurringInvoices"
+                        render={({ field }) => (
+                            <ToggleField
+                                label="Auto-generate recurring invoices"
+                                description="For clients billed weekly, fortnightly, or monthly, drafts an invoice automatically once their billing period closes — you still review and send it yourself, nothing goes out unattended."
+                                checked={field.value}
+                                onChange={field.onChange}
+                                disabled={disabled}
+                            />
+                        )}
+                    />
                     <Controller
                         control={control}
                         name="paymentRemindersEnabled"

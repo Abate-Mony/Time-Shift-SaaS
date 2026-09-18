@@ -349,6 +349,7 @@ export interface CompanySettings {
   openShiftsEnabled: boolean;
   openShiftsRequireApproval: boolean;
   paymentRemindersEnabled: boolean;
+  autoGenerateRecurringInvoices: boolean;
 
   // Read-only here — see companyController.ts's COMPANY_READ_ONLY_EXTRA_FIELDS.
   // Written via setDefaultInvoiceTemplate (PATCH /companies/invoice-template),
