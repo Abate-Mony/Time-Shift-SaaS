@@ -79,6 +79,21 @@ export const getDashboardInsightsAI = async (): Promise<AIDashboardInsightsRespo
     return data;
 };
 
+export type AIDataAssistantTurn = { role: "user" | "assistant"; content: string };
+
+// POST /ai/data-assistant/chat — read-only Q&A over the company's own jobs/
+// invoices/quotes/clients/workers (see the backend's dataAssistantTools.ts
+// for the exact whitelisted fields; it never returns contact details, pay
+// rates, or identifying documents). Stateless: the full recent history
+// rides along on every call rather than being persisted server-side.
+export const sendDataAssistantMessage = async (
+    message: string,
+    history: AIDataAssistantTurn[]
+): Promise<{ reply: string }> => {
+    const { data } = await customFetch.post<{ reply: string }>("/ai/data-assistant/chat", { message, history });
+    return data;
+};
+
 // ── Worker documents ────────────────────────────────────────────────────
 // Self-service — a worker uploads/removes their own documents (ID,
 // right-to-work, certifications, ...). Entirely optional everywhere.

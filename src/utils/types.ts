@@ -245,6 +245,7 @@ export interface PlanLimits {
     advancedReports: boolean;
     aiJobAssistant: boolean;
     aiDashboardInsights: boolean;
+    aiDataAssistant: boolean;
   };
 }
 

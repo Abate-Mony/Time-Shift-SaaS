@@ -17,6 +17,7 @@ import {
   Quote,
   Receipt,
   Settings,
+  Sparkles,
   SquareUser,
   Users,
   Zap
@@ -42,6 +43,7 @@ const secondaryItems = [
   // { id: 'timesheets', label: 'Timesheets', icon: FileText },
   { id: 'analytics', label: 'Analytics', icon: Zap },
   { id: 'quotes', label: 'Qoutes', icon: Quote },
+  { id: 'assistant', label: 'Assistant', icon: Sparkles },
 ]
 
 const bottomItems = [
