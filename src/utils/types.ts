@@ -348,6 +348,7 @@ export interface CompanySettings {
   generateAheadDays: number;
   openShiftsEnabled: boolean;
   openShiftsRequireApproval: boolean;
+  paymentRemindersEnabled: boolean;
 
   // Read-only here — see companyController.ts's COMPANY_READ_ONLY_EXTRA_FIELDS.
   // Written via setDefaultInvoiceTemplate (PATCH /companies/invoice-template),

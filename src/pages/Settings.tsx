@@ -14,6 +14,7 @@ import {
     Coins,
     Lock,
     MapPin,
+    Receipt,
     Timer,
 } from 'lucide-react'
 
@@ -68,6 +69,7 @@ const settingsFormSchema = z.object({
     generateAheadDays: z.coerce.number({ invalid_type_error: 'Enter a number' }).int('Whole days only').min(1, 'At least 1 day').max(365, 'Max 365 days'),
     openShiftsEnabled: z.boolean(),
     openShiftsRequireApproval: z.boolean(),
+    paymentRemindersEnabled: z.boolean(),
 })
 
 type FormValues = z.infer<typeof settingsFormSchema>
@@ -93,6 +95,7 @@ const DEFAULT_FORM_VALUES: FormValues = {
     generateAheadDays: 28,
     openShiftsEnabled: false,
     openShiftsRequireApproval: true,
+    paymentRemindersEnabled: true,
 }
 
 function toFormValues(s: CompanySettings): FormValues {
@@ -676,6 +679,22 @@ export function Settings() {
                             )}
                         />
                     </AnimatePresenceField>
+                </SectionCard>
+
+                <SectionCard icon={Receipt} title="Invoicing" description="Automated communication around unpaid invoices">
+                    <Controller
+                        control={control}
+                        name="paymentRemindersEnabled"
+                        render={({ field }) => (
+                            <ToggleField
+                                label="Automatic payment reminders"
+                                description="Nudges a client by email when an invoice becomes overdue (at 3, 7, 14, and 30 days past due)."
+                                checked={field.value}
+                                onChange={field.onChange}
+                                disabled={disabled}
+                            />
+                        )}
+                    />
                 </SectionCard>
 
                 {isAdmin && (
