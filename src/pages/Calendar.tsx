@@ -117,22 +117,15 @@ const DisplayCalendar = ({
         </p>
 
         {selectedJobs?.length === 0 ? (
-          <div className="text-center py-8">
-            <p className="text-xs text-muted-foreground">No jobs on this day
-
-              <EmptyState
-                title='Create New Job With this Date'
-                icon={<Luggage />}
-                action={<Link to={`/create-job`}>
-                  <Button>
-                    create Job
-                  </Button>
-                </Link>}
-              >
-
-              </EmptyState>
-            </p>
-          </div>
+          <EmptyState
+            title='No jobs on this day'
+            icon={<Luggage />}
+            action={<Link to={`/create-job`}>
+              <Button>
+                Create job
+              </Button>
+            </Link>}
+          />
         ) : (
           <div className="flex flex-col gap-3">
             {selectedJobs?.map((job) => {
@@ -240,7 +233,10 @@ export function Calendar() {
   const jobs = data?.jobs ?? []
   const [selectedDate, setSelectedDate] = useState<string | null>(() => dayjs().format('YYYY-MM-DD'))
   const [open, setOpen] = useState(false)
-  const isDesktop = useMediaQuery({ minWidth: 768 })
+  // Must match the side detail panel's own breakpoint (`lg:block` below) —
+  // otherwise there's a dead range where the drawer is suppressed here but
+  // the panel isn't visible yet, and selecting a day shows nothing.
+  const isDesktop = useMediaQuery({ minWidth: 1024 })
 
   useEffect(() => {
     handleFiltersChange({ start, end, view })
@@ -307,13 +303,13 @@ export function Calendar() {
                 name='view'
                 show
                 layoutId='calendar-filter-button'
-                animateClassName='size-full! inset-0! bg-[#1E3A56]  group-hover:text-black!'
+                animateClassName='size-full! inset-0! bg-[var(--primary)]'
                 value={key}
                 key={v}
                 onClick={() => {
                   if (key !== 'month' && selectedDate) setCurrentDate(dayjs(selectedDate))
                 }}
-                className={`h-8  px-3.5 rounded-lg text-xs font-medium transition-colors ${key === view ? 'bg-[#21262c]- text-white' : 'text-muted-foreground hover:bg-muted'
+                className={`h-8  px-3.5 rounded-lg text-xs font-medium transition-colors ${key === view ? 'text-white' : 'text-muted-foreground hover:bg-muted'
                   }`}
               >
                 {v}
@@ -403,7 +399,7 @@ export function Calendar() {
                       <div
                         key={day}
                         onClick={() => selectDay(dateStr)}
-                        className={`h-28 border-b border-r border-border p-2 cursor-pointer transition-colors hover:bg-muted/60 ${isSelected ? 'bg-blue-50/40' : ''
+                        className={`h-28 border-b border-r border-border p-2 cursor-pointer transition-colors hover:bg-muted/60 ${isSelected ? 'bg-[var(--primary)]/10' : ''
                           }`}
                       >
                         <div className="flex justify-end mb-1">
@@ -413,7 +409,7 @@ export function Calendar() {
                             ${isToday
                                 ? 'bg-[var(--primary)] text-white'
                                 : isSelected
-                                  ? 'bg-blue-100 text-blue-700'
+                                  ? 'bg-[var(--primary)]/15 text-[var(--primary)]'
                                   : 'text-muted-foreground'
                               }`}
                           >
@@ -476,7 +472,7 @@ export function Calendar() {
                     <div
                       key={dateStr}
                       onClick={() => selectDay(dateStr)}
-                      className={`h-72 border-b border-r border-border last:border-r-0 p-2 cursor-pointer transition-colors hover:bg-muted/60 ${isSelected ? 'bg-blue-50/40' : ''
+                      className={`h-72 border-b border-r border-border last:border-r-0 p-2 cursor-pointer transition-colors hover:bg-muted/60 ${isSelected ? 'bg-[var(--primary)]/10' : ''
                         }`}
                     >
                       <div className="flex flex-col gap-0.5">
