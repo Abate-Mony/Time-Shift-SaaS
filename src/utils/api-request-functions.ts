@@ -12,7 +12,7 @@ import type {
 } from "@/data/restrictionMockData";
 
 import { getCurrentPosition } from "./getPosition";
-import type { InvoiceTemplate } from "./types/invoiceTemplate";
+import type { InvoiceTemplate, InvoiceTemplateInput } from "./types/invoiceTemplate";
 import type { Quote, QuoteFormInput } from "./types/quote";
 import type { EmailSettings, EmailSettingsResponse, SendTestEmailResult } from "./types/emailSettings";
 
@@ -170,6 +170,32 @@ export const setDefaultInvoiceTemplate = async (templateId: string | null): Prom
     return data.defaultInvoiceTemplate;
 };
 
+// ── Custom template builder ──────────────────────────────────────────────
+// Same "themed knobs" pool as the 10 system presets — never a freeform
+// layout designer, see invoiceTemplateController.ts's comment.
+
+export const createInvoiceTemplate = async (payload: InvoiceTemplateInput & { name: string }): Promise<InvoiceTemplate> => {
+    const { data } = await customFetch.post<{ template: InvoiceTemplate }>("/invoice-templates", payload);
+    return data.template;
+};
+
+export const updateInvoiceTemplate = async (id: string, payload: InvoiceTemplateInput): Promise<InvoiceTemplate> => {
+    const { data } = await customFetch.patch<{ template: InvoiceTemplate }>(`/invoice-templates/${id}`, payload);
+    return data.template;
+};
+
+export const deleteInvoiceTemplate = async (id: string): Promise<boolean> => {
+    try {
+        await customFetch.delete(`/invoice-templates/${id}`);
+        toast.success("Template deleted");
+        await queryClient.invalidateQueries({ queryKey: ["invoice-templates"] });
+        return true;
+    } catch (err) {
+        toast.error(getApiErrorMessage(err));
+        return false;
+    }
+};
+
 // ── Email & Sending ──────────────────────────────────────────────────────
 // Left throwing (not toast-wrapped) for get/update/connect/verify — the
 // Email Settings page shows richer inline feedback (DNS record states,
@@ -254,9 +280,13 @@ export const deleteQuote = async (quoteId: string): Promise<boolean> => {
 // Emails the quote (PDF attached) to the client and flips draft -> sent —
 // see quoteController.ts's sendQuoteHandler. Takes no body: send whatever
 // is currently saved, so callers must persist edits (updateQuote) first.
-export const sendQuote = async (quoteId: string): Promise<boolean> => {
+// Covers both the first send and a resend (sent/viewed -> sent again with
+// a rotated response link) — the backend now accepts either. templateId
+// lets the send-time picker choose a look for this document; omitted, the
+// backend reuses whatever's already resolved/locked.
+export const sendQuote = async (quoteId: string, templateId?: string): Promise<boolean> => {
     try {
-        await customFetch.post(`/quotes/${quoteId}/send`);
+        await customFetch.post(`/quotes/${quoteId}/send`, templateId ? { template: templateId } : {});
         toast.success("Quote sent to client");
         await queryClient.invalidateQueries({ queryKey: ["quotes"] });
         await queryClient.invalidateQueries({ queryKey: ["quote", quoteId] });
@@ -552,9 +582,9 @@ export const deleteInvoice = async (invoiceId: string): Promise<boolean> => {
     }
 };
 
-export const sendInvoice = async (invoiceId: string): Promise<boolean> => {
+export const sendInvoice = async (invoiceId: string, templateId?: string): Promise<boolean> => {
     try {
-        await customFetch.post(`/invoices/${invoiceId}/send`);
+        await customFetch.post(`/invoices/${invoiceId}/send`, templateId ? { template: templateId } : {});
 
         toast.success("Invoice sent to client");
 

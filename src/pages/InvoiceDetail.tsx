@@ -11,6 +11,7 @@ import { useState } from 'react'
 import { useNavigate, useParams, type LoaderFunctionArgs } from 'react-router'
 import { useBackLink } from '@/hooks/useBackLink'
 import toast from 'react-hot-toast'
+import { SendWithTemplateDialog } from '@/components/invoiceTemplates/SendWithTemplateDialog'
 
 const STATUS_STYLES: Record<string, string> = {
     draft: 'bg-muted text-muted-foreground',
@@ -53,6 +54,7 @@ export function InvoiceDetail() {
     const [markingPaid, setMarkingPaid] = useState(false)
     const [cancelling, setCancelling] = useState(false)
     const [downloading, setDownloading] = useState(false)
+    const [showSendDialog, setShowSendDialog] = useState(false)
 
     if (!invoice) return null
 
@@ -64,10 +66,11 @@ export function InvoiceDetail() {
         if (ok) navigate('/invoices')
     }
 
-    const handleSend = async () => {
+    const handleSend = async (templateId?: string): Promise<boolean> => {
         setSending(true)
-        await sendInvoice(invoice._id)
+        const ok = await sendInvoice(invoice._id, templateId)
         setSending(false)
+        return ok
     }
 
     // Hits the real pdfkit-rendered, template-aware PDF (GET /invoices/:id/pdf)
@@ -148,13 +151,13 @@ export function InvoiceDetail() {
                 </button>
                 <div className="flex items-center gap-2">
                     {invoice.status === 'draft' && (
-                        <Button variant="outline" size="sm" disabled={sending} onClick={handleSend}>
+                        <Button variant="outline" size="sm" disabled={sending} onClick={() => setShowSendDialog(true)}>
                             <Mail size={13} /> {sending ? 'Sending…' : 'Send Invoice'}
                         </Button>
                     )}
                     {(invoice.status === 'sent' || invoice.status === 'overdue') && (
                         <>
-                            <Button variant="outline" size="sm" disabled={sending} onClick={handleSend}>
+                            <Button variant="outline" size="sm" disabled={sending} onClick={() => setShowSendDialog(true)}>
                                 <Mail size={13} /> {sending ? 'Sending…' : 'Resend'}
                             </Button>
                             <Button size="sm" disabled={markingPaid} onClick={handleMarkPaid}>
@@ -374,6 +377,17 @@ export function InvoiceDetail() {
                     </div>
                 )}
             </div>
+
+            {showSendDialog && (
+                <SendWithTemplateDialog
+                    documentType="invoice"
+                    documentId={invoice._id}
+                    documentNumber={invoice.invoiceNumber}
+                    mode={invoice.status === 'draft' ? 'send' : 'resend'}
+                    onClose={() => setShowSendDialog(false)}
+                    onConfirm={handleSend}
+                />
+            )}
         </div>
     )
 }

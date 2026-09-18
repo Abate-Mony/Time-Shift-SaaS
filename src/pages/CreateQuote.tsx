@@ -18,6 +18,7 @@ import { useEffect, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
 import { Link, useNavigate, useParams, type LoaderFunctionArgs } from 'react-router'
 import { QuoteStatusBadge } from './Quotes'
+import { SendWithTemplateDialog } from '@/components/invoiceTemplates/SendWithTemplateDialog'
 
 // A job created from this quote — only the fields the "Jobs created from
 // this quote" section actually renders, not the full Job shape.
@@ -180,6 +181,7 @@ export function CreateQuote() {
     const [downloading, setDownloading] = useState(false)
     const [cancelling, setCancelling] = useState(false)
     const [deleting, setDeleting] = useState(false)
+    const [showSendDialog, setShowSendDialog] = useState(false)
 
     // Seed local state from the loaded quote exactly once — client/site are
     // deliberately NOT re-editable once a quote exists: the API only ever
@@ -302,19 +304,33 @@ export function CreateQuote() {
         }
     }
 
-    async function handleSend() {
-        if (!validate()) return
+    async function handleSend(templateId?: string): Promise<boolean> {
+        if (!validate()) return false
         setSending(true)
         try {
             const saved = await persist()
             await queryClient.invalidateQueries({ queryKey: ['quotes'] })
-            const ok = await sendQuote(saved._id)
+            const ok = await sendQuote(saved._id, templateId)
             if (ok) navigate(`/quotes/${saved._id}`)
+            return ok
         } catch (err) {
             toast.error(errorMessage(err))
+            return false
         } finally {
             setSending(false)
         }
+    }
+
+    // Resending doesn't re-persist form edits — a manager resending a
+    // stuck/lost email isn't necessarily mid-edit, and a sent/viewed quote
+    // is already readOnly here anyway (nothing to persist).
+    async function handleResend(templateId?: string): Promise<boolean> {
+        if (!quote) return false
+        setSending(true)
+        const ok = await sendQuote(quote._id, templateId)
+        setSending(false)
+        if (ok) await queryClient.invalidateQueries({ queryKey: ['quote', quote._id] })
+        return ok
     }
 
     async function handleDownloadPdf() {
@@ -401,18 +417,38 @@ export function CreateQuote() {
                             <Briefcase size={13} /> {jobsFromQuote.length > 0 ? 'Create another job' : 'Create job'}
                         </Button>
                     )}
+                    {!!quote && (quote.status === 'sent' || quote.status === 'viewed') && (
+                        <Button variant="outline" size="sm" disabled={sending} onClick={() => setShowSendDialog(true)}>
+                            {sending ? <Loader2 size={13} className="animate-spin" /> : <Send size={13} />} Resend
+                        </Button>
+                    )}
                     {!readOnly && (
                         <>
                             <Button variant="outline" size="sm" disabled={saving || sending} onClick={handleSaveDraft}>
                                 {saving && <Loader2 size={13} className="animate-spin" />} Save draft
                             </Button>
-                            <Button size="sm" disabled={saving || sending} onClick={handleSend}>
+                            <Button
+                                size="sm"
+                                disabled={saving || sending}
+                                onClick={() => (isEditingExisting ? setShowSendDialog(true) : handleSend())}
+                            >
                                 {sending ? <Loader2 size={13} className="animate-spin" /> : <Send size={13} />} {sending ? 'Sending…' : 'Send quote'}
                             </Button>
                         </>
                     )}
                 </div>
             </div>
+
+            {showSendDialog && quote && (
+                <SendWithTemplateDialog
+                    documentType="quote"
+                    documentId={quote._id}
+                    documentNumber={quote.quoteNumber}
+                    mode={quote.status === 'draft' ? 'send' : 'resend'}
+                    onClose={() => setShowSendDialog(false)}
+                    onConfirm={templateId => (quote.status === 'draft' ? handleSend(templateId) : handleResend(templateId))}
+                />
+            )}
 
             <div className="grid grid-cols-1 xl:grid-cols-[1fr_280px] gap-5">
                 <div className="flex flex-col gap-4 min-w-0">

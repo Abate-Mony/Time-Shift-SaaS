@@ -19,3 +19,17 @@ export interface InvoiceTemplate {
     presetKey?: string | null
     company?: string | null
 }
+
+// Payload for POST /invoice-templates and PATCH /invoice-templates/:id —
+// everything but `name` optional (the backend defaults the rest on
+// create), never includes isSystemPreset/presetKey/company/_id.
+export interface InvoiceTemplateInput {
+    name?: string
+    baseLayout?: InvoiceTemplateBaseLayout
+    accentColor?: string
+    font?: InvoiceTemplateFont
+    logoPosition?: InvoiceTemplateLogoPosition
+    showVatBreakdown?: boolean
+    showPaymentTerms?: boolean
+    showNotes?: boolean
+}
