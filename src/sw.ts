@@ -1,11 +1,23 @@
 /// <reference lib="webworker" />
 import { precacheAndRoute } from "workbox-precaching"
+import { clientsClaim } from "workbox-core"
 
 declare const self: ServiceWorkerGlobalScope
 
 // Injected at build time by vite-plugin-pwa (strategies: "injectManifest")
 // with the list of built assets to precache.
 precacheAndRoute(self.__WB_MANIFEST)
+
+// registerType: "autoUpdate" (vite.config.ts) relies on the app calling
+// registerSW({ immediate: true }) from virtual:pwa-register, which posts this
+// message to a waiting worker and reloads once it takes over. Without these
+// two calls a new SW sits in "waiting" forever (an SPA tab is never fully
+// closed), so it keeps serving a precached index.html from an old deploy —
+// pointing at hashed JS/CSS filenames a newer deploy has since removed.
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "SKIP_WAITING") self.skipWaiting()
+})
+clientsClaim()
 
 self.addEventListener("push", (event) => {
   let data: { title?: string; body?: string; tag?: string; silent?: boolean; url?: string } = {}
