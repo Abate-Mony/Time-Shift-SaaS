@@ -52,6 +52,7 @@ const NAV_LINKS = [
   { to: '/reports', label: 'Overview', end: true },
   { to: '/reports/payroll', label: 'Payroll' },
   { to: '/reports/timesheets', label: 'Timesheets' },
+  { to: '/reports/aging', label: 'Aging' },
   // Locked below Professional — see the "advancedReports" gate.
   { to: '/reports/performance', label: 'Performance', gated: true },
   { to: '/reports/profitability', label: 'Profitability', gated: true },

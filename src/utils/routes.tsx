@@ -247,6 +247,7 @@ export const router = createBrowserRouter([
                             { index: true, lazy: () => import("@/pages/reports/ReportsOverviewPage").then(m => ({ Component: m.ReportsOverviewPage })) },
                             { path: "payroll", lazy: () => import("@/pages/reports/ReportsPayrollPage").then(m => ({ Component: m.ReportsPayrollPage })) },
                             { path: "timesheets", lazy: () => import("@/pages/reports/ReportsTimesheetsPage").then(m => ({ Component: m.ReportsTimesheetsPage })) },
+                            { path: "aging", lazy: () => import("@/pages/reports/ReportsAgingPage").then(m => ({ Component: m.ReportsAgingPage })) },
                             { path: "performance", lazy: () => import("@/pages/reports/ReportsPerformancePage").then(m => ({ Component: m.ReportsPerformancePage })) },
                             { path: "profitability", lazy: () => import("@/pages/reports/ReportsProfitabilityPage").then(m => ({ Component: m.ReportsProfitabilityPage })) },
                         ],

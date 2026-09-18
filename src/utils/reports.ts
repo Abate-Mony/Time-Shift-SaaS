@@ -121,3 +121,41 @@ export const reportsProfitabilityQuery = (range: DateRange, basis: RevenueBasis,
     return data
   },
 })
+
+export type AgingBucket = "current" | "1-30" | "31-60" | "61-90" | "90+"
+
+export interface AgingInvoiceRow {
+  invoiceNumber: string
+  clientId: string | null
+  clientName: string
+  dueDate: string | null
+  daysOverdue: number
+  balanceDue: number
+  bucket: AgingBucket
+}
+
+export interface AgingClientRow {
+  clientId: string | null
+  clientName: string
+  buckets: Record<AgingBucket, number>
+  total: number
+  invoiceCount: number
+}
+
+export interface ReportsAgingResponse {
+  asOf: string
+  buckets: Record<AgingBucket, number>
+  totalOutstanding: number
+  byClient: AgingClientRow[]
+  invoices: AgingInvoiceRow[]
+}
+
+// Point-in-time snapshot ("as of now") — unlike the other reports, this
+// isn't scoped to the Reports page's month picker.
+export const reportsAgingQuery = () => ({
+  queryKey: ["reports", "aging"],
+  queryFn: async (): Promise<ReportsAgingResponse> => {
+    const { data } = await customFetch.get("/reports/aging")
+    return data
+  },
+})
