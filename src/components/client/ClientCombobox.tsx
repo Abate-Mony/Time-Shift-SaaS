@@ -12,6 +12,7 @@ import type { Client } from '@/utils/types/client'
 export type ComboboxClient = Pick<Client, '_id' | 'name'> & {
   status?: Client['status']
   primaryContact?: Client['primaryContact']
+  billingEmail?: Client['billingEmail']
   defaultChargeType?: Client['defaultChargeType']
   defaultChargeRate?: number
   paymentTermsDays?: number
@@ -145,6 +146,7 @@ function QuickCreateClient({
 
 function ClientResult({ client, onSelect }: { client: Client; onSelect: () => void }) {
   const isInactive = client.status === 'inactive'
+  const email = client.billingEmail || client.primaryContact?.email
   return (
     <button
       onClick={onSelect}
@@ -162,7 +164,7 @@ function ClientResult({ client, onSelect }: { client: Client; onSelect: () => vo
           )}
         </div>
         <p className="text-xs text-muted-foreground truncate">
-          {[client.primaryContact?.name, client.formattedAddress].filter(Boolean).join(' · ')}
+          {[client.primaryContact?.name, email, client.formattedAddress].filter(Boolean).join(' · ')}
         </p>
         {isInactive && (
           <div className="flex items-center gap-1 mt-1 text-xs text-amber-600">
@@ -178,14 +180,15 @@ function ClientResult({ client, onSelect }: { client: Client; onSelect: () => vo
 // ─── Selected client card ─────────────────────────────────────────────────────
 
 function SelectedClientCard({ client, onClear }: { client: ComboboxClient; onClear: () => void }) {
+  const email = client.billingEmail || client.primaryContact?.email
   return (
     <div className="w-full border border-[var(--border)] rounded-xl p-3 bg-card">
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
           <p className="text-sm font-bold text-foreground truncate">{client.name}</p>
-          {client.primaryContact && (
+          {(client.primaryContact?.name || email) && (
             <p className="text-xs text-muted-foreground truncate mt-0.5">
-              {client.primaryContact.name}{client.primaryContact.email ? ` · ${client.primaryContact.email}` : ''}
+              {[client.primaryContact?.name, email].filter(Boolean).join(' · ')}
             </p>
           )}
           {!!client.defaultChargeRate && client.defaultChargeRate > 0 && (
