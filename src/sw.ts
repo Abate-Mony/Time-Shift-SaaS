@@ -1,6 +1,5 @@
 /// <reference lib="webworker" />
 import { precacheAndRoute, cleanupOutdatedCaches } from "workbox-precaching"
-import { clientsClaim } from "workbox-core"
 
 declare const self: ServiceWorkerGlobalScope
 
@@ -15,16 +14,19 @@ precacheAndRoute(self.__WB_MANIFEST)
 // instead of leaving dead cache storage around indefinitely.
 cleanupOutdatedCaches()
 
-// registerType: "autoUpdate" (vite.config.ts) relies on the app calling
-// registerSW({ immediate: true }) from virtual:pwa-register, which posts this
-// message to a waiting worker and reloads once it takes over. Without these
-// two calls a new SW sits in "waiting" forever (an SPA tab is never fully
-// closed), so it keeps serving a precached index.html from an old deploy —
-// pointing at hashed JS/CSS filenames a newer deploy has since removed.
-self.addEventListener("message", (event) => {
-  if (event.data && event.data.type === "SKIP_WAITING") self.skipWaiting()
+// Activates a newly installed worker immediately instead of leaving it
+// "waiting" for every tab to close (an SPA tab is never fully closed) —
+// without this, a browser keeps serving a precached index.html from an old
+// deploy, pointing at hashed JS/CSS filenames a newer deploy has since
+// removed. main.tsx's registerSW({ immediate: true }) still does its part:
+// it's what triggers the page reload once this worker takes control.
+self.addEventListener("install", () => {
+  self.skipWaiting()
 })
-clientsClaim()
+
+self.addEventListener("activate", (event) => {
+  event.waitUntil(self.clients.claim())
+})
 
 self.addEventListener("push", (event) => {
   let data: { title?: string; body?: string; tag?: string; silent?: boolean; url?: string } = {}
