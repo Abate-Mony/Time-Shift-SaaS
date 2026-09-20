@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router'
+import { useQuery } from '@tanstack/react-query'
 import { isAxiosError } from 'axios'
 import toast from 'react-hot-toast'
 import { Sparkles, Send, Loader2, Bot, User, Briefcase, Receipt, FileText, SquareUser, UserRound } from 'lucide-react'
@@ -8,12 +9,20 @@ import { Button } from '@/components/ui/button'
 import { useCompanyPlan } from '@/hooks/useCompanyPlan'
 import { PlanLockBadge } from '@/components/billing/PlanLockBadge'
 import { backLinkState } from '@/hooks/useBackLink'
+import { queryClient } from '@/lib/queryClient'
 import { sendDataAssistantMessage, type AIDataAssistantTurn } from '@/utils/api-request-functions'
 
 interface ChatMessage {
   role: 'user' | 'assistant'
   content: string
 }
+
+// Keeping the thread in the shared React Query cache (rather than this
+// component's own useState) is what lets it survive navigating away and
+// back — e.g. clicking a job reference, then returning to /assistant. The
+// cache lives in memory for the life of the tab, so it still clears on an
+// actual page reload, same as before.
+const THREAD_QUERY_KEY = ['data-assistant-thread']
 
 // The assistant tags one specific, actionable record it names (an
 // unstaffed job, an overdue invoice, ...) as ⟦type:id|label⟧ — see the
@@ -89,13 +98,24 @@ const SUGGESTIONS = [
 // Read-only Q&A over the company's own jobs/invoices/quotes/clients/workers —
 // see the backend's dataAssistantTools.ts for exactly what it can and can't
 // see (never contact details, pay rates, or identifying documents, and
-// never another company's data). Stateless: history rides along on each
-// call rather than being persisted, so a refresh clears the thread.
+// never another company's data). The thread survives in-app navigation
+// (see THREAD_QUERY_KEY above) but not a real page reload — history still
+// only ever rides along with each request, never persisted server-side.
 export function DataAssistant() {
   const { hasFeature } = useCompanyPlan()
   const canUseAI = hasFeature('aiDataAssistant')
 
-  const [messages, setMessages] = useState<ChatMessage[]>([])
+  const { data: messages = [] } = useQuery<ChatMessage[]>({
+    queryKey: THREAD_QUERY_KEY,
+    queryFn: () => [],
+    staleTime: Infinity,
+    gcTime: Infinity,
+  })
+  const setMessages = (updater: ChatMessage[] | ((prev: ChatMessage[]) => ChatMessage[])) =>
+    queryClient.setQueryData<ChatMessage[]>(THREAD_QUERY_KEY, prev =>
+      typeof updater === 'function' ? updater(prev ?? []) : updater
+    )
+
   const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
