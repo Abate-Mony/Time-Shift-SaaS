@@ -59,8 +59,6 @@ export const loader = (queryClient: QueryClient) => async ({ request }: LoaderFu
 }
 export default function JobsScreen() {
     const [searchParams] = useSearchParams()
-    const activeSlide = searchParams.get("status")
-    const [tab, setTab] = useState<any>(activeSlide ?? 'pending')
     const { searchValues } = useLoaderData() as {
         searchValues: Params
     }
@@ -90,13 +88,15 @@ export default function JobsScreen() {
     }
 
     const tabs: { id: CreateJobForm["status"] | "all"; label: string; }[] = [
-        { id: 'all', label: 'All',  },
-        { id: 'accepted', label: 'Accepted', },
-        { id: 'pending', label: 'Pending', },
-        { id: 'completed', label: 'Completed', },
-        { id: 'cancelled', label: 'Cancelled', },
-        { id: 'declined', label: 'Decline', },
+        { id: 'all', label: 'All' },
+        { id: 'pending', label: 'Pending' },
+        { id: 'accepted', label: 'Accepted' },
+        { id: 'in-progress', label: 'In Progress' },
+        { id: 'completed', label: 'Completed' },
+        { id: 'cancelled', label: 'Cancelled' },
+        { id: 'declined', label: 'Declined' },
     ]
+    const activeTab = searchParams.get('status') ?? 'all'
     return (
         <div className="flex flex-col gap-4 pb-4">
             <div>
@@ -170,7 +170,6 @@ export default function JobsScreen() {
                         {tabs.map((t, idx) => (
                             <FilterButton
                                 layoutId="worker-job-screen-job-status"
-                                onClick={() => setTab(t.id)}
                                 animateClassName={cn(
                                     t.id === 'assigned' ? 'bg-amber-100 ' : 'bg-blue-100 '
                                     , "h-full opacity-45! backdrop-blur-sm!"
@@ -233,8 +232,12 @@ export default function JobsScreen() {
                                 <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center mx-auto mb-3">
                                     <Briefcase size={20} className="text-blue-400" />
                                 </div>
-                                <p className="text-sm font-semibold text-foreground mb-1">No {""} jobs</p>
-                                <p className="text-xs text-muted-foreground">Accept a job from Pending to start working.</p>
+                                <p className="text-sm font-semibold text-foreground mb-1">
+                                    No {activeTab === 'all' ? '' : `${tabs.find(t => t.id === activeTab)?.label.toLowerCase()} `}jobs
+                                </p>
+                                {activeTab === 'all' || activeTab === 'pending' ? (
+                                    <p className="text-xs text-muted-foreground">Accept a job from Pending to start working.</p>
+                                ) : null}
                             </div>
                         }
                     </div>
