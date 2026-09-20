@@ -3,7 +3,30 @@ import OpenShiftCard from "@/components/OpenShiftCard"
 import customFetch from "@/utils/customFetch"
 import type { CreateJobForm } from "@/utils/types"
 import { useQuery, type QueryClient } from "@tanstack/react-query"
-import { AlertCircle, CalendarClock, Loader2 } from "lucide-react"
+import { AlertCircle, CalendarClock } from "lucide-react"
+import { Skeleton } from "@/components/ui/skeleton"
+
+function OpenShiftCardSkeleton() {
+    return (
+        <div className="bg-card rounded-2xl border border-[var(--border)] overflow-hidden shadow-sm">
+            <div className="h-1 bg-muted" />
+            <div className="p-4">
+                <div className="flex items-start justify-between gap-2 mb-3">
+                    <div className="flex-1 min-w-0 flex flex-col gap-1.5">
+                        <Skeleton className="h-3.5 w-3/5" />
+                        <Skeleton className="h-3 w-2/5" />
+                    </div>
+                    <Skeleton className="h-5 w-12 rounded-full shrink-0" />
+                </div>
+                <div className="grid grid-cols-2 gap-y-2.5 gap-x-3">
+                    {Array.from({ length: 4 }).map((_, i) => (
+                        <Skeleton key={i} className={`h-3 ${i === 0 || i === 3 ? 'col-span-2 w-3/4' : 'w-2/3'}`} />
+                    ))}
+                </div>
+            </div>
+        </div>
+    )
+}
 
 export const openShiftsQuery = {
     queryKey: ["open-shifts"],
@@ -30,8 +53,10 @@ export default function OpenShiftsPage() {
             </div>
 
             {isPending ? (
-                <div className="flex items-center justify-center py-16">
-                    <Loader2 size={20} className="animate-spin text-muted-foreground" />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {Array.from({ length: 4 }).map((_, i) => (
+                        <OpenShiftCardSkeleton key={i} />
+                    ))}
                 </div>
             ) : isError ? (
                 <EmptyState

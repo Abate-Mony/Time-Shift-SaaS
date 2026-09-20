@@ -11,6 +11,7 @@ import { ChevronLeft, ChevronRight, Download, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { startOfWeek } from "./ScheduleScreen";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const PERIOD_TYPES: { id: TimesheetPeriodType; label: string }[] = [
   { id: "weekly", label: "Weekly" },
@@ -158,14 +159,14 @@ export default function DownloadTimesheetScreen() {
         <div className="flex items-center justify-between py-3.5">
           <span className="text-sm text-muted-foreground">Total hours</span>
           <span className="text-sm font-semibold text-foreground">
-            {summaryLoading ? "—" : formatDuration(summary?.totalMinutes)}
+            {summaryLoading ? <Skeleton className="h-4 w-14 inline-block align-middle" /> : formatDuration(summary?.totalMinutes)}
           </span>
         </div>
 
         <div className="flex items-center justify-between py-3.5">
           <span className="text-sm text-muted-foreground">Shifts</span>
           <span className="text-sm font-semibold text-foreground">
-            {summaryLoading ? "—" : (summary?.totalJobs ?? 0)}
+            {summaryLoading ? <Skeleton className="h-4 w-6 inline-block align-middle" /> : (summary?.totalJobs ?? 0)}
           </span>
         </div>
       </div>

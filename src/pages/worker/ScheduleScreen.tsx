@@ -6,6 +6,24 @@ import dayjs from "dayjs"
 import { ChevronLeft, ChevronRight, X } from "lucide-react"
 import { useMemo, useState } from "react"
 import { useNavigate } from "react-router"
+import { Skeleton } from "@/components/ui/skeleton"
+
+function ShiftRowSkeleton() {
+  return (
+    <div className="w-full flex items-center gap-3 bg-card rounded-xl border border-[var(--border)] p-3">
+      <div className="flex flex-col items-center justify-center w-12 shrink-0 gap-1">
+        <Skeleton className="h-3 w-8" />
+        <Skeleton className="h-2.5 w-8" />
+      </div>
+      <div className="w-px self-stretch bg-[var(--border)]" />
+      <div className="flex-1 min-w-0 flex flex-col gap-1.5">
+        <Skeleton className="h-3.5 w-3/5" />
+        <Skeleton className="h-3 w-2/5" />
+      </div>
+      <Skeleton className="h-5 w-14 rounded-full shrink-0" />
+    </div>
+  )
+}
 
 export const DAY_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
 
@@ -176,9 +194,12 @@ export default function ScheduleScreen() {
 
       <div className="flex flex-col gap-4">
         {isLoading ? (
-          <div className="bg-card rounded-2xl border border-[var(--border)] p-10 text-center shadow-sm">
-            <p className="text-sm text-muted-foreground">Loading…</p>
-          </div>
+          <>
+            <Skeleton className="h-3 w-24" />
+            {Array.from({ length: 4 }).map((_, i) => (
+              <ShiftRowSkeleton key={i} />
+            ))}
+          </>
         ) : visibleGroups.length === 0 ? (
           <div className="bg-card rounded-2xl border border-[var(--border)] p-10 text-center shadow-sm">
             <p className="text-sm font-semibold text-muted-foreground">

@@ -14,6 +14,23 @@ import type {
 import { useMutation, useQuery, type QueryClient } from "@tanstack/react-query";
 import { Bell, ChevronLeft } from "lucide-react";
 import { useNavigate } from "react-router";
+import { Skeleton } from "@/components/ui/skeleton";
+
+function PreferenceRowSkeleton({ switches = 1 }: { switches?: number }) {
+  return (
+    <div className="flex items-center justify-between gap-3 py-3.5">
+      <div className="flex flex-col gap-1.5">
+        <Skeleton className="h-3.5 w-32" />
+        <Skeleton className="h-3 w-44" />
+      </div>
+      <div className="flex items-center gap-3 shrink-0">
+        {Array.from({ length: switches }).map((_, i) => (
+          <Skeleton key={i} className="h-5 w-9 rounded-full" />
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export const notificationPreferencesQuery = {
   queryKey: ["notification-preferences"],
@@ -157,8 +174,33 @@ export default function NotificationPreferencesScreen() {
 
   if (isLoading) {
     return (
-      <div className="py-10 text-sm text-muted-foreground">
-        Loading notification preferences...
+      <div className="flex flex-col gap-4 pb-4 animate-fade-in">
+        <div className="flex flex-col gap-2">
+          <Skeleton className="h-5 w-56" />
+          <Skeleton className="h-3 w-64" />
+        </div>
+        <div className="bg-card rounded-2xl border border-[var(--border)] px-5 shadow-sm">
+          <div className="py-3.5 border-b border-[var(--border)]">
+            <Skeleton className="h-3 w-40" />
+          </div>
+          <div className="divide-y divide-border">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <PreferenceRowSkeleton key={i} />
+            ))}
+          </div>
+        </div>
+        {SECTIONS.map(section => (
+          <div key={section.title} className="bg-card rounded-2xl border border-[var(--border)] px-5 shadow-sm">
+            <div className="py-3.5 border-b border-[var(--border)]">
+              <Skeleton className="h-3 w-24" />
+            </div>
+            <div className="divide-y divide-border">
+              {section.rows.map((_, i) => (
+                <PreferenceRowSkeleton key={i} switches={3} />
+              ))}
+            </div>
+          </div>
+        ))}
       </div>
     );
   }

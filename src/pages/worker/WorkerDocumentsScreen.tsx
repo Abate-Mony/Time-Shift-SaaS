@@ -6,6 +6,7 @@ import { isAxiosError } from "axios"
 import { ChevronLeft, FileText, Image as ImageIcon, Loader2, Paperclip, Trash2, Upload } from "lucide-react"
 
 import { deleteMyDocument, getMyDocuments, uploadMyDocument } from "@/utils/api-request-functions"
+import { Skeleton } from "@/components/ui/skeleton"
 
 const documentsQuery = {
   queryKey: ["my-documents"],
@@ -143,7 +144,18 @@ export default function WorkerDocumentsScreen() {
 
       {/* List */}
       {isLoading ? (
-        <p className="text-sm text-muted-foreground text-center py-6">Loading…</p>
+        <div className="bg-card rounded-2xl border border-[var(--border)] shadow-sm divide-y divide-border">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-3 px-4 py-3.5">
+              <Skeleton className="w-8 h-8 rounded-xl shrink-0" />
+              <div className="flex-1 min-w-0 flex flex-col gap-1.5">
+                <Skeleton className="h-3.5 w-2/5" />
+                <Skeleton className="h-3 w-1/4" />
+              </div>
+              <Skeleton className="w-3.5 h-3.5 rounded-sm shrink-0" />
+            </div>
+          ))}
+        </div>
       ) : documents.length === 0 ? (
         <p className="text-sm text-muted-foreground text-center py-6">No documents uploaded yet.</p>
       ) : (
