@@ -1,4 +1,6 @@
 import { Plus, Trash2 } from 'lucide-react'
+import { Input } from '../ui/input'
+import { Label } from '../ui/label'
 
 export interface ClientContactDraft {
   name: string
@@ -58,8 +60,8 @@ export function ClientContactsEditor({
       {contacts.map((contact, i) => (
         <div key={i} className="border border-[var(--border)] rounded-xl p-4 flex flex-col gap-3">
           <div className="flex items-center justify-between gap-2">
-            <label className="flex items-center gap-2 text-xs font-semibold text-muted-foreground cursor-pointer">
-              <input
+            <Label className="flex items-center gap-2 text-xs font-semibold text-muted-foreground cursor-pointer">
+              <Input
                 type="radio"
                 name="primary-contact"
                 checked={contact.isPrimary}
@@ -67,7 +69,7 @@ export function ClientContactsEditor({
                 className="accent-[var(--primary)]"
               />
               Primary contact
-            </label>
+            </Label>
             <button
               type="button"
               onClick={() => remove(i)}
@@ -80,8 +82,8 @@ export function ClientContactsEditor({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 min-w-0">
             <div>
-              <label className="block text-[11px] text-muted-foreground mb-1">Name</label>
-              <input
+              <Label className="block text-[11px] text-muted-foreground mb-1">Name</Label>
+              <Input
                 value={contact.name}
                 onChange={e => update(i, { name: e.target.value })}
                 placeholder="Sarah Williams"
@@ -89,8 +91,8 @@ export function ClientContactsEditor({
               />
             </div>
             <div>
-              <label className="block text-[11px] text-muted-foreground mb-1">Role</label>
-              <input
+              <Label className="block text-[11px] text-muted-foreground mb-1">Role</Label>
+              <Input
                 value={contact.role}
                 onChange={e => update(i, { role: e.target.value })}
                 placeholder="Site Manager"
@@ -98,8 +100,8 @@ export function ClientContactsEditor({
               />
             </div>
             <div>
-              <label className="block text-[11px] text-muted-foreground mb-1">Email</label>
-              <input
+              <Label className="block text-[11px] text-muted-foreground mb-1">Email</Label>
+              <Input
                 type="email"
                 value={contact.email}
                 onChange={e => update(i, { email: e.target.value })}
@@ -108,8 +110,8 @@ export function ClientContactsEditor({
               />
             </div>
             <div>
-              <label className="block text-[11px] text-muted-foreground mb-1">Phone</label>
-              <input
+              <Label className="block text-[11px] text-muted-foreground mb-1">Phone</Label>
+              <Input
                 value={contact.phone}
                 onChange={e => update(i, { phone: e.target.value })}
                 placeholder="+44 7700 900000"

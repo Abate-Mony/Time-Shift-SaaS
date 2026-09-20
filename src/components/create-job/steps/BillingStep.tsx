@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils"
 import { formatCurrency } from "@/utils/format"
 import { useCreateJob } from "../CreateJobContext"
 import { FieldError } from "../FieldError"
+import { Label } from "@/components/ui/label"
 
 const CHARGE_TYPES = [
   { value: "hourly", label: "Hourly rate", sub: "Bills by hours worked" },
@@ -115,7 +116,7 @@ export function BillingStep() {
             <div className="mt-4 min-w-0">
               <div className="flex flex-col sm:flex-row gap-3 mb-4 min-w-0">
                 {CHARGE_TYPES.map(opt => (
-                  <label
+                  <Label
                     key={opt.value}
                     className={cn(
                       "flex-1 min-w-0 flex items-start gap-3 p-3.5 rounded-xl border-2 cursor-pointer transition-all",
@@ -124,7 +125,7 @@ export function BillingStep() {
                         : "border-[var(--border)] hover:border-slate-300"
                     )}
                   >
-                    <input
+                    <Input
                       type="radio"
                       name="chargeType"
                       className="sr-only"
@@ -144,7 +145,7 @@ export function BillingStep() {
                       <span className="block text-sm font-semibold text-foreground">{opt.label}</span>
                       <span className="block text-[11px] text-muted-foreground mt-0.5">{opt.sub}</span>
                     </span>
-                  </label>
+                  </Label>
                 ))}
               </div>
 

@@ -6,15 +6,15 @@ import {
   DrawerContent,
   DrawerFooter
 } from "@/components/ui/drawer"
+import { backLinkState } from '@/hooks/useBackLink'
 import { cn } from '@/lib/utils'
 import customFetch from '@/utils/customFetch'
 import { sleep } from '@/utils/sleep'
 import type { User } from '@/utils/types'
 import { useQuery, type QueryClient } from '@tanstack/react-query'
-import { Briefcase, ChevronRight, Clock, Mail, Phone, Star, X } from 'lucide-react'
+import { Briefcase, ChevronRight, Clock, Mail, Phone, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useLoaderData, useNavigation, type LoaderFunctionArgs, type Params } from 'react-router'
-import { backLinkState } from '@/hooks/useBackLink'
 import { Avatar, Card, StatusBadge } from '../components/ui'
 import { jobs } from '../data/mockData'
 
@@ -294,17 +294,17 @@ export function Workers() {
                         <p className="text-sm font-semibold text-foreground">{worker?.fullname}</p>
                         <StatusBadge status={"active"} />
                       </div>
-                      <p className="text-xs text-muted-foreground">{worker?.role} · {"location"}</p>
+                      <p className="text-xs text-muted-foreground">{worker?.role} </p>
                       <div className="flex items-center gap-3 mt-2">
                         <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <Clock size={11} />{worker?.isActive}h this week
+                          <Clock size={11} />{worker?.hoursThisWeek}h this week
                         </span>
                         <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <Briefcase size={11} />{worker?.isVerified} jobs done
+                          <Briefcase size={11} />{worker?.jobsCompleted} jobs done
                         </span>
-                        <span className="flex items-center gap-1 text-xs text-amber-600">
+                        {/* <span className="flex items-center gap-1 text-xs text-amber-600">
                           <Star size={11} fill="currentColor" />{worker?.lastLogin}
-                        </span>
+                        </span> */}
                       </div>
                     </div>
                     <div className="flex items-center gap-2">

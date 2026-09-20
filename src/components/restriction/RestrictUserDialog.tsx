@@ -8,6 +8,8 @@ import {
   type RestrictionCapability,
   CAPABILITY_GROUPS, CAPABILITY_LABELS, REASON_LABELS, REMEDY_LABELS,
 } from '../../data/restrictionMockData.ts'
+import { Input } from '../ui/input.tsx'
+import { Label } from '../ui/label.tsx'
 
 interface RestrictUserDialogProps {
   workerName: string
@@ -100,8 +102,8 @@ function CapabilityPicker({
         <div key={group.label} className="mb-3 last:mb-0">
           <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5">{group.label}</p>
           {group.items.map(cap => (
-            <label key={cap} className="flex items-center gap-2.5 py-1.5 cursor-pointer group">
-              <input
+            <Label key={cap} className="flex items-center gap-2.5 py-1.5 cursor-pointer group">
+              <Input
                 type="checkbox"
                 checked={selected.includes(cap)}
                 onChange={() => toggle(cap)}
@@ -110,7 +112,7 @@ function CapabilityPicker({
               <span className="text-sm text-foreground group-hover:text-foreground transition-colors">
                 {CAPABILITY_LABELS[cap]}
               </span>
-            </label>
+            </Label>
           ))}
         </div>
       ))}

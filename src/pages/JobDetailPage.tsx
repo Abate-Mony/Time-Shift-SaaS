@@ -1,13 +1,18 @@
-import customFetch from '@/utils/customFetch'
-import { formatCurrency } from '@/utils/format'
-import { formatDate, formatDuration, getShiftProgress } from '@/utils/date'
+import AssignWorkersModal from '@/components/AssignWorkersModal'
+import { Input } from '@/components/ui/input'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { backLinkState, useBackLink } from '@/hooks/useBackLink'
 import { queryClient } from '@/lib/queryClient'
 import { deleteJob, deleteJobAttachment, duplicateJob, reviewAssignmentOvertime, reviewOpenShiftClaim, updateJobWorkers, uploadJobAttachment } from '@/utils/api-request-functions'
+import customFetch from '@/utils/customFetch'
+import { formatDate, formatDuration, getShiftProgress } from '@/utils/date'
+import { formatCurrency } from '@/utils/format'
+import { buildMapUrl, MAP_SERVICES, type MapService } from '@/utils/mapLinks'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import dayjs from 'dayjs'
-import toast from 'react-hot-toast'
 import {
     AlertCircle,
+    Ban, Bot,
     Briefcase,
     Building2,
     Calendar,
@@ -15,41 +20,40 @@ import {
     Check,
     CheckCircle2,
     ChevronLeft,
+    CircleCheck,
     Clock,
+    Coffee,
     Copy,
     Download,
     Edit,
     FileText,
     Flag,
+    LogIn, LogOut,
     MapPin,
     MapPinOff,
     MoreHorizontal,
     Navigation,
     Paperclip,
+    Pencil,
     Play,
     Plus,
     Receipt,
+    Send,
     ShieldCheck,
     SquareX,
+    StickyNote,
     Timer,
     Trash2,
     TriangleAlert,
+    UserMinus,
     Users,
-    X
+    X,
+    XCircle,
+    XOctagon
 } from 'lucide-react'
-import {
-    Pencil, Send, XCircle,
-    UserMinus, XOctagon,
-    LogIn, LogOut, Coffee,
-    Ban, Bot, StickyNote, CircleCheck,
-} from "lucide-react"
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import toast from 'react-hot-toast'
 import { Link, useNavigate, useParams } from 'react-router'
-import { useBackLink, backLinkState } from '@/hooks/useBackLink'
-import AssignWorkersModal from '@/components/AssignWorkersModal'
-import { Input } from '@/components/ui/input'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { buildMapUrl, MAP_SERVICES, type MapService } from '@/utils/mapLinks'
 import { Avatar, Card, Divider, PriorityBadge, StatusBadge } from '../components/ui'
 import { singleJob } from './EditJobPage'
 
@@ -57,16 +61,14 @@ import { singleJob } from './EditJobPage'
 // both, their preferred map service carries over.
 const PREFERRED_MAP_STORAGE_KEY = "preferredMapService"
 
-import type { LucideIcon } from "lucide-react"
-import type { ActivityType, CreateJobForm } from '@/utils/types'
+import { Button } from '@/components/ui/button'
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
 import { getInitials } from '@/utils/getInitials'
 import { isJobLocked } from '@/utils/jobLock'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import { Separator } from '@radix-ui/react-separator'
-import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer'
-import { Button } from '@/components/ui/button'
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
+import type { ActivityType, CreateJobForm } from '@/utils/types'
+import type { LucideIcon } from "lucide-react"
 
 export const recordFormatUI: Record<ActivityType, { icon: LucideIcon; className: string; label: string }> = {
     // ── Job lifecycle ──────────────────────────────────────────────
@@ -397,11 +399,7 @@ export function JobDetail() {
         onError: () => toast.error("Couldn't update clock-in policy. Try again."),
     })
 
-    const GEOFENCE_LABELS: Record<string, string> = {
-        off: "No location check",
-        warn: "Record and flag",
-        enforce: "Require them on site",
-    }
+
 
     // Falls back to this when the worker picked a reason but left the free-text
     // note blank — a plain enum value like "job_took_longer" isn't fit to show.
@@ -482,11 +480,11 @@ export function JobDetail() {
                     Back to {back.label}
                 </button>
                 <span className="text-slate-300">/</span>
-                <span className="text-sm text-foreground font-medium truncate max-w-xs">{job.title}</span>
+                <span className="text-sm lg:text-lg text-foreground font-medium truncate max-w-xs">{job.title}</span>
             </div>
 
             {/* ── Hero card ────────────────────────────────────────────────────── */}
-            <div className={`bg-gradient-to-br ${gradient} rounded-2xl p-6 mb-5 relative overflow-hidden`}>
+            <div className={`bg-gradient-to-br ${gradient} rounded-2xl p-6 mb-5 relative overflow-hidden hidden`}>
                 {/* Texture */}
                 <div
                     className="absolute inset-0 opacity-[0.05]"

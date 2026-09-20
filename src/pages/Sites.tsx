@@ -7,6 +7,7 @@ import { sitesQuery } from '@/utils/sites'
 import { clientsQuery } from '@/utils/clients'
 import type { Client } from '@/utils/types/client'
 import type { SiteStatus } from '@/utils/types/site'
+import { Input } from '@/components/ui/input'
 
 export const loader = (queryClient: QueryClient) => async () => {
     await Promise.all([
@@ -128,7 +129,7 @@ export function Sites() {
                 </div>
                 <div className="relative min-w-[220px]">
                     <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                    <input
+                    <Input
                         value={search}
                         onChange={e => setSearch(e.target.value)}
                         placeholder="Search sites…"

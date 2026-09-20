@@ -1,5 +1,7 @@
 import { useRef, useState } from "react"
 import { Paperclip, X, FileText, Image as ImageIcon } from "lucide-react"
+import { Label } from "../ui/label"
+import { Input } from "../ui/input"
 
 const ACCEPTED = "image/jpeg,image/png,image/webp,application/pdf"
 
@@ -30,10 +32,10 @@ export function JobAttachmentField() {
         A photo or PDF that assigned workers can view — e.g. a door passcode or access instructions.
       </p>
       <div className="flex items-center gap-3 min-w-0 flex-wrap">
-        <label className="inline-flex items-center gap-2 text-sm font-medium text-foreground border border-[var(--border)] rounded-lg px-3 py-2 cursor-pointer hover:bg-muted transition-colors shrink-0">
+        <Label className="inline-flex items-center gap-2 text-sm font-medium text-foreground border border-[var(--border)] rounded-lg px-3 py-2 cursor-pointer hover:bg-muted transition-colors shrink-0">
           <Paperclip size={14} />
           {fileName ? "Change file" : "Choose file"}
-          <input
+          <Input
             ref={inputRef}
             type="file"
             name="attachment"
@@ -41,7 +43,7 @@ export function JobAttachmentField() {
             className="sr-only"
             onChange={handleChange}
           />
-        </label>
+        </Label>
         {fileName && (
           <div className="flex items-center gap-1.5 min-w-0 bg-muted border border-[var(--border)] rounded-lg px-2.5 py-1.5">
             {fileName.toLowerCase().endsWith(".pdf") ? (

@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import type { Client } from '@/utils/types/client'
 import type { Site } from '@/utils/types/site'
+import { Input } from '../ui/input'
+import { Label } from '../ui/label'
 
 export interface SiteFormValues {
   name: string
@@ -165,7 +167,7 @@ export function SiteForm({
       <Section title="Basic details">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 min-w-0">
           <Field label="Site name *">
-            <input
+            <Input
               value={values.name}
               onChange={set('name')}
               placeholder="e.g. Bristol Distribution Centre"
@@ -193,42 +195,42 @@ export function SiteForm({
       <Section title="Address" description="Where this site actually is — used for directions once a worker is assigned.">
         <div className="flex flex-col gap-4 min-w-0">
           <Field label="Address line 1">
-            <input value={values.addressLine1} onChange={set('addressLine1')} placeholder="12 Example Street" className={inputClass} />
+            <Input value={values.addressLine1} onChange={set('addressLine1')} placeholder="12 Example Street" className={inputClass} />
           </Field>
           <Field label="Address line 2">
-            <input value={values.addressLine2} onChange={set('addressLine2')} placeholder="Unit 4" className={inputClass} />
+            <Input value={values.addressLine2} onChange={set('addressLine2')} placeholder="Unit 4" className={inputClass} />
           </Field>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 min-w-0">
             <Field label="City / town">
-              <input value={values.city} onChange={set('city')} placeholder="Bristol" className={inputClass} />
+              <Input value={values.city} onChange={set('city')} placeholder="Bristol" className={inputClass} />
             </Field>
             <Field label="County">
-              <input value={values.county} onChange={set('county')} placeholder="Avon" className={inputClass} />
+              <Input value={values.county} onChange={set('county')} placeholder="Avon" className={inputClass} />
             </Field>
             <Field label="Postcode">
-              <input value={values.postcode} onChange={set('postcode')} placeholder="BS1 6XN" className={inputClass} />
+              <Input value={values.postcode} onChange={set('postcode')} placeholder="BS1 6XN" className={inputClass} />
             </Field>
             <Field label="Country">
-              <input value={values.country} onChange={set('country')} placeholder="United Kingdom" className={inputClass} />
+              <Input value={values.country} onChange={set('country')} placeholder="United Kingdom" className={inputClass} />
             </Field>
           </div>
         </div>
       </Section>
 
       <Section title="Geofence" description="Overrides your company's default clock-in radius for this site only.">
-        <label className="flex items-center gap-2.5 cursor-pointer mb-4">
-          <input
+        <Label className="flex items-center gap-2.5 cursor-pointer mb-4">
+          <Input
             type="checkbox"
             checked={values.geofenceEnabled}
             onChange={e => setValues(v => ({ ...v, geofenceEnabled: e.target.checked }))}
             className="w-4 h-4 rounded border-slate-300 text-[var(--primary)] focus:ring-[var(--primary)]/30"
           />
           <span className="text-sm font-medium text-foreground">Enable a custom geofence for this site</span>
-        </label>
+        </Label>
         {values.geofenceEnabled && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 min-w-0">
             <Field label="Radius (metres)">
-              <input
+              <Input
                 type="number"
                 min="25"
                 max="5000"
@@ -250,13 +252,13 @@ export function SiteForm({
       <Section title="Site contact" description="Who a worker should contact if something's wrong on site.">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 min-w-0">
           <Field label="Name">
-            <input value={values.contactName} onChange={set('contactName')} placeholder="James Smith" className={inputClass} />
+            <Input value={values.contactName} onChange={set('contactName')} placeholder="James Smith" className={inputClass} />
           </Field>
           <Field label="Phone">
-            <input value={values.contactPhone} onChange={set('contactPhone')} placeholder="07700 900123" className={inputClass} />
+            <Input value={values.contactPhone} onChange={set('contactPhone')} placeholder="07700 900123" className={inputClass} />
           </Field>
           <Field label="Email">
-            <input type="email" value={values.contactEmail} onChange={set('contactEmail')} placeholder="james@client.co.uk" className={inputClass} />
+            <Input type="email" value={values.contactEmail} onChange={set('contactEmail')} placeholder="james@client.co.uk" className={inputClass} />
             {touched && !emailValid && <p className="text-xs text-red-500 mt-1">Enter a valid email address.</p>}
           </Field>
         </div>

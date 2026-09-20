@@ -9,6 +9,7 @@ import { Download, Loader2, X } from 'lucide-react'
 import { useState } from 'react'
 import toast from 'react-hot-toast'
 import { TemplatePreviewCard } from './TemplatePreviewCard'
+import { Label } from '../ui/label'
 
 const BASE_LAYOUTS: { value: InvoiceTemplateBaseLayout; label: string; sub: string }[] = [
     { value: 'modern', label: 'Modern', sub: 'Accent header block, bold totals' },
@@ -120,8 +121,8 @@ export function TemplateBuilderDialog({ template, onClose, onSaved }: TemplateBu
                             <div>
                                 <p className="text-sm font-medium text-foreground mb-1.5">Accent color</p>
                                 <div className="flex items-center gap-2">
-                                    <input type="color" value={accentColor} onChange={e => setAccentColor(e.target.value)} className="w-9 h-9 rounded-lg border border-[var(--border)] cursor-pointer shrink-0" />
-                                    <input
+                                    <Input type="color" value={accentColor} onChange={e => setAccentColor(e.target.value)} className="w-9 h-9 rounded-lg border border-[var(--border)] cursor-pointer shrink-0" />
+                                    <Input
                                         value={accentColor}
                                         onChange={e => setAccentColor(e.target.value)}
                                         className="flex-1 h-9 px-2.5 border border-[var(--border)] rounded-lg text-sm text-foreground bg-card font-mono focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/15"
@@ -158,15 +159,15 @@ export function TemplateBuilderDialog({ template, onClose, onSaved }: TemplateBu
                                 { key: 'showPaymentTerms', label: 'Show payment terms / quote terms', value: showPaymentTerms, set: setShowPaymentTerms },
                                 { key: 'showNotes', label: 'Show notes', value: showNotes, set: setShowNotes },
                             ].map(row => (
-                                <label key={row.key} className="flex items-center gap-2.5 cursor-pointer">
-                                    <input
+                                <Label key={row.key} className="flex items-center gap-2.5 cursor-pointer">
+                                    <Input
                                         type="checkbox"
                                         checked={row.value}
                                         onChange={e => row.set(e.target.checked)}
                                         className="w-4 h-4 rounded border-[var(--border)] accent-[var(--primary)] cursor-pointer"
                                     />
                                     <span className="text-sm text-foreground">{row.label}</span>
-                                </label>
+                                </Label>
                             ))}
                         </div>
                     </div>

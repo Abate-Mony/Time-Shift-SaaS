@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Search, ChevronDown, X, MapPin, ShieldCheck } from 'lucide-react'
 import customFetch from '@/utils/customFetch'
 import type { Site } from '@/utils/types/site'
+import { Input } from '../ui/input'
 
 export type ComboboxSite = Pick<Site, '_id' | 'name' | 'formattedAddress' | 'coordinates' | 'geofenceMode' | 'geofenceRadiusMeters'> & {
   contact?: Site['contact']
@@ -127,7 +128,7 @@ export function SiteCombobox({ clientId, value, onChange }: SiteComboboxProps) {
           >
             <div className="flex items-center gap-2 px-3 py-2 border-b border-[var(--border)]">
               <Search size={13} className="text-muted-foreground shrink-0" />
-              <input
+              <Input
                 ref={inputRef}
                 value={query}
                 onChange={e => setQuery(e.target.value)}

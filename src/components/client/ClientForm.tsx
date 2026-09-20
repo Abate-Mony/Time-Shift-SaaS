@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import type { ChargeType, ClientStatus } from '@/utils/types/client'
 import { ClientContactsEditor, emptyContact, type ClientContactDraft } from './ClientContactsEditor'
+import { Input } from '../ui/input'
+import { Label } from '../ui/label'
 
 export interface ClientFormValues {
   name: string
@@ -138,7 +140,7 @@ export function ClientForm({ onSubmit, submitting, submitLabel = 'Create client'
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 min-w-0">
           <div className="sm:col-span-2">
             <Field label="Client name *">
-              <input
+              <Input
                 value={values.name}
                 onChange={set('name')}
                 placeholder="e.g. ABC Property Management"
@@ -148,7 +150,7 @@ export function ClientForm({ onSubmit, submitting, submitLabel = 'Create client'
             </Field>
           </div>
           <Field label="Main phone">
-            <input value={values.phone} onChange={set('phone')} placeholder="020 7946 0001" className={inputClass} />
+            <Input value={values.phone} onChange={set('phone')} placeholder="020 7946 0001" className={inputClass} />
           </Field>
           <Field label="Status">
             <select value={values.status} onChange={set('status')} className={`${inputClass} bg-card cursor-pointer`}>
@@ -169,7 +171,7 @@ export function ClientForm({ onSubmit, submitting, submitLabel = 'Create client'
       <Section title="Billing" description="Used as defaults when invoicing this client.">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 min-w-0">
           <Field label="Billing email">
-            <input
+            <Input
               type="email"
               value={values.billingEmail}
               onChange={set('billingEmail')}
@@ -181,10 +183,10 @@ export function ClientForm({ onSubmit, submitting, submitLabel = 'Create client'
             )}
           </Field>
           <Field label="VAT number">
-            <input value={values.vatNumber} onChange={set('vatNumber')} placeholder="GB123456789" className={inputClass} />
+            <Input value={values.vatNumber} onChange={set('vatNumber')} placeholder="GB123456789" className={inputClass} />
           </Field>
           <Field label="Payment terms (days)">
-            <input
+            <Input
               type="number"
               min="0"
               value={values.paymentTermsDays}
@@ -199,23 +201,23 @@ export function ClientForm({ onSubmit, submitting, submitLabel = 'Create client'
       <Section title="Address" description="The client's business/billing address — not a job site.">
         <div className="flex flex-col gap-4 min-w-0">
           <Field label="Address line 1">
-            <input value={values.addressLine1} onChange={set('addressLine1')} placeholder="14 Canary Wharf" className={inputClass} />
+            <Input value={values.addressLine1} onChange={set('addressLine1')} placeholder="14 Canary Wharf" className={inputClass} />
           </Field>
           <Field label="Address line 2">
-            <input value={values.addressLine2} onChange={set('addressLine2')} placeholder="Suite 400" className={inputClass} />
+            <Input value={values.addressLine2} onChange={set('addressLine2')} placeholder="Suite 400" className={inputClass} />
           </Field>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 min-w-0">
             <Field label="City / town">
-              <input value={values.city} onChange={set('city')} placeholder="London" className={inputClass} />
+              <Input value={values.city} onChange={set('city')} placeholder="London" className={inputClass} />
             </Field>
             <Field label="County">
-              <input value={values.county} onChange={set('county')} placeholder="Greater London" className={inputClass} />
+              <Input value={values.county} onChange={set('county')} placeholder="Greater London" className={inputClass} />
             </Field>
             <Field label="Postcode">
-              <input value={values.postcode} onChange={set('postcode')} placeholder="E14 5AB" className={inputClass} />
+              <Input value={values.postcode} onChange={set('postcode')} placeholder="E14 5AB" className={inputClass} />
             </Field>
             <Field label="Country">
-              <input value={values.country} onChange={set('country')} placeholder="United Kingdom" className={inputClass} />
+              <Input value={values.country} onChange={set('country')} placeholder="United Kingdom" className={inputClass} />
             </Field>
           </div>
         </div>
@@ -229,13 +231,13 @@ export function ClientForm({ onSubmit, submitting, submitLabel = 'Create client'
               { value: 'fixed', label: 'Fixed', sub: 'Prefill new jobs with a fixed client charge' },
             ] as const
           ).map(opt => (
-            <label
+            <Label
               key={opt.value}
               className={`flex-1 min-w-0 flex items-start gap-3 p-3.5 rounded-xl border-2 cursor-pointer transition-all ${
                 values.defaultChargeType === opt.value ? 'border-[var(--primary)] bg-[var(--primary)]/[0.03]' : 'border-[var(--border)] hover:border-slate-300'
               }`}
             >
-              <input
+              <Input
                 type="radio"
                 name="defaultChargeType"
                 className="sr-only"
@@ -253,14 +255,14 @@ export function ClientForm({ onSubmit, submitting, submitLabel = 'Create client'
                 <span className="block text-sm font-semibold text-foreground">{opt.label}</span>
                 <span className="block text-[11px] text-muted-foreground mt-0.5">{opt.sub}</span>
               </span>
-            </label>
+            </Label>
           ))}
         </div>
         <div className="max-w-xs min-w-0">
           <Field label={values.defaultChargeType === 'hourly' ? 'Default hourly rate' : 'Default fixed charge'}>
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-semibold">£</span>
-              <input
+              <Input
                 type="number"
                 step="0.01"
                 min="0"

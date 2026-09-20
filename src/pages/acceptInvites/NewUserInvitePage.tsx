@@ -19,6 +19,7 @@ import toast from "react-hot-toast";
 import type {
     InvitationOutletContext,
 } from "../../utils/types/invitation";
+import { Input } from "@/components/ui/input";
 
 export default function NewUserInvitePage() {
     const navigate =
@@ -318,7 +319,7 @@ export default function NewUserInvitePage() {
                             Full name
                         </label>
 
-                        <input
+                        <Input
                             value={
                                 fullname
                             }
@@ -350,7 +351,7 @@ export default function NewUserInvitePage() {
                             Email address
                         </label>
 
-                        <input
+                        <Input
                             value={
                                 invite.email
                             }
@@ -365,7 +366,7 @@ export default function NewUserInvitePage() {
                         </label>
 
                         <div className="relative">
-                            <input
+                            <Input
                                 type={
                                     passwordVisible
                                         ? "text"
@@ -437,7 +438,7 @@ export default function NewUserInvitePage() {
                         </label>
 
                         <div className="relative">
-                            <input
+                            <Input
                                 type={
                                     confirmVisible
                                         ? "text"

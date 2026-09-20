@@ -15,6 +15,8 @@ import { queryClient } from '@/lib/queryClient'
 import { clientDetailQuery } from '@/utils/clients'
 import type { Client } from '@/utils/types/client'
 import { ClientDetailProvider } from './ClientDetailContext'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 
 export const loader = (queryClient: QueryClient) => async ({ params }: LoaderFunctionArgs) => {
     await queryClient.ensureQueryData(clientDetailQuery(params.id as string))
@@ -330,8 +332,8 @@ function FormInput({ label, value, onChange, placeholder, type = 'text' }: {
 }) {
     return (
         <div>
-            <label className="block text-[11px] text-muted-foreground mb-1">{label}</label>
-            <input value={value} onChange={onChange} placeholder={placeholder} type={type}
+            <Label className="block text-[11px] text-muted-foreground mb-1">{label}</Label>
+            <Input value={value} onChange={onChange} placeholder={placeholder} type={type}
                 className="w-full h-10 px-3 border border-[var(--border)] rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/15 focus:border-[var(--primary)]/40 transition-all" />
         </div>
     )
@@ -372,8 +374,8 @@ function EditClientForm({ client, onSave, onClose }: { client: Client; onSave: (
                 </div>
                 <div className="overflow-y-auto flex-1 px-6 py-5 flex flex-col gap-5">
                     <div>
-                        <label className="block text-xs font-semibold text-foreground mb-1.5">Client name <span className="text-red-400">*</span></label>
-                        <input value={form.name} onChange={set('name')} placeholder="Client name"
+                        <Label className="block text-xs font-semibold text-foreground mb-1.5">Client name <span className="text-red-400">*</span></Label>
+                        <Input value={form.name} onChange={set('name')} placeholder="Client name"
                             className="w-full h-10 px-3 border border-[var(--border)] rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/15 focus:border-[var(--primary)]/40 transition-all" />
                     </div>
                     <div>
@@ -393,7 +395,7 @@ function EditClientForm({ client, onSave, onClose }: { client: Client; onSave: (
                         <p className="text-xs font-semibold text-foreground mb-2">Default charges</p>
                         <div className="grid grid-cols-2 gap-3">
                             <div>
-                                <label className="block text-[11px] text-muted-foreground mb-1">Charge type</label>
+                                <Label className="block text-[11px] text-muted-foreground mb-1">Charge type</Label>
                                 <select value={form.defaultChargeType} onChange={set('defaultChargeType')}
                                     className="w-full h-10 px-3 border border-[var(--border)] rounded-xl text-sm bg-card focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/15 focus:border-[var(--primary)]/40 transition-all">
                                     <option value="hourly">Hourly</option>
@@ -426,7 +428,7 @@ function EditClientForm({ client, onSave, onClose }: { client: Client; onSave: (
                         )}
                     </AnimatePresence>
                     <div>
-                        <label className="block text-xs font-semibold text-foreground mb-1.5">Internal notes</label>
+                        <Label className="block text-xs font-semibold text-foreground mb-1.5">Internal notes</Label>
                         <textarea value={form.notes} onChange={set('notes')} rows={2}
                             className="w-full px-3 py-2.5 border border-[var(--border)] rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/15 focus:border-[var(--primary)]/40 transition-all resize-none" />
                     </div>

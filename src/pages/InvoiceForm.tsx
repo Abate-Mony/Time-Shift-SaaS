@@ -155,7 +155,7 @@ export function InvoiceForm() {
             </div>
 
             <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
-                <input type="hidden" {...register('job')} />
+                <Input type="hidden" {...register('job')} />
 
                 {/* Details */}
                 <div className="bg-card rounded-xl border border-[var(--border)] p-6">
@@ -226,7 +226,7 @@ export function InvoiceForm() {
                                                 <p className="h-9 flex items-center px-3 text-sm text-foreground bg-muted border border-[var(--border)] rounded-lg truncate">
                                                     {job?.title}
                                                 </p>
-                                                <input type="hidden" {...register(`lineItems.${index}.description` as const)} />
+                                                <Input type="hidden" {...register(`lineItems.${index}.description` as const)} />
                                             </>
                                         ) : (
                                             <Input
@@ -240,7 +240,7 @@ export function InvoiceForm() {
                                     {isFixedJobRow ? (
                                         <>
                                             <p className="h-9 flex items-center px-3 text-sm text-muted-foreground bg-muted border border-[var(--border)] rounded-lg">Fixed</p>
-                                            <input type="hidden" {...register(`lineItems.${index}.hours` as const, { valueAsNumber: true })} />
+                                            <Input type="hidden" {...register(`lineItems.${index}.hours` as const, { valueAsNumber: true })} />
                                         </>
                                     ) : (
                                         <Input

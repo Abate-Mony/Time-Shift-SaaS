@@ -110,14 +110,14 @@ function LineRow({ item, onChange, onDelete, deletable, disabled }: {
     const amount = item.quantity * item.unitPrice
     return (
         <div className="grid grid-cols-[1fr_72px_112px_96px_28px] gap-1.5 py-2 border-b border-[var(--border)] last:border-0 items-center">
-            <input
+            <Input
                 value={item.description}
                 onChange={e => onChange({ ...item, description: e.target.value })}
                 placeholder="Describe this item or service"
                 disabled={disabled}
                 className="h-8 px-3 border border-transparent hover:border-[var(--border)] focus:border-[var(--primary)]/40 rounded-md text-sm text-foreground placeholder:text-muted-foreground bg-transparent focus:bg-card focus:outline-none focus:ring-1 focus:ring-[var(--primary)]/15 transition-all disabled:opacity-70"
             />
-            <input
+            <Input
                 type="number" min={0} step={0.5}
                 value={item.quantity || ''}
                 onChange={e => onChange({ ...item, quantity: parseFloat(e.target.value) || 0 })}
@@ -126,7 +126,7 @@ function LineRow({ item, onChange, onDelete, deletable, disabled }: {
             />
             <div className="relative">
                 <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground pointer-events-none">£</span>
-                <input
+                <Input
                     type="number" min={0} step={0.01}
                     value={item.unitPrice || ''}
                     onChange={e => onChange({ ...item, unitPrice: parseFloat(e.target.value) || 0 })}
@@ -495,7 +495,7 @@ export function CreateQuote() {
                             <div>
                                 <FieldLabel text="Quote number" />
                                 <div className="relative">
-                                    <input
+                                    <Input
                                         readOnly
                                         value={isEditingExisting ? quote!.quoteNumber : 'Generated on save'}
                                         className="w-full h-9 px-3 pr-9 border border-[var(--border)] rounded-lg text-sm font-mono bg-muted text-muted-foreground cursor-default"
@@ -615,7 +615,7 @@ export function CreateQuote() {
                                     <div className="flex items-center gap-2">
                                         {vatPreset === 'custom' && (
                                             <div className="relative w-16">
-                                                <input
+                                                <Input
                                                     type="number" min={0} max={100}
                                                     value={customVatRate}
                                                     onChange={e => setCustomVatRate(parseFloat(e.target.value) || 0)}
@@ -670,7 +670,7 @@ export function CreateQuote() {
                                 <p className="text-xs text-muted-foreground mt-1">Shown below the quote total.</p>
                             </div>
                             <label className="flex items-start gap-2.5 pt-2 border-t border-[var(--border)] cursor-pointer">
-                                <input
+                                <Input
                                     type="checkbox"
                                     checked={sendThankYouEmail}
                                     onChange={e => setSendThankYouEmail(e.target.checked)}

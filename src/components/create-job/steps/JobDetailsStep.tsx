@@ -12,6 +12,7 @@ import { clientSitesQuery } from "@/utils/sites"
 import { useCreateJob } from "../CreateJobContext"
 import { formatHours } from "../wizardConfig"
 import { FieldError } from "../FieldError"
+import { Label } from "@/components/ui/label"
 
 const PRIORITIES = [
   { value: "low", label: "Low", className: "text-foreground" },
@@ -117,7 +118,7 @@ export function JobDetailsStep() {
             </p>
             <div className="flex flex-wrap gap-2 min-w-0">
               {PRIORITIES.map(item => (
-                <label
+                <Label
                   key={item.value}
                   className={cn(
                     "shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl border-2 cursor-pointer transition-all",
@@ -126,7 +127,7 @@ export function JobDetailsStep() {
                       : "border-[var(--border)] hover:border-slate-300"
                   )}
                 >
-                  <input
+                  <Input
                     type="radio"
                     name="priority"
                     className="sr-only"
@@ -143,7 +144,7 @@ export function JobDetailsStep() {
                     {priority === item.value && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
                   </span>
                   <span className={cn("text-sm font-medium", item.className)}>{item.label}</span>
-                </label>
+                </Label>
               ))}
             </div>
             <FieldError message={errors.priority?.message as string} />

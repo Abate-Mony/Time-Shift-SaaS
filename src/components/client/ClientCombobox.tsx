@@ -4,6 +4,8 @@ import { Search, ChevronDown, X, Plus, AlertTriangle, RefreshCw } from 'lucide-r
 import customFetch from '@/utils/customFetch'
 import { findClientByExactName, isDuplicateClientError } from '@/utils/clients'
 import type { Client } from '@/utils/types/client'
+import { Input } from '../ui/input'
+import { Label } from '../ui/label'
 
 // A job's populated client (JobClientRef, from @/utils/types) is a subset
 // of the full Client doc — no paymentTermsDays, no formattedAddress. This
@@ -77,29 +79,29 @@ function QuickCreateClient({
       </div>
       <div className="flex flex-col gap-3">
         <div>
-          <label className="block text-[11px] text-muted-foreground mb-1">Client name <span className="text-red-400">*</span></label>
-          <input value={name} onChange={e => setName(e.target.value)} placeholder="Acme Security"
+          <Label className="block text-[11px] text-muted-foreground mb-1">Client name <span className="text-red-400">*</span></Label>
+          <Input value={name} onChange={e => setName(e.target.value)} placeholder="Acme Security"
             className="w-full h-9 px-3 border border-[var(--border)] rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/15 focus:border-[var(--primary)]/40 transition-all" />
         </div>
         <div>
-          <label className="block text-[11px] text-muted-foreground mb-1">Primary contact name</label>
-          <input value={contactName} onChange={e => setContactName(e.target.value)} placeholder="Jane Smith"
+          <Label className="block text-[11px] text-muted-foreground mb-1">Primary contact name</Label>
+          <Input value={contactName} onChange={e => setContactName(e.target.value)} placeholder="Jane Smith"
             className="w-full h-9 px-3 border border-[var(--border)] rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/15 focus:border-[var(--primary)]/40 transition-all" />
         </div>
         <div>
-          <label className="block text-[11px] text-muted-foreground mb-1">Primary contact email</label>
-          <input value={contactEmail} onChange={e => setContactEmail(e.target.value)} placeholder="jane@acmesecurity.co.uk" type="email"
+          <Label className="block text-[11px] text-muted-foreground mb-1">Primary contact email</Label>
+          <Input value={contactEmail} onChange={e => setContactEmail(e.target.value)} placeholder="jane@acmesecurity.co.uk" type="email"
             className="w-full h-9 px-3 border border-[var(--border)] rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/15 focus:border-[var(--primary)]/40 transition-all" />
         </div>
         <div className="grid grid-cols-2 gap-2">
           <div>
-            <label className="block text-[11px] text-muted-foreground mb-1">Phone</label>
-            <input value={phone} onChange={e => setPhone(e.target.value)} placeholder="07700 900123"
+            <Label className="block text-[11px] text-muted-foreground mb-1">Phone</Label>
+            <Input value={phone} onChange={e => setPhone(e.target.value)} placeholder="07700 900123"
               className="w-full h-9 px-3 border border-[var(--border)] rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/15 focus:border-[var(--primary)]/40 transition-all" />
           </div>
           <div>
-            <label className="block text-[11px] text-muted-foreground mb-1">Billing email</label>
-            <input value={billingEmail} onChange={e => setBillingEmail(e.target.value)} placeholder="accounts@…"
+            <Label className="block text-[11px] text-muted-foreground mb-1">Billing email</Label>
+            <Input value={billingEmail} onChange={e => setBillingEmail(e.target.value)} placeholder="accounts@…"
               className="w-full h-9 px-3 border border-[var(--border)] rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/15 focus:border-[var(--primary)]/40 transition-all" />
           </div>
         </div>
@@ -340,10 +342,10 @@ export function ClientCombobox({ value, onChange, onToast }: ClientComboboxProps
               />
             ) : (
               <>
-                {/* Search input */}
+                {/* Search Input */}
                 <div className="flex items-center gap-2 px-3 py-2 border-b border-[var(--border)]">
                   <Search size={13} className="text-muted-foreground shrink-0" />
-                  <input
+                  <Input
                     ref={inputRef}
                     value={query}
                     onChange={e => setQuery(e.target.value)}

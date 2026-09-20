@@ -20,6 +20,8 @@ import {
 import type {
     InvitationOutletContext,
 } from "../../utils/types/invitation";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export default function ExistingUserInvitePage() {
     const navigate =
@@ -273,22 +275,22 @@ export default function ExistingUserInvitePage() {
                     .
                 </p>
 
-                <label className="text-sm font-semibold text-foreground block mb-1.5">
+                <Label className="text-sm font-semibold text-foreground block mb-1.5">
                     Email address
-                </label>
+                </Label>
 
-                <input
+                <Input
                     value={invite.email}
                     readOnly
                     className="w-full h-11 px-4 border border-border rounded-xl bg-muted text-sm text-muted-foreground mb-4"
                 />
 
-                <label className="text-sm font-semibold text-foreground block mb-1.5">
+                <Label className="text-sm font-semibold text-foreground block mb-1.5">
                     Password
-                </label>
+                </Label>
 
                 <div className="relative">
-                    <input
+                    <Input
                         type={
                             showPassword
                                 ? "text"

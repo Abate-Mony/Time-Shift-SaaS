@@ -4,6 +4,7 @@ import { useFilter } from '../hooks/CustomLinkFilterHook'
 import { useSearchParams } from 'react-router'
 import debounce from '../utils/debounce'
 import { cn } from '../lib/utils'
+import { Input } from './ui/input'
 interface iSearch
     extends React.InputHTMLAttributes<HTMLInputElement> {
     containerClassName?: string
@@ -36,7 +37,7 @@ function SearchComponent({
         <div>
             <div className="relative mb-4 ">
                 <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                <input
+                <Input
                     //   value={search}
                     defaultValue={searchVal || ""}
                     onChange={debouncedHandleChange}

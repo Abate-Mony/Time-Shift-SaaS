@@ -25,6 +25,7 @@ import { Form, redirect, useLoaderData, useNavigate, useNavigation, useParams, u
 import { Avatar, Input } from '../components/ui'
 import { ApplyRatePrompt, ClientCombobox, type ComboboxClient } from '@/components/client/ClientCombobox'
 import { isJobLocked } from '@/utils/jobLock'
+import { Label } from '@/components/ui/label'
 
 type AssignedWorker = CreateJobForm["workers"][number]
 
@@ -367,7 +368,7 @@ export function EditJob() {
 
                         <div className="grid sm:grid-cols-2 gap-4">
                             <div>
-                                <label className="text-sm font-medium text-foreground mb-1.5 block">Client</label>
+                                <Label className="text-sm font-medium text-foreground mb-1.5 block">Client</Label>
                                 <ClientCombobox
                                     value={selectedClient}
                                     onChange={setSelectedClient}
@@ -795,7 +796,7 @@ export function EditJob() {
                                                 sub: "Blocks clock-in outside the radius — they'll need you to override it",
                                             },
                                         ].map(opt => (
-                                            <label
+                                            <Label
                                                 key={opt.value}
                                                 className={cn(
                                                     "flex items-start gap-3 px-4 py-3 rounded-xl border-2 cursor-pointer transition-all min-w-0",
@@ -832,7 +833,7 @@ export function EditJob() {
                                                     <span className="block text-sm font-semibold text-foreground">{opt.label}</span>
                                                     <span className="block text-[11px] text-muted-foreground mt-0.5">{opt.sub}</span>
                                                 </span>
-                                            </label>
+                                            </Label>
                                         ))}
                                     </div>
 

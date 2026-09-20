@@ -1,3 +1,4 @@
+import { Input } from "@/components/ui/input"
 import customFetch from "@/utils/customFetch"
 import { isAxiosError } from "axios"
 import { motion } from "framer-motion"
@@ -15,7 +16,7 @@ function PasswordField({
     <div className="flex flex-col gap-1.5">
       <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{label}</label>
       <div className="relative">
-        <input
+        <Input
           type={show ? "text" : "password"}
           value={value}
           onChange={e => onChange(e.target.value)}

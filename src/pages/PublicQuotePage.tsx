@@ -7,6 +7,8 @@ import { useCallback, useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import { useParams } from 'react-router'
 import { QuoteStatusBadge } from './Quotes'
+import { Input } from '@/components/ui'
+import { Label } from '@/components/ui/label'
 
 const DEFAULT_ACCENT = '#1E3A5F'
 
@@ -59,7 +61,7 @@ function RespondDialog({
 
                     <div>
                         <label className="block text-xs font-semibold text-slate-600 mb-1.5">Your name <span className="text-red-500">*</span></label>
-                        <input
+                        <Input
                             value={name}
                             onChange={e => setName(e.target.value)}
                             placeholder="Jane Smith"
@@ -67,8 +69,8 @@ function RespondDialog({
                         />
                     </div>
                     <div>
-                        <label className="block text-xs font-semibold text-slate-600 mb-1.5">Email <span className="text-red-500">*</span></label>
-                        <input
+                        <Label className="block text-xs font-semibold text-slate-600 mb-1.5">Email <span className="text-red-500">*</span></Label>
+                        <Input
                             type="email"
                             value={email}
                             onChange={e => setEmail(e.target.value)}
@@ -79,9 +81,9 @@ function RespondDialog({
 
                     {mode === 'decline' && (
                         <div>
-                            <label className="block text-xs font-semibold text-slate-600 mb-1.5">
+                            <Label className="block text-xs font-semibold text-slate-600 mb-1.5">
                                 Reason <span className="text-slate-400 font-normal">(optional)</span>
-                            </label>
+                            </Label>
                             <textarea
                                 value={reason}
                                 onChange={e => setReason(e.target.value.slice(0, 500))}

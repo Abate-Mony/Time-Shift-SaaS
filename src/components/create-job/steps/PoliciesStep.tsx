@@ -5,6 +5,7 @@ import { Input } from "@/components/ui"
 import { cn } from "@/lib/utils"
 import { useCreateJob } from "../CreateJobContext"
 import { FieldError } from "../FieldError"
+import { Label } from "@/components/ui/label"
 
 const GEOFENCE_MODES = [
   { value: "", label: "Use company default", sub: "Whatever's set in Settings — recommended" },
@@ -93,14 +94,14 @@ export function PoliciesStep() {
           {GEOFENCE_MODES.map(opt => {
             const active = (geofenceMode ?? "") === opt.value
             return (
-              <label
+              <Label
                 key={opt.value}
                 className={cn(
                   "flex items-start gap-3 px-4 py-3 rounded-xl border-2 cursor-pointer transition-all min-w-0",
                   active ? "border-[var(--primary)] bg-[var(--primary)]/[0.03]" : "border-[var(--border)] hover:border-slate-300"
                 )}
               >
-                <input
+                <Input
                   type="radio"
                   name="geofenceModeChoice"
                   className="sr-only"
@@ -125,7 +126,7 @@ export function PoliciesStep() {
                   <span className="block text-sm font-semibold text-foreground">{opt.label}</span>
                   <span className="block text-[11px] text-muted-foreground mt-0.5">{opt.sub}</span>
                 </span>
-              </label>
+              </Label>
             )
           })}
         </div>

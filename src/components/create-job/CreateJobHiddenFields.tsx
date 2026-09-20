@@ -1,3 +1,4 @@
+import { Input } from "../ui/input"
 import { useCreateJob } from "./CreateJobContext"
 import { mapRecurringStateToPayload } from "@/utils/mapRecurringStateToPayload"
 
@@ -9,7 +10,7 @@ import { mapRecurringStateToPayload } from "@/utils/mapRecurringStateToPayload"
  * lived inside step components, unmounting a step would silently drop its
  * values from the submitted FormData.
  *
- * Native <input> deliberately — the styled `Input` wrapper renders a label and
+ * Native<Input> deliberately — the styled `Input` wrapper renders a label and
  * container div, which lays out even when type="hidden".
  */
 export function CreateJobHiddenFields() {
@@ -30,58 +31,58 @@ export function CreateJobHiddenFields() {
   return (
     <>
       {/* Client / Site — held in component state, not RHF */}
-      <input type="hidden" name="client" value={selectedClient?._id ?? ""} />
-      <input type="hidden" name="site" value={selectedSite?._id ?? ""} />
+    <Input type="hidden" name="client" value={selectedClient?._id ?? ""} />
+    <Input type="hidden" name="site" value={selectedSite?._id ?? ""} />
       {lockedFromQuote && (
         <>
-          <input type="hidden" name="sourceQuote" value={lockedFromQuote.quoteId} />
+        <Input type="hidden" name="sourceQuote" value={lockedFromQuote.quoteId} />
           {/* Display-only, for the post-create toast — the backend ignores
               unknown fields, it never reads this. */}
-          <input type="hidden" name="sourceQuoteNumber" value={lockedFromQuote.quoteNumber} />
+        <Input type="hidden" name="sourceQuoteNumber" value={lockedFromQuote.quoteNumber} />
         </>
       )}
 
       {/* Location */}
-      <input type="hidden" name="address" value={address ?? ""} />
+    <Input type="hidden" name="address" value={address ?? ""} />
       {coordinates && (
-        <input type="hidden" name="coordinates" value={JSON.stringify(coordinates)} />
+      <Input type="hidden" name="coordinates" value={JSON.stringify(coordinates)} />
       )}
 
       {/* Recurrence */}
-      <input type="hidden" name="isRecurring" value={String(recurringPayload.isRecurring)} />
+    <Input type="hidden" name="isRecurring" value={String(recurringPayload.isRecurring)} />
       {recurringPayload.frequency && (
-        <input type="hidden" name="frequency" value={recurringPayload.frequency} />
+      <Input type="hidden" name="frequency" value={recurringPayload.frequency} />
       )}
       {recurringPayload.interval !== undefined && (
-        <input type="hidden" name="interval" value={String(recurringPayload.interval)} />
+      <Input type="hidden" name="interval" value={String(recurringPayload.interval)} />
       )}
       {recurringPayload.daysOfWeek && (
-        <input type="hidden" name="daysOfWeek" value={JSON.stringify(recurringPayload.daysOfWeek)} />
+      <Input type="hidden" name="daysOfWeek" value={JSON.stringify(recurringPayload.daysOfWeek)} />
       )}
       {recurringPayload.endDate && (
-        <input type="hidden" name="endDate" value={recurringPayload.endDate} />
+      <Input type="hidden" name="endDate" value={recurringPayload.endDate} />
       )}
 
       {/* Staffing */}
       {selectedWorkers.length > 0 && (
-        <input type="hidden" name="workers" value={JSON.stringify(selectedWorkers)} />
+      <Input type="hidden" name="workers" value={JSON.stringify(selectedWorkers)} />
       )}
-      {supervisor && <input type="hidden" name="supervisor" value={supervisor} />}
-      <input type="hidden" name="openToClaims" value={String(openToClaims)} />
-      <input type="hidden" name="requiresApproval" value={String(requiresApproval)} />
+      {supervisor &&<Input type="hidden" name="supervisor" value={supervisor} />}
+    <Input type="hidden" name="openToClaims" value={String(openToClaims)} />
+    <Input type="hidden" name="requiresApproval" value={String(requiresApproval)} />
 
       {/* Policies */}
-      {geofenceMode && <input type="hidden" name="geofenceMode" value={geofenceMode} />}
+      {geofenceMode &&<Input type="hidden" name="geofenceMode" value={geofenceMode} />}
       {geofenceMode && geofenceMode !== "off" && geofenceRadius && (
-        <input type="hidden" name="geofenceRadiusMeters" value={String(geofenceRadius)} />
+      <Input type="hidden" name="geofenceRadiusMeters" value={String(geofenceRadius)} />
       )}
 
       {/* Invoice — the UI is still hidden, so this stays false in practice */}
-      <input type="hidden" name="generateInvoice" value={String(generateInvoice)} />
+    <Input type="hidden" name="generateInvoice" value={String(generateInvoice)} />
       {generateInvoice && (
         <>
-          <input type="hidden" name="invoiceDueDate" value={invoiceDueDate} />
-          <input type="hidden" name="invoiceLineItems" value={JSON.stringify(invoiceLineItems)} />
+        <Input type="hidden" name="invoiceDueDate" value={invoiceDueDate} />
+        <Input type="hidden" name="invoiceLineItems" value={JSON.stringify(invoiceLineItems)} />
         </>
       )}
     </>

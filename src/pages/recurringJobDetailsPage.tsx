@@ -17,6 +17,8 @@ import toast from 'react-hot-toast'
 import { StatusBadge as JobStatusBadge } from '@/components/ui'
 import { shiftHoursFrom, formatHours } from '@/components/create-job/wizardConfig'
 import type { FileRef } from '@/utils/types'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
@@ -359,8 +361,8 @@ function EditPatternDialog({
 
                     {/* Interval */}
                     <div className="flex items-center gap-3">
-                        <label className="text-sm font-semibold text-foreground shrink-0">Every</label>
-                        <input
+                        <Label className="text-sm font-semibold text-foreground shrink-0">Every</Label>
+                        <Input
                             type="number"
                             min={1}
                             value={form.interval}
@@ -381,7 +383,7 @@ function EditPatternDialog({
                         <div className="grid grid-cols-2 gap-3">
                             <div className="flex flex-col gap-1.5">
                                 <label className="text-xs text-muted-foreground">Start time</label>
-                                <input
+                                <Input
                                     type="time"
                                     value={form.startTime}
                                     onChange={e => setForm(v => ({ ...v, startTime: e.target.value }))}
@@ -390,7 +392,7 @@ function EditPatternDialog({
                             </div>
                             <div className="flex flex-col gap-1.5">
                                 <label className="text-xs text-muted-foreground">End time</label>
-                                <input
+                                <Input
                                     type="time"
                                     value={form.endTime}
                                     onChange={e => setForm(v => ({ ...v, endTime: e.target.value }))}
@@ -444,7 +446,7 @@ function EditPatternDialog({
                     <div className="grid grid-cols-2 gap-3">
                         <div className="flex flex-col gap-1.5">
                             <label className="text-sm font-semibold text-foreground">End date</label>
-                            <input
+                            <Input
                                 type="date"
                                 value={form.endDate}
                                 onChange={e => setForm(v => ({ ...v, endDate: e.target.value }))}
@@ -454,7 +456,7 @@ function EditPatternDialog({
                         </div>
                         <div className="flex flex-col gap-1.5">
                             <label className="text-sm font-semibold text-foreground">Max occurrences</label>
-                            <input
+                            <Input
                                 type="number"
                                 min={1}
                                 value={form.maxOccurrences}
@@ -477,7 +479,7 @@ function EditPatternDialog({
                             <div className="flex flex-col gap-1 max-h-40 overflow-y-auto border border-border rounded-xl p-2">
                                 {workers.map(w => (
                                     <label key={w._id} className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-muted cursor-pointer">
-                                        <input
+                                        <Input
                                             type="checkbox"
                                             checked={form.defaultWorkerIds.includes(w._id)}
                                             onChange={() => toggleWorker(w._id)}
