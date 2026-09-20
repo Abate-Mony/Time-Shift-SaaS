@@ -1,16 +1,82 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useNavigate } from 'react-router'
 import { isAxiosError } from 'axios'
 import toast from 'react-hot-toast'
-import { Sparkles, Send, Loader2, Bot, User } from 'lucide-react'
+import { Sparkles, Send, Loader2, Bot, User, Briefcase, Receipt, FileText, SquareUser, UserRound } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { useCompanyPlan } from '@/hooks/useCompanyPlan'
 import { PlanLockBadge } from '@/components/billing/PlanLockBadge'
+import { backLinkState } from '@/hooks/useBackLink'
 import { sendDataAssistantMessage, type AIDataAssistantTurn } from '@/utils/api-request-functions'
 
 interface ChatMessage {
   role: 'user' | 'assistant'
   content: string
+}
+
+// The assistant tags one specific, actionable record it names (an
+// unstaffed job, an overdue invoice, ...) as ⟦type:id|label⟧ — see the
+// backend's SYSTEM_PROMPT in dataAssistantChat.ts. Parsed back out here
+// into a clickable chip so "that job" is something you can actually open,
+// not just read about.
+type RefType = 'job' | 'invoice' | 'quote' | 'client' | 'worker'
+
+const REF_REGEX = /⟦(job|invoice|quote|client|worker):([a-f0-9]{24})\|([^⟧]+)⟧/g
+
+const REF_ROUTES: Record<RefType, (id: string) => string> = {
+  job: id => `/jobs/${id}`,
+  invoice: id => `/invoices/${id}`,
+  quote: id => `/quotes/${id}`,
+  client: id => `/clients/${id}`,
+  worker: id => `/workers/${id}/worker-profile`,
+}
+
+const REF_ICONS: Record<RefType, typeof Briefcase> = {
+  job: Briefcase,
+  invoice: Receipt,
+  quote: FileText,
+  client: SquareUser,
+  worker: UserRound,
+}
+
+function EntityChip({ type, id, label, tone }: { type: RefType; id: string; label: string; tone: 'user' | 'assistant' }) {
+  const navigate = useNavigate()
+  const Icon = REF_ICONS[type]
+  return (
+    <button
+      type="button"
+      onClick={() => navigate(REF_ROUTES[type](id), { state: backLinkState('Assistant') })}
+      className={`inline-flex items-center gap-1 mx-0.5 px-1.5 py-0.5 rounded-md text-[13px] font-semibold underline decoration-dotted underline-offset-2 align-baseline transition-colors ${tone === 'user'
+        ? 'text-white hover:bg-white/15'
+        : 'text-[var(--primary)] hover:bg-[var(--primary)]/10'
+        }`}
+    >
+      <Icon size={11} className="shrink-0" />
+      {label}
+    </button>
+  )
+}
+
+// Splits a reply into plain-text spans and clickable EntityChips wherever
+// the assistant tagged a specific record — everything else renders exactly
+// as the model wrote it.
+function MessageContent({ content, tone }: { content: string; tone: 'user' | 'assistant' }) {
+  const regex = new RegExp(REF_REGEX)
+  const parts: ReactNode[] = []
+  let lastIndex = 0
+  let match: RegExpExecArray | null
+  let key = 0
+
+  while ((match = regex.exec(content))) {
+    if (match.index > lastIndex) parts.push(<span key={key++}>{content.slice(lastIndex, match.index)}</span>)
+    const [, type, id, label] = match
+    parts.push(<EntityChip key={key++} type={type as RefType} id={id} label={label} tone={tone} />)
+    lastIndex = match.index + match[0].length
+  }
+  if (lastIndex < content.length) parts.push(<span key={key++}>{content.slice(lastIndex)}</span>)
+
+  return <>{parts}</>
 }
 
 const SUGGESTIONS = [
@@ -113,7 +179,7 @@ export function DataAssistant() {
                   : 'bg-muted text-foreground'
                   }`}
               >
-                {m.content}
+                <MessageContent content={m.content} tone={m.role} />
               </div>
             </div>
           ))}
