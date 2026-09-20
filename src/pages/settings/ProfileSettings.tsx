@@ -1,5 +1,7 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Check, Loader2 } from 'lucide-react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { isAxiosError } from 'axios'
 import toast from 'react-hot-toast'
@@ -7,17 +9,44 @@ import { useOutletContext } from 'react-router'
 import type { iUser } from '@/layouts/dashboardlayout'
 import { Avatar, Divider, Input } from '@/components/ui'
 import { Button } from '@/components/ui/button'
-import { deleteProfilePhoto, uploadProfilePhoto } from '@/utils/api-request-functions'
+import { deleteProfilePhoto, updateAdminProfile, uploadProfilePhoto } from '@/utils/api-request-functions'
 import { getInitials } from '@/utils/getInitials'
 import { MAX_AVATAR_FILE_SIZE } from '@/utils/constants/upload'
 import { compressAvatarImage } from '@/utils/imageCompression'
+import { adminProfileSchema } from '@/utils/schemas'
+import type { AdminProfileForm } from '@/utils/types'
+
+const FieldError = ({ message }: { message?: string }) => {
+    if (!message) return null
+    return <p className="text-xs text-red-500 mt-1">{message}</p>
+}
 
 export default function ProfileSettings() {
     const { user } = useOutletContext<{ user: iUser }>()
     const queryClient = useQueryClient()
     const photoInputRef = useRef<HTMLInputElement>(null)
-    const [saved, setSaved] = useState(false)
     const [compressing, setCompressing] = useState(false)
+
+    const {
+        register,
+        handleSubmit,
+        reset,
+        formState: { errors, isSubmitting, isDirty },
+    } = useForm<AdminProfileForm>({
+        resolver: zodResolver(adminProfileSchema),
+        defaultValues: { fullname: user?.fullname ?? '', phone: user?.phone ?? '' },
+    })
+
+    // user arrives async (outlet context) — the form's initial render can
+    // beat it, so re-seed once the real values are in.
+    useEffect(() => {
+        reset({ fullname: user?.fullname ?? '', phone: user?.phone ?? '' })
+    }, [user?.fullname, user?.phone, reset])
+
+    const onSubmit = async (data: AdminProfileForm) => {
+        const ok = await updateAdminProfile(data)
+        if (ok) reset(data)
+    }
 
     const uploadPhotoMutation = useMutation({
         mutationFn: uploadProfilePhoto,
@@ -39,11 +68,6 @@ export default function ProfileSettings() {
         },
         onError: () => toast.error("Couldn't remove the photo — try again."),
     })
-
-    const handleSave = () => {
-        setSaved(true)
-        setTimeout(() => setSaved(false), 2000)
-    }
 
     const handlePhotoSelected = async (file: File) => {
         setCompressing(true)
@@ -108,21 +132,36 @@ export default function ProfileSettings() {
                     </div>
                 </div>
                 <Divider />
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 min-w-0">
-                    <Input label="First Name" defaultValue="Owen" />
-                    <Input label="Last Name" defaultValue="Wright" />
-                    <Input label="Email Address" type="email" defaultValue="owen@secureguard.co.uk" />
-                    <Input label="Phone" type="tel" defaultValue="+44 7700 900000" />
-                </div>
-                <div className="min-w-0">
-                    <Input label="Job Title" defaultValue="Company Owner" />
-                </div>
-                <div className="flex justify-end gap-3">
-                    <Button variant="outline" size="sm">Cancel</Button>
-                    <Button size="sm" onClick={handleSave}>
-                        {saved ? <><Check size={13} /> Saved</> : 'Save Changes'}
-                    </Button>
-                </div>
+                <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5 min-w-0">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 min-w-0">
+                        <div>
+                            <Input label="Full Name" {...register('fullname')} />
+                            <FieldError message={errors.fullname?.message} />
+                        </div>
+                        <div>
+                            <Input
+                                label="Email Address"
+                                type="email"
+                                value={user?.email ?? ''}
+                                disabled
+                                title="Contact support to change your email address"
+                            />
+                        </div>
+                        <div>
+                            <Input label="Phone" type="tel" {...register('phone')} />
+                            <FieldError message={errors.phone?.message} />
+                        </div>
+                    </div>
+                    <div className="flex justify-end gap-3">
+                        <Button type="button" variant="outline" size="sm" disabled={!isDirty || isSubmitting} onClick={() => reset()}>
+                            Cancel
+                        </Button>
+                        <Button type="submit" size="sm" disabled={!isDirty || isSubmitting}>
+                            {isSubmitting ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />}
+                            {isSubmitting ? 'Saving…' : 'Save Changes'}
+                        </Button>
+                    </div>
+                </form>
             </div>
         </div>
     )

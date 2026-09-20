@@ -199,6 +199,21 @@ export const createJobSchema = z
         path: ["workers"],
     });
 
+// Admin/manager/owner "Settings > Profile" — deliberately smaller than
+// editProfileSchema below: email isn't editable from this page (kept
+// read-only in the UI), and there's no gender field here.
+export const adminProfileSchema = z.object({
+    fullname: z
+        .string()
+        .trim()
+        .min(1, "Full name is required"),
+
+    phone: z
+        .string()
+        .trim()
+        .optional(),
+});
+
 export const editProfileSchema = z.object({
     fullname: z
         .string()

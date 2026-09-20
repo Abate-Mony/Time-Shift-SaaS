@@ -2,7 +2,7 @@ import { queryClient } from "@/lib/queryClient";
 import { isAxiosError } from "axios";
 import toast from "react-hot-toast";
 import customFetch from "./customFetch";
-import type { ClientBillingInfo, CompanyPlanId, CompanyPlanInfo, CreateJobForm, EditProfileForm, EligibleWorkResponse, EventNotificationPreference, FileRef, Invoice, InvoiceAdjustmentInput, InvoiceCompanyInfo, InvoiceStatus, JobAttachment, NotificationEvent, NotificationPreferences, PlanCatalogEntry, PlanCatalogResponse, TimesheetSummaryResponse, User, WorkerDocument } from "./types";
+import type { AdminProfileForm, ClientBillingInfo, CompanyPlanId, CompanyPlanInfo, CreateJobForm, EditProfileForm, EligibleWorkResponse, EventNotificationPreference, FileRef, Invoice, InvoiceAdjustmentInput, InvoiceCompanyInfo, InvoiceStatus, JobAttachment, NotificationEvent, NotificationPreferences, PlanCatalogEntry, PlanCatalogResponse, TimesheetSummaryResponse, User, WorkerDocument } from "./types";
 import type {
     AccessLevel,
     AccountRestriction,
@@ -735,6 +735,25 @@ export const updateWorkerProfile = async (profile: EditProfileForm): Promise<boo
                     : "Something went wrong.";
 
         toast.error(message);
+        return false;
+    }
+};
+
+// Admin/manager/owner "Settings > Profile" — same endpoint as
+// updateWorkerProfile, just a smaller payload (no email/gender; this page
+// keeps email read-only on purpose).
+export const updateAdminProfile = async (profile: AdminProfileForm): Promise<boolean> => {
+    try {
+        await customFetch.patch("/users/current-user", profile);
+
+        toast.success("Profile updated");
+
+        await queryClient.invalidateQueries({
+            queryKey: ["user"],
+        });
+        return true;
+    } catch (err) {
+        toast.error(getApiErrorMessage(err));
         return false;
     }
 };

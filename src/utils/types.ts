@@ -1,5 +1,5 @@
 import type z from "zod";
-import type { createJobSchema, editProfileSchema, invoiceLineItemSchema, invoiceSchema, Worker } from "./schemas";
+import type { adminProfileSchema, createJobSchema, editProfileSchema, invoiceLineItemSchema, invoiceSchema, Worker } from "./schemas";
 import type { ClientAddress, ClientContact, ClientStatus, ChargeType } from "./types/client";
 
 // A job/assignment's billable-unit state — fixed-price jobs track this on
@@ -119,6 +119,8 @@ export type CreateJobForm = Omit<z.infer<typeof createJobSchema>, "client" | "wo
 export type EditProfileForm = z.output<typeof editProfileSchema>;
 // Shape react-hook-form works with (pre-transform: gender can be "" from the placeholder option).
 export type EditProfileFormInput = z.input<typeof editProfileSchema>;
+
+export type AdminProfileForm = z.infer<typeof adminProfileSchema>;
 
 export type InvoiceLineItem = z.infer<typeof invoiceLineItemSchema>;
 export type InvoiceForm = z.infer<typeof invoiceSchema>;
