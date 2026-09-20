@@ -248,6 +248,7 @@ export interface PlanLimits {
     aiJobAssistant: boolean;
     aiDashboardInsights: boolean;
     aiDataAssistant: boolean;
+    externalApiAccess: boolean;
   };
 }
 

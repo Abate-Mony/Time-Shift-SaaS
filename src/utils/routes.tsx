@@ -12,6 +12,7 @@ import AppearanceSettings from "@/pages/settings/AppearanceSettings";
 import BillingSettings from "@/pages/settings/BillingSettings";
 import CompanySettings from "@/pages/settings/CompanySettings";
 import EmailSettings from "@/pages/settings/EmailSettings";
+import ApiKeysSettings from "@/pages/settings/ApiKeysSettings";
 import InvoicingSettings from "@/pages/settings/InvoicingSettings";
 import NotificationSettings from "@/pages/settings/NotificationSettings";
 import ProfileSettings from "@/pages/settings/ProfileSettings";
@@ -299,6 +300,7 @@ export const router = createBrowserRouter([
                             { path: "invoicing", element: <InvoicingSettings /> },
                             { path: "security", element: <SecuritySettings /> },
                             { path: "email", element: <EmailSettings /> },
+                            { path: "api-keys", element: <ApiKeysSettings /> },
                             { path: "billing", element: <BillingSettings /> },
                             { path: "billing/plans", element: <ChangePlanSettings /> },
                             { path: "billing/checkout", element: <CheckOutSettings /> },

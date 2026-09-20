@@ -12,6 +12,7 @@ const NAV_LINKS = [
     { to: '/settings/invoicing', label: 'Invoicing' },
     { to: '/settings/security', label: 'Security' },
     { to: '/settings/email', label: 'Email & Sending' },
+    { to: '/settings/api-keys', label: 'API Keys' },
     { to: '/settings/billing', label: 'Billing' },
 ]
 

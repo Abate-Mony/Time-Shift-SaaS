@@ -15,6 +15,7 @@ import { getCurrentPosition } from "./getPosition";
 import type { InvoiceTemplate, InvoiceTemplateInput } from "./types/invoiceTemplate";
 import type { Quote, QuoteFormInput } from "./types/quote";
 import type { EmailSettings, EmailSettingsResponse, SendTestEmailResult } from "./types/emailSettings";
+import type { ApiKeyInfo, CreateApiKeyResponse } from "./types/apiKey";
 
 // Shape of POST /ai/job-draft's response. Every field on `draft` is a
 // best-effort guess the model made from a free-text prompt — nothing here
@@ -262,6 +263,40 @@ export const sendTestEmail = async (email: string): Promise<SendTestEmailResult 
     } catch (err) {
         toast.error(getApiErrorMessage(err));
         return null;
+    }
+};
+
+// ── External API keys ────────────────────────────────────────────────────
+// Company-issued credentials for external integrations (a booking website,
+// etc.) — see the backend's routes/externalRouter.ts for what a key
+// actually unlocks (read-only schedule/client lookups, and creating jobs
+// that always land as a draft for a manager to review).
+
+export const getApiKeys = async (): Promise<ApiKeyInfo[]> => {
+    const { data } = await customFetch.get<{ apiKeys: ApiKeyInfo[] }>("/companies/api-keys");
+    return data.apiKeys;
+};
+
+export const createApiKey = async (name: string): Promise<CreateApiKeyResponse | null> => {
+    try {
+        const { data } = await customFetch.post<CreateApiKeyResponse>("/companies/api-keys", { name });
+        await queryClient.invalidateQueries({ queryKey: ["api-keys"] });
+        return data;
+    } catch (err) {
+        toast.error(getApiErrorMessage(err));
+        return null;
+    }
+};
+
+export const revokeApiKey = async (id: string): Promise<boolean> => {
+    try {
+        await customFetch.delete(`/companies/api-keys/${id}`);
+        toast.success("API key revoked");
+        await queryClient.invalidateQueries({ queryKey: ["api-keys"] });
+        return true;
+    } catch (err) {
+        toast.error(getApiErrorMessage(err));
+        return false;
     }
 };
 
