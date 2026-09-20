@@ -1283,6 +1283,15 @@ export const getPlanCatalog = async (): Promise<PlanCatalogEntry[]> => {
     return data.plans
 }
 
+// GET /plans — the same catalog, but the truly public route (no auth
+// required) — see server.ts's own note. Used by the logged-out marketing
+// page's pricing section, so it never has to hand-maintain its own copy of
+// these numbers.
+export const getPublicPlanCatalog = async (): Promise<PlanCatalogEntry[]> => {
+    const { data } = await customFetch.get<PlanCatalogResponse>("/plans")
+    return data.plans
+}
+
 // GET /companies/plan — the company's actual plan and what it unlocks.
 // Source of truth for the billing pages instead of the old hardcoded
 // CURRENT_PLAN_ID mock.

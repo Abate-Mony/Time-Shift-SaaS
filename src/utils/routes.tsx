@@ -39,6 +39,7 @@ import InvitationSuccessPage from "@/pages/acceptInvites/InvitationSuccessPage";
 import NewUserInvitePage from "@/pages/acceptInvites/NewUserInvitePage";
 import RecurringAssignmentPage, { loader as recurringAssignmentsLoader } from "@/pages/worker/RecurringAssignmentPage";
 import PublicQuotePage from "@/pages/PublicQuotePage";
+import { MarketingHome } from "@/pages/marketing/MarketingHome";
 import { createBrowserRouter, Navigate } from "react-router";
 import DashboardLayout from "../layouts/dashboardlayout";
 import { Calendar, calendarLoader, ClentBillingPage, ClientDetail, clientDetailLoader, ClientDetailsaJobsPage, ClientDetailsContactsPage, ClientDetailsOverviewPage, ClientDetailsSitesPage, Clients, clientsLoader, clockLoader, CreateClientPage, CreateInvoicePage, createInvoiceLoader, CreateJob, createjobAction, CreateQuote, createQuoteLoader, CreateSitePage, DataAssistant, Dashboard, dashboardLoader, DownloadTimesheetScreen, EditJob, editJobAction, HelpArticlePage, HelpArticleScreen, HelpCentre, HelpCentreScreen, InvoiceDetail, invoiceDetailLoader, InvoiceForm, invoiceFormLoader, Invoices, invoicesLoader, JobDetail, Jobs, jobsLoader, loginAction, openShiftsLoader, ProfileScreen, Quotes, quotesLoader, RecurringJobDetail, recurringJobDetailLoader, RecurringJobs, recurringJobsLoader, Settings, settingsLoader, signupAction, singleJobLoader, singleWorkerJobLoader, SiteDetailPage, siteDetailLoader, Sites, sitesLoader, SuspendedAccountPage, Team, teamLoader, workerLoader, WorkerProfile, workerProfileLoader, workerStatsLoader, Workers, workersLoader, CheckOutSettings, ChangePlanSettings, Notifications, TeamsCreatepage, teamsCreateLoader, WorkerDocumentsScreen } from "../pages";
@@ -370,6 +371,15 @@ export const router = createBrowserRouter([
                 // all direct children of the bare RootLayout.
                 path: "q/:token",
                 element: <PublicQuotePage />,
+            },
+            {
+                // The public marketing/landing page — deliberately its own
+                // path rather than overriding "/", since "/" is already the
+                // authenticated Dashboard's index route and swapping it
+                // based on login state would mean restructuring that route's
+                // own loader. See MARKETING_PAGE.md for the reasoning.
+                path: "welcome",
+                element: <MarketingHome />,
             },
             {
                 path: "/invite",
