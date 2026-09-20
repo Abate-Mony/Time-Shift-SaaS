@@ -2,8 +2,26 @@ import type { CreateJobForm, User } from "@/utils/types"
 import { AxiosError } from "axios"
 import { motion } from "framer-motion"
 import { AlertTriangle, Home, RotateCcw } from "lucide-react"
+import { useEffect, useState } from "react"
 import { isRouteErrorResponse, Link, useOutletContext, useRouteError } from "react-router"
 import { AnimatedText } from "./ui/AnimatedError"
+import { STALE_CHUNK_RELOAD_GUARD_KEY } from "@/utils/staleChunkGuard"
+
+// A lazy route chunk (Reports/Analytics, see routes.tsx's `lazy:` fields)
+// fetches its own hashed JS file on demand. If a tab has been open since
+// before a deploy, that hash no longer exists on the server once the next
+// deploy replaces it — the dynamic import 404s with one of these
+// browser-specific messages. A hard reload fixes it (the browser fetches
+// the current index.html, which points at the current hashes) — no need to
+// show the generic error screen and make the user click "Try again"
+// themselves. Guarded by sessionStorage so a *genuinely* broken deploy
+// doesn't reload-loop forever.
+const STALE_CHUNK_PATTERN = /Failed to fetch dynamically imported module|error loading dynamically imported module|Importing a module script failed/i
+
+function isStaleChunkError(error: unknown): boolean {
+    const message = error instanceof Error ? error.message : typeof error === "string" ? error : ""
+    return STALE_CHUNK_PATTERN.test(message)
+}
 
 function getErrorInfo(error: unknown): { status?: number; message: string } {
     if (isRouteErrorResponse(error)) {
@@ -35,12 +53,44 @@ const ErrorElement = () => {
     const error = useRouteError()
     console.error(error)
 
+    const staleChunk = isStaleChunkError(error)
+    const [reloading] = useState(() => {
+        if (!staleChunk) return false
+        try {
+            return !sessionStorage.getItem(STALE_CHUNK_RELOAD_GUARD_KEY)
+        } catch {
+            return false
+        }
+    })
+
+    useEffect(() => {
+        if (!reloading) return
+        try {
+            sessionStorage.setItem(STALE_CHUNK_RELOAD_GUARD_KEY, "1")
+        } catch {
+            // ignore — worst case this reload isn't guarded against looping
+        }
+        window.location.reload()
+    }, [reloading])
+
     const { status, message } = getErrorInfo(error)
     const { user } = useOutletContext() as {
         user: User
     } || { user: null };
 
     const path = user?.role === "worker" ? "/worker" : "/"
+
+    if (reloading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-background px-4">
+                <div className="flex flex-col items-center gap-3 text-center">
+                    <RotateCcw size={20} className="text-muted-foreground animate-spin" />
+                    <p className="text-sm text-muted-foreground">A new version is available — updating…</p>
+                </div>
+            </div>
+        )
+    }
+
     return (
         <div className="min-h-screen flex items-center justify-center bg-background px-4">
             {/* const user=usecont */}

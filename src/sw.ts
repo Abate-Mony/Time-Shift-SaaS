@@ -1,5 +1,5 @@
 /// <reference lib="webworker" />
-import { precacheAndRoute } from "workbox-precaching"
+import { precacheAndRoute, cleanupOutdatedCaches } from "workbox-precaching"
 import { clientsClaim } from "workbox-core"
 
 declare const self: ServiceWorkerGlobalScope
@@ -7,6 +7,13 @@ declare const self: ServiceWorkerGlobalScope
 // Injected at build time by vite-plugin-pwa (strategies: "injectManifest")
 // with the list of built assets to precache.
 precacheAndRoute(self.__WB_MANIFEST)
+
+// This project uses strategies: "injectManifest", so the plugin's
+// generateSW-only `workbox: { cleanupOutdatedCaches: true }` option has no
+// effect here — this is the injectManifest equivalent: deletes precache
+// entries from a previous deploy's manifest once the new worker activates,
+// instead of leaving dead cache storage around indefinitely.
+cleanupOutdatedCaches()
 
 // registerType: "autoUpdate" (vite.config.ts) relies on the app calling
 // registerSW({ immediate: true }) from virtual:pwa-register, which posts this

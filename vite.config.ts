@@ -12,6 +12,10 @@ export default defineConfig({
     mkcert(),
     VitePWA({
       registerType: "autoUpdate",
+      // NOT `workbox: { cleanupOutdatedCaches: true, ... }` — that option
+      // only applies to strategies: "generateSW". This project uses
+      // injectManifest (below), so it's silently ignored; the actual fix is
+      // calling cleanupOutdatedCaches() directly inside src/sw.ts.
       // Custom service worker (push + notificationclick handlers) lives at
       // src/sw.ts. injectManifest builds that file and injects the Workbox
       // precache list into it, instead of generateSW's default of writing
