@@ -9,6 +9,7 @@ import { isAdminRole } from '@/utils/roles'
 import { deleteInvoiceTemplate, getInvoiceTemplates, setDefaultInvoiceTemplate } from '@/utils/api-request-functions'
 import { TemplatePreviewCard } from '@/components/invoiceTemplates/TemplatePreviewCard'
 import { TemplateBuilderDialog } from '@/components/invoiceTemplates/TemplateBuilderDialog'
+import { ThumbnailGridSkeleton } from '@/components/ui/skeleton-parts'
 import { Button } from '@/components/ui/button'
 import type { InvoiceTemplate } from '@/utils/types/invoiceTemplate'
 import { companySettingsQuery } from '@/pages/Settings'
@@ -74,9 +75,7 @@ export default function InvoicingSettings() {
                 </div>
 
                 {isLoading ? (
-                    <div className="flex justify-center py-10 text-muted-foreground">
-                        <Loader2 size={20} className="animate-spin" />
-                    </div>
+                    <ThumbnailGridSkeleton count={10} />
                 ) : (
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
                         {templates?.map(template => {

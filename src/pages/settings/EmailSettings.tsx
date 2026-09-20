@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button'
 import { Input } from '../../components/ui'
+import { Skeleton } from '@/components/ui/skeleton'
 import { useOutletContext } from 'react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { isAxiosError } from 'axios'
@@ -345,8 +346,23 @@ export default function EmailSettings() {
 
     if (isLoading || !settings) {
         return (
-            <div className="p-6 max-w-3xl mx-auto animate-fade-in flex justify-center py-16 text-muted-foreground">
-                <Loader2 size={20} className="animate-spin" />
+            <div className="p-6 max-w-3xl mx-auto animate-fade-in flex flex-col gap-4">
+                <div className="flex flex-col gap-2">
+                    <Skeleton className="h-6 w-48" />
+                    <Skeleton className="h-4 w-96 max-w-full" />
+                </div>
+                <div className="bg-card rounded-xl border border-[var(--border)] p-6 flex flex-col gap-4">
+                    <Skeleton className="h-4 w-32" />
+                    <div className="grid sm:grid-cols-2 gap-4">
+                        <Skeleton className="h-9 w-full rounded-lg" />
+                        <Skeleton className="h-9 w-full rounded-lg" />
+                    </div>
+                </div>
+                <div className="bg-card rounded-xl border border-[var(--border)] p-6 flex flex-col gap-4">
+                    <Skeleton className="h-4 w-40" />
+                    <Skeleton className="h-9 w-full rounded-lg" />
+                    <Skeleton className="h-24 w-full rounded-lg" />
+                </div>
             </div>
         )
     }

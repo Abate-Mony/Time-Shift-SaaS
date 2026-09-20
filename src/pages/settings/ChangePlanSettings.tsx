@@ -8,6 +8,22 @@ import type { Billing } from '@/utils/constants/plant'
 import { useQuery } from '@tanstack/react-query'
 import { BillingToggle } from '@/components/billing/BillingToggle'
 import { PlanCard } from '@/components/billing/PlanCard'
+import { Skeleton } from '@/components/ui/skeleton'
+
+function PlanCardSkeleton() {
+  return (
+    <div className="bg-card rounded-xl border border-[var(--border)] p-6 flex flex-col gap-4">
+      <Skeleton className="h-4 w-20" />
+      <Skeleton className="h-8 w-24" />
+      <div className="flex flex-col gap-2.5 mt-1">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <Skeleton key={i} className="h-3 w-full" />
+        ))}
+      </div>
+      <Skeleton className="h-9 w-full rounded-lg mt-2" />
+    </div>
+  )
+}
 
 export default function ChangePlanSettings() {
   const { user } = useOutletContext<{ user: iUser }>()
@@ -49,8 +65,10 @@ export default function ChangePlanSettings() {
       </div>
 
       {isLoading ? (
-        <div className="flex justify-center py-16 text-muted-foreground">
-          <Loader2 size={22} className="animate-spin" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-start">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <PlanCardSkeleton key={i} />
+          ))}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-start">

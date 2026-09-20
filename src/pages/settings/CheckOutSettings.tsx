@@ -19,6 +19,7 @@ import { getPlanCatalog, updateCompanyPlan } from '@/utils/api-request-functions
 import { isAdminRole } from '@/utils/roles'
 import { queryClient } from '@/lib/queryClient'
 import { useQuery } from '@tanstack/react-query'
+import { Skeleton } from '@/components/ui/skeleton'
 
 const CheckOutSettings = () => {
   const { user } = useOutletContext<{ user: iUser }>()
@@ -45,8 +46,18 @@ const CheckOutSettings = () => {
 
   if (isLoading) {
     return (
-      <div className="max-w-2xl mx-auto animate-fade-in flex justify-center py-16 text-muted-foreground">
-        <Loader2 size={22} className="animate-spin" />
+      <div className="max-w-2xl mx-auto animate-fade-in flex flex-col gap-4">
+        <Skeleton className="h-6 w-40" />
+        <div className="bg-card rounded-xl border border-[var(--border)] p-6 flex flex-col gap-4">
+          <Skeleton className="h-4 w-28" />
+          <Skeleton className="h-9 w-full rounded-lg" />
+          <Skeleton className="h-9 w-full rounded-lg" />
+          <div className="flex items-center justify-between pt-2">
+            <Skeleton className="h-4 w-20" />
+            <Skeleton className="h-6 w-24" />
+          </div>
+        </div>
+        <Skeleton className="h-11 w-full rounded-lg" />
       </div>
     )
   }
