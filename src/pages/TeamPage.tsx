@@ -21,6 +21,7 @@ import {
   respondToRestrictionAppeal,
   type CreateRestrictionPayload,
 } from '@/utils/api-request-functions'
+import { Input } from '@/components/ui/input'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -604,7 +605,7 @@ export function Team() {
           <div className="flex flex-wrap items-center gap-3 mb-4">
             <div className="relative flex-1 min-w-[200px] max-w-xs">
               <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-              <input
+              <Input
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 placeholder="Search by name or email…"

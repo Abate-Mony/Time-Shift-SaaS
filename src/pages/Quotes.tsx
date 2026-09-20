@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button'
 import FilterButton from '@/components/ui/FilterButton'
+import { Input } from '@/components/ui/input'
 import { useFilter } from '@/hooks/CustomLinkFilterHook'
 import { backLinkState } from '@/hooks/useBackLink'
 import customFetch from '@/utils/customFetch'
@@ -148,7 +149,7 @@ export function Quotes() {
             <div className="flex items-center gap-3 mb-4 flex-wrap">
                 <div className="relative flex-1 min-w-[200px] max-w-xs">
                     <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-                    <input
+                    <Input
                         value={searchInput}
                         onChange={e => setSearchInput(e.target.value)}
                         placeholder="Search by title, client, or number…"
