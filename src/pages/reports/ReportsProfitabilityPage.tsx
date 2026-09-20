@@ -4,6 +4,8 @@ import { useQuery } from '@tanstack/react-query'
 import { TrendingUp, TrendingDown, Coins, Wallet } from 'lucide-react'
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 import { Card, StatCard } from '@/components/ui'
+import { Skeleton } from '@/components/ui/skeleton'
+import { BarsSkeleton, StatCardRowSkeleton, TableSkeleton } from '@/components/ui/skeleton-parts'
 import { CustomTooltip } from './shared'
 import { useReportsContext } from '@/layouts/ReportLayout'
 import { reportsProfitabilityQuery, type RevenueBasis } from '@/utils/reports'
@@ -69,7 +71,19 @@ export function ReportsProfitabilityPage() {
       </div>
 
       {isPending ? (
-        <p className="text-sm text-muted-foreground">Loading profitability…</p>
+        <div className="flex flex-col gap-5">
+          <StatCardRowSkeleton count={3} className="lg:grid-cols-3" />
+          <Card className="p-5">
+            <Skeleton className="h-4 w-36 mb-4" />
+            <BarsSkeleton count={10} className="h-[220px]" />
+          </Card>
+          <Card>
+            <div className="px-5 pt-5 pb-4 border-b border-[var(--border)]">
+              <Skeleton className="h-4 w-44" />
+            </div>
+            <TableSkeleton rows={5} columns={5} />
+          </Card>
+        </div>
       ) : isError || !data ? (
         <p className="text-sm text-red-500">Failed to load the profitability report.</p>
       ) : (

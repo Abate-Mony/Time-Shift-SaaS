@@ -1,5 +1,6 @@
 import { Card } from '@/components/ui'
 import { Skeleton } from '@/components/ui/skeleton'
+import { BarsSkeleton, ListRowSkeleton, StatCardSkeleton } from '@/components/ui/skeleton-parts'
 
 // Mirrors Dashboard.tsx's real grid 1:1 (same wrapper classes, same Card
 // component, same column spans) so nothing shifts when the real data pops
@@ -7,44 +8,6 @@ import { Skeleton } from '@/components/ui/skeleton'
 // AI insights card are left out on purpose: they're conditional even once
 // data has loaded, so skeleton-ing them would promise content that might
 // not actually show up.
-
-function StatCardSkeleton() {
-  return (
-    <Card className="p-5">
-      <div className="flex items-start justify-between mb-3">
-        <Skeleton className="h-4 w-24" />
-        <Skeleton className="w-9 h-9 rounded-lg" />
-      </div>
-      <Skeleton className="h-7 w-16 mb-2" />
-      <Skeleton className="h-3 w-28" />
-    </Card>
-  )
-}
-
-// A row of bars with varied, deterministic heights — reads as "a chart is
-// coming" without pretending to preview real values.
-function BarsSkeleton({ count, className = '' }: { count: number; className?: string }) {
-  const heights = Array.from({ length: count }, (_, i) => 35 + ((i * 37) % 60))
-  return (
-    <div className={`flex items-end gap-2 ${className}`}>
-      {heights.map((h, i) => (
-        <Skeleton key={i} className="flex-1 rounded-t-md rounded-b-none" style={{ height: `${h}%` }} />
-      ))}
-    </div>
-  )
-}
-
-function ListRowSkeleton({ avatar = true }: { avatar?: boolean }) {
-  return (
-    <div className="flex items-start gap-3">
-      {avatar && <Skeleton className="w-8 h-8 rounded-full shrink-0" />}
-      <div className="flex-1 min-w-0 flex flex-col gap-1.5">
-        <Skeleton className="h-3.5 w-3/5" />
-        <Skeleton className="h-3 w-2/5" />
-      </div>
-    </div>
-  )
-}
 
 export function DashboardSkeleton() {
   return (

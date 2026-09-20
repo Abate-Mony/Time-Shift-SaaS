@@ -1,6 +1,7 @@
 import dayjs from 'dayjs'
 import { useQuery } from '@tanstack/react-query'
 import { Card, Avatar } from '@/components/ui'
+import { TableSkeleton } from '@/components/ui/skeleton-parts'
 import { useReportsContext } from '@/layouts/ReportLayout'
 import { reportsTimesheetsQuery } from '@/utils/reports'
 
@@ -8,7 +9,7 @@ export function ReportsTimesheetsPage() {
   const { dateRange } = useReportsContext()
   const { data, isPending, isError } = useQuery(reportsTimesheetsQuery(dateRange))
 
-  if (isPending) return <p className="text-sm text-muted-foreground">Loading timesheets…</p>
+  if (isPending) return <Card><TableSkeleton rows={7} columns={6} /></Card>
   if (isError) return <p className="text-sm text-red-500">Failed to load the timesheets report.</p>
 
   return (

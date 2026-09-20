@@ -3,15 +3,35 @@ import { useQuery } from '@tanstack/react-query'
 import { Download } from 'lucide-react'
 import { Card, Avatar } from '@/components/ui'
 import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
+import { TableSkeleton } from '@/components/ui/skeleton-parts'
 import { useReportsContext } from '@/layouts/ReportLayout'
 import { reportsPayrollQuery } from '@/utils/reports'
+
+function ReportsPayrollSkeleton() {
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="bg-muted/60 border border-border rounded-xl px-4 py-3 flex items-center gap-3">
+        <Skeleton className="w-8 h-8 rounded-full shrink-0" />
+        <div className="flex flex-col gap-1.5">
+          <Skeleton className="h-3.5 w-48" />
+          <Skeleton className="h-3 w-32" />
+        </div>
+        <Skeleton className="h-8 w-36 rounded-lg ml-auto" />
+      </div>
+      <Card>
+        <TableSkeleton rows={6} columns={5} />
+      </Card>
+    </div>
+  )
+}
 
 export function ReportsPayrollPage() {
   const { dateRange } = useReportsContext()
   const monthLabel = dayjs(dateRange.start).format('MMMM YYYY')
   const { data, isPending, isError } = useQuery(reportsPayrollQuery(dateRange))
 
-  if (isPending) return <p className="text-sm text-muted-foreground">Loading payroll…</p>
+  if (isPending) return <ReportsPayrollSkeleton />
   if (isError) return <p className="text-sm text-red-500">Failed to load the payroll report.</p>
 
   return (

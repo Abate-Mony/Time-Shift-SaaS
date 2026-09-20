@@ -1,6 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 import { Card } from '@/components/ui'
+import { Skeleton } from '@/components/ui/skeleton'
+import { HorizontalBarsSkeleton } from '@/components/ui/skeleton-parts'
 import { CustomTooltip } from './shared'
 import { useReportsContext } from '@/layouts/ReportLayout'
 import { reportsPerformanceQuery } from '@/utils/reports'
@@ -14,7 +16,12 @@ export function ReportsPerformancePage() {
   const { data, isPending, isError } = useQuery({ ...reportsPerformanceQuery(dateRange), enabled: canView })
 
   if (!canView) return <PlanUpgradeNotice feature="Performance reports" />
-  if (isPending) return <p className="text-sm text-muted-foreground">Loading performance…</p>
+  if (isPending) return (
+    <Card className="p-5">
+      <Skeleton className="h-4 w-32 mb-4" />
+      <HorizontalBarsSkeleton rows={6} />
+    </Card>
+  )
   if (isError) return <p className="text-sm text-red-500">Failed to load the performance report.</p>
 
   const chartData = data.workers.map(w => ({ name: w.fullname.split(' ')[0], hours: w.hours }))

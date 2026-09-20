@@ -2,6 +2,8 @@ import { useQuery } from '@tanstack/react-query'
 import { AlertTriangle, Clock, Wallet } from 'lucide-react'
 import { Link } from 'react-router'
 import { Card, StatCard } from '@/components/ui'
+import { Skeleton } from '@/components/ui/skeleton'
+import { StatCardRowSkeleton, TableSkeleton } from '@/components/ui/skeleton-parts'
 import { backLinkState } from '@/hooks/useBackLink'
 import { formatCurrency } from '@/utils/format'
 import { reportsAgingQuery, type AgingBucket } from '@/utils/reports'
@@ -20,7 +22,16 @@ export function ReportsAgingPage() {
   return (
     <div className="flex flex-col gap-5">
       {isPending ? (
-        <p className="text-sm text-muted-foreground">Loading aging report…</p>
+        <div className="flex flex-col gap-5">
+          <Skeleton className="h-3 w-24 -mb-1" />
+          <StatCardRowSkeleton count={6} className="lg:grid-cols-6" />
+          <Card>
+            <div className="px-5 pt-5 pb-4 border-b border-[var(--border)]">
+              <Skeleton className="h-4 w-36" />
+            </div>
+            <TableSkeleton rows={5} columns={7} />
+          </Card>
+        </div>
       ) : isError || !data ? (
         <p className="text-sm text-red-500">Failed to load the aging report.</p>
       ) : (

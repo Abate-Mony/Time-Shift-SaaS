@@ -6,6 +6,8 @@ import { Card, StatCard } from '@/components/ui'
 import { CustomTooltip } from './shared'
 import { useReportsContext } from '@/layouts/ReportLayout'
 import { reportsOverviewQuery } from '@/utils/reports'
+import { BarsSkeleton, DonutSkeleton, StatCardRowSkeleton } from '@/components/ui/skeleton-parts'
+import { Skeleton } from '@/components/ui/skeleton'
 import * as React from "react"
 // import Image from "next/image"
 
@@ -45,7 +47,35 @@ export function ReportsOverviewPage() {
   const monthLabel = dayjs(dateRange.start).format('MMMM YYYY')
   const { data, isPending, isError } = useQuery(reportsOverviewQuery(dateRange))
 
-  if (isPending) return <p className="text-sm text-muted-foreground">Loading overview…</p>
+  if (isPending) return (
+    <div className="flex flex-col gap-5">
+      <StatCardRowSkeleton />
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(min(20rem,calc(100%-0.3rem)),1fr))] gap-5">
+        <div className="col-span-2">
+          <Card className="p-5">
+            <Skeleton className="h-4 w-40 mb-4" />
+            <BarsSkeleton count={10} className="h-[200px]" />
+          </Card>
+        </div>
+        <Card className="p-5 flex flex-col items-center">
+          <Skeleton className="h-4 w-32 mb-4 self-start" />
+          <DonutSkeleton size={140} />
+          <div className="flex flex-col gap-2 mt-4 w-full">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="flex items-center justify-between">
+                <Skeleton className="h-3 w-16" />
+                <Skeleton className="h-3 w-6" />
+              </div>
+            ))}
+          </div>
+        </Card>
+      </div>
+      <Card className="p-5">
+        <Skeleton className="h-4 w-44 mb-4" />
+        <BarsSkeleton count={7} className="h-[160px]" />
+      </Card>
+    </div>
+  )
   if (isError) return <p className="text-sm text-red-500">Failed to load the overview report.</p>
 
   const pieData = data.jobStatusBreakdown.map(s => ({
