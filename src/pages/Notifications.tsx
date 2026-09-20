@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Bell, CheckCircle2, AlertCircle, Flag, Check, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   getNotifications,
   markAllNotificationsRead,
@@ -61,9 +62,13 @@ export function Notifications() {
       <div className="flex items-start justify-between mb-6">
         <div>
           <h1 className="text-xl font-semibold text-foreground tracking-tight">Notifications</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            {isPending ? 'Loading…' : `${unreadCount} unread on this page · ${data?.total ?? 0} total`}
-          </p>
+          {isPending ? (
+            <Skeleton className="h-4 w-48 mt-1.5" />
+          ) : (
+            <p className="text-sm text-muted-foreground mt-0.5">
+              {`${unreadCount} unread on this page · ${data?.total ?? 0} total`}
+            </p>
+          )}
         </div>
         <Button
           variant="ghost"
@@ -76,7 +81,18 @@ export function Notifications() {
       </div>
 
       {isPending ? (
-        <div className="h-40 flex items-center justify-center text-sm text-muted-foreground">Loading notifications…</div>
+        <div className="flex flex-col gap-3">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="flex items-start gap-4 p-4 rounded-xl border border-[var(--border)] bg-card">
+              <Skeleton className="w-9 h-9 rounded-xl shrink-0" />
+              <div className="flex-1 min-w-0 flex flex-col gap-1.5">
+                <Skeleton className="h-3.5 w-2/5" />
+                <Skeleton className="h-3.5 w-4/5" />
+                <Skeleton className="h-3 w-16 mt-0.5" />
+              </div>
+            </div>
+          ))}
+        </div>
       ) : notifications.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-center">
           <div className="w-12 h-12 rounded-xl bg-muted border border-border flex items-center justify-center mb-3">

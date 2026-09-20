@@ -172,7 +172,40 @@ export function SuspendedAccountPage() {
     return ok
   }
 
-  if (isPending || !restriction || restriction.accessLevel !== 'none') {
+  if (isPending) {
+    return (
+      <div className="min-h-screen bg-[#0A1628] flex flex-col">
+        <div className="px-5 py-4 flex items-center gap-2.5">
+          <div className="w-7 h-7 rounded-lg bg-blue-500 flex items-center justify-center">
+            <span className="text-white font-bold text-xs">W</span>
+          </div>
+          <span className="text-white font-semibold text-base tracking-tight">work<span className="text-blue-400">.wrk</span></span>
+        </div>
+        <div className="flex-1 flex flex-col items-center justify-center px-5 py-8">
+          <div className="w-full max-w-sm flex flex-col gap-4">
+            <div className="text-center mb-2 flex flex-col items-center gap-4">
+              <div className="w-16 h-16 rounded-2xl bg-white/6 animate-pulse" />
+              <div className="w-full flex flex-col items-center gap-2">
+                <div className="h-5 w-4/5 rounded-md bg-white/8 animate-pulse" />
+                <div className="h-3.5 w-full rounded-md bg-white/6 animate-pulse" />
+              </div>
+            </div>
+            <div className="bg-white/6 border border-white/10 rounded-2xl p-5 flex flex-col gap-4">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="flex items-center justify-between">
+                  <div className="h-3 w-16 rounded bg-white/8 animate-pulse" />
+                  <div className="h-3 w-24 rounded bg-white/8 animate-pulse" />
+                </div>
+              ))}
+            </div>
+            <div className="h-12 w-full rounded-xl bg-white/8 animate-pulse" />
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (!restriction || restriction.accessLevel !== 'none') {
     return (
       <div className="min-h-screen bg-[#0A1628] flex items-center justify-center">
         <Loader2 size={22} className="text-white/40 animate-spin" />

@@ -5,6 +5,8 @@ import {
 import { TrendingUp, TrendingDown, Clock, Users, Briefcase, CheckCircle, Download } from 'lucide-react'
 import { useQuery, type QueryClient } from '@tanstack/react-query'
 import { getAnalytics, type AnalyticsRange, type AnalyticsResponse } from '@/utils/api-request-functions'
+import { Skeleton } from '@/components/ui/skeleton'
+import { BarsSkeleton, DonutSkeleton, ListRowSkeleton, TableSkeleton } from '@/components/ui/skeleton-parts'
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
@@ -117,7 +119,68 @@ export function Analytics() {
   if (isPending || !data) {
     return (
       <div className="p-6 max-w-[1400px]">
-        <div className="h-40 flex items-center justify-center text-sm text-muted-foreground">Loading analytics…</div>
+        {/* Header */}
+        <div className="flex items-center justify-between mb-7 flex-wrap gap-4">
+          <div className="flex flex-col gap-2">
+            <Skeleton className="h-6 w-32" />
+            <Skeleton className="h-4 w-56" />
+          </div>
+          <Skeleton className="h-9 w-64 rounded-xl" />
+        </div>
+
+        {/* KPI row */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-7">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="rounded-2xl border border-border bg-card p-5 flex flex-col gap-3">
+              <div className="flex items-center justify-between">
+                <Skeleton className="w-9 h-9 rounded-xl" />
+                <Skeleton className="h-5 w-12 rounded-full" />
+              </div>
+              <Skeleton className="h-7 w-16" />
+              <Skeleton className="h-3 w-20" />
+            </div>
+          ))}
+        </div>
+
+        {/* Hours + status */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
+          <div className="lg:col-span-2 bg-card border border-border rounded-2xl p-5">
+            <Skeleton className="h-4 w-28 mb-1" />
+            <Skeleton className="h-3 w-40 mb-4" />
+            <BarsSkeleton count={10} className="h-[220px]" />
+          </div>
+          <div className="bg-card border border-border rounded-2xl p-5 flex flex-col items-center">
+            <Skeleton className="h-4 w-36 mb-4 self-start" />
+            <DonutSkeleton size={140} />
+          </div>
+        </div>
+
+        {/* Worker activity + overtime */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+          {Array.from({ length: 2 }).map((_, i) => (
+            <div key={i} className="bg-card border border-border rounded-2xl p-5">
+              <Skeleton className="h-4 w-40 mb-1" />
+              <Skeleton className="h-3 w-24 mb-4" />
+              <BarsSkeleton count={7} className="h-[200px]" />
+            </div>
+          ))}
+        </div>
+
+        {/* Top workers + location performance */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+          <div className="bg-card border border-border rounded-2xl p-5">
+            <Skeleton className="h-4 w-36 mb-4" />
+            <div className="flex flex-col gap-3">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <ListRowSkeleton key={i} />
+              ))}
+            </div>
+          </div>
+          <div className="bg-card border border-border rounded-2xl p-5">
+            <Skeleton className="h-4 w-44 mb-4" />
+            <TableSkeleton rows={4} columns={4} />
+          </div>
+        </div>
       </div>
     )
   }

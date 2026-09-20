@@ -13,6 +13,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
 import { useNavigate } from 'react-router'
 import { backLinkState } from '@/hooks/useBackLink'
+import { Skeleton } from '@/components/ui/skeleton'
 
 export const loader = (queryClient: QueryClient) => async () => {
     await queryClient.ensureQueryData(clientsQuery())
@@ -401,8 +402,20 @@ export function CreateInvoicePage() {
                         </div>
 
                         {isFetching ? (
-                            <div className="py-10 flex items-center justify-center text-muted-foreground">
-                                <Loader2 size={18} className="animate-spin" />
+                            <div className="flex flex-col gap-2.5">
+                                {Array.from({ length: 4 }).map((_, i) => (
+                                    <div key={i} className="flex items-start gap-3 p-3.5 rounded-xl border border-[var(--border)]">
+                                        <Skeleton className="w-4 h-4 mt-0.5 rounded shrink-0" />
+                                        <div className="flex-1 min-w-0 flex flex-col gap-1.5">
+                                            <div className="flex items-start justify-between gap-3">
+                                                <Skeleton className="h-3.5 w-2/5" />
+                                                <Skeleton className="h-3.5 w-14 shrink-0" />
+                                            </div>
+                                            <Skeleton className="h-3 w-1/3" />
+                                            <Skeleton className="h-3 w-3/5" />
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
                         ) : isError ? (
                             <p className="text-sm text-red-500 py-6 text-center">Couldn't load eligible work — try again.</p>
