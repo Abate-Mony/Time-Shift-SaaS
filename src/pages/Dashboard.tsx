@@ -8,6 +8,7 @@ import dayjs from 'dayjs'
 import { Avatar, Badge, Card, StatCard, StatusBadge } from '../components/ui'
 import { getAnalytics, getDashboardStats, type DashboardStatsActivity } from '@/utils/api-request-functions'
 import { AIDashboardInsights } from '@/components/dashboard/AIDashboardInsights'
+import { DashboardSkeleton } from '@/components/dashboard/DashboardSkeleton'
 import { getInitials } from '@/utils/getInitials'
 import { recordFormatUI } from './JobDetailPage'
 import type { ActivityType } from '@/utils/types'
@@ -86,11 +87,7 @@ export function Dashboard() {
   const { data: monthly, isPending: monthlyPending } = useQuery(monthlyOverviewQuery)
 
   if (statsPending || !stats) {
-    return (
-      <div className="p-6 animate-fade-in">
-        <div className="h-40 flex items-center justify-center text-sm text-muted-foreground">Loading dashboard…</div>
-      </div>
-    )
+    return <DashboardSkeleton />
   }
 
   const dailyTarget = stats.stats.hoursThisWeek.target > 0 ? Math.round(stats.stats.hoursThisWeek.target / 7) : 0
