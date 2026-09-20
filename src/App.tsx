@@ -8,27 +8,24 @@ import { RouterProvider } from "react-router";
 import { queryClient } from "./lib/queryClient";
 import { router } from "./utils/routes";
 import { TooltipProvider } from "@/components/ui/tooltip"
-import ChunkErrorBoundary from "./components/errorBoundary";
 
 axios.defaults.withCredentials = true;
 
 const App = () => {
 
   return (
-      <ChunkErrorBoundary>
+    <>
+      <QueryClientProvider client={queryClient}>
+        <ReactQueryDevtools initialIsOpen={false} position="left" buttonPosition="bottom-left" />
+        <TooltipProvider>
+          <RouterProvider
 
-        <QueryClientProvider client={queryClient}>
-          <ReactQueryDevtools initialIsOpen={false} position="left" buttonPosition="bottom-left" />
-          <TooltipProvider>
-            <RouterProvider
-
-              router={router}
-            ></RouterProvider>
-          </TooltipProvider>
-        </QueryClientProvider>
-        <Toaster />
-      </ChunkErrorBoundary>
-
+            router={router}
+          ></RouterProvider>
+        </TooltipProvider>
+      </QueryClientProvider>
+      <Toaster />
+    </>
   )
 }
 
