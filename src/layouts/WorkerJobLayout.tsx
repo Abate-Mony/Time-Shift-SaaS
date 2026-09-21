@@ -3,10 +3,10 @@ import { Outlet } from 'react-router'
 
 const WorkerJobLayout = () => {
     const Navs = [
-        {
-            label: "My Jobs",
-            to: "/worker/jobs/my-jobs"
-        },
+        // {
+        //     label: "My Jobs",
+        //     to: "/worker/jobs/my-jobs"
+        // },
         {
             label: "Open Shifts",
             to: "/worker/jobs/open-shifts"
