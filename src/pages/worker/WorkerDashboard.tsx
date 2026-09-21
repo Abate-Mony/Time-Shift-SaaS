@@ -183,28 +183,6 @@ export default function HomeScreen() {
         </div>
       )}
 
-      {/* Today's shift */}
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-bold text-foreground">Today's Shift</h2>
-          <Link to={"/worker/jobs"}>
-            <Button variant={"link"} className="text-xs text-blue-600 font-semibold flex items-center gap-1 hover:text-blue-800 transition-colors">
-              View all <ArrowUpRight size={12} />
-            </Button>
-          </Link>
-        </div>
-
-        {activeJob ? (
-          <JobCard job={activeJob} />
-        ) : (
-          <EmptyState
-            icon={<Briefcase size={20} />}
-            title="No Shifts Today"
-            description="Check the Jobs tab for upcoming assignments"
-          />
-        )}
-      </div>
-
       {/* This week */}
       <div>
         <h2 className="text-sm font-bold text-foreground mb-3">This Week</h2>
@@ -214,7 +192,7 @@ export default function HomeScreen() {
               <div key={i} className="flex flex-col items-center gap-1.5">
                 <span className="text-[10px] font-semibold text-muted-foreground">{d.day}</span>
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold relative
-                  ${d.isToday ? 'bg-primary text-primary-foreground' : d.hasShift ? 'bg-blue-50 text-blue-700 dark:bg-blue-500/15 dark:text-blue-400' : 'text-muted-foreground'}`}>
+                      ${d.isToday ? 'bg-primary text-primary-foreground' : d.hasShift ? 'bg-blue-50 text-blue-700 dark:bg-blue-500/15 dark:text-blue-400' : 'text-muted-foreground'}`}>
                   {d.date.date()}
                   {d.hasShift && !d.isToday && (
                     <span className="absolute -bottom-0.5 w-1.5 h-1.5 bg-blue-400 rounded-full" />
@@ -241,6 +219,28 @@ export default function HomeScreen() {
           </div>
         </div>
       </div>
+      {/* Today's shift */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-bold text-foreground">Today's Shift</h2>
+          <Link to={"/worker/jobs"}>
+            <Button variant={"link"} className="text-xs text-blue-600 font-semibold flex items-center gap-1 hover:text-blue-800 transition-colors">
+              View all <ArrowUpRight size={12} />
+            </Button>
+          </Link>
+        </div>
+
+        {activeJob ? (
+          <JobCard job={activeJob} />
+        ) : (
+          <EmptyState
+            icon={<Briefcase size={20} />}
+            title="No Shifts Today"
+            description="Check the Jobs tab for upcoming assignments"
+          />
+        )}
+      </div>
+
 
       {/* Upcoming shifts */}
       <div>
