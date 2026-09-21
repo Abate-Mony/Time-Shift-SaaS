@@ -208,6 +208,13 @@ export default function JobDetailScreen() {
                 </div>
             )}
 
+            {job?.instructions && (
+                <div className="bg-card border border-[var(--border)] rounded-2xl p-4">
+                    <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wide mb-2">Instructions</p>
+                    <p className="text-sm text-foreground leading-relaxed">{job.instructions}</p>
+                </div>
+            )}
+
             {job?.attachment && (
                 <a
                     href={job.attachment.url}
