@@ -44,10 +44,8 @@ export default defineConfig({
         background_color: "#ffffff",
         theme_color: "#ffffff",
         icons: [
-          // TODO: replace with real 192x192 / 512x512 PNG icons once
-          // available — favicon.svg is a placeholder so the manifest
-          // doesn't reference a 404ing file in the meantime.
-          { src: "/favicon.svg", sizes: "any", type: "image/svg+xml", purpose: "any" },
+          { src: "/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+          { src: "/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
         ],
       },
     }),
