@@ -25,6 +25,12 @@ export interface JobClientRef {
 
 export type UserRole = "owner" | "admin" | "manager" | "worker";
 
+// A completely separate authorization axis from UserRole — INPRN staff
+// operating the platform itself, not a role inside any one company. Never
+// display this merged with `role` (see the platform console's own "Company
+// role" / "Platform access" split).
+export type PlatformRole = "super_admin" | "support_admin" | "billing_admin";
+
 // export type NotificationPreferences = {
 //   jobAssigned: boolean;
 //   jobCancelled: boolean;
@@ -41,6 +47,7 @@ export type User = {
   email: string;
   fullname: string;
   role: UserRole;
+  platformRole?: PlatformRole | null;
   isVerified: boolean;
   isActive: boolean;
   lastLogin?: string | null;

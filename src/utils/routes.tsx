@@ -510,6 +510,83 @@ export const router = createBrowserRouter([
                 ]
             },
             {
+                // Deliberately its own top-level route tree, not nested under
+                // DashboardLayout — see PlatformLayout.tsx: the platform
+                // console is a separate app area with its own sidebar/gate,
+                // not a reskinned customer dashboard page. Lazy-loaded, same
+                // reasoning as /reports: an internal, rarely-used section
+                // shouldn't add to every visitor's main bundle.
+                path: "platform",
+                lazy: () =>
+                    import("@/layouts/PlatformLayout").then((m) => ({
+                        Component: m.default,
+                        loader: m.platformLoader(queryClient),
+                    })),
+                errorElement: <ErrorElement />,
+                children: [
+                    {
+                        index: true,
+                        lazy: () =>
+                            import("@/pages/platform/PlatformOverview").then((m) => ({
+                                Component: m.PlatformOverview,
+                                loader: m.platformOverviewLoader(queryClient),
+                            })),
+                    },
+                    {
+                        path: "companies",
+                        lazy: () =>
+                            import("@/pages/platform/PlatformCompanies").then((m) => ({
+                                Component: m.PlatformCompanies,
+                                loader: m.platformCompaniesLoader(queryClient),
+                            })),
+                    },
+                    {
+                        path: "companies/:companyId",
+                        lazy: () =>
+                            import("@/pages/platform/PlatformCompanyDetail").then((m) => ({
+                                Component: m.PlatformCompanyDetail,
+                                loader: m.platformCompanyDetailLoader(queryClient),
+                            })),
+                    },
+                    {
+                        path: "users",
+                        lazy: () =>
+                            import("@/pages/platform/PlatformUsers").then((m) => ({
+                                Component: m.PlatformUsers,
+                                loader: m.platformUsersLoader(queryClient),
+                            })),
+                    },
+                    {
+                        path: "users/:userId",
+                        lazy: () =>
+                            import("@/pages/platform/PlatformUserDetail").then((m) => ({
+                                Component: m.PlatformUserDetail,
+                                loader: m.platformUserDetailLoader(queryClient),
+                            })),
+                    },
+                    {
+                        path: "audit",
+                        lazy: () =>
+                            import("@/pages/platform/PlatformAudit").then((m) => ({
+                                Component: m.PlatformAudit,
+                                loader: m.platformAuditLoader(queryClient),
+                            })),
+                    },
+                    {
+                        path: "system",
+                        lazy: () =>
+                            import("@/pages/platform/PlatformSystem").then((m) => ({
+                                Component: m.PlatformSystem,
+                                loader: m.platformSystemLoader(queryClient),
+                            })),
+                    },
+                    {
+                        path: "*",
+                        element: <NotFound />,
+                    },
+                ],
+            },
+            {
                 path: "account/suspended",
                 element: <SuspendedAccountPage />
             },

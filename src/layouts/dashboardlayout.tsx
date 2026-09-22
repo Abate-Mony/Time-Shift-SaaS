@@ -44,6 +44,14 @@ export const loader = (queryClient: QueryClient) => async ({ request: _request }
         if (user.role == "worker") {
             return redirect("/worker")
         }
+        // A dedicated platform-admin account (created via
+        // createPlatformAdmin.ts) has no company — this layout and its
+        // Sidebar assume every user belongs to one (e.g. user.company.name),
+        // so there's nothing valid to render here for it. Send it straight
+        // to the console it actually has access to instead of crashing.
+        if (!user.company && user.platformRole) {
+            return redirect("/platform")
+        }
         return
     } catch (error) {
         // toast.error("fail to login you in try again later")

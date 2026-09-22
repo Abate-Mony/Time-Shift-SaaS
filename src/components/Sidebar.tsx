@@ -17,6 +17,7 @@ import {
   Quote,
   Receipt,
   Settings,
+  ShieldCheck,
   Sparkles,
   SquareUser,
   Users,
@@ -162,6 +163,25 @@ export function Sidebar({ collapsed, onToggleSidebar, user }: SidebarProps) {
 
           {/* Bottom nav */}
           <div className="border-t border-white/6 px-3 py-3 flex- flex-col gap-0.5  ">
+            {/* Platform access is a completely separate authorization axis
+                from company role (see utils/types.ts's PlatformRole) —
+                shown here only as an entry point into /platform, never as
+                another item alongside the tenant nav above. */}
+            {user?.platformRole === 'super_admin' && (
+              <CustomNavLink
+                to="/platform"
+                show
+                layoutId='side-bar-items'
+                selectedClassName=''
+                animateClassName="inset-0 size-full bg-gray-500/15"
+                className={`w-full  text-white/50 hover:text-white/75 px-2.5 hover:bg-white/3  justify-center  h-auto items-center gap-2.5  py-2 rounded-lg text-sm transition-colors relative group`}
+              >
+                <div className='w-full flex items-center  space-x-1.5 h-full justify-between '>
+                  <ShieldCheck size={16} className={cn('text-blue-400 group-[.slide-active]:text-current')} />
+                  {!collapsed && <span className="flex-1 text-left font-medium">Platform</span>}
+                </div>
+              </CustomNavLink>
+            )}
             {bottomItems.map(item => (
               <CustomNavLink
                 to={item.id}
