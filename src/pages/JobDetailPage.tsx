@@ -3,7 +3,7 @@ import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { backLinkState, useBackLink } from '@/hooks/useBackLink'
 import { queryClient } from '@/lib/queryClient'
-import { deleteJob, deleteJobAttachment, duplicateJob, manuallyAdjustAssignment, reviewAssignmentOvertime, reviewOpenShiftClaim, updateJobWorkers, uploadJobAttachment } from '@/utils/api-request-functions'
+import { deleteJob, deleteJobAttachment, duplicateJob, manuallyAdjustAssignment, markAssignmentNoShow, reviewAssignmentOvertime, reviewOpenShiftClaim, updateJobWorkers, uploadJobAttachment } from '@/utils/api-request-functions'
 import customFetch from '@/utils/customFetch'
 import { formatDate, formatDuration, getShiftProgress } from '@/utils/date'
 import { formatCurrency } from '@/utils/format'
@@ -113,6 +113,8 @@ export const recordFormatUI: Record<ActivityType, { icon: LucideIcon; className:
     assignment_auto_completed: { icon: Bot, className: "bg-slate-400", label: "auto-completed by system" },
     assignment_overtime_flagged: { icon: TriangleAlert, className: "bg-orange-500", label: "flagged overtime for review" },
     assignment_overtime_reviewed: { icon: Flag, className: "bg-slate-500", label: "reviewed overtime" },
+    assignment_manually_adjusted: { icon: Pencil, className: "bg-blue-500", label: "recorded hours manually" },
+    assignment_no_show: { icon: Ban, className: "bg-rose-500", label: "marked as a no-show" },
 
     // ── Misc ───────────────────────────────────────────────────────
     note_added: { icon: StickyNote, className: "bg-sky-500", label: "added a note" },
@@ -406,6 +408,20 @@ export function JobDetail() {
         setManualDate(job?.date ? dayjs(job.date).format("YYYY-MM-DD") : "")
         setManualReason("")
     }
+
+    // No-show — the mirror of manual hours entry above: the worker was
+    // scheduled and never showed at all, as opposed to having worked but
+    // missing clock data. Only offered for a worker who never clocked in.
+    const [noShowWorker, setNoShowWorker] = useState<AssignedWorker | null>(null)
+    const [noShowReason, setNoShowReason] = useState("")
+    const noShowMutation = useMutation({
+        mutationFn: ({ assignmentId, reason }: { assignmentId: string; reason: string }) =>
+            markAssignmentNoShow(assignmentId, reason),
+        onSuccess: () => {
+            setNoShowWorker(null)
+            setNoShowReason("")
+        },
+    })
 
     // Geofence inline editor — seeded from `job` fresh every time it opens
     // (not just on mount), so it can't go stale after other edits refetch
@@ -952,6 +968,11 @@ export function JobDetail() {
                                                             <Pencil size={8} /> Manually entered
                                                         </span>
                                                     )}
+                                                    {w.cancellationType === "no_show" && (
+                                                        <span className="inline-flex items-center gap-1 text-[9px] font-semibold text-rose-700 bg-rose-100 px-1.5 py-0.5 rounded-full mt-1">
+                                                            <Ban size={8} /> No-show
+                                                        </span>
+                                                    )}
                                                 </div>
                                             </div>
                                             <p className="text-xs font-semibold text-foreground mono">
@@ -976,18 +997,34 @@ export function JobDetail() {
                                                     </span>
                                                 )}
                                             </div>
-                                            <Tooltip>
-                                                <TooltipTrigger asChild>
-                                                    <button
-                                                        type="button"
-                                                        onClick={e => { e.stopPropagation(); openManualEntry(w) }}
-                                                        className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors shrink-0"
-                                                    >
-                                                        <Pencil size={13} />
-                                                    </button>
-                                                </TooltipTrigger>
-                                                <TooltipContent>Record hours worked</TooltipContent>
-                                            </Tooltip>
+                                            <div className="flex items-center gap-1 shrink-0">
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <button
+                                                            type="button"
+                                                            onClick={e => { e.stopPropagation(); openManualEntry(w) }}
+                                                            className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors shrink-0"
+                                                        >
+                                                            <Pencil size={13} />
+                                                        </button>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent>Record hours worked</TooltipContent>
+                                                </Tooltip>
+                                                {!w.checkedInAt && !["completed", "cancelled", "declined"].includes(w.status ?? "") && (
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <button
+                                                                type="button"
+                                                                onClick={e => { e.stopPropagation(); setNoShowWorker(w); setNoShowReason("") }}
+                                                                className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-rose-50 hover:text-rose-600 transition-colors shrink-0"
+                                                            >
+                                                                <Ban size={13} />
+                                                            </button>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>Mark as no-show</TooltipContent>
+                                                    </Tooltip>
+                                                )}
+                                            </div>
                                         </div>
                                     )
                                 })}
@@ -1827,6 +1864,48 @@ export function JobDetail() {
                             }}
                         >
                             {manualAdjustMutation.isPending ? "Saving…" : "Record hours"}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* No-show — the worker was scheduled and never showed at all,
+                as opposed to having worked with missing clock data. */}
+            <Dialog open={noShowWorker !== null} onOpenChange={open => !open && setNoShowWorker(null)}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Mark as no-show</DialogTitle>
+                        <DialogDescription>
+                            {noShowWorker?.fullname} was scheduled for this shift and never showed up or did any work.
+                            This cancels their assignment — if they actually worked but clock data is missing, use
+                            "Record hours worked" instead.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="space-y-1.5">
+                        <Label htmlFor="no-show-reason">Reason</Label>
+                        <Textarea
+                            id="no-show-reason"
+                            value={noShowReason}
+                            onChange={e => setNoShowReason(e.target.value)}
+                            placeholder="e.g. Never arrived, didn't respond to calls or messages"
+                            rows={3}
+                        />
+                    </div>
+
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setNoShowWorker(null)} disabled={noShowMutation.isPending}>
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="destructive"
+                            disabled={noShowMutation.isPending || noShowReason.trim().length === 0}
+                            onClick={() => {
+                                if (!noShowWorker?._id) return
+                                noShowMutation.mutate({ assignmentId: noShowWorker._id, reason: noShowReason.trim() })
+                            }}
+                        >
+                            {noShowMutation.isPending ? "Saving…" : "Mark as no-show"}
                         </Button>
                     </DialogFooter>
                 </DialogContent>

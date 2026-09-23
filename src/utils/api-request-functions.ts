@@ -597,6 +597,33 @@ export const manuallyAdjustAssignment = async (
     }
 };
 
+// Records that a scheduled worker never showed up at all — distinct from
+// manuallyAdjustAssignment above (worker did the work, clock data's just
+// missing/wrong). Reuses the assignment's existing "cancelled" status with
+// cancellationType: "no_show" rather than a new status value.
+export const markAssignmentNoShow = async (assignmentId: string, reason: string): Promise<boolean> => {
+    try {
+        await customFetch.patch(`/workers/assignments/${assignmentId}/no-show`, { reason });
+
+        toast.success("Marked as no-show.");
+
+        await queryClient.invalidateQueries({ queryKey: ["job"] });
+        return true;
+    } catch (err) {
+        const message =
+            isAxiosError(err)
+                ? err.response?.data?.msg ??
+                err.response?.data?.message ??
+                "Something went wrong."
+                : err instanceof Error
+                    ? err.message
+                    : "Something went wrong.";
+
+        toast.error(message);
+        return false;
+    }
+};
+
 export const reviewOpenShiftClaim = async (assignmentId: string, approve: boolean): Promise<boolean> => {
     try {
         await customFetch.patch(`/workers/assignments/${assignmentId}/claim-review`, { approve });

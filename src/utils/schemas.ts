@@ -82,6 +82,11 @@ export const workerSchema = z.object({
         .string()
         .default(""),
 
+    // "no_show" here (see JobAssignment.ts on the backend) means a manager
+    // confirmed the worker never showed at all — distinct from "worker"
+    // (they cancelled ahead of time themselves).
+    cancellationType: z.enum(["manager", "worker", "job", "no_show"]).optional(),
+
     workerNotes: z
         .string()
         .default(""),
