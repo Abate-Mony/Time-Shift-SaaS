@@ -407,6 +407,27 @@ export const changeWorkerJobStaus = async (
     }
 };
 
+// Check/uncheck one item on a job's checklist — shared across every worker
+// assigned, not per-worker (see jobModel.ts's checklist field). No toast on
+// success — this fires on every tap and a toast per checkbox would be noisy;
+// the checkbox itself is the feedback.
+export const toggleChecklistItem = async (jobId: string, itemId: string, done: boolean): Promise<boolean> => {
+    try {
+        await customFetch.patch(`/workers/${jobId}/checklist/${itemId}`, { done });
+        await queryClient.invalidateQueries({ queryKey: ["job", jobId] });
+        return true;
+    } catch (err) {
+        const message = isAxiosError(err)
+            ? err.response?.data?.msg ?? err.response?.data?.message ?? "Something went wrong."
+            : err instanceof Error
+                ? err.message
+                : "Something went wrong.";
+
+        toast.error(message);
+        return false;
+    }
+};
+
 // ── Shift-completion note & photos ───────────────────────────────────────
 // Both operate on the assignment, not the job — reached from the "shift
 // complete" summary screen after the job has already been marked completed

@@ -16,7 +16,7 @@ export const STEP_FIELDS: Record<number, string[]> = {
   1: ["title", "description", "client", "priority", "location", "date", "startTime", "endTime"],
   2: ["requiredWorkers", "workers", "supervisor"],
   3: ["payRate", "chargeType", "chargeRate", "chargeAmount"],
-  4: ["instructions", "notes", "clockInGraceMinutes", "geofenceMode", "geofenceRadiusMeters"],
+  4: ["instructions", "checklist", "notes", "clockInGraceMinutes", "geofenceMode", "geofenceRadiusMeters"],
   5: [],
 }
 
@@ -45,6 +45,7 @@ export const FIELD_STEP_MAP: Record<string, number> = {
   chargeAmount: 3,
 
   instructions: 4,
+  checklist: 4,
   notes: 4,
   clockInGraceMinutes: 4,
   geofenceMode: 4,

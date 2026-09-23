@@ -1,6 +1,6 @@
 import { PriorityBadge, StatusBadge } from "@/components/ui"
 import { queryClient } from "@/lib/queryClient"
-import { changeWorkerJobStaus } from "@/utils/api-request-functions"
+import { changeWorkerJobStaus, toggleChecklistItem } from "@/utils/api-request-functions"
 import customFetch from "@/utils/customFetch"
 import { formatDate, formatDuration, formatTimeUntil } from "@/utils/date"
 import { useShiftStartGate } from "@/hooks/useShiftStartGate"
@@ -8,8 +8,8 @@ import { ensureNotificationPermission } from "@/utils/notifications"
 import { ensurePushSubscription } from "@/utils/pushSubscription"
 import { buildMapUrl, MAP_SERVICES, type MapService } from "@/utils/mapLinks"
 import type { CreateJobForm } from "@/utils/types"
-import { useQuery } from "@tanstack/react-query"
-import { AlertCircle, AlertTriangle, Briefcase, CalendarDays, Check, CheckCircle2, ChevronLeft, Clock, Dot, Loader2, MapPin, Navigation, Paperclip, RefreshCw, Timer, X } from "lucide-react"
+import { useMutation, useQuery } from "@tanstack/react-query"
+import { AlertCircle, AlertTriangle, Briefcase, CalendarDays, Check, CheckCircle2, ChevronLeft, Circle, Clock, Dot, ListChecks, Loader2, MapPin, Navigation, Paperclip, RefreshCw, Timer, X } from "lucide-react"
 import { useCompanyPlan } from "@/hooks/useCompanyPlan"
 import { useNavigate, useParams, type LoaderFunctionArgs } from "react-router"
 import { useState } from "react"
@@ -51,6 +51,10 @@ export default function JobDetailScreen() {
     const job = useQuery(singleWorkerJob(id)).data?.job
     const [loadingAction, setLoadingAction] = useState<'accept' | 'reject' | 'start' | null>(null)
     const { canStart, minutesUntilStart, hasExpired } = useShiftStartGate(job?.date, job?.startTime, job?.endTime)
+
+    const checklistMutation = useMutation({
+        mutationFn: ({ itemId, done }: { itemId: string; done: boolean }) => toggleChecklistItem(id!, itemId, done),
+    })
 
     const onAccept = async () => {
         setLoadingAction('accept')
@@ -212,6 +216,36 @@ export default function JobDetailScreen() {
                 <div className="bg-card border border-[var(--border)] rounded-2xl p-4">
                     <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wide mb-2">Instructions</p>
                     <p className="text-sm text-foreground leading-relaxed">{job.instructions}</p>
+                </div>
+            )}
+
+            {job?.checklist && job.checklist.length > 0 && (
+                <div className="bg-card border border-[var(--border)] rounded-2xl p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                        <ListChecks size={13} className="text-muted-foreground" />
+                        <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wide">
+                            Checklist · {job.checklist.filter(i => i.done).length}/{job.checklist.length}
+                        </p>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                        {job.checklist.map((item, i) => (
+                            <button
+                                key={item._id ?? i}
+                                type="button"
+                                disabled={!item._id || checklistMutation.isPending}
+                                onClick={() => item._id && checklistMutation.mutate({ itemId: item._id, done: !item.done })}
+                                className="flex items-center gap-3 py-2 text-left disabled:opacity-60"
+                            >
+                                {item.done
+                                    ? <CheckCircle2 size={18} className="text-emerald-600 shrink-0" />
+                                    : <Circle size={18} className="text-slate-300 shrink-0" />
+                                }
+                                <span className={`text-sm flex-1 ${item.done ? "text-muted-foreground line-through" : "text-foreground"}`}>
+                                    {item.text}
+                                </span>
+                            </button>
+                        ))}
+                    </div>
                 </div>
             )}
 

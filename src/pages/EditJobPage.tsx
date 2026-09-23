@@ -17,7 +17,7 @@ import { QueryClient, useQuery } from '@tanstack/react-query'
 import { isAxiosError } from 'axios'
 import { AnimatePresence, motion } from 'framer-motion'
 import dayjs from "dayjs"
-import { Calendar, Check, ChevronDown, ChevronLeft, Clock, Loader2, Lock, MapPin, Paperclip, Save, Settings2, Users, X } from 'lucide-react'
+import { Calendar, Check, ChevronDown, ChevronLeft, Clock, ListChecks, Loader2, Lock, MapPin, Paperclip, Plus, Save, Settings2, Trash2, Users, X } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { useForm } from "react-hook-form"
 import toast from 'react-hot-toast'
@@ -106,6 +106,17 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
         delete payload.coordinates
     }
 
+    // Same JSON-hidden-input pattern as coordinates above.
+    if (raw.checklist) {
+        try {
+            payload.checklist = JSON.parse(raw.checklist)
+        } catch {
+            delete payload.checklist
+        }
+    } else {
+        delete payload.checklist
+    }
+
     try {
         await customFetch.patch(`/jobs/${params.id}`, payload)
 
@@ -162,6 +173,11 @@ export function EditJob() {
 
     )
     const [selectedClient, setSelectedClient] = useState<ComboboxClient | null>(job?.client ?? null)
+    // Resent whole on save (including already-done items, so a worker's
+    // progress isn't wiped by an unrelated edit) — same local-state +
+    // hidden-input pattern as selectedWorkers above, since this form
+    // submits from the raw DOM, not RHF state.
+    const [checklist, setChecklist] = useState<CreateJobForm["checklist"]>(job?.checklist ?? [])
     const { users } = useQuery<{ users: User[] }>(workersQuery(searchValues))?.data || {
         users: []
     } as {
@@ -889,6 +905,7 @@ export function EditJob() {
                 )}
                 <input type="hidden" name="openToClaims" value={String(openToClaims)} />
                 <input type="hidden" name="requiresApproval" value={String(requiresApproval)} />
+                <input type="hidden" name="checklist" value={JSON.stringify(checklist)} />
 
                 {/* Instructions & Attachments */}
                 <div className="bg-card rounded-xl border border-[var(--border)] p-6">
@@ -909,6 +926,51 @@ export function EditJob() {
                         <Paperclip size={14} />
                         Attach files, documents or images
                     </button>
+                </div>
+
+                {/* Checklist */}
+                <div className="bg-card rounded-xl border border-[var(--border)] p-6">
+                    <h2 className="text-sm font-semibold text-foreground mb-1 flex items-center gap-2">
+                        <ListChecks size={15} className="text-muted-foreground" />
+                        Checklist
+                    </h2>
+                    <p className="text-[11px] text-muted-foreground mb-3">
+                        Optional. Tasks workers can check off on-site — everyone assigned shares the same list.
+                    </p>
+
+                    <div className="flex flex-col gap-2">
+                        {checklist.map((item, index) => (
+                            <div key={item._id ?? index} className="flex items-center gap-2">
+                                <Input
+                                    value={item.text}
+                                    onChange={e => {
+                                        const next = [...checklist]
+                                        next[index] = { ...next[index], text: e.target.value }
+                                        setChecklist(next)
+                                    }}
+                                    placeholder="e.g. Clean the oven"
+                                    className="flex-1"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setChecklist(checklist.filter((_, i) => i !== index))}
+                                    className="w-8 h-8 shrink-0 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-rose-50 hover:text-rose-600 transition-colors"
+                                >
+                                    <Trash2 size={14} />
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+
+                    <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="mt-3"
+                        onClick={() => setChecklist([...checklist, { text: "", done: false }])}
+                    >
+                        <Plus size={13} /> Add item
+                    </Button>
                 </div>
 
                 {/* Actions */}

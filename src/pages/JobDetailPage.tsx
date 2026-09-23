@@ -28,6 +28,7 @@ import {
     Edit,
     FileText,
     Flag,
+    ListChecks,
     LogIn, LogOut,
     MapPin,
     MapPinOff,
@@ -912,6 +913,36 @@ export function JobDetail() {
                             )}
                         </div>
                     </Card>
+
+                    {/* Checklist — read-only here (add/edit happens on the Edit Job
+                        page); this view is so a manager can see progress without
+                        having to ask a worker on-site. */}
+                    {job.checklist && job.checklist.length > 0 && (
+                        <Card>
+                            <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-[var(--border)]">
+                                <div className="flex items-center gap-2">
+                                    <ListChecks size={15} className="text-muted-foreground" />
+                                    <h3 className="text-sm font-semibold text-foreground">Checklist</h3>
+                                </div>
+                                <p className="text-xs text-muted-foreground">
+                                    {job.checklist.filter(i => i.done).length} / {job.checklist.length} done
+                                </p>
+                            </div>
+                            <div className="divide-y divide-border">
+                                {job.checklist.map((item, i) => (
+                                    <div key={item._id ?? i} className="flex items-center gap-3 px-5 py-3">
+                                        {item.done
+                                            ? <CircleCheck size={16} className="text-emerald-600 shrink-0" />
+                                            : <div className="w-4 h-4 rounded-full border-2 border-slate-300 shrink-0" />
+                                        }
+                                        <p className={cn("text-sm flex-1 min-w-0", item.done ? "text-muted-foreground line-through" : "text-foreground")}>
+                                            {item.text}
+                                        </p>
+                                    </div>
+                                ))}
+                            </div>
+                        </Card>
+                    )}
 
                     {/* Worker time logs */}
                     {assignedWorkers.length > 0 && (

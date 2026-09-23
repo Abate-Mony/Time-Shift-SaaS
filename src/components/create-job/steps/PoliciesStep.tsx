@@ -1,11 +1,13 @@
 import { AnimatePresence, motion } from "framer-motion"
-import { MapPin, Paperclip } from "lucide-react"
+import { ListChecks, MapPin, Paperclip, Plus, Trash2 } from "lucide-react"
+import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui"
 import { cn } from "@/lib/utils"
 import { useCreateJob } from "../CreateJobContext"
 import { FieldError } from "../FieldError"
 import { Label } from "@/components/ui/label"
+import { useFieldArray } from "react-hook-form"
 
 const GEOFENCE_MODES = [
   { value: "", label: "Use company default", sub: "Whatever's set in Settings — recommended" },
@@ -16,10 +18,15 @@ const GEOFENCE_MODES = [
 
 export function PoliciesStep() {
   const { form } = useCreateJob()
-  const { register, setValue, watch, formState: { errors } } = form
+  const { register, setValue, watch, control, formState: { errors } } = form
 
   const coordinates = watch("coordinates")
   const geofenceMode = watch("geofenceMode")
+
+  const { fields: checklistFields, append: appendChecklistItem, remove: removeChecklistItem } = useFieldArray({
+    control,
+    name: "checklist",
+  })
 
   return (
     <div className="flex flex-col gap-5 min-w-0">
@@ -45,6 +52,49 @@ export function PoliciesStep() {
           <Paperclip size={14} className="shrink-0" />
           <span className="truncate">Attach files, documents or images</span>
         </button>
+      </div>
+
+      {/* Checklist — optional on-site task list workers tick off as they
+          go (e.g. "Clean oven", "Wash client plates"). Shared across every
+          worker assigned, not per-worker. */}
+      <div className="bg-card rounded-xl border border-[var(--border)] p-6 min-w-0">
+        <div className="flex items-center gap-2 mb-1">
+          <ListChecks size={15} className="text-muted-foreground shrink-0" />
+          <h2 className="text-sm font-semibold text-foreground">Checklist</h2>
+        </div>
+        <p className="text-[11px] text-muted-foreground mb-3">
+          Optional. Tasks workers can check off on-site — everyone assigned shares the same list.
+        </p>
+
+        <div className="flex flex-col gap-2 min-w-0">
+          {checklistFields.map((field, index) => (
+            <div key={field.id} className="flex items-center gap-2 min-w-0">
+              <Input
+                {...register(`checklist.${index}.text` as const)}
+                placeholder="e.g. Clean the oven"
+                className="flex-1 min-w-0"
+              />
+              <button
+                type="button"
+                onClick={() => removeChecklistItem(index)}
+                className="w-8 h-8 shrink-0 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-rose-50 hover:text-rose-600 transition-colors"
+              >
+                <Trash2 size={14} />
+              </button>
+            </div>
+          ))}
+        </div>
+        <FieldError message={(errors.checklist as any)?.message ?? (errors.checklist as any)?.root?.message} />
+
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="mt-3"
+          onClick={() => appendChecklistItem({ text: "", done: false })}
+        >
+          <Plus size={13} /> Add item
+        </Button>
       </div>
 
       {/* Internal notes */}

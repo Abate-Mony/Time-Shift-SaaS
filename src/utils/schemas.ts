@@ -125,6 +125,15 @@ export const workerSchema = z.object({
 });
 
 export type Worker = z.infer<typeof workerSchema>;
+export const checklistItemSchema = z.object({
+    // Absent for a new item the admin just added client-side and hasn't
+    // saved yet — the backend assigns one on create. Required to target a
+    // specific item on toggle (see toggleJobChecklistItem).
+    _id: z.string().optional(),
+    text: z.string().min(1, "Checklist item can't be empty").max(200),
+    done: z.boolean().default(false),
+});
+
 export const createJobSchema = z
     .object({
         _id: z.string().optional(),
@@ -193,6 +202,8 @@ export const createJobSchema = z
         supervisor: z.string().optional(),
         instructions: z.string().optional(),
         notes: z.string().optional(),
+        // Optional worker-facing task list — see jobModel.ts's checklist field.
+        checklist: z.array(checklistItemSchema).default([]),
         openToClaims: z.boolean().default(false),
         requiresApproval: z.boolean().default(true),
         // Same NaN-from-blank-input issue as geofenceRadiusMeters above.
