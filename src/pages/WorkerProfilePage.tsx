@@ -53,6 +53,8 @@ interface WorkerStatsResponse {
         acceptanceRate: number | null
         onTimeArrivalRate: number | null
         hoursUtilisationRate: number | null
+        noShows: number
+        noShowRate: number | null
     }
     hoursTrend: { weekStart: string; hours: number }[]
     jobHistory: {
@@ -535,6 +537,23 @@ export function WorkerProfile() {
                                     </div>
                                 </div>
                             ))}
+                        </div>
+
+                        {/* No-shows — kept separate from the rate list above:
+                            those are all "higher is better" (green past 80%),
+                            this one is the opposite, so it needs its own
+                            inverted color logic rather than sharing that map. */}
+                        <div className="mt-4 pt-4 border-t border-[var(--border)] flex items-center justify-between">
+                            <p className="text-xs font-medium text-muted-foreground">No-shows</p>
+                            <div className="flex items-center gap-1.5">
+                                <span className="text-xs font-bold text-foreground">
+                                    {stats.noShows} {stats.noShowRate !== null && `(${pct(stats.noShowRate)})`}
+                                </span>
+                                {stats.noShows === 0
+                                    ? <CheckCircle2 size={12} className="text-emerald-500" />
+                                    : <AlertCircle size={12} className="text-rose-500" />
+                                }
+                            </div>
                         </div>
                     </Card>
 
