@@ -62,6 +62,12 @@ export const workerSchema = z.object({
     ]).optional(),
     clockOutNote: z.string().optional(),
 
+    // Set when a manager records hours directly instead of the worker
+    // clocking in/out themselves — see manuallyAdjustAssignment on the
+    // backend. checkedInAt/checkedOutAt are still populated in this case.
+    manuallyAdjusted: z.boolean().optional(),
+    adjustmentReason: z.string().optional(),
+
     acceptedAt: z.date().optional(),
 
     declinedAt: z.date().optional(),

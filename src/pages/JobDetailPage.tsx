@@ -3,7 +3,7 @@ import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { backLinkState, useBackLink } from '@/hooks/useBackLink'
 import { queryClient } from '@/lib/queryClient'
-import { deleteJob, deleteJobAttachment, duplicateJob, reviewAssignmentOvertime, reviewOpenShiftClaim, updateJobWorkers, uploadJobAttachment } from '@/utils/api-request-functions'
+import { deleteJob, deleteJobAttachment, duplicateJob, manuallyAdjustAssignment, reviewAssignmentOvertime, reviewOpenShiftClaim, updateJobWorkers, uploadJobAttachment } from '@/utils/api-request-functions'
 import customFetch from '@/utils/customFetch'
 import { formatDate, formatDuration, getShiftProgress } from '@/utils/date'
 import { formatCurrency } from '@/utils/format'
@@ -62,7 +62,17 @@ import { singleJob } from './EditJobPage'
 const PREFERRED_MAP_STORAGE_KEY = "preferredMapService"
 
 import { Button } from '@/components/ui/button'
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog'
+import { Label } from '@/components/ui/label'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
+import { Textarea } from '@/components/ui/textarea'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
 import { getInitials } from '@/utils/getInitials'
@@ -367,6 +377,35 @@ export function JobDetail() {
     })
     const [adjustingId, setAdjustingId] = useState<string | null>(null)
     const [adjustHours, setAdjustHours] = useState("")
+
+    // Manual hours entry — for a shift with missing/wrong clock data (phone
+    // died, forgot to clock in/out) rather than the overtime-review flow
+    // above, which only ever applies to a shift that already clocked both
+    // in and out and ran long.
+    const [manualEntryWorker, setManualEntryWorker] = useState<AssignedWorker | null>(null)
+    const [manualHours, setManualHours] = useState("")
+    const [manualDate, setManualDate] = useState("")
+    const [manualReason, setManualReason] = useState("")
+    const manualAdjustMutation = useMutation({
+        mutationFn: ({ assignmentId, hoursWorked, reason, workDate }: {
+            assignmentId: string
+            hoursWorked: number
+            reason: string
+            workDate?: string
+        }) => manuallyAdjustAssignment(assignmentId, hoursWorked, reason, workDate),
+        onSuccess: () => {
+            setManualEntryWorker(null)
+            setManualHours("")
+            setManualDate("")
+            setManualReason("")
+        },
+    })
+    const openManualEntry = (w: AssignedWorker) => {
+        setManualEntryWorker(w)
+        setManualHours(job?.minutes ? (job.minutes / 60).toFixed(2) : "")
+        setManualDate(job?.date ? dayjs(job.date).format("YYYY-MM-DD") : "")
+        setManualReason("")
+    }
 
     // Geofence inline editor — seeded from `job` fresh every time it opens
     // (not just on mount), so it can't go stale after other edits refetch
@@ -879,10 +918,11 @@ export function JobDetail() {
                             </div>
 
                             {/* Table header */}
-                            <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-4 px-5 py-2.5 bg-muted/60 border-b border-[var(--border)]">
+                            <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr_auto] gap-4 px-5 py-2.5 bg-muted/60 border-b border-[var(--border)] items-center">
                                 {['Worker', 'Clock In', 'Clock Out', 'Break', 'Billable'].map(h => (
                                     <p key={h} className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">{h}</p>
                                 ))}
+                                <span />
                             </div>
 
                             <div className="divide-y divide-border">
@@ -897,7 +937,7 @@ export function JobDetail() {
                                         <div
                                             key={w.email}
                                             className={cn(
-                                                "grid grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-4 px-5 py-3.5 items-center hover:bg-muted/50 transition-colors cursor-pointer",
+                                                "grid grid-cols-[2fr_1fr_1fr_1fr_1fr_auto] gap-4 px-5 py-3.5 items-center hover:bg-muted/50 transition-colors cursor-pointer",
                                                 isOvertime && "bg-amber-50/40"
                                             )}
                                             onClick={() => onNavigate(`/workers/${w.worker}/worker-profile`, backLinkState(job.title))}
@@ -907,6 +947,11 @@ export function JobDetail() {
                                                 <div>
                                                     <p className="text-sm font-medium text-foreground">{w.fullname}</p>
                                                     <p className="text-[10px] text-muted-foreground">{w.email}</p>
+                                                    {w.manuallyAdjusted && (
+                                                        <span className="inline-flex items-center gap-1 text-[9px] font-semibold text-blue-700 bg-blue-100 px-1.5 py-0.5 rounded-full mt-1">
+                                                            <Pencil size={8} /> Manually entered
+                                                        </span>
+                                                    )}
                                                 </div>
                                             </div>
                                             <p className="text-xs font-semibold text-foreground mono">
@@ -931,15 +976,28 @@ export function JobDetail() {
                                                     </span>
                                                 )}
                                             </div>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <button
+                                                        type="button"
+                                                        onClick={e => { e.stopPropagation(); openManualEntry(w) }}
+                                                        className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors shrink-0"
+                                                    >
+                                                        <Pencil size={13} />
+                                                    </button>
+                                                </TooltipTrigger>
+                                                <TooltipContent>Record hours worked</TooltipContent>
+                                            </Tooltip>
                                         </div>
                                     )
                                 })}
                             </div>
 
                             {/* Totals row */}
-                            <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-4 px-5 py-3.5 bg-muted/60 border-t border-[var(--border)]">
+                            <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr_auto] gap-4 px-5 py-3.5 bg-muted/60 border-t border-[var(--border)]">
                                 <p className="text-xs font-bold text-foreground col-span-4">Estimated Total Billable</p>
                                 <p className="text-xs font-bold text-emerald-700">{formatDuration(totalMinutes)}</p>
+                                <span />
                             </div>
                         </Card>
                     )}
@@ -1693,6 +1751,86 @@ export function JobDetail() {
                 open={showAssignWorkersModal}
                 onOpenChange={setShowAssignWorkersModal}
             />
+
+            {/* Manual hours entry — for a worker whose phone died or who
+                forgot to clock in/out but still did the work. Sets this
+                assignment to completed with the hours the manager enters,
+                not a live-computed duration. */}
+            <Dialog open={manualEntryWorker !== null} onOpenChange={open => !open && setManualEntryWorker(null)}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Record hours worked</DialogTitle>
+                        <DialogDescription>
+                            {manualEntryWorker?.fullname} — for a shift with no clock-in, or missing/wrong clock data.
+                            This marks the shift as completed with the hours you enter here.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="space-y-3">
+                        <div className="space-y-1.5">
+                            <Label htmlFor="manual-hours">Hours worked</Label>
+                            <Input
+                                id="manual-hours"
+                                type="number"
+                                step="0.25"
+                                min="0"
+                                max="24"
+                                value={manualHours}
+                                onChange={e => setManualHours(e.target.value)}
+                                placeholder={job?.minutes ? `Scheduled: ${formatDuration(job.minutes)}` : "e.g. 3"}
+                            />
+                        </div>
+
+                        {!manualEntryWorker?.checkedInAt && (
+                            <div className="space-y-1.5">
+                                <Label htmlFor="manual-date">Date worked</Label>
+                                <Input
+                                    id="manual-date"
+                                    type="date"
+                                    value={manualDate}
+                                    onChange={e => setManualDate(e.target.value)}
+                                />
+                            </div>
+                        )}
+
+                        <div className="space-y-1.5">
+                            <Label htmlFor="manual-reason">Reason</Label>
+                            <Textarea
+                                id="manual-reason"
+                                value={manualReason}
+                                onChange={e => setManualReason(e.target.value)}
+                                placeholder="e.g. Phone died mid-shift — worker confirmed hours by text"
+                                rows={3}
+                            />
+                        </div>
+                    </div>
+
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setManualEntryWorker(null)} disabled={manualAdjustMutation.isPending}>
+                            Cancel
+                        </Button>
+                        <Button
+                            disabled={
+                                manualAdjustMutation.isPending ||
+                                !manualHours ||
+                                !(parseFloat(manualHours) > 0) ||
+                                manualReason.trim().length === 0
+                            }
+                            onClick={() => {
+                                if (!manualEntryWorker?._id) return
+                                manualAdjustMutation.mutate({
+                                    assignmentId: manualEntryWorker._id,
+                                    hoursWorked: parseFloat(manualHours),
+                                    reason: manualReason.trim(),
+                                    workDate: manualDate || undefined,
+                                })
+                            }}
+                        >
+                            {manualAdjustMutation.isPending ? "Saving…" : "Record hours"}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
             {/* Approve modal */}
             {showApproveModal && (

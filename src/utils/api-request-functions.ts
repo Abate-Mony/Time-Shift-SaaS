@@ -559,6 +559,44 @@ export const reviewAssignmentOvertime = async (
     }
 };
 
+// Records hours worked directly for a shift with missing/wrong clock data —
+// worker's phone died, forgot to clock in/out, etc. See
+// manuallyAdjustAssignment on the backend: this sets the assignment to
+// "completed" and synthesizes checkedInAt/checkedOutAt from the job's
+// schedule (or preserves a real checkedInAt if one exists), so the result
+// reads like a normal completed shift everywhere else in the app.
+export const manuallyAdjustAssignment = async (
+    assignmentId: string,
+    hoursWorked: number,
+    reason: string,
+    workDate?: string
+): Promise<boolean> => {
+    try {
+        await customFetch.patch(`/workers/assignments/${assignmentId}/manual-adjustment`, {
+            hoursWorked,
+            reason,
+            workDate,
+        });
+
+        toast.success("Hours recorded.");
+
+        await queryClient.invalidateQueries({ queryKey: ["job"] });
+        return true;
+    } catch (err) {
+        const message =
+            isAxiosError(err)
+                ? err.response?.data?.msg ??
+                err.response?.data?.message ??
+                "Something went wrong."
+                : err instanceof Error
+                    ? err.message
+                    : "Something went wrong.";
+
+        toast.error(message);
+        return false;
+    }
+};
+
 export const reviewOpenShiftClaim = async (assignmentId: string, approve: boolean): Promise<boolean> => {
     try {
         await customFetch.patch(`/workers/assignments/${assignmentId}/claim-review`, { approve });
