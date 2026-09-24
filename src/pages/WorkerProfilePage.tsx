@@ -41,6 +41,7 @@ interface WorkerStatsResponse {
         isActive: boolean
         createdAt: string
         profilePhoto?: FileRef | null
+        deletionRequestedAt?: string | null
     }
     stats: {
         hoursThisWeek: number
@@ -269,6 +270,11 @@ export function WorkerProfile() {
                             <div className="flex items-center gap-3 flex-wrap mb-1">
                                 <h1 className="text-xl font-bold text-foreground tracking-tight">{worker.fullname}</h1>
                                 <StatusBadge status={restriction ? 'suspended' : worker.isActive ? 'active' : 'suspended'} />
+                                {worker.deletionRequestedAt && (
+                                    <Badge variant="danger">
+                                        Deletion requested {dayjs(worker.deletionRequestedAt).format('D MMM')}
+                                    </Badge>
+                                )}
                             </div>
                             <p className="text-sm text-muted-foreground mb-3 capitalize">{worker.role}</p>
                             <div className="flex flex-wrap gap-4">

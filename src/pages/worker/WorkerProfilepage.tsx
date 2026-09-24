@@ -13,12 +13,13 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Scrollable } from "@/components/ui/scrollable";
 import { queryClient } from "@/lib/queryClient";
+import { requestAccountDeletion } from "@/utils/api-request-functions";
 import customFetch from "@/utils/customFetch";
 import { logoutUser } from "@/utils/logout";
 import type { User } from "@/utils/types";
 import type { WorkerDashboardStats } from "@/utils/types/workerType";
 import { useQuery } from "@tanstack/react-query";
-import { Bell, CheckCircle2, ChevronRight, Clock, Download, HelpCircle, LogOut, MapPin, Paperclip, Phone, Star, Zap } from "lucide-react";
+import { Bell, CheckCircle2, ChevronRight, Clock, Download, HelpCircle, LogOut, MapPin, Paperclip, Phone, Star, Trash2, Zap } from "lucide-react";
 import { useNavigate, useOutletContext, type LoaderFunctionArgs } from "react-router";
 
 export const workerDashboardstats = () => {
@@ -186,6 +187,38 @@ export function ProfileScreen() {
               <AlertDialogAction className="bg-rose-400"
                 onClick={logoutUser}
               >Log Out</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* This app has no in-app account creation (a company admin
+            provisions every worker account), so there's nothing to
+            self-service delete here either — this sends a documented
+            request to the company's admin(s) instead. */}
+        <AlertDialog>
+          <AlertDialogTrigger className="w-full flex items-center gap-3.5 px-5 py-4 hover:bg-muted transition-colors text-left">
+            <div className="w-8 h-8 rounded-xl bg-muted flex items-center justify-center shrink-0">
+              <Trash2 size={14} className="text-muted-foreground" />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-red-600">Request Account Deletion</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Sends a request to your admin</p>
+            </div>
+            <Trash2 size={14} className="text-red-500" />
+          </AlertDialogTrigger>
+          <AlertDialogContent className="max-w-[min(400px,calc(100%-1rem))] rounded-sm">
+            <AlertDialogHeader>
+              <Trash2 size={30} className="mx-auto text-red-700" />
+              <AlertDialogTitle className="text-xl text-center">Request Account Deletion</AlertDialogTitle>
+              <AlertDialogDescription className="text-center">
+                This sends a request to your company admin to have your INPRN account deleted. This can't be undone once they action it.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction className="bg-red-600"
+                onClick={() => requestAccountDeletion()}
+              >Send Request</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>

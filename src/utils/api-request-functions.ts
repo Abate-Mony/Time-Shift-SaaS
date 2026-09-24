@@ -360,6 +360,26 @@ export const cancelQuote = async (quoteId: string, cancellationReason?: string):
     }
 };
 
+// This app has no in-app account creation (a company admin provisions every
+// worker account), so there's nothing to self-service delete here either —
+// this sends a documented request to the company's admin(s), who can
+// deactivate/remove the account from the web dashboard's Team page.
+export const requestAccountDeletion = async (reason?: string): Promise<boolean> => {
+    try {
+        await customFetch.post("/workers/me/request-deletion", reason ? { reason } : {});
+        toast.success("Your request has been sent to your company admin.");
+        return true;
+    } catch (err) {
+        const message = isAxiosError(err)
+            ? err.response?.data?.msg ?? err.response?.data?.message ?? "Something went wrong."
+            : err instanceof Error
+                ? err.message
+                : "Something went wrong.";
+        toast.error(message);
+        return false;
+    }
+};
+
 export const changeWorkerJobStaus = async (
     jobId: string,
     status: "accepted" | "declined" | "in-progress" | "completed" | "cancelled",
