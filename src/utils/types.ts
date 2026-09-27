@@ -382,7 +382,10 @@ export type NotificationEvent =
   | "geofence_warning"
   | "timesheet_submitted"
   | "timesheet_approved"
-  | "timesheet_rejected";
+  | "timesheet_rejected"
+  | "time_off_requested"
+  | "time_off_reviewed"
+  | "shift_time_changed";
 
 export type EventNotificationPreference = {
   email: boolean;

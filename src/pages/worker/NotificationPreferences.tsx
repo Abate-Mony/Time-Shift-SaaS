@@ -63,6 +63,11 @@ const SECTIONS: {
         label: "New job assigned",
         description: "When a manager assigns you a shift",
       },
+      {
+        event: "shift_time_changed",
+        label: "Shift time changed",
+        description: "When a manager changes the time on a shift you're already on",
+      },
     ],
   },
   {
@@ -77,6 +82,16 @@ const SECTIONS: {
         event: "timesheet_rejected",
         label: "Timesheet rejected",
         description: "When your timesheet is rejected",
+      },
+    ],
+  },
+  {
+    title: "Time off",
+    rows: [
+      {
+        event: "time_off_reviewed",
+        label: "Request reviewed",
+        description: "When your manager approves or declines a time-off request",
       },
     ],
   },
