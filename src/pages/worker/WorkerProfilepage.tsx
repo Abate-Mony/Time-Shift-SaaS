@@ -19,7 +19,7 @@ import { logoutUser } from "@/utils/logout";
 import type { User } from "@/utils/types";
 import type { WorkerDashboardStats } from "@/utils/types/workerType";
 import { useQuery } from "@tanstack/react-query";
-import { Bell, CheckCircle2, ChevronRight, Clock, Download, HelpCircle, LogOut, MapPin, Paperclip, Phone, Star, Trash2, Zap } from "lucide-react";
+import { Bell, CalendarOff, CheckCircle2, ChevronRight, Clock, Download, HelpCircle, LogOut, MapPin, Paperclip, Phone, Star, Trash2, Zap } from "lucide-react";
 import { useNavigate, useOutletContext, type LoaderFunctionArgs } from "react-router";
 
 export const workerDashboardstats = () => {
@@ -144,6 +144,7 @@ export function ProfileScreen() {
         {[
           { label: 'Download Timesheet', icon: Download, sub: 'July 2025', to: "/worker/profile/download-time-sheet" },
           { label: 'My Documents', icon: Paperclip, sub: 'ID, right-to-work, certifications', to: "/worker/profile/documents" },
+          { label: 'Time Off', icon: CalendarOff, sub: 'Request time off, track status', to: "/worker/profile/time-off" },
           { label: 'Notification Preferences', icon: Bell, sub: 'Job alerts, reminders', to: '/worker/profile/notifications' },
           { label: 'Help Centre', icon: HelpCircle, sub: 'Guides and answers', to: '/worker/help' },
           { label: 'Contact Manager', icon: Phone, sub: 'Get in touch', to: undefined },

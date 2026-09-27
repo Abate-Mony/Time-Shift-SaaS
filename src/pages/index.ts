@@ -40,6 +40,7 @@ export { ProfileScreen, loader as workerProfileLoader } from "./worker/WorkerPro
 export { loader as clockLoader } from "./worker/ClockScreenPage"
 export { default as DownloadTimesheetScreen } from "./worker/DownloadTimesheet"
 export { default as WorkerDocumentsScreen } from "./worker/WorkerDocumentsScreen"
+export { default as WorkerTimeOffScreen } from "./worker/TimeOffScreen"
 export { DataAssistant } from "./DataAssistant"
 export { Team, loader as teamLoader } from "./TeamPage"
 export { RecurringJobDetail, loader as recurringJobDetailLoader } from "./recurringJobDetailsPage"
