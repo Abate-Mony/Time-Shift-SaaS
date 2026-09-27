@@ -1,6 +1,16 @@
 {
     "routes": [
         {
+            "src": "/.well-known/apple-app-site-association",
+            "dest": "/.well-known/apple-app-site-association",
+            "headers": { "Content-Type": "application/json" }
+        },
+        {
+            "src": "/.well-known/assetlinks.json",
+            "dest": "/.well-known/assetlinks.json",
+            "headers": { "Content-Type": "application/json" }
+        },
+        {
             "src": "/[^.]+",
             "dest": "/",
             "status": 200
