@@ -98,7 +98,7 @@ export function PlatformCompanyDetail() {
             <p className="text-sm font-semibold text-amber-900">
               Company {company.status === "suspended" ? "suspended" : "disabled"}
             </p>
-            <p className="mt-0.5 text-sm text-amber-800">Users from this company cannot access INPRN.</p>
+            <p className="mt-0.5 text-sm text-amber-800">Users from this company cannot access InnoShifts.</p>
             <Button size="sm" className="mt-3" onClick={() => setStatusDialog("active")}>
               Restore company
             </Button>
@@ -215,7 +215,7 @@ export function PlatformCompanyDetail() {
         description={
           statusDialog === "active"
             ? "This will restore full access for this company's users."
-            : "Users from this company will no longer be able to access INPRN until the company is restored."
+            : "Users from this company will no longer be able to access InnoShifts until the company is restored."
         }
         confirmLabel={statusDialog === "active" ? "Restore company" : statusDialog === "suspended" ? "Suspend company" : "Disable company"}
         destructive={statusDialog !== "active"}

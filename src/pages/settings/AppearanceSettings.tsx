@@ -15,7 +15,7 @@ export default function AppearanceSettings() {
         <div className="p-6 max-w-3xl mx-auto animate-fade-in">
             <div className="bg-card rounded-xl border border-border p-6 min-w-0">
                 <p className="text-sm font-semibold text-foreground mb-0.5">Theme</p>
-                <p className="text-xs text-muted-foreground mb-5">Choose how INPRN looks on this device.</p>
+                <p className="text-xs text-muted-foreground mb-5">Choose how InnoShifts looks on this device.</p>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     {OPTIONS.map(opt => {

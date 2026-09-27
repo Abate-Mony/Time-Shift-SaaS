@@ -37,8 +37,8 @@ export default defineConfig({
         type: "module",
       },
       manifest: {
-        name: "INPRN",
-        short_name: "INPRN",
+        name: "InnoShifts",
+        short_name: "InnoShifts",
         start_url: "/",
         display: "standalone",
         background_color: "#ffffff",

@@ -46,7 +46,7 @@ export default function PlatformLayout() {
     <div className="flex h-screen overflow-hidden bg-[#F7F9FC]">
       <aside className="hidden w-[240px] shrink-0 flex-col bg-[#0F172A] text-slate-300 md:flex">
         <div className="px-5 py-5">
-          <p className="text-sm font-semibold text-white">INPRN</p>
+          <p className="text-sm font-semibold text-white">InnoShifts</p>
           <div className="mt-1 flex items-center gap-1.5">
             <span className="text-xs text-slate-400">Platform</span>
             <span className="rounded border border-slate-600 px-1.5 py-0.5 text-[10px] font-medium text-slate-400">

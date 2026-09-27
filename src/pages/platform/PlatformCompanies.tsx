@@ -42,7 +42,7 @@ export function PlatformCompanies() {
     <div className="space-y-5 p-6">
       <div>
         <h1 className="text-xl font-semibold text-foreground tracking-tight">Companies</h1>
-        <p className="mt-0.5 text-sm text-muted-foreground">View and manage all organisations using INPRN.</p>
+        <p className="mt-0.5 text-sm text-muted-foreground">View and manage all organisations using InnoShifts.</p>
       </div>
 
       <div className="flex flex-wrap items-center gap-2">

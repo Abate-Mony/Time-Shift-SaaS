@@ -207,7 +207,7 @@ export default function InvitationLayout() {
                 <p className="text-xs text-muted-foreground text-center mt-6">
                     Powered by{" "}
                     <span className="font-semibold text-muted-foreground">
-                        INPRN
+                        InnoShifts
                     </span>
                 </p>
             </div>

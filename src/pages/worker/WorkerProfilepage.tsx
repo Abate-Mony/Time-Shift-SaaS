@@ -212,7 +212,7 @@ export function ProfileScreen() {
               <Trash2 size={30} className="mx-auto text-red-700" />
               <AlertDialogTitle className="text-xl text-center">Request Account Deletion</AlertDialogTitle>
               <AlertDialogDescription className="text-center">
-                This sends a request to your company admin to have your INPRN account deleted. This can't be undone once they action it.
+                This sends a request to your company admin to have your InnoShifts account deleted. This can't be undone once they action it.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

@@ -493,7 +493,7 @@ export function CommandPalette({
                 onChange={(event) =>
                   setQuery(event.target.value)
                 }
-                placeholder="Search INPRN..."
+                placeholder="Search InnoShifts..."
                 className="
                h-14
               w-full

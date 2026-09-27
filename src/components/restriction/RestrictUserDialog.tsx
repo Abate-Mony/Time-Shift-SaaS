@@ -50,7 +50,7 @@ function AccessLevelOption({
     none: {
       icon: Ban,
       label: 'Suspended',
-      desc: 'The worker cannot access the normal INPRN app.',
+      desc: 'The worker cannot access the normal InnoShifts app.',
       danger: true,
     },
   }
@@ -142,7 +142,7 @@ function SuspendConfirm({
         <h3 className="text-base font-bold text-foreground">Suspend {workerName}?</h3>
       </div>
       <p className="text-sm text-muted-foreground leading-relaxed">
-        {workerName} will lose access to the normal INPRN app immediately.
+        {workerName} will lose access to the normal InnoShifts app immediately.
       </p>
       <div className="bg-muted border border-border rounded-xl p-3.5">
         <p className="text-xs font-semibold text-muted-foreground mb-2">They can still:</p>

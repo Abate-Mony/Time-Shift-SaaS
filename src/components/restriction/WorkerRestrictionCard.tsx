@@ -44,7 +44,7 @@ function LiftRestrictionDialog({
           </div>
           <h3 className="text-base font-bold text-foreground mb-1.5">Restore full access?</h3>
           <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
-            {workerName} will regain normal access to INPRN.
+            {workerName} will regain normal access to InnoShifts.
           </p>
           <div>
             <label className="block text-xs font-semibold text-foreground mb-1.5">Optional reason</label>
