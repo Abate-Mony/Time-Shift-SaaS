@@ -33,7 +33,7 @@ export function PlatformUsers() {
     <div className="space-y-5 p-6">
       <div>
         <h1 className="text-xl font-semibold text-foreground tracking-tight">Users</h1>
-        <p className="mt-0.5 text-sm text-muted-foreground">Search users across every company on InnoShifts.</p>
+        <p className="mt-0.5 text-sm text-muted-foreground">Search users across every company on OnClockly.</p>
       </div>
 
       <form

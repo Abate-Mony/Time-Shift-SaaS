@@ -33,10 +33,10 @@ self.addEventListener("push", (event) => {
   try {
     data = event.data ? event.data.json() : {}
   } catch {
-    data = { title: "InnoShifts", body: event.data ? event.data.text() : "" }
+    data = { title: "OnClockly", body: event.data ? event.data.text() : "" }
   }
 
-  const title = data.title || "InnoShifts"
+  const title = data.title || "OnClockly"
   const options: NotificationOptions = {
     body: data.body || "",
     tag: data.tag || "inprn-notification",

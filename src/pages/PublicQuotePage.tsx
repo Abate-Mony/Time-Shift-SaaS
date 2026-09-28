@@ -381,7 +381,7 @@ export default function PublicQuotePage() {
                     />
                 )}
 
-                <p className="text-xs text-slate-400 text-center mt-8">Powered by InnoShifts</p>
+                <p className="text-xs text-slate-400 text-center mt-8">Powered by OnClockly</p>
             </div>
 
             {dialogMode && (

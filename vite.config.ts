@@ -37,8 +37,8 @@ export default defineConfig({
         type: "module",
       },
       manifest: {
-        name: "InnoShifts",
-        short_name: "InnoShifts",
+        name: "OnClockly",
+        short_name: "OnClockly",
         start_url: "/",
         display: "standalone",
         background_color: "#ffffff",
