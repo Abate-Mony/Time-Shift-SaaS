@@ -3,7 +3,7 @@
     "apps": [],
     "details": [
       {
-        "appID": "REPLACE_WITH_APPLE_TEAM_ID.com.onclockly.app",
+        "appID": "GWCVF8X23L.com.onclockly.app",
         "paths": ["/worker/*"]
       }
     ]
