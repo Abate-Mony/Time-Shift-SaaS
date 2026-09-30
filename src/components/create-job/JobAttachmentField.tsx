@@ -40,7 +40,7 @@ export function JobAttachmentField() {
             type="file"
             name="attachment"
             accept={ACCEPTED}
-            className="sr-only"
+            className="sr-only hidden"
             onChange={handleChange}
           />
         </Label>
