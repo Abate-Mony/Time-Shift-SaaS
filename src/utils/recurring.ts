@@ -18,6 +18,12 @@ export interface RecurringSchedule {
     startTime: string
     endTime: string
     client?: string
+    payRate: number
+    chargeType: 'hourly' | 'fixed'
+    chargeRate: number
+    chargeAmount: number
+    geofenceMode: 'off' | 'warn' | 'enforce' | null
+    geofenceRadiusMeters: number
   }
   maxOccurrences?: number
   occurrenceCount: number

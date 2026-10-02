@@ -256,7 +256,20 @@ export interface EditPatternForm {
     defaultWorkerIds: string[]
     startTime: string
     endTime: string
+    payRate: string
+    chargeType: 'hourly' | 'fixed'
+    chargeRate: string
+    chargeAmount: string
+    geofenceMode: '' | 'off' | 'warn' | 'enforce'
+    geofenceRadiusMeters: string
 }
+
+const GEOFENCE_MODES = [
+    { value: '', label: 'Use company default' },
+    { value: 'off', label: 'No location check' },
+    { value: 'warn', label: 'Record and flag' },
+    { value: 'enforce', label: 'Require them on site' },
+] as const
 
 function EditPatternDialog({
     detail,
@@ -282,6 +295,12 @@ function EditPatternDialog({
         defaultWorkerIds: d.defaultWorkers.map(w => w._id),
         startTime: d.templateJob.startTime,
         endTime: d.templateJob.endTime,
+        payRate: String(d.templateJob.payRate ?? 0),
+        chargeType: d.templateJob.chargeType ?? 'hourly',
+        chargeRate: String(d.templateJob.chargeRate ?? 0),
+        chargeAmount: String(d.templateJob.chargeAmount ?? 0),
+        geofenceMode: d.templateJob.geofenceMode ?? '',
+        geofenceRadiusMeters: String(d.templateJob.geofenceRadiusMeters ?? 150),
     })
 
     const [form, setForm] = useState<EditPatternForm>(() => buildFormFromDetail(detail))
@@ -300,6 +319,10 @@ function EditPatternDialog({
 
     const daysMissing = form.frequency === 'weekly' && form.daysOfWeek.length === 0
     const timeMissing = !form.startTime || !form.endTime
+    const payRateInvalid = form.payRate !== '' && (Number.isNaN(Number(form.payRate)) || Number(form.payRate) < 0)
+    const chargeRateInvalid = form.chargeRate !== '' && (Number.isNaN(Number(form.chargeRate)) || Number(form.chargeRate) < 0)
+    const chargeAmountInvalid = form.chargeType === 'fixed' && (form.chargeAmount === '' || Number.isNaN(Number(form.chargeAmount)) || Number(form.chargeAmount) <= 0)
+    const radiusInvalid = form.geofenceRadiusMeters !== '' && (Number.isNaN(Number(form.geofenceRadiusMeters)) || Number(form.geofenceRadiusMeters) < 0)
 
     // Order doesn't carry meaning for either array (days get re-sorted on
     // toggle; worker selection order isn't a thing a manager would notice
@@ -316,9 +339,16 @@ function EditPatternDialog({
         form.maxOccurrences !== initial.maxOccurrences ||
         !sameMembers(form.defaultWorkerIds, initial.defaultWorkerIds) ||
         form.startTime !== initial.startTime ||
-        form.endTime !== initial.endTime
+        form.endTime !== initial.endTime ||
+        form.payRate !== initial.payRate ||
+        form.chargeType !== initial.chargeType ||
+        form.chargeRate !== initial.chargeRate ||
+        form.chargeAmount !== initial.chargeAmount ||
+        form.geofenceMode !== initial.geofenceMode ||
+        form.geofenceRadiusMeters !== initial.geofenceRadiusMeters
 
-    const canSubmit = !daysMissing && !timeMissing && form.interval >= 1 && isDirty
+    const canSubmit = !daysMissing && !timeMissing && !payRateInvalid && !chargeRateInvalid &&
+        !chargeAmountInvalid && !radiusInvalid && form.interval >= 1 && isDirty
 
     const shiftHours = shiftHoursFrom(form.startTime, form.endTime)
     const isOvernight = !!form.startTime && !!form.endTime && form.endTime < form.startTime
@@ -411,6 +441,117 @@ function EditPatternDialog({
                                     <span className="font-semibold">{formatHours(shiftHours)}</span> shift duration
                                     {isOvernight && <span className="text-blue-500"> · overnight</span>}
                                 </p>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Pay rate / charge rate / charge amount */}
+                    <div className="flex flex-col gap-2">
+                        <label className="text-sm font-semibold text-foreground">Rates</label>
+                        <p className="text-xs text-muted-foreground -mt-1">
+                            Applies to future shifts only — already-generated shifts, and any a worker has already accepted, keep their current rate.
+                        </p>
+
+                        <div className="flex flex-col gap-1.5">
+                            <label className="text-xs text-muted-foreground">Pay rate (£/hr, to the worker)</label>
+                            <Input
+                                type="number"
+                                min={0}
+                                step="0.01"
+                                value={form.payRate}
+                                onChange={e => setForm(v => ({ ...v, payRate: e.target.value }))}
+                                className="h-9 px-3 border border-border rounded-lg text-sm text-foreground bg-card focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/15 focus:border-[var(--primary)]/40 transition-all"
+                            />
+                        </div>
+
+                        <div className="flex flex-col gap-1.5">
+                            <label className="text-xs text-muted-foreground">Client billing</label>
+                            <div className="grid grid-cols-2 gap-2">
+                                {(['hourly', 'fixed'] as const).map(opt => (
+                                    <button
+                                        key={opt}
+                                        type="button"
+                                        onClick={() => setForm(v => ({ ...v, chargeType: opt }))}
+                                        className={`h-9 rounded-lg text-sm font-semibold border-2 transition-all capitalize ${form.chargeType === opt
+                                            ? 'border-[var(--primary)] bg-[var(--primary)]/[0.04] text-[var(--primary)]'
+                                            : 'border-border text-muted-foreground hover:border-slate-300'
+                                            }`}
+                                    >
+                                        {opt}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {form.chargeType === 'fixed' ? (
+                            <div className="flex flex-col gap-1.5">
+                                <label className="text-xs text-muted-foreground">Fixed charge (£ total)</label>
+                                <Input
+                                    type="number"
+                                    min={0}
+                                    step="0.01"
+                                    value={form.chargeAmount}
+                                    onChange={e => setForm(v => ({ ...v, chargeAmount: e.target.value }))}
+                                    className="h-9 px-3 border border-border rounded-lg text-sm text-foreground bg-card focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/15 focus:border-[var(--primary)]/40 transition-all"
+                                />
+                            </div>
+                        ) : (
+                            <div className="flex flex-col gap-1.5">
+                                <label className="text-xs text-muted-foreground">Charge rate (£/hr, to the client)</label>
+                                <Input
+                                    type="number"
+                                    min={0}
+                                    step="0.01"
+                                    value={form.chargeRate}
+                                    onChange={e => setForm(v => ({ ...v, chargeRate: e.target.value }))}
+                                    className="h-9 px-3 border border-border rounded-lg text-sm text-foreground bg-card focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/15 focus:border-[var(--primary)]/40 transition-all"
+                                />
+                            </div>
+                        )}
+
+                        {(payRateInvalid || chargeRateInvalid || chargeAmountInvalid) && (
+                            <p className="text-xs text-amber-600 flex items-center gap-1">
+                                <Info size={11} /> Rates must be zero or a positive number{form.chargeType === 'fixed' ? ' (fixed charge must be greater than zero)' : ''}
+                            </p>
+                        )}
+                    </div>
+
+                    {/* Geofence */}
+                    <div className="flex flex-col gap-2">
+                        <label className="text-sm font-semibold text-foreground">Location check</label>
+                        <p className="text-xs text-muted-foreground -mt-1">
+                            Applies to future shifts only — already-generated shifts keep their current setting.
+                        </p>
+                        <div className="grid grid-cols-2 gap-2">
+                            {GEOFENCE_MODES.map(opt => (
+                                <button
+                                    key={opt.value}
+                                    type="button"
+                                    onClick={() => setForm(v => ({ ...v, geofenceMode: opt.value }))}
+                                    className={`h-9 px-2 rounded-lg text-xs font-semibold border-2 transition-all ${form.geofenceMode === opt.value
+                                        ? 'border-[var(--primary)] bg-[var(--primary)]/[0.04] text-[var(--primary)]'
+                                        : 'border-border text-muted-foreground hover:border-slate-300'
+                                        }`}
+                                >
+                                    {opt.label}
+                                </button>
+                            ))}
+                        </div>
+                        {form.geofenceMode !== 'off' && form.geofenceMode !== '' && (
+                            <div className="flex flex-col gap-1.5 mt-1">
+                                <label className="text-xs text-muted-foreground">Radius (metres)</label>
+                                <Input
+                                    type="number"
+                                    min={0}
+                                    value={form.geofenceRadiusMeters}
+                                    onChange={e => setForm(v => ({ ...v, geofenceRadiusMeters: e.target.value }))}
+                                    className="h-9 px-3 w-32 border border-border rounded-lg text-sm text-foreground bg-card focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/15 focus:border-[var(--primary)]/40 transition-all"
+                                />
+                                {radiusInvalid && (
+                                    <p className="text-xs text-amber-600 flex items-center gap-1">
+                                        <Info size={11} /> Radius must be zero or a positive number
+                                    </p>
+                                )}
                             </div>
                         )}
                     </div>
@@ -525,6 +666,11 @@ function SchedulePatternCard({ schedule }: { schedule: RecurringDetail }) {
         { label: 'End date', value: schedule.endDate ? fmtDateLong(schedule.endDate) : 'No end date' },
         schedule.maxOccurrences ? { label: 'Max occurrences', value: String(schedule.maxOccurrences) } : null,
         { label: 'Shift time', value: `${schedule.templateJob.startTime}–${schedule.templateJob.endTime}` },
+        { label: 'Pay rate', value: `£${schedule.templateJob.payRate.toFixed(2)}/hr` },
+        schedule.templateJob.chargeType === 'fixed'
+            ? { label: 'Client billing', value: `£${schedule.templateJob.chargeAmount.toFixed(2)} fixed` }
+            : { label: 'Client billing', value: `£${schedule.templateJob.chargeRate.toFixed(2)}/hr` },
+        { label: 'Location check', value: GEOFENCE_MODES.find(m => m.value === (schedule.templateJob.geofenceMode ?? ''))?.label ?? 'Use company default' },
         schedule.generatedUntil ? { label: 'Generated through', value: fmtDateLong(schedule.generatedUntil) } : null,
     ].filter(Boolean) as { label: string; value: string }[]
 
@@ -780,6 +926,12 @@ export function RecurringJobDetail() {
                 defaultWorkers: form.defaultWorkerIds,
                 startTime: form.startTime,
                 endTime: form.endTime,
+                payRate: form.payRate === '' ? undefined : Number(form.payRate),
+                chargeType: form.chargeType,
+                chargeRate: form.chargeRate === '' ? undefined : Number(form.chargeRate),
+                chargeAmount: form.chargeAmount === '' ? undefined : Number(form.chargeAmount),
+                geofenceMode: form.geofenceMode === '' ? null : form.geofenceMode,
+                geofenceRadiusMeters: form.geofenceRadiusMeters === '' ? undefined : Number(form.geofenceRadiusMeters),
             }),
         onSuccess: ({ data }) => {
             setShowEdit(false)
