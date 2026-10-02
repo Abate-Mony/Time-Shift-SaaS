@@ -17,6 +17,8 @@ import { QueryClient, useQuery } from '@tanstack/react-query'
 import { isAxiosError } from 'axios'
 import { AnimatePresence, motion } from 'framer-motion'
 import dayjs from "dayjs"
+import utc from "dayjs/plugin/utc"
+dayjs.extend(utc)
 import { Calendar, Check, ChevronDown, ChevronLeft, Clock, ListChecks, Loader2, Lock, MapPin, Paperclip, Plus, Save, Settings2, Trash2, Users, X } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { useForm } from "react-hook-form"
@@ -205,7 +207,7 @@ export function EditJob() {
             // always comes from the hidden input driven by `selectedClient`
             // state below, so this is purely to keep RHF's own validation happy.
             client: (job?.client?._id ?? undefined) as any,
-            date: dayjs(job?.date).format("YYYY-MM-DD")
+            date: dayjs.utc(job?.date).format("YYYY-MM-DD")
         },
         mode: "onSubmit",
         reValidateMode: "onChange",
