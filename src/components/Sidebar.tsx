@@ -15,6 +15,7 @@ import {
   LayoutDashboard,
   LogOut,
   MapPin,
+  Podium,
   Quote,
   Receipt,
   Settings,
@@ -34,6 +35,7 @@ const navItems = [
   { id: 'workers', label: 'Workers', icon: Users },
   { id: 'clients', label: 'Client', icon: SquareUser },
   { id: 'team', label: 'Teams', icon: MapPin },
+  { id: 'leads', label: 'Leads', icon: Podium },
   { id: 'time-off', label: 'Time Off', icon: CalendarOff },
   { id: 'calendar', label: 'Calendar', icon: Calendar },
   { id: 'sites', label: 'Sites', icon: MapPin },
@@ -81,7 +83,7 @@ export function Sidebar({ collapsed, onToggleSidebar, user }: SidebarProps) {
             {collapsed ? (
               <div className="w-7 h-7 rounded-lg bg-blue-500 flex items-center justify-center">
                 <span className="text-white font-bold text-xs">{
-                  getInitials((user.company.name || ""),1)
+                  getInitials((user.company.name || ""), 1)
                 }</span>
               </div>
             ) : (
