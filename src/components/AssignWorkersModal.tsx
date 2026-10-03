@@ -16,6 +16,16 @@ import { useMemo, useState } from "react"
 
 type AssignedWorker = CreateJobForm["workers"][number]
 
+type WorkerAvailability = {
+    status: "available" | "partial" | "unavailable" | "unset"
+    reason: string | null
+}
+
+const AVAILABILITY_TAG: Partial<Record<WorkerAvailability["status"], { label: string; className: string }>> = {
+    unavailable: { label: "Unavailable", className: "bg-rose-50 text-rose-600" },
+    partial: { label: "Partly available", className: "bg-amber-50 text-amber-700" },
+}
+
 export default function AssignWorkersModal({
     jobId,
     assignedWorkers,
@@ -35,6 +45,19 @@ export default function AssignWorkersModal({
         queryFn: async () => {
             const { data } = await customFetch.get<{ users: User[] }>("/users/users")
             return data
+        },
+        enabled: open,
+    })
+
+    // Advisory only — flags workers whose weekly availability or time off
+    // clashes with this shift. Never blocks selecting them.
+    const { data: availability } = useQuery({
+        queryKey: ["job-availability", jobId],
+        queryFn: async () => {
+            const { data } = await customFetch.get<{ availability: Record<string, WorkerAvailability> }>(
+                `/availability/jobs/${jobId}`
+            )
+            return data.availability
         },
         enabled: open,
     })
@@ -127,6 +150,8 @@ export default function AssignWorkersModal({
                         visibleWorkers.map((w, i) => {
                             const isAssigned = assignedEmails.has(w.email)
                             const isSelected = selected.some(sw => sw.email === w.email)
+                            const avail = availability?.[w._id]
+                            const tag = !isAssigned && avail ? AVAILABILITY_TAG[avail.status] : undefined
                             return (
                                 <button
                                     disabled={isAssigned}
@@ -141,9 +166,16 @@ export default function AssignWorkersModal({
                                 >
                                     <Avatar initials={w.fullname.slice(0, 2)} size="sm" index={i} src={w.profilePhoto?.url} />
                                     <div className="flex-1 text-left min-w-0">
-                                        <p className="text-sm font-medium text-foreground truncate">{w.fullname}</p>
-                                        <p className="text-xs text-muted-foreground">
-                                            {isAssigned ? "Already assigned" : w.role}
+                                        <div className="flex items-center gap-1.5 min-w-0">
+                                            <p className="text-sm font-medium text-foreground truncate">{w.fullname}</p>
+                                            {tag && (
+                                                <span className={cn("shrink-0 px-1.5 py-0.5 rounded-md text-[10px] font-semibold", tag.className)}>
+                                                    {tag.label}
+                                                </span>
+                                            )}
+                                        </div>
+                                        <p className="text-xs text-muted-foreground truncate">
+                                            {isAssigned ? "Already assigned" : tag && avail?.reason ? avail.reason : w.role}
                                         </p>
                                     </div>
                                     <div className={cn(
