@@ -39,6 +39,7 @@ import {
     Play,
     Plus,
     Receipt,
+    Repeat2,
     Send,
     ShieldCheck,
     SquareX,
@@ -1396,6 +1397,28 @@ export function JobDetail() {
                                         <div className="flex-1 min-w-0">
                                             <p className="text-sm font-medium text-foreground group-hover:text-blue-700 transition-colors">{w.fullname}</p>
                                             <p className="text-[10px] text-muted-foreground">{w.email}</p>
+                                            {(() => {
+                                                // Taker of another worker's offered shift — approving
+                                                // their claim also takes the giver off this job.
+                                                if (w.giveawayFrom && w.pendingApproval) {
+                                                    const giver = assignedWorkers.find(g => g._id === w.giveawayFrom)
+                                                    return (
+                                                        <span className="inline-flex items-center gap-1 mt-1 px-1.5 py-0.5 rounded-md bg-violet-50 text-violet-600 text-[10px] font-semibold">
+                                                            <Repeat2 size={10} />
+                                                            Taking over from {giver?.fullname ?? "another worker"} — approving removes them
+                                                        </span>
+                                                    )
+                                                }
+                                                if (w.giveawayOfferedAt && w.status === "accepted") {
+                                                    return (
+                                                        <span className="inline-flex items-center gap-1 mt-1 px-1.5 py-0.5 rounded-md bg-violet-50 text-violet-600 text-[10px] font-semibold">
+                                                            <Repeat2 size={10} />
+                                                            {w.giveawayTakenBy ? "Handover awaiting your approval" : "Offering this shift to others"}
+                                                        </span>
+                                                    )
+                                                }
+                                                return null
+                                            })()}
                                         </div>
                                         {w.pendingApproval ? (
                                             <div className="flex items-center gap-1.5">

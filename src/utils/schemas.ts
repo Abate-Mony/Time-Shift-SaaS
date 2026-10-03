@@ -48,6 +48,15 @@ export const workerSchema = z.object({
     // status stays "pending" either way, this is what tells the two apart.
     pendingApproval: z.boolean().optional(),
 
+    // Open giveaway (see offerShiftGiveaway on the backend). On the giver's
+    // assignment: giveawayOfferedAt while their offer is live, and
+    // giveawayTakenBy once a taker's claim is waiting on approval. On the
+    // taker's assignment: giveawayFrom — the giver's assignment it replaces,
+    // so approving that claim also takes the giver off the job.
+    giveawayOfferedAt: z.string().nullable().optional(),
+    giveawayTakenBy: z.string().nullable().optional(),
+    giveawayFrom: z.string().nullable().optional(),
+
     // Set on clock-out when worked time overran the job's scheduled duration
     // by more than the company's threshold. "pending" means a manager needs
     // to approve/adjust/reject it (see reviewAssignmentOvertime) before the
