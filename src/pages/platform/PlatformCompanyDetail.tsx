@@ -235,7 +235,7 @@ export function PlatformCompanyDetail() {
         open={resetDialog}
         onOpenChange={setResetDialog}
         title="Reset sending domain?"
-        description="This clears the custom sending domain configuration. Email sending falls back to the INPRN default sender immediately."
+        description="This clears the custom sending domain configuration. Email sending falls back to the OnClockly default sender immediately."
         confirmLabel="Reset domain"
         destructive
         busy={resetDomainMutation.isPending}
@@ -369,7 +369,7 @@ function CompanyEmailTab({
     <Card>
       <CardHeader><CardTitle>Email Sending</CardTitle></CardHeader>
       <CardContent>
-        <InfoRow label="Sending mode" value={settings.provider === "custom" ? "Custom domain" : "INPRN default"} />
+        <InfoRow label="Sending mode" value={settings.provider === "custom" ? "Custom domain" : "OnClockly default"} />
         <InfoRow label="Sending domain" value={settings.sendingDomain || "—"} />
         <InfoRow label="Domain status" value={<PlatformStatusBadge status={settings.domainStatus} />} />
         <InfoRow label="Sender email" value={settings.senderEmail || "—"} />

@@ -68,7 +68,7 @@ export interface PlatformUserDetail extends PlatformUserListItem {
 }
 
 export interface PlatformEmailSettings {
-  provider: "inprn" | "custom";
+  provider: "onclockly" | "custom";
   senderName: string;
   senderEmail: string;
   replyToEmail: string;

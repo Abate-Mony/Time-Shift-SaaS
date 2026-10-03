@@ -1,4 +1,4 @@
-export type EmailProvider = 'inprn' | 'custom'
+export type EmailProvider = 'onclockly' | 'custom'
 export type DomainStatus = 'not_connected' | 'pending' | 'verified' | 'failed'
 
 // Normalized by the backend from Resend's own DNS record shape — never

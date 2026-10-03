@@ -246,7 +246,7 @@ export const verifyEmailDomain = async (): Promise<EmailSettingsResponse> => {
 export const removeEmailDomain = async (): Promise<boolean> => {
     try {
         await customFetch.delete("/companies/email-domain");
-        toast.success("Sending domain removed — INPRN emails will use the fallback address");
+        toast.success("Sending domain removed — OnClockly emails will use the fallback address");
         await queryClient.invalidateQueries({ queryKey: ["email-settings"] });
         return true;
     } catch (err) {

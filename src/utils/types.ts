@@ -25,7 +25,7 @@ export interface JobClientRef {
 
 export type UserRole = "owner" | "admin" | "manager" | "worker";
 
-// A completely separate authorization axis from UserRole — INPRN staff
+// A completely separate authorization axis from UserRole — OnClockly staff
 // operating the platform itself, not a role inside any one company. Never
 // display this merged with `role` (see the platform console's own "Company
 // role" / "Platform access" split).

@@ -140,7 +140,7 @@ function RemoveDomainDialog({ domain, onClose, onRemoved }: { domain: string; on
             <div className="bg-card rounded-t-2xl sm:rounded-2xl shadow-2xl w-full max-w-sm p-5">
                 <h3 className="text-base font-bold text-foreground mb-2">Remove {domain}?</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                    INPRN will stop sending emails from this domain and will fall back to its own sending address.
+                    OnClockly will stop sending emails from this domain and will fall back to its own sending address.
                     Your workers and clients will still receive emails.
                 </p>
                 <div className="flex gap-2.5 mt-5">
@@ -262,7 +262,7 @@ function ConnectDomainWizard({ onClose, onFinished }: { onClose: () => void; onF
 
                     {step === 3 && (
                         <div className="flex flex-col gap-4">
-                            <p className="text-sm text-muted-foreground">Choose how INPRN emails will appear to your workers and clients.</p>
+                            <p className="text-sm text-muted-foreground">Choose how OnClockly emails will appear to your workers and clients.</p>
                             <Input label="Sender name" value={senderName} onChange={e => setSenderName(e.target.value)} placeholder="Your Company Ltd" />
                             <div>
                                 <label className="text-sm font-medium text-foreground">Sender address</label>
@@ -371,7 +371,7 @@ export default function EmailSettings() {
         <div className="p-6 max-w-3xl mx-auto animate-fade-in flex flex-col gap-4">
             <div>
                 <h1 className="text-xl font-semibold text-foreground tracking-tight">Email &amp; Sending</h1>
-                <p className="text-sm text-muted-foreground mt-0.5">Control how emails sent by INPRN appear to your workers and clients.</p>
+                <p className="text-sm text-muted-foreground mt-0.5">Control how emails sent by OnClockly appear to your workers and clients.</p>
             </div>
 
             {!isOwner && (
@@ -425,10 +425,10 @@ export default function EmailSettings() {
                 {settings.domainStatus === 'not_connected' ? (
                     <>
                         <p className="text-sm text-muted-foreground">
-                            Send emails from your own company domain instead of INPRN's — workers and clients will see it come from you.
+                            Send emails from your own company domain instead of OnClockly's — workers and clients will see it come from you.
                         </p>
                         <p className="text-sm text-foreground">
-                            Current sender: <span className="font-semibold">INPRN &lt;notifications@inprn.com&gt;</span>
+                            Current sender: <span className="font-semibold">OnClockly &lt;no-reply@notification.onclockly.com&gt;</span>
                         </p>
                         {isOwner && (
                             <div>
