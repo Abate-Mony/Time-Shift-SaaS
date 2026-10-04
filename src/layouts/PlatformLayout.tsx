@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery, type QueryClient } from "@tanstack/react-query";
 import { NavLink, Outlet, redirect, useLocation, type LoaderFunctionArgs } from "react-router";
 import toast from "react-hot-toast";
@@ -16,6 +17,8 @@ import {
   ChevronRight,
   Search,
   Bell,
+  Menu,
+  X,
 } from "lucide-react";
 import { userQuery, type iUser } from "./dashboardlayout";
 
@@ -50,6 +53,7 @@ export default function PlatformLayout() {
   const { data } = useQuery(userQuery);
   const user = data?.user as iUser | undefined;
   const location = useLocation();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const activeNav = [...NAV_ITEMS]
     .filter((item) => (item.end ? location.pathname === item.to : location.pathname.startsWith(item.to)))
@@ -59,8 +63,17 @@ export default function PlatformLayout() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#F7F9FC]">
+      {/* Backdrop — mobile only, closes the sidebar on tap outside it */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-20 bg-black/40 md:hidden" onClick={() => setMobileOpen(false)} />
+      )}
+
       {/* ── Sidebar ─────────────────────────────────────────────────── */}
-      <div className="hidden md:flex w-[240px] shrink-0 bg-[#0F172A] flex-col">
+      <div
+        className={`fixed inset-y-0 left-0 z-30 w-[240px] shrink-0 bg-[#0F172A] flex flex-col transform transition-transform duration-200 md:relative md:translate-x-0 ${
+          mobileOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
         {/* Brand */}
         <div className="px-5 pt-5 pb-4">
           <div className="flex items-center gap-2 mb-1">
@@ -68,9 +81,15 @@ export default function PlatformLayout() {
               <span className="text-[10px] font-black text-white tracking-tight">OC</span>
             </div>
             <span className="text-sm font-bold text-white">OnClockly</span>
-            <span className="ml-auto text-[9px] font-bold text-[#0F172A] bg-amber-400 px-1.5 py-0.5 rounded uppercase tracking-wider">
+            <span className="ml-1 text-[9px] font-bold text-[#0F172A] bg-amber-400 px-1.5 py-0.5 rounded uppercase tracking-wider">
               Platform
             </span>
+            <button
+              onClick={() => setMobileOpen(false)}
+              className="ml-auto w-6 h-6 flex items-center justify-center rounded text-slate-500 hover:text-slate-300 transition-colors md:hidden"
+            >
+              <X size={14} />
+            </button>
           </div>
           <p className="text-[10px] text-slate-500 pl-8">Internal operations console</p>
         </div>
@@ -92,6 +111,7 @@ export default function PlatformLayout() {
               key={to}
               to={to}
               end={end}
+              onClick={() => setMobileOpen(false)}
               className={({ isActive }) =>
                 `w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors mb-0.5 ${
                   isActive ? "bg-white/10 text-white font-semibold" : "text-slate-400 hover:bg-white/5 hover:text-slate-200"
@@ -132,6 +152,12 @@ export default function PlatformLayout() {
       {/* ── Main ────────────────────────────────────────────────────── */}
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="h-12 border-b border-[#E2E8F0] bg-white flex items-center px-5 gap-4 sticky top-0 z-10 shrink-0">
+          <button
+            onClick={() => setMobileOpen(true)}
+            className="w-8 h-8 -ml-1.5 flex items-center justify-center rounded-lg hover:bg-slate-50 text-slate-500 transition-colors shrink-0 md:hidden"
+          >
+            <Menu size={16} />
+          </button>
           <div className="flex items-center gap-1.5 flex-1 min-w-0">
             <span className="text-sm text-slate-400">Platform</span>
             {activeNav && !activeNav.end && (
@@ -146,8 +172,8 @@ export default function PlatformLayout() {
             className="flex items-center gap-2 h-8 px-3 bg-slate-50 border border-[#E2E8F0] rounded-lg text-xs text-slate-400 hover:bg-slate-100 transition-colors"
           >
             <Search size={11} />
-            Search
-            <kbd className="ml-1 text-[10px] font-mono bg-slate-200 text-slate-500 px-1 rounded">⌘K</kbd>
+            <span className="hidden sm:inline">Search</span>
+            <kbd className="ml-1 hidden text-[10px] font-mono bg-slate-200 text-slate-500 px-1 rounded sm:inline">⌘K</kbd>
           </button>
           <button className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-50 text-slate-400 transition-colors relative">
             <Bell size={14} />
