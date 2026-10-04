@@ -578,6 +578,38 @@ export const router = createBrowserRouter([
                             })),
                     },
                     {
+                        // Subscriptions/Trials/Usage/Emails have no backend yet
+                        // (no billing provider, no trial tracking, no
+                        // cross-company telemetry/email rollup) — these are
+                        // static preview screens, hence no loader.
+                        path: "subscriptions",
+                        lazy: () =>
+                            import("@/pages/platform/PlatformSubscriptions").then((m) => ({
+                                Component: m.PlatformSubscriptions,
+                            })),
+                    },
+                    {
+                        path: "trials",
+                        lazy: () =>
+                            import("@/pages/platform/PlatformTrials").then((m) => ({
+                                Component: m.PlatformTrials,
+                            })),
+                    },
+                    {
+                        path: "usage",
+                        lazy: () =>
+                            import("@/pages/platform/PlatformUsage").then((m) => ({
+                                Component: m.PlatformUsage,
+                            })),
+                    },
+                    {
+                        path: "emails",
+                        lazy: () =>
+                            import("@/pages/platform/PlatformEmails").then((m) => ({
+                                Component: m.PlatformEmails,
+                            })),
+                    },
+                    {
                         path: "users/:userId",
                         lazy: () =>
                             import("@/pages/platform/PlatformUserDetail").then((m) => ({

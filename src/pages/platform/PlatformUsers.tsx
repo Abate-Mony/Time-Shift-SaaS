@@ -1,12 +1,15 @@
-import { useQuery, type QueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { useLoaderData, useNavigate, useNavigation, type LoaderFunctionArgs } from "react-router";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { PlatformStatusBadge } from "@/components/platform/PlatformStatusBadge";
-import { platformUsersQuery } from "@/utils/platform-api";
+import { AnimatePresence } from "framer-motion";
+import toast from "react-hot-toast";
+import { Eye, Ban, RotateCcw, Users as UsersIcon } from "lucide-react";
+import {
+  StatusBadge, TH, TD, PlatformTable, THead, TBody, Row, EmptyRow,
+  RowMenu, ConfirmModal, SearchInput,
+} from "@/components/platform/figma/primitives";
+import { platformUsersQuery, updateUserStatus } from "@/utils/platform-api";
 import { useState } from "react";
-import { Badge } from "@/components/ui/badge";
+import dayjs from "dayjs";
 
 export const platformUsersLoader = (queryClient: QueryClient) => async ({ request }: LoaderFunctionArgs) => {
   const params = Object.fromEntries(new URL(request.url).searchParams.entries());
@@ -19,9 +22,31 @@ export function PlatformUsers() {
   const navigate = useNavigate();
   const navigation = useNavigation();
   const isLoading = navigation.state === "loading";
+  const queryClient = useQueryClient();
 
   const { data } = useQuery(platformUsersQuery(searchValues));
   const [search, setSearch] = useState(searchValues.search ?? "");
+  const [statusDialog, setStatusDialog] = useState<{ userId: string; name: string; next: "active" | "disabled" } | null>(null);
+
+  const statusMutation = useMutation({
+    mutationFn: (vars: { userId: string; status: "active" | "disabled"; reason: string }) =>
+      updateUserStatus(vars.userId, vars.status, vars.reason),
+    onSuccess: () => {
+      toast.success("User status updated. This action has been recorded in the audit log.");
+      queryClient.invalidateQueries({ queryKey: ["platform", "users"] });
+      setStatusDialog(null);
+    },
+    onError: () => toast.error("Failed to update user status."),
+  });
+
+  const submitSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const params = new URLSearchParams(searchValues);
+    if (search) params.set("search", search);
+    else params.delete("search");
+    params.delete("page");
+    navigate(`/platform/users?${params.toString()}`);
+  };
 
   const goToPage = (page: number) => {
     const params = new URLSearchParams(searchValues);
@@ -30,83 +55,108 @@ export function PlatformUsers() {
   };
 
   return (
-    <div className="space-y-5 p-6">
+    <div className="p-6 flex flex-col gap-4">
       <div>
-        <h1 className="text-xl font-semibold text-foreground tracking-tight">Users</h1>
-        <p className="mt-0.5 text-sm text-muted-foreground">Search users across every company on OnClockly.</p>
+        <h1 className="text-xl font-bold text-slate-900">Users</h1>
+        <p className="text-sm text-slate-500 mt-0.5">Cross-company user search and management.</p>
       </div>
 
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          const params = new URLSearchParams(searchValues);
-          if (search) params.set("search", search);
-          else params.delete("search");
-          params.delete("page");
-          navigate(`/platform/users?${params.toString()}`);
-        }}
-        className="w-72"
-      >
-        <Input placeholder="Search by name or email…" value={search} onChange={(e) => setSearch(e.target.value)} />
+      <form onSubmit={submitSearch} className="max-w-sm">
+        <SearchInput value={search} onChange={setSearch} placeholder="Search by name, email or company…" />
       </form>
 
       <div className={isLoading ? "opacity-60 transition-opacity" : "transition-opacity"}>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>User</TableHead>
-              <TableHead>Company</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Platform access</TableHead>
-              <TableHead>Status</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
+        <PlatformTable>
+          <THead>
+            <TH>User</TH>
+            <TH>Company</TH>
+            <TH>Company role</TH>
+            <TH>Platform access</TH>
+            <TH>Status</TH>
+            <TH>Created</TH>
+            <TH><span className="sr-only">Actions</span></TH>
+          </THead>
+          <TBody>
             {data?.data.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={5} className="py-10 text-center text-sm text-muted-foreground">
-                  No users match this search.
-                </TableCell>
-              </TableRow>
+              <EmptyRow colSpan={7}>
+                <UsersIcon size={20} className="text-slate-200 mx-auto mb-2" />
+                No users match this search.
+              </EmptyRow>
             )}
             {data?.data.map((user) => (
-              <TableRow key={user.id} className="cursor-pointer" onClick={() => navigate(`/platform/users/${user.id}`)}>
-                <TableCell>
-                  <p className="font-medium text-foreground">{user.name}</p>
-                  <p className="text-xs text-muted-foreground">{user.email}</p>
-                </TableCell>
-                <TableCell className="text-muted-foreground">{user.company?.name ?? "—"}</TableCell>
-                <TableCell className="capitalize">{user.role}</TableCell>
-                <TableCell>
-                  {user.platformRole ? <Badge className="capitalize">{user.platformRole.replace("_", " ")}</Badge> : <span className="text-muted-foreground">—</span>}
-                </TableCell>
-                <TableCell><PlatformStatusBadge status={user.accountStatus} /></TableCell>
-              </TableRow>
+              <Row key={user.id} onClick={() => navigate(`/platform/users/${user.id}`)}>
+                <TD>
+                  <p className="font-semibold text-slate-800 text-sm">{user.name}</p>
+                  <p className="text-[11px] text-slate-400">{user.email}</p>
+                </TD>
+                <TD className="text-xs text-slate-600">{user.company?.name ?? "—"}</TD>
+                <TD><span className="text-xs font-semibold capitalize text-slate-700">{user.role}</span></TD>
+                <TD>
+                  {user.platformRole ? (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold ring-1 bg-amber-50 text-amber-700 ring-amber-200 capitalize">
+                      {user.platformRole.replace("_", " ")}
+                    </span>
+                  ) : (
+                    <span className="text-[11px] text-slate-300">—</span>
+                  )}
+                </TD>
+                <TD><StatusBadge status={user.accountStatus} /></TD>
+                <TD className="text-xs text-slate-400 whitespace-nowrap">{dayjs(user.createdAt).format("D MMM YYYY")}</TD>
+                <TD onClick={(e) => e.stopPropagation()}>
+                  <RowMenu
+                    items={[
+                      { label: "View user", icon: Eye, onClick: () => navigate(`/platform/users/${user.id}`) },
+                      user.accountStatus === "active"
+                        ? { label: "Disable account", icon: Ban, danger: true, onClick: () => setStatusDialog({ userId: user.id, name: user.name, next: "disabled" }) }
+                        : { label: "Restore account", icon: RotateCcw, onClick: () => setStatusDialog({ userId: user.id, name: user.name, next: "active" }) },
+                    ]}
+                  />
+                </TD>
+              </Row>
             ))}
-          </TableBody>
-        </Table>
+          </TBody>
+        </PlatformTable>
+
+        {data && data.pagination.totalPages > 1 && (
+          <div className="px-4 py-3 border-t border-[#F1F5F9] bg-[#F8FAFC] flex items-center justify-between rounded-b-lg">
+            <p className="text-xs text-slate-400">{data.pagination.total} users · page {data.pagination.page} of {data.pagination.totalPages}</p>
+            <div className="flex gap-2">
+              <button
+                disabled={data.pagination.page <= 1}
+                onClick={() => goToPage(data.pagination.page - 1)}
+                className="h-7 px-2.5 rounded text-xs font-semibold text-slate-600 hover:bg-slate-200 transition-colors disabled:opacity-40 disabled:hover:bg-transparent"
+              >
+                Previous
+              </button>
+              <button
+                disabled={data.pagination.page >= data.pagination.totalPages}
+                onClick={() => goToPage(data.pagination.page + 1)}
+                className="h-7 px-2.5 rounded text-xs font-semibold text-slate-600 hover:bg-slate-200 transition-colors disabled:opacity-40 disabled:hover:bg-transparent"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
-      {data && data.pagination.totalPages > 1 && (
-        <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <p>
-            Page {data.pagination.page} of {data.pagination.totalPages} · {data.pagination.total} users
-          </p>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" disabled={data.pagination.page <= 1} onClick={() => goToPage(data.pagination.page - 1)}>
-              Previous
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={data.pagination.page >= data.pagination.totalPages}
-              onClick={() => goToPage(data.pagination.page + 1)}
-            >
-              Next
-            </Button>
-          </div>
-        </div>
-      )}
+      <AnimatePresence>
+        {statusDialog && (
+          <ConfirmModal
+            title={statusDialog.next === "active" ? `Restore ${statusDialog.name}?` : `Disable ${statusDialog.name}?`}
+            body={
+              statusDialog.next === "active"
+                ? "This restores the account's ability to sign in."
+                : "This account will no longer be able to sign in. Note: an already-issued access token can keep working for up to 15 minutes until it naturally expires."
+            }
+            confirmLabel={statusDialog.next === "active" ? "Restore account" : "Disable account"}
+            danger={statusDialog.next !== "active"}
+            busy={statusMutation.isPending}
+            onConfirm={(reason) => statusMutation.mutate({ userId: statusDialog.userId, status: statusDialog.next, reason })}
+            onClose={() => setStatusDialog(null)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
