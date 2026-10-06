@@ -160,6 +160,91 @@ function RemoveDomainDialog({ domain, onClose, onRemoved }: { domain: string; on
     )
 }
 
+// ─── Set / edit sender address ──────────────────────────────────────────────
+// Separate from ConnectDomainWizard on purpose: that wizard assumes you're
+// mid-connect (steps 1-2 need a domain that isn't verified yet). This
+// covers the case the wizard has no path back into — a domain that's
+// already verified but has no senderEmail set (or an admin wants to
+// change the mailbox name later) — see the "Finish sender setup" button
+// that used to only render pre-verification, stranding anyone who saved
+// the top Sender identity card without ever reaching the wizard's step 3.
+function EditSenderDialog({
+    sendingDomain,
+    currentSenderName,
+    currentReplyTo,
+    currentSenderEmail,
+    onClose,
+    onSaved,
+}: {
+    sendingDomain: string
+    currentSenderName: string
+    currentReplyTo: string
+    currentSenderEmail: string
+    onClose: () => void
+    onSaved: () => void
+}) {
+    const queryClient = useQueryClient()
+    const existingLocalPart = currentSenderEmail.includes('@') ? currentSenderEmail.split('@')[0] : ''
+    const [localPart, setLocalPart] = useState(existingLocalPart || 'notifications')
+    const [senderName, setSenderName] = useState(currentSenderName)
+    const [replyToEmail, setReplyToEmail] = useState(currentReplyTo)
+    const [showTestDialog, setShowTestDialog] = useState(false)
+
+    const saveMutation = useMutation({
+        mutationFn: () => updateEmailSettings({ senderName: senderName.trim(), replyToEmail: replyToEmail.trim(), senderLocalPart: localPart.trim() }),
+        onSuccess: settings => {
+            queryClient.setQueryData(emailSettingsQueryKey, (prev: any) => prev ? { ...prev, settings } : prev)
+            toast.success('Sender address saved')
+            onSaved()
+        },
+        onError: err => toast.error(errMsg(err, "Couldn't save the sender address.")),
+    })
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm px-4" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
+            <div className="bg-card rounded-t-2xl sm:rounded-2xl shadow-2xl w-full max-w-lg p-5 flex flex-col gap-4">
+                <h3 className="text-base font-bold text-foreground">{existingLocalPart ? 'Edit sender address' : 'Finish sender setup'}</h3>
+                <p className="text-sm text-muted-foreground">
+                    {existingLocalPart
+                        ? 'Change the mailbox OnClockly sends from on your verified domain.'
+                        : "Your domain is verified, but no sender mailbox has been set yet — emails are still falling back to OnClockly's own address."}
+                </p>
+                <Input label="Sender name" value={senderName} onChange={e => setSenderName(e.target.value)} placeholder="Your Company Ltd" />
+                <div>
+                    <label className="text-sm font-medium text-foreground">Sender address</label>
+                    <div className="flex items-center border border-[var(--border)] rounded-lg overflow-hidden mt-1.5 focus-within:ring-2 focus-within:ring-[var(--primary)]/15">
+                        <input
+                            value={localPart}
+                            onChange={e => setLocalPart(e.target.value)}
+                            placeholder="notifications"
+                            className="flex-1 h-9 px-3 text-sm text-foreground bg-card outline-none"
+                        />
+                        <span className="px-3 h-9 flex items-center text-sm text-muted-foreground bg-muted border-l border-[var(--border)] shrink-0">@{sendingDomain}</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">Only the mailbox name is editable — the domain is fixed to what you verified.</p>
+                </div>
+                <Input label="Reply-to (optional)" type="email" value={replyToEmail} onChange={e => setReplyToEmail(e.target.value)} placeholder="office@yourcompany.co.uk" />
+
+                <div className="flex gap-2.5 justify-end mt-2">
+                    <Button type="button" variant="outline" onClick={() => setShowTestDialog(true)} disabled={!localPart.trim()}>
+                        <Send size={13} /> Send test email
+                    </Button>
+                    <Button type="button" variant="outline" onClick={onClose} disabled={saveMutation.isPending}>Cancel</Button>
+                    <Button
+                        type="button"
+                        disabled={!senderName.trim() || !localPart.trim() || saveMutation.isPending}
+                        onClick={() => saveMutation.mutate()}
+                    >
+                        {saveMutation.isPending ? <Loader2 size={14} className="animate-spin" /> : 'Save'}
+                    </Button>
+                </div>
+
+                {showTestDialog && <TestEmailDialog onClose={() => setShowTestDialog(false)} />}
+            </div>
+        </div>
+    )
+}
+
 // ─── Connect-domain wizard ──────────────────────────────────────────────────
 
 function ConnectDomainWizard({ onClose, onFinished }: { onClose: () => void; onFinished: () => void }) {
@@ -325,6 +410,7 @@ export default function EmailSettings() {
     const [showWizard, setShowWizard] = useState(false)
     const [showRemoveDialog, setShowRemoveDialog] = useState(false)
     const [showTestDialog, setShowTestDialog] = useState(false)
+    const [showEditSender, setShowEditSender] = useState(false)
 
     const identityMutation = useMutation({
         mutationFn: () => updateEmailSettings({ senderName: senderName ?? settings?.senderName, replyToEmail: replyToEmail ?? settings?.replyToEmail }),
@@ -441,12 +527,21 @@ export default function EmailSettings() {
                         <p className="text-sm font-mono text-foreground">{settings.sendingDomain}</p>
 
                         {settings.domainStatus === 'verified' && (
-                            <div>
-                                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">Current sender</p>
-                                <p className="text-sm font-semibold text-foreground">{settings.senderName}</p>
-                                <p className="text-sm text-muted-foreground">{settings.senderEmail}</p>
-                                {settings.replyToEmail && <p className="text-xs text-muted-foreground mt-0.5">Reply-to: {settings.replyToEmail}</p>}
-                            </div>
+                            settings.senderEmail === '' ? (
+                                <div className="flex items-start gap-2.5 bg-amber-50 border border-amber-200 rounded-lg px-3.5 py-3">
+                                    <AlertTriangle size={14} className="text-amber-600 shrink-0 mt-0.5" />
+                                    <p className="text-sm text-amber-800">
+                                        No sender mailbox set yet — emails are still sending from OnClockly's own address, not {settings.sendingDomain}.
+                                    </p>
+                                </div>
+                            ) : (
+                                <div>
+                                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">Current sender</p>
+                                    <p className="text-sm font-semibold text-foreground">{settings.senderName}</p>
+                                    <p className="text-sm text-muted-foreground">{settings.senderEmail}</p>
+                                    {settings.replyToEmail && <p className="text-xs text-muted-foreground mt-0.5">Reply-to: {settings.replyToEmail}</p>}
+                                </div>
+                            )
                         )}
 
                         {settings.domainStatus === 'pending' && (
@@ -467,9 +562,20 @@ export default function EmailSettings() {
                             <div className="flex gap-2.5 flex-wrap">
                                 {settings.domainStatus === 'verified' ? (
                                     <>
-                                        <Button type="button" variant="outline" size="sm" onClick={() => setShowTestDialog(true)}>
-                                            <Send size={13} /> Send test email
-                                        </Button>
+                                        {settings.senderEmail === '' ? (
+                                            <Button type="button" size="sm" onClick={() => setShowEditSender(true)}>
+                                                Finish sender setup
+                                            </Button>
+                                        ) : (
+                                            <>
+                                                <Button type="button" variant="outline" size="sm" onClick={() => setShowEditSender(true)}>
+                                                    Edit sender address
+                                                </Button>
+                                                <Button type="button" variant="outline" size="sm" onClick={() => setShowTestDialog(true)}>
+                                                    <Send size={13} /> Send test email
+                                                </Button>
+                                            </>
+                                        )}
                                         <Button type="button" variant="outline" size="sm" className="text-red-600 hover:text-red-600 hover:bg-red-50" onClick={() => setShowRemoveDialog(true)}>
                                             <Trash2 size={13} /> Manage domain
                                         </Button>
@@ -521,6 +627,16 @@ export default function EmailSettings() {
                 />
             )}
             {showTestDialog && <TestEmailDialog onClose={() => setShowTestDialog(false)} />}
+            {showEditSender && (
+                <EditSenderDialog
+                    sendingDomain={settings.sendingDomain}
+                    currentSenderName={settings.senderName}
+                    currentReplyTo={settings.replyToEmail}
+                    currentSenderEmail={settings.senderEmail}
+                    onClose={() => setShowEditSender(false)}
+                    onSaved={() => setShowEditSender(false)}
+                />
+            )}
         </div>
     )
 }
