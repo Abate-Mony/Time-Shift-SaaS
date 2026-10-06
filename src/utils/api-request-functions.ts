@@ -16,6 +16,8 @@ import type { InvoiceTemplate, InvoiceTemplateInput } from "./types/invoiceTempl
 import type { Quote, QuoteFormInput } from "./types/quote";
 import type { EmailSettings, EmailSettingsResponse, SendTestEmailResult } from "./types/emailSettings";
 import type { ApiKeyInfo, CreateApiKeyResponse } from "./types/apiKey";
+import type { PublicQuoteLinkInfo } from "./types/quoteLink";
+import type { QuoteWorkflowResponse, QuoteWorkflowState } from "./types/quoteWorkflow";
 
 // Shape of POST /ai/job-draft's response. Every field on `draft` is a
 // best-effort guess the model made from a free-text prompt — nothing here
@@ -298,6 +300,51 @@ export const revokeApiKey = async (id: string): Promise<boolean> => {
         toast.error(getApiErrorMessage(err));
         return false;
     }
+};
+
+// ── Public quote-request link ───────────────────────────────────────────
+// The identifier a company shares publicly (quotes.onclockly.com/<slug>)
+// for the unauthenticated quote-request wizard to resolve them by — see
+// the backend's publicQuoteIntakeController.ts. Deliberately a separate,
+// rotatable value from any API key (companies/api-keys above): this one
+// only ever lets a visitor view the public form and submit a lead.
+
+export const getPublicQuoteLink = async (): Promise<PublicQuoteLinkInfo> => {
+    const { data } = await customFetch.get<PublicQuoteLinkInfo & { success: true }>("/companies/public-quote-link");
+    return { slug: data.slug, url: data.url };
+};
+
+export const rotatePublicQuoteLink = async (): Promise<PublicQuoteLinkInfo | null> => {
+    try {
+        const { data } = await customFetch.post<PublicQuoteLinkInfo & { success: true }>("/companies/public-quote-link/rotate");
+        await queryClient.invalidateQueries({ queryKey: ["public-quote-link"] });
+        return { slug: data.slug, url: data.url };
+    } catch (err) {
+        toast.error(getApiErrorMessage(err));
+        return null;
+    }
+};
+
+// ── Quote Workflow ───────────────────────────────────────────────────────
+// The admin-editable content behind the public quote-request wizard (see
+// the backend's quoteWorkflowModel.ts / quoteWorkflowController.ts). Left
+// throwing, not toast-wrapped — the builder page shows per-field Zod
+// validation errors (e.g. "duplicate option values") inline/via its own
+// toast, same reasoning as Email Settings above.
+
+export const getQuoteWorkflow = async (): Promise<QuoteWorkflowResponse> => {
+    const { data } = await customFetch.get<QuoteWorkflowResponse & { success: true }>("/companies/quote-workflow");
+    return data;
+};
+
+export const saveQuoteWorkflowDraft = async (draft: QuoteWorkflowState): Promise<QuoteWorkflowState> => {
+    const { data } = await customFetch.put<{ success: true; draft: QuoteWorkflowState }>("/companies/quote-workflow", draft);
+    return data.draft;
+};
+
+export const publishQuoteWorkflow = async (): Promise<{ published: QuoteWorkflowState; publishedAt: string }> => {
+    const { data } = await customFetch.post<{ success: true; published: QuoteWorkflowState; publishedAt: string }>("/companies/quote-workflow/publish");
+    return { published: data.published, publishedAt: data.publishedAt };
 };
 
 // ── Quotes ────────────────────────────────────────────────────────────────

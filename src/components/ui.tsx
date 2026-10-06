@@ -124,37 +124,36 @@ export function Input({ label, error, icon, className = '', ...props }: InputPro
 }
 
 // ── Select ─────────────────────────────────────────────────────────────────
-// export function Select({ label, options, value, onChange, className = '' }: { label?: string; options: { value: string; label: string }[]; value: string; onChange: (v: string) => void; className?: string }) {
-//   return (
-//     <div className="flex flex-col gap-1.5">
-//       {label && <label className="text-sm font-medium text-foreground">{label}</label>}
-//       <select
-//         value={value}
-//         onChange={e => onChange(e.target.value)}
-//         className={`h-9 px-3 border border-[var(--border)] rounded-lg text-sm text-foreground bg-card focus:outline-none focus:ring-2 focus:ring-[#3B82F6]/30 focus:border-[#3B82F6] transition-all appearance-none cursor-pointer ${className}`}
-//       >
-//         {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-//       </select>
-//     </div>
-//   )
-// }
+export function Select({ label, options, value, onChange, className = '' }: { label?: string; options: { value: string; label: string }[]; value: string; onChange: (v: string) => void; className?: string }) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      {label && <label className="text-sm font-medium text-foreground">{label}</label>}
+      <select
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        className={`h-9 px-3 border border-border rounded-lg text-sm text-foreground bg-background focus:outline-none focus:ring-2 focus:ring-ring/30 focus:border-ring transition-all appearance-none cursor-pointer ${className}`}
+      >
+        {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+      </select>
+    </div>
+  )
+}
 
 // ── Textarea ───────────────────────────────────────────────────────────────
-// export function Textarea({ label, placeholder, value, onChange, rows = 3 }: { label?: string; placeholder?: string; value?: string; onChange?: (v: string) => void; rows?: number }) {
-//   return (
-//     <div className="flex flex-col gap-1.5">
-//       {label && <label className="text-sm font-medium text-foreground">{label}</label>}
-//       <textarea
-
-//         value={value}
-//         onChange={e => onChange?.(e.target.value)}
-//         placeholder={placeholder}
-//         rows={rows}
-//         className="w-full px-3 py-2 border border-[var(--border)] rounded-lg text-sm text-foreground bg-card placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#3B82F6]/30 focus:border-[#3B82F6] transition-all resize-none"
-//       />
-//     </div>
-//   )
-// }
+export function Textarea({ label, placeholder, value, onChange, rows = 3, className = '' }: { label?: string; placeholder?: string; value?: string; onChange?: (v: string) => void; rows?: number; className?: string }) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      {label && <label className="text-sm font-medium text-foreground">{label}</label>}
+      <textarea
+        value={value}
+        onChange={e => onChange?.(e.target.value)}
+        placeholder={placeholder}
+        rows={rows}
+        className={`w-full px-3 py-2 border border-border rounded-lg text-sm text-foreground bg-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/30 focus:border-ring transition-all resize-none ${className}`}
+      />
+    </div>
+  )
+}
 
 // ── Card ───────────────────────────────────────────────────────────────────
 export function Card({ children, className = '', onClick }: { children: ReactNode; className?: string; onClick?: () => void }) {

@@ -13,6 +13,8 @@ import BillingSettings from "@/pages/settings/BillingSettings";
 import CompanySettings from "@/pages/settings/CompanySettings";
 import EmailSettings from "@/pages/settings/EmailSettings";
 import ApiKeysSettings from "@/pages/settings/ApiKeysSettings";
+import QuoteLinkSettings from "@/pages/settings/QuoteLinkSettings";
+import QuoteWorkflowSettings from "@/pages/settings/QuoteWorkflowSettings";
 import InvoicingSettings from "@/pages/settings/InvoicingSettings";
 import NotificationSettings from "@/pages/settings/NotificationSettings";
 import ProfileSettings from "@/pages/settings/ProfileSettings";
@@ -318,6 +320,8 @@ export const router = createBrowserRouter([
                             { path: "security", element: <SecuritySettings /> },
                             { path: "email", element: <EmailSettings /> },
                             { path: "api-keys", element: <ApiKeysSettings /> },
+                            { path: "quote-link", element: <QuoteLinkSettings /> },
+                            { path: "quote-workflow", element: <QuoteWorkflowSettings /> },
                             { path: "billing", element: <BillingSettings /> },
                             { path: "billing/plans", element: <ChangePlanSettings /> },
                             { path: "billing/checkout", element: <CheckOutSettings /> },
