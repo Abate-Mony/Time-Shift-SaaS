@@ -168,7 +168,7 @@ function ServiceTypeCard({
 }
 
 const blankService = (): QuoteWorkflowServiceType => ({
-    key: '', label: '', description: '', icon: 'home', order: 0, active: true, basePrice: 0, requiresManualQuote: false, questionsPerPage: 1,
+    key: '', label: '', description: '', icon: 'home', order: 0, active: true, basePrice: 0, requiresManualQuote: false, questionsPerPage: 1, depositPercentage: 0, autoSendQuoteOnSubmit: false,
     steps: [{
         id: uid(), type: 'contact', label: 'Your contact details', subtitle: 'Where should we send your estimate?',
         placeholder: '', helpText: '', required: true, order: 0, active: true,
@@ -228,6 +228,26 @@ function ServiceTypeModal({ initial, onClose, onSave }: { initial?: QuoteWorkflo
                         ))}
                     </div>
                 </div>
+                {!value.requiresManualQuote && (
+                    <>
+                        <div>
+                            <p className="text-sm font-medium text-foreground mb-2">Deposit</p>
+                            <p className="text-xs text-muted-foreground mb-2">What % of the quote to request as a deposit once a client accepts it. 0 means no deposit invoice is created.</p>
+                            <div className="flex gap-2">
+                                {[0, 10, 20, 30, 50].map(n => (
+                                    <Button key={n} type="button" variant={value.depositPercentage === n ? 'default' : 'outline'} onClick={() => setValue(v => ({ ...v, depositPercentage: n }))} className="!px-4">{n === 0 ? 'None' : `${n}%`}</Button>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="rounded-xl border border-border p-3.5 flex items-center justify-between">
+                            <div>
+                                <p className="text-sm font-medium text-foreground">Send quote automatically</p>
+                                <p className="text-xs text-muted-foreground mt-0.5">Skip manual review — email the quote the moment someone submits this service, instead of waiting for a staff member to send it.</p>
+                            </div>
+                            <Toggle on={value.autoSendQuoteOnSubmit} onChange={() => setValue(v => ({ ...v, autoSendQuoteOnSubmit: !v.autoSendQuoteOnSubmit }))} label={value.autoSendQuoteOnSubmit ? 'On' : 'Off'} />
+                        </div>
+                    </>
+                )}
             </div>
             <div className="px-6 py-4 border-t border-border flex justify-end gap-2">
                 <Button variant="outline" onClick={onClose}>Cancel</Button>

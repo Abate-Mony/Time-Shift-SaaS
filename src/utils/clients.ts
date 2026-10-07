@@ -1,5 +1,6 @@
 import customFetch from "@/utils/customFetch"
 import type { Client } from "@/utils/types/client"
+import type { LeadQuoteRef } from "@/utils/types/lead"
 
 export interface ClientListResponse {
   clients: Client[]
@@ -27,6 +28,10 @@ export interface ClientDetailResponse {
   client: Client
   stats: ClientStats
   recentJobs: ClientRecentJob[]
+  // Same shape the Lead detail page already uses — includes quotes a
+  // public-wizard resubmission created for this client, alongside
+  // hand-built ones (see time_sheet_server's clientController.ts getClient).
+  quotes: LeadQuoteRef[]
 }
 
 // The Clients management page fetches a generous single page and

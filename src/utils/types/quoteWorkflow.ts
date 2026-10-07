@@ -48,6 +48,13 @@ export interface QuoteWorkflowServiceType {
     // higher groups that many consecutive questions onto one page. The
     // contact step is always its own final page regardless of this value.
     questionsPerPage: number
+    // What % of the instant estimate to collect as a deposit once a quote
+    // for this service is accepted — 0 means no deposit invoice. Only
+    // meaningful when requiresManualQuote is false.
+    depositPercentage: number
+    // Skips the manual "Send quote" review step in the Leads CRM — a
+    // submission for this service emails the quote immediately instead.
+    autoSendQuoteOnSubmit: boolean
     steps: QuoteWorkflowStep[]
 }
 

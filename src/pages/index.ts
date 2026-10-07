@@ -54,6 +54,7 @@ export { ClientDetailsOverviewPage } from "./ClientDetails/ClientDetailsOverView
 export { ClientDetailsContactsPage } from "./ClientDetails/ClientDetailsContactsPage"
 export { ClientDetailsaJobsPage } from "./ClientDetails/ClientDetailsJobsPage"
 export { ClientDetailsSitesPage } from "./ClientDetails/ClientDetailsSitesPage"
+export { ClientDetailsQuotesPage } from "./ClientDetails/ClientDetailsQuotesPage"
 export { default as ClentBillingPage } from "./ClientDetails/ClientDetailsBillingPage"
 export { SuspendedAccountPage } from "./SuspendedAccountPage"
 export { default as CheckOutSettings } from "./settings/CheckOutSettings"

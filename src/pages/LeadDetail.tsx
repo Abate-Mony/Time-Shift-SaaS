@@ -4,15 +4,16 @@ import {
   ChevronLeft, MoreHorizontal, Plus, X, Pencil, Check,
   Phone, Mail, MapPin, CalendarClock, FileText, Building2,
   Ban, CheckCircle2, ExternalLink, Clock, AlertTriangle,
-  Globe, RefreshCw, MessageSquare, Loader2,
+  Globe, RefreshCw, MessageSquare, Loader2, Send, ClipboardList,
 } from 'lucide-react'
 import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query'
-import { useNavigate, useParams, type LoaderFunctionArgs } from 'react-router'
+import { redirect, useNavigate, useParams, type LoaderFunctionArgs } from 'react-router'
 import toast from 'react-hot-toast'
 import { isAxiosError } from 'axios'
 import customFetch from '@/utils/customFetch'
 import { backLinkState } from '@/hooks/useBackLink'
 import { leadDetailQuery, assignableUsersQuery, fmtLeadValue, formatFollowUp } from '@/utils/leads'
+import { clientDetailQuery } from '@/utils/clients'
 import { getInitials } from '@/utils/getInitials'
 import { STAGE_CONFIG, LOST_REASONS, type Lead, type LeadStage, type LeadQuoteRef } from '@/utils/types/lead'
 import { LeadStageBadge, LeadSourceBadge } from './Leads'
@@ -21,8 +22,27 @@ import { QuoteStatusBadge } from './Quotes'
 // ─── Data loader ──────────────────────────────────────────────────────────────
 
 export const loader = (queryClient: QueryClient) => async ({ params }: LoaderFunctionArgs) => {
-  await queryClient.ensureQueryData(leadDetailQuery(params.id as string))
-  return null
+  const id = params.id as string
+  try {
+    await queryClient.ensureQueryData(leadDetailQuery(id))
+    return null
+  } catch (err) {
+    // leadController.ts only ever matches lifecycle "lead"/"lost" — a lead
+    // that's since been converted to a client (e.g. by accepting a quote,
+    // see quoteController.ts's respondToPublicQuote) 404s here even though
+    // the record still exists, just as a Client now. Same _id either way
+    // (conversion is an in-place lifecycle flip, not a new document), so a
+    // client lookup on the same id tells us whether that's what happened.
+    if (isAxiosError(err) && err.response?.status === 404) {
+      try {
+        await queryClient.ensureQueryData(clientDetailQuery(id))
+        return redirect(`/clients/${id}`)
+      } catch {
+        // Not a client either — genuinely not found, fall through.
+      }
+    }
+    throw err
+  }
 }
 
 const invalidateLead = (qc: ReturnType<typeof useQueryClient>, id: string) => {
@@ -525,6 +545,61 @@ function OverviewSidebar({ lead }: { lead: Lead }) {
   )
 }
 
+// ─── Quote Intake Section ───────────────────────────────────────────────────
+// What the visitor actually submitted via the public quote wizard
+// (Lead.quoteIntake) — only rendered for leads that came in that way.
+// `estimate` was already recalculated server-side at submit time against
+// the company's published Quote Workflow (never trusted from the
+// visitor's own browser), so it's safe to send as-is.
+
+function QuoteIntakeSection({ lead, onSendQuote, sending }: { lead: Lead; onSendQuote: () => void; sending: boolean }) {
+  const intake = lead.quoteIntake
+  if (!intake) return null
+
+  const estimate = intake.estimate
+  const serviceLabel = intake.serviceType.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+
+  return (
+    <div className="bg-white border border-[#E2E8F0] rounded-xl overflow-hidden">
+      <div className="flex items-center justify-between px-5 py-3 border-b border-[#F1F5F9]">
+        <div className="flex items-center gap-2">
+          <ClipboardList size={14} className="text-slate-400" />
+          <h3 className="text-sm font-bold text-slate-800">Quote request</h3>
+        </div>
+        {estimate && !estimate.requiresManualQuote && (
+          <button onClick={onSendQuote} disabled={sending}
+            className="h-7 px-3 text-[11px] font-bold text-white bg-[#1E3A5F] rounded-lg hover:bg-[#162D4A] transition-colors flex items-center gap-1 disabled:opacity-50">
+            {sending ? <Loader2 size={10} className="animate-spin" /> : <Send size={10} />} Send quote to client
+          </button>
+        )}
+      </div>
+      <div className="px-5 py-4">
+        <p className="text-xs text-slate-400 mb-0.5">Service requested</p>
+        <p className="text-sm font-semibold text-slate-800 mb-3">{serviceLabel}</p>
+
+        {!estimate ? (
+          <p className="text-xs text-slate-400">No price could be calculated for this submission — build a quote manually instead.</p>
+        ) : estimate.requiresManualQuote ? (
+          <p className="text-xs text-slate-400">This service requires a manual quote — build one by hand using the details below.</p>
+        ) : (
+          <div className="rounded-lg bg-[#F8FAFC] border border-[#F1F5F9] divide-y divide-[#F1F5F9]">
+            {estimate.lines.map((line, i) => (
+              <div key={i} className="flex items-center justify-between px-3 py-2 text-xs">
+                <span className="text-slate-500">{line.label}</span>
+                <span className="font-semibold text-slate-700">{fmtLeadValue(line.price)}</span>
+              </div>
+            ))}
+            <div className="flex items-center justify-between px-3 py-2">
+              <span className="text-xs font-bold text-slate-600">Estimated total</span>
+              <span className="text-sm font-bold text-[#1E3A5F]">{fmtLeadValue(estimate.total)}</span>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 // ─── Quotes Section ───────────────────────────────────────────────────────────
 
 function QuotesSection({ quotes, onCreateQuote }: { quotes: LeadQuoteRef[]; onCreateQuote: () => void }) {
@@ -675,6 +750,11 @@ export function LeadDetail() {
     onSuccess: () => { toast.success('Lead restored.'); invalidateLead(qc, lead._id) },
     onError: (err: unknown) => toast.error(mutationErrorMessage(err, 'Failed to restore lead.')),
   })
+  const sendQuoteMutation = useMutation({
+    mutationFn: () => customFetch.post(`/leads/${lead._id}/send-quote`),
+    onSuccess: () => { toast.success('Quote sent to client.'); invalidateLead(qc, lead._id) },
+    onError: (err: unknown) => toast.error(mutationErrorMessage(err, 'Failed to send quote.')),
+  })
 
   return (
     <div className="min-h-full bg-[#F8FAFC]">
@@ -787,6 +867,7 @@ export function LeadDetail() {
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-5 items-start">
           <div className="flex flex-col gap-5">
+            <QuoteIntakeSection lead={lead} onSendQuote={() => sendQuoteMutation.mutate()} sending={sendQuoteMutation.isPending} />
             <ContactsSection lead={lead} onAddContact={() => setModal('contact')} />
             <QuotesSection quotes={quotes} onCreateQuote={() => onNavigate('/quotes/create')} />
             <NotesSection lead={lead} onAddNote={() => setModal('note')} />

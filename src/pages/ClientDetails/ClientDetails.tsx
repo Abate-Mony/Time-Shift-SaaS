@@ -61,6 +61,7 @@ const TABS: { to: string; label: string }[] = [
     { to: 'contacts', label: 'Contacts' },
     { to: 'sites', label: 'Sites' },
     { to: 'jobs', label: 'Jobs' },
+    { to: 'quotes', label: 'Quotes' },
     { to: 'billing', label: 'Billing' },
 ]
 
@@ -528,10 +529,11 @@ function Toast({ message }: { message: string }) {
 
 export function ClientDetail() {
     const { id } = useParams<{ id: string }>()
-    const { client, stats, recentJobs } = useQuery(clientDetailQuery(id as string)).data as {
+    const { client, stats, recentJobs, quotes } = useQuery(clientDetailQuery(id as string)).data as {
         client: Client
         stats: import('@/utils/clients').ClientStats
         recentJobs: import('@/utils/clients').ClientRecentJob[]
+        quotes: import('@/utils/types/lead').LeadQuoteRef[]
     }
     const [showEdit, setShowEdit] = useState(false)
     const [showStatus, setShowStatus] = useState(false)
@@ -671,7 +673,7 @@ export function ClientDetail() {
             {/* Tabs */}
             <TabBar />
 
-            <ClientDetailProvider value={{ client, stats, recentJobs }}>
+            <ClientDetailProvider value={{ client, stats, recentJobs, quotes }}>
                 <AnimatePresence mode="wait">
                     <Outlet />
                 </AnimatePresence>

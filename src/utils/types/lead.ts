@@ -32,6 +32,26 @@ export interface LeadLifecycleEvent {
   by?: LeadAssignee | null
 }
 
+export interface LeadQuoteEstimateLine {
+  label: string
+  price: number
+}
+
+// What the visitor actually submitted via the public quote wizard — see
+// time_sheet_server's clientModel.ts's quoteIntake field. `estimate` is
+// null when the service couldn't be resolved against the company's
+// published Quote Workflow at submit time (e.g. it was edited/unpublished
+// between the visitor loading the page and submitting).
+export interface LeadQuoteIntake {
+  serviceType: string
+  answers: Record<string, unknown>
+  estimate: {
+    lines: LeadQuoteEstimateLine[]
+    total: number
+    requiresManualQuote: boolean
+  } | null
+}
+
 export interface Lead {
   _id: string
   name: string
@@ -53,6 +73,7 @@ export interface Lead {
   lostAt?: string | null
   lostReason?: string
   lifecycleHistory?: LeadLifecycleEvent[]
+  quoteIntake?: LeadQuoteIntake | null
   isAutomated?: boolean
   notes?: string
   createdBy?: LeadAssignee | null

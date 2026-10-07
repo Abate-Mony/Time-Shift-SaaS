@@ -1,11 +1,13 @@
 import type { ClientRecentJob, ClientStats } from "@/utils/clients"
 import type { Client } from "@/utils/types/client"
+import type { LeadQuoteRef } from "@/utils/types/lead"
 import { createContext, useContext } from "react"
 
 export interface ClientDetailContextValue {
     client: Client
     stats: ClientStats
     recentJobs: ClientRecentJob[]
+    quotes: LeadQuoteRef[]
 }
 
 const ClientDetailContext = createContext<ClientDetailContextValue | null>(null)
