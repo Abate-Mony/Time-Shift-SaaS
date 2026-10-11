@@ -4,7 +4,7 @@ import {
   ChevronLeft, MoreHorizontal, Plus, X, Pencil, Check,
   Phone, Mail, MapPin, CalendarClock, FileText, Building2,
   Ban, CheckCircle2, ExternalLink, Clock, AlertTriangle,
-  Globe, RefreshCw, MessageSquare, Loader2, Send, ClipboardList,
+  Globe, RefreshCw, MessageSquare, Loader2, ClipboardList,
 } from 'lucide-react'
 import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query'
 import { redirect, useNavigate, useParams, type LoaderFunctionArgs } from 'react-router'
@@ -546,13 +546,15 @@ function OverviewSidebar({ lead }: { lead: Lead }) {
 }
 
 // ─── Quote Intake Section ───────────────────────────────────────────────────
-// What the visitor actually submitted via the public quote wizard
-// (Lead.quoteIntake) — only rendered for leads that came in that way.
-// `estimate` was already recalculated server-side at submit time against
-// the company's published Quote Workflow (never trusted from the
-// visitor's own browser), so it's safe to send as-is.
+// What the visitor FIRST submitted via the public quote wizard
+// (Lead.quoteIntake — never overwritten by a later resubmit, see
+// publicQuoteIntakeController.ts). `estimate` was already recalculated
+// server-side at submit time against the company's published Quote
+// Workflow. Read-only: every submission (first or repeat) already gets
+// its own draft Quote automatically, visible below in Quotes — send it
+// from there (or from the main Quotes page), same as for a client.
 
-function QuoteIntakeSection({ lead, onSendQuote, sending }: { lead: Lead; onSendQuote: () => void; sending: boolean }) {
+function QuoteIntakeSection({ lead }: { lead: Lead }) {
   const intake = lead.quoteIntake
   if (!intake) return null
 
@@ -564,14 +566,8 @@ function QuoteIntakeSection({ lead, onSendQuote, sending }: { lead: Lead; onSend
       <div className="flex items-center justify-between px-5 py-3 border-b border-[#F1F5F9]">
         <div className="flex items-center gap-2">
           <ClipboardList size={14} className="text-slate-400" />
-          <h3 className="text-sm font-bold text-slate-800">Quote request</h3>
+          <h3 className="text-sm font-bold text-slate-800">First quote request</h3>
         </div>
-        {estimate && !estimate.requiresManualQuote && (
-          <button onClick={onSendQuote} disabled={sending}
-            className="h-7 px-3 text-[11px] font-bold text-white bg-[#1E3A5F] rounded-lg hover:bg-[#162D4A] transition-colors flex items-center gap-1 disabled:opacity-50">
-            {sending ? <Loader2 size={10} className="animate-spin" /> : <Send size={10} />} Send quote to client
-          </button>
-        )}
       </div>
       <div className="px-5 py-4">
         <p className="text-xs text-slate-400 mb-0.5">Service requested</p>
@@ -750,12 +746,6 @@ export function LeadDetail() {
     onSuccess: () => { toast.success('Lead restored.'); invalidateLead(qc, lead._id) },
     onError: (err: unknown) => toast.error(mutationErrorMessage(err, 'Failed to restore lead.')),
   })
-  const sendQuoteMutation = useMutation({
-    mutationFn: () => customFetch.post(`/leads/${lead._id}/send-quote`),
-    onSuccess: () => { toast.success('Quote sent to client.'); invalidateLead(qc, lead._id) },
-    onError: (err: unknown) => toast.error(mutationErrorMessage(err, 'Failed to send quote.')),
-  })
-
   return (
     <div className="min-h-full bg-[#F8FAFC]">
       {isLost && (
@@ -867,7 +857,7 @@ export function LeadDetail() {
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-5 items-start">
           <div className="flex flex-col gap-5">
-            <QuoteIntakeSection lead={lead} onSendQuote={() => sendQuoteMutation.mutate()} sending={sendQuoteMutation.isPending} />
+            <QuoteIntakeSection lead={lead} />
             <ContactsSection lead={lead} onAddContact={() => setModal('contact')} />
             <QuotesSection quotes={quotes} onCreateQuote={() => onNavigate('/quotes/create')} />
             <NotesSection lead={lead} onAddNote={() => setModal('note')} />
