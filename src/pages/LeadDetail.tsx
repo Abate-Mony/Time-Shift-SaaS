@@ -1,10 +1,12 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import dayjs from 'dayjs'
 import {
   ChevronLeft, MoreHorizontal, Plus, X, Pencil, Check,
   Phone, Mail, MapPin, CalendarClock, FileText, Building2,
   Ban, CheckCircle2, ExternalLink, Clock, AlertTriangle,
   Globe, RefreshCw, MessageSquare, Loader2, ClipboardList,
+  ArrowUp, ArrowDown, ArrowUpDown,
 } from 'lucide-react'
 import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query'
 import { redirect, useNavigate, useParams, type LoaderFunctionArgs } from 'react-router'
@@ -598,7 +600,43 @@ function QuoteIntakeSection({ lead }: { lead: Lead }) {
 
 // ─── Quotes Section ───────────────────────────────────────────────────────────
 
+type QuoteSortKey = 'createdAt' | 'total'
+type SortDir = 'asc' | 'desc'
+
+function QuoteSortHeader({ label, active, dir, onClick }: { label: string; active: boolean; dir: SortDir; onClick: () => void }) {
+  const Icon = !active ? ArrowUpDown : dir === 'asc' ? ArrowUp : ArrowDown
+  return (
+    <th className="text-left px-4 py-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+      <button onClick={onClick} className={`flex items-center gap-1 hover:text-slate-600 transition-colors ${active ? 'text-slate-600' : ''}`}>
+        {label} <Icon size={11} />
+      </button>
+    </th>
+  )
+}
+
 function QuotesSection({ quotes, onCreateQuote }: { quotes: LeadQuoteRef[]; onCreateQuote: () => void }) {
+  const navigate = useNavigate()
+  const gotoQuote = (quoteId: string) => navigate(`/quotes/${quoteId}`)
+  const [sortKey, setSortKey] = useState<QuoteSortKey>('createdAt')
+  const [sortDir, setSortDir] = useState<SortDir>('desc')
+
+  const toggleSort = (key: QuoteSortKey) => {
+    if (sortKey === key) {
+      setSortDir(d => (d === 'asc' ? 'desc' : 'asc'))
+    } else {
+      setSortKey(key)
+      setSortDir('desc')
+    }
+  }
+
+  const sortedQuotes = useMemo(() => {
+    const factor = sortDir === 'asc' ? 1 : -1
+    return [...quotes].sort((a, b) => {
+      if (sortKey === 'total') return (a.total - b.total) * factor
+      return (dayjs(a.createdAt).valueOf() - dayjs(b.createdAt).valueOf()) * factor
+    })
+  }, [quotes, sortKey, sortDir])
+
   if (quotes.length === 0) {
     return (
       <div className="bg-white border border-[#E2E8F0] rounded-xl p-6 text-center">
@@ -620,28 +658,36 @@ function QuotesSection({ quotes, onCreateQuote }: { quotes: LeadQuoteRef[]; onCr
           <Plus size={10} /> Create Quote
         </button>
       </div>
-      <table className="w-full border-collapse">
-        <thead className="bg-[#F8FAFC] border-b border-[#E2E8F0]">
-          <tr>
-            {['Quote', 'Status', 'Amount', 'Sent', 'Valid Until'].map(h => (
-              <th key={h} className="text-left px-4 py-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider">{h}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-[#F8FAFC]">
-          {quotes.map(q => (
-            <tr key={q._id} className="hover:bg-slate-50/60 transition-colors">
-              <td className="px-4 py-3">
-                <span className="font-mono text-xs font-semibold text-slate-500 bg-slate-50 px-2 py-0.5 rounded border border-slate-200/80">{q.quoteNumber}</span>
-              </td>
-              <td className="px-4 py-3"><QuoteStatusBadge status={q.status} /></td>
-              <td className="px-4 py-3 text-sm font-bold text-slate-800">{fmtLeadValue(q.total)}</td>
-              <td className="px-4 py-3 text-xs text-slate-400">{q.sentAt ? new Date(q.sentAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '—'}</td>
-              <td className="px-4 py-3 text-xs text-slate-400">{new Date(q.validUntil).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</td>
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse">
+          <thead className="bg-[#F8FAFC] border-b border-[#E2E8F0]">
+            <tr>
+              <th className="text-left px-4 py-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Quote</th>
+              <th className="text-left px-4 py-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Status</th>
+              <QuoteSortHeader label="Amount" active={sortKey === 'total'} dir={sortDir} onClick={() => toggleSort('total')} />
+              <QuoteSortHeader label="Created" active={sortKey === 'createdAt'} dir={sortDir} onClick={() => toggleSort('createdAt')} />
+              <th className="text-left px-4 py-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Sent</th>
+              <th className="text-left px-4 py-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Valid Until</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody className="divide-y divide-[#F8FAFC]">
+            {sortedQuotes.map(q => (
+              <tr key={q._id} className="hover:bg-slate-50/60 transition-colors cursor-pointer"
+              onClick={() => gotoQuote(q._id)}
+              >
+                <td className="px-4 py-3 whitespace-nowrap">
+                  <span className="font-mono text-xs font-semibold text-slate-500 bg-slate-50 px-2 py-0.5 rounded border border-slate-200/80">{q.quoteNumber}</span>
+                </td>
+                <td className="px-4 py-3 whitespace-nowrap"><QuoteStatusBadge status={q.status} /></td>
+                <td className="px-4 py-3 text-sm font-bold text-slate-800 whitespace-nowrap">{fmtLeadValue(q.total)}</td>
+                <td className="px-4 py-3 text-xs text-slate-400 whitespace-nowrap">{dayjs(q.createdAt).format('D MMM YYYY, HH:mm')}</td>
+                <td className="px-4 py-3 text-xs text-slate-400 whitespace-nowrap">{q.sentAt ? dayjs(q.sentAt).format('D MMM YYYY') : '—'}</td>
+                <td className="px-4 py-3 text-xs text-slate-400 whitespace-nowrap">{dayjs(q.validUntil).format('D MMM YYYY')}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   )
 }
