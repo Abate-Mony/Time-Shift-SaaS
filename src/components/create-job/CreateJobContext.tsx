@@ -53,6 +53,15 @@ export interface CreateJobContextValue {
   // backend enforces the same rule independently either way.
   lockedFromQuote: { quoteId: string; quoteNumber: string; quoteTitle: string } | null
 
+  // Set once a client-portal booking request's details have been applied
+  // (see CreateJob.tsx's booking-request-prefill effect) — unlike
+  // lockedFromQuote, this doesn't lock anything: a request only ever
+  // carries a client's loose preference (service/date/notes), never
+  // commercial terms, so staff is expected to fill in and adjust
+  // everything else normally. It's purely for the banner + the hidden
+  // bookingRequestId field the backend uses to mark the request approved.
+  lockedFromBookingRequest: { requestId: string; service: string } | null
+
   generateInvoice: boolean
   setGenerateInvoice: (on: boolean) => void
   invoiceDueDate: string

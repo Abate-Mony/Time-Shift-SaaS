@@ -732,7 +732,9 @@ export default function QuoteWorkflowSettings() {
                         <div>
                             <p className="text-sm font-medium text-blue-900 dark:text-blue-300">Your public quote link</p>
                             <p className="text-xs text-blue-700 dark:text-blue-400/80 mt-0.5">
-                                {link?.url ? <>{link.url} · The link always shows your last published version.</> : (
+                                {link?.url ? <><a href={link.url} target="_blank" rel="noopener noreferrer" className="underline">
+                                    {link.url}
+                                </a> · The link always shows your last published version.</> : (
                                     <>No quote link yet — <Link to="/settings/quote-link" className="underline">create one in Quote Link settings</Link>.</>
                                 )}
                             </p>

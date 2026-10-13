@@ -19,8 +19,8 @@ import { AnimatePresence, motion } from 'framer-motion'
 import dayjs from "dayjs"
 import utc from "dayjs/plugin/utc"
 dayjs.extend(utc)
-import { Calendar, Check, ChevronDown, ChevronLeft, Clock, ListChecks, Loader2, Lock, MapPin, Paperclip, Plus, Save, Settings2, Trash2, Users, X } from 'lucide-react'
-import { useRef, useState } from 'react'
+import { AlertTriangle, Calendar, Check, ChevronDown, ChevronLeft, Clock, ListChecks, Loader2, Lock, MapPin, Paperclip, Plus, Save, Settings2, Trash2, Users, X } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
 import { useForm } from "react-hook-form"
 import toast from 'react-hot-toast'
 import { Form, redirect, useLoaderData, useNavigate, useNavigation, useParams, useSearchParams, useSubmit, type ActionFunctionArgs, type LoaderFunctionArgs, type Params } from 'react-router'
@@ -28,6 +28,7 @@ import { Avatar, Input } from '../components/ui'
 import { ApplyRatePrompt, ClientCombobox, type ComboboxClient } from '@/components/client/ClientCombobox'
 import { isJobLocked } from '@/utils/jobLock'
 import { Label } from '@/components/ui/label'
+import { singleJobChangeRequest } from '@/utils/jobChangeRequests'
 
 type AssignedWorker = CreateJobForm["workers"][number]
 
@@ -130,7 +131,11 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
         queryClient.invalidateQueries({
             queryKey: ["jobs"],
         });
-        return redirect("/jobs")
+        queryClient.invalidateQueries({
+            queryKey: ["job-change-requests"],
+        });
+        // Land back in the inbox this edit came from, if it did.
+        return redirect(raw.jobChangeRequestId ? "/job-change-requests" : "/jobs")
     } catch (err) {
         let errorM
 
@@ -170,6 +175,7 @@ export function EditJob() {
     // everything else (title, notes, workers, etc.) stays editable, so this
     // page itself must always be reachable rather than gated behind it.
     const locked = job ? isJobLocked(job) : false
+    const lockedReason = job?.billingStatus === "invoiced" ? "already been invoiced" : "already happened"
     const [selectedWorkers, setSelectedWorkers] = useState<CreateJobForm["workers"]>(
         job?.workers ? job.workers : []
 
@@ -212,6 +218,34 @@ export function EditJob() {
         mode: "onSubmit",
         reValidateMode: "onChange",
     })
+
+    // ── Job-change-request prefill ───────────────────────────────
+    // /jobs/:id/edit?jobChangeRequest=<id> — same refresh-safe query-param
+    // mechanism as CreateJob.tsx's ?bookingRequest= prefill, applied here
+    // instead since a reschedule request targets an EXISTING job rather
+    // than creating one. Approval only happens as a side effect of actually
+    // submitting this real form (jobChangeRequestId is threaded through as
+    // a hidden input below) — never a one-click status flip.
+    const jobChangeRequestId = searchParams.get("jobChangeRequest")
+    const { data: jobChangeRequest, isLoading: jobChangeRequestLoading, isError: jobChangeRequestLoadError } = useQuery({
+        ...singleJobChangeRequest(jobChangeRequestId ?? ""),
+        enabled: !!jobChangeRequestId,
+    })
+    const appliedJobChangeRequestRef = useRef(false)
+
+    useEffect(() => {
+        if (!jobChangeRequest || appliedJobChangeRequestRef.current) return
+        appliedJobChangeRequestRef.current = true
+
+        setValue("date", dayjs.utc(jobChangeRequest.requestedDate).format("YYYY-MM-DD"), { shouldValidate: true })
+        if (jobChangeRequest.requestedStartTime) {
+            setValue("startTime", jobChangeRequest.requestedStartTime, { shouldValidate: true })
+        }
+        if (jobChangeRequest.requestedEndTime) {
+            setValue("endTime", jobChangeRequest.requestedEndTime, { shouldValidate: true })
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [jobChangeRequest])
 
     const startTime = watch("startTime")
     const endTime = watch("endTime")
@@ -352,6 +386,35 @@ export function EditJob() {
                 </div>
             </div>
 
+            {jobChangeRequestId && (
+                <div className="mb-6 -mt-2 min-w-0">
+                    {jobChangeRequestLoading ? (
+                        <div className="bg-muted/50 border border-[var(--border)] rounded-xl px-4 py-3 flex items-center gap-2">
+                            <Loader2 size={14} className="animate-spin text-muted-foreground shrink-0" />
+                            <p className="text-sm text-muted-foreground">Loading change request…</p>
+                        </div>
+                    ) : jobChangeRequestLoadError || !jobChangeRequest ? (
+                        <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 flex items-start gap-2.5">
+                            <AlertTriangle size={15} className="text-red-500 shrink-0 mt-0.5" />
+                            <div className="min-w-0">
+                                <p className="text-sm font-semibold text-red-800">Change request unavailable</p>
+                                <p className="text-xs text-red-700 mt-0.5">We couldn't use this request to prefill the form — you can still edit the job directly.</p>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="bg-[var(--primary)]/[0.04] border border-[var(--primary)]/15 rounded-xl px-4 py-3 flex items-start gap-2.5">
+                            <Calendar size={15} className="text-[var(--primary)] shrink-0 mt-0.5" />
+                            <div className="min-w-0 flex-1">
+                                <p className="text-sm font-semibold text-foreground">Reviewing a reschedule request</p>
+                                <p className="text-xs text-muted-foreground mt-0.5">
+                                    Date and time have been prefilled from the client's request — review before saving.
+                                </p>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
+
             <Form
                 ref={formRef}
                 onSubmit={(e) => e.preventDefault()}
@@ -484,7 +547,7 @@ export function EditJob() {
                         <div className="mb-4 flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3.5 py-2.5">
                             <Lock size={13} className="text-amber-600 shrink-0" />
                             <p className="text-xs text-amber-800">
-                                This shift has already happened, so its date and time are locked — everything else on this page can still be changed.
+                                This shift has {lockedReason}, so its date and time are locked — everything else on this page can still be changed.
                             </p>
                         </div>
                     )}
@@ -908,6 +971,7 @@ export function EditJob() {
                 <input type="hidden" name="openToClaims" value={String(openToClaims)} />
                 <input type="hidden" name="requiresApproval" value={String(requiresApproval)} />
                 <input type="hidden" name="checklist" value={JSON.stringify(checklist)} />
+                {jobChangeRequestId && <input type="hidden" name="jobChangeRequestId" value={jobChangeRequestId} />}
 
                 {/* Instructions & Attachments */}
                 <div className="bg-card rounded-xl border border-[var(--border)] p-6">

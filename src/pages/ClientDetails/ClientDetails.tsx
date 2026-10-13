@@ -63,6 +63,7 @@ const TABS: { to: string; label: string }[] = [
     { to: 'jobs', label: 'Jobs' },
     { to: 'quotes', label: 'Quotes' },
     { to: 'billing', label: 'Billing' },
+    { to: 'portal-access', label: 'Portal Access' },
 ]
 
 function TabBar() {

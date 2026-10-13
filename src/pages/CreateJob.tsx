@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useQuery } from "@tanstack/react-query"
 import { AnimatePresence, motion } from "framer-motion"
 import { isAxiosError } from "axios"
-import { AlertTriangle, ChevronLeft, FileText, Loader2 } from "lucide-react"
+import { AlertTriangle, CalendarCheck, ChevronLeft, FileText, Loader2 } from "lucide-react"
 import toast from "react-hot-toast"
 import dayjs from "dayjs"
 import {
@@ -33,6 +33,7 @@ import type { AIJobDraftResponse } from "@/utils/api-request-functions"
 import { CreateJobStepper } from "@/components/create-job/CreateJobStepper"
 import { CreateJobHiddenFields } from "@/components/create-job/CreateJobHiddenFields"
 import { singleQuote } from "@/pages/CreateQuote"
+import { singleBookingRequest } from "@/utils/bookingRequests"
 import { WizardFooter } from "@/components/create-job/WizardFooter"
 import { JobDetailsStep } from "@/components/create-job/steps/JobDetailsStep"
 import { ScheduleStaffingStep } from "@/components/create-job/steps/ScheduleStaffingStep"
@@ -253,6 +254,21 @@ export function CreateJob() {
   const sourceQuoteDoc = quoteData?.quote
   const [lockedFromQuote, setLockedFromQuote] = useState<{ quoteId: string; quoteNumber: string; quoteTitle: string } | null>(null)
   const appliedQuoteRef = useRef(false)
+
+  // ── Booking-request prefill ───────────────────────────────
+  // /create-job?bookingRequest=<id> — same refresh-safe query-param
+  // mechanism as the quote prefill above, cloned rather than reusing
+  // sourceQuoteDoc's shape: a booking request only ever carries a loose
+  // preference (service/date/notes), never commercial terms, so nothing
+  // here locks billing/charge fields the way the quote prefill does.
+  const bookingRequestId = searchParams.get("bookingRequest")
+  const { data: bookingRequestData, isLoading: bookingRequestLoading, isError: bookingRequestLoadError } = useQuery({
+    ...singleBookingRequest(bookingRequestId ?? ""),
+    enabled: !!bookingRequestId,
+  })
+  const sourceBookingRequest = bookingRequestData
+  const [lockedFromBookingRequest, setLockedFromBookingRequest] = useState<{ requestId: string; service: string } | null>(null)
+  const appliedBookingRequestRef = useRef(false)
 
   const form = useForm({
     resolver: zodResolver(createJobSchema),
@@ -514,6 +530,34 @@ export function CreateJob() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sourceQuoteDoc])
 
+  // Applies a booking request's details exactly once, the moment it first
+  // becomes available. Unlike the quote effect above, this doesn't gate on
+  // any status — a booking request is only ever linked here while still
+  // "pending" (the backend's own scoping already prevents approving a
+  // request twice), so there's no terminal-state banner needed, just a
+  // loading/error state and the normal "here's what got prefilled" note.
+  useEffect(() => {
+    if (!sourceBookingRequest || appliedBookingRequestRef.current) return
+    appliedBookingRequestRef.current = true
+
+    const client = sourceBookingRequest.client
+    if (client && typeof client !== "string") {
+      handleClientSelect({ _id: client._id, name: client.name })
+    }
+
+    setValue("title", sourceBookingRequest.service, { shouldValidate: true })
+    if (sourceBookingRequest.notes) {
+      setValue("description", sourceBookingRequest.notes, { shouldValidate: true })
+    }
+    setValue("date", dayjs(sourceBookingRequest.preferredDate).format("YYYY-MM-DD"), { shouldValidate: true })
+    if (sourceBookingRequest.preferredTime) {
+      setValue("startTime", sourceBookingRequest.preferredTime, { shouldValidate: true })
+    }
+
+    setLockedFromBookingRequest({ requestId: sourceBookingRequest._id, service: sourceBookingRequest.service })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sourceBookingRequest])
+
   // ── AI draft ───────────────────────────────────────────────
   // Merges only the fields the AI actually returned — never blanks out
   // something the manager already typed. The manager still reviews and
@@ -615,6 +659,7 @@ export function CreateJob() {
     selectedSite,
     handleSiteSelect,
     lockedFromQuote,
+    lockedFromBookingRequest,
     generateInvoice,
     setGenerateInvoice,
     invoiceDueDate,
@@ -636,7 +681,7 @@ export function CreateJob() {
         <div className="flex items-center gap-3 mb-6 min-w-0">
           <button
             type="button"
-            onClick={() => navigate(lockedFromQuote ? `/quotes/${lockedFromQuote.quoteId}` : "/jobs")}
+            onClick={() => navigate(lockedFromQuote ? `/quotes/${lockedFromQuote.quoteId}` : lockedFromBookingRequest ? "/booking-requests" : "/jobs")}
             className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors shrink-0"
           >
             <ChevronLeft size={16} />
@@ -715,6 +760,49 @@ export function CreateJob() {
           </div>
         )}
 
+        {bookingRequestId && (
+          <div className="mb-6 -mt-2 min-w-0">
+            {bookingRequestLoading ? (
+              <div className="bg-muted/50 border border-[var(--border)] rounded-xl px-4 py-3 flex items-center gap-2">
+                <Loader2 size={14} className="animate-spin text-muted-foreground shrink-0" />
+                <p className="text-sm text-muted-foreground">Loading booking request…</p>
+              </div>
+            ) : bookingRequestLoadError || !sourceBookingRequest ? (
+              <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 flex items-start gap-2.5">
+                <AlertTriangle size={15} className="text-red-500 shrink-0 mt-0.5" />
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-red-800">Booking request unavailable</p>
+                  <p className="text-xs text-red-700 mt-0.5">We couldn't use this request to create a job.</p>
+                  <button
+                    type="button"
+                    onClick={() => setSearchParams(prev => { prev.delete("bookingRequest"); return prev })}
+                    className="text-xs font-semibold text-red-700 underline mt-1.5"
+                  >
+                    Create job without this request
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-[var(--primary)]/[0.04] border border-[var(--primary)]/15 rounded-xl px-4 py-3 flex items-start gap-2.5">
+                <CalendarCheck size={15} className="text-[var(--primary)] shrink-0 mt-0.5" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-foreground">Creating job from a booking request</p>
+                  <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                    {sourceBookingRequest.service} — client and preferred date have been prefilled. Review and confirm before saving; site, timing, and billing still need to be set.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => navigate("/booking-requests")}
+                  className="text-xs font-semibold text-[var(--primary)] shrink-0 hover:underline"
+                >
+                  View requests
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
         {aiAssumptions.length > 0 && (
           <div className="mb-6 -mt-2 bg-[var(--primary)]/[0.04] border border-[var(--primary)]/15 rounded-xl px-4 py-3 min-w-0">
             <p className="text-xs font-semibold text-[var(--primary)] uppercase tracking-wide mb-1.5">
@@ -775,7 +863,7 @@ export function CreateJob() {
             onNext={goNext}
             onSaveDraft={() => doSubmit("draft")}
             onPublish={() => doSubmit("published")}
-            onCancel={() => navigate(lockedFromQuote ? `/quotes/${lockedFromQuote.quoteId}` : "/jobs")}
+            onCancel={() => navigate(lockedFromQuote ? `/quotes/${lockedFromQuote.quoteId}` : lockedFromBookingRequest ? "/booking-requests" : "/jobs")}
           />
         </Form>
       </div>

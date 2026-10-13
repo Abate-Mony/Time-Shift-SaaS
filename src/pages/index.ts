@@ -4,6 +4,8 @@ export { action as createjobAction } from "./CreateJob"
 export { loader as jobsLoader } from "./Jobs"
 export { loader as workersLoader } from "./Workers"
 export { TimeOffRequestsPage, loader as timeOffRequestsLoader } from "./TimeOffRequestsPage"
+export { BookingRequests, loader as bookingRequestsLoader } from "./BookingRequests"
+export { JobChangeRequests, loader as jobChangeRequestsLoader } from "./JobChangeRequests"
 export { Dashboard } from './Dashboard'
 export { Jobs } from './Jobs'
 export { CreateJob } from './CreateJob'
@@ -55,6 +57,7 @@ export { ClientDetailsContactsPage } from "./ClientDetails/ClientDetailsContacts
 export { ClientDetailsaJobsPage } from "./ClientDetails/ClientDetailsJobsPage"
 export { ClientDetailsSitesPage } from "./ClientDetails/ClientDetailsSitesPage"
 export { ClientDetailsQuotesPage } from "./ClientDetails/ClientDetailsQuotesPage"
+export { ClientDetailsPortalAccessPage } from "./ClientDetails/ClientDetailsPortalAccessPage"
 export { default as ClentBillingPage } from "./ClientDetails/ClientDetailsBillingPage"
 export { SuspendedAccountPage } from "./SuspendedAccountPage"
 export { default as CheckOutSettings } from "./settings/CheckOutSettings"
