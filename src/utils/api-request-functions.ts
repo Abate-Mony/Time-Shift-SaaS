@@ -12,6 +12,7 @@ import type {
 } from "@/data/restrictionMockData";
 
 import { getCurrentPosition } from "./getPosition";
+import type { Billing } from "./constants/plant";
 import type { InvoiceTemplate, InvoiceTemplateInput } from "./types/invoiceTemplate";
 import type { Quote, QuoteFormInput } from "./types/quote";
 import type { EmailSettings, EmailSettingsResponse, SendTestEmailResult } from "./types/emailSettings";
@@ -1444,10 +1445,27 @@ export const getCompanyPlan = async (): Promise<CompanyPlanInfo> => {
     return data
 }
 
-// PATCH /companies/plan — no payment processing behind this yet (see the
-// backend note on updateCompanyPlan); this just sets the field for real,
-// replacing the checkout page's simulated round trip.
+// PATCH /companies/plan — only ever accepts "free" now that real billing
+// exists (see the backend note on updateCompanyPlan); starter/professional
+// go through createCheckoutSession below instead.
 export const updateCompanyPlan = async (plan: CompanyPlanId): Promise<CompanyPlanId> => {
     const { data } = await customFetch.patch<{ plan: CompanyPlanId }>("/companies/plan", { plan })
     return data.plan
+}
+
+// POST /companies/plan/checkout-session — starts a real Stripe Checkout for
+// a company with no active subscription yet. Returns a hosted Stripe URL;
+// callers must do a real browser redirect (window.location.href), not
+// react-router navigate — this URL is on stripe.com, not this app.
+export const createCheckoutSession = async (plan: "starter" | "professional", billing: Billing): Promise<{ url: string }> => {
+    const { data } = await customFetch.post<{ url: string }>("/companies/plan/checkout-session", { plan, billing })
+    return data
+}
+
+// POST /companies/plan/portal-session — the entry point for cancelling,
+// updating the card on file, and viewing invoices once already subscribed.
+// Same real-redirect caveat as above.
+export const createPortalSession = async (): Promise<{ url: string }> => {
+    const { data } = await customFetch.post<{ url: string }>("/companies/plan/portal-session")
+    return data
 }

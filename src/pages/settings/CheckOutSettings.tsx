@@ -6,7 +6,6 @@ import {
   ArrowLeft,
   Check,
   CheckCircle2,
-  CreditCard,
   Loader2,
   Lock,
   ShieldCheck,
@@ -15,7 +14,7 @@ import type { iUser } from '@/layouts/dashboardlayout'
 import { getPrice, type Billing } from '@/utils/constants/plant'
 import { Button } from '@/components/ui/button'
 import { BillingToggle } from '@/components/billing/BillingToggle'
-import { getPlanCatalog, updateCompanyPlan } from '@/utils/api-request-functions'
+import { getPlanCatalog, updateCompanyPlan, createCheckoutSession } from '@/utils/api-request-functions'
 import { isAdminRole } from '@/utils/roles'
 import { queryClient } from '@/lib/queryClient'
 import { useQuery } from '@tanstack/react-query'
@@ -94,19 +93,25 @@ const CheckOutSettings = () => {
     })
   }
 
-  // No real payment processor behind this yet — the payment method below is
-  // still the same mock Visa •••• 4242 BillingSettings shows. But the plan
-  // change itself is real: confirming actually sets Company.plan, which is
-  // what every limit check (worker cap, job cap, feature gates) reads.
+  // Free never touches Stripe at all (no subscription, nothing to charge) —
+  // same instant field-write as before. Starter/Professional now start a
+  // real Stripe Checkout Session and redirect there; the actual plan
+  // change only happens once Stripe's webhook confirms payment succeeded
+  // (see billingController.ts), not from this click.
   const handleConfirm = async () => {
     setConfirming(true)
     try {
-      await updateCompanyPlan(plan.id)
-      await queryClient.invalidateQueries({ queryKey: ['company-plan'] })
-      toast.success(isFree ? `You're on the ${plan.name} plan` : `Subscribed to ${plan.name}`)
-      navigate('/settings/billing')
-    } catch {
-      toast.error("Couldn't update your plan. Try again.")
+      if (isFree) {
+        await updateCompanyPlan(plan.id)
+        await queryClient.invalidateQueries({ queryKey: ['company-plan'] })
+        toast.success(`You're on the ${plan.name} plan`)
+        navigate('/settings/billing')
+      } else {
+        const { url } = await createCheckoutSession(plan.id as 'starter' | 'professional', billing)
+        window.location.href = url
+      }
+    } catch (err: any) {
+      toast.error(err?.response?.data?.msg ?? (isFree ? "Couldn't update your plan. Try again." : "Couldn't start checkout. Try again."))
     } finally {
       setConfirming(false)
     }
@@ -180,24 +185,11 @@ const CheckOutSettings = () => {
         </div>
       </div>
 
-      {/* Payment method — skipped entirely for the free plan */}
+      {/* Card entry happens on Stripe's own hosted Checkout page after
+          clicking below — nothing to render here. */}
       {!isFree && (
-        <div className="bg-card rounded-xl border border-[var(--border)] p-6 min-w-0">
-          <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
-            <CreditCard size={14} className="text-muted-foreground" /> Payment method
-          </h3>
-          <div className="flex items-center gap-3 p-3.5 border border-[var(--border)] rounded-xl min-w-0">
-            <div className="w-10 h-7 bg-slate-800 rounded flex items-center justify-center shrink-0">
-              <span className="text-white text-[10px] font-bold">VISA</span>
-            </div>
-            <div className="min-w-0">
-              <p className="text-sm font-medium text-foreground">Visa ending in 4242</p>
-              <p className="text-xs text-muted-foreground">Expires 08/2027</p>
-            </div>
-            <button type="button" className="ml-auto text-xs text-blue-600 font-medium hover:text-blue-800 shrink-0">
-              Change
-            </button>
-          </div>
+        <div className="flex items-center gap-2 text-xs text-muted-foreground px-1">
+          <ShieldCheck size={13} /> You'll enter your card on Stripe's secure checkout page next.
         </div>
       )}
 

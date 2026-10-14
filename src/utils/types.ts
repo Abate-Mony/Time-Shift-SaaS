@@ -264,6 +264,10 @@ export interface CompanyPlanInfo {
   plan: CompanyPlanId;
   maxWorkers: number;
   limits: PlanLimits;
+  hasStripeCustomer: boolean;
+  subscriptionStatus: string | null;
+  currentPeriodEnd: string | null;
+  cancelAtPeriodEnd: boolean;
 }
 
 // GET /companies/plans — the pricing-page catalog for all four tiers.

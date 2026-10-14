@@ -1,10 +1,20 @@
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import type { iUser } from '@/layouts/dashboardlayout'
-import { getCompanyPlan, getPlanCatalog } from '@/utils/api-request-functions'
+import { getCompanyPlan, getPlanCatalog, createPortalSession } from '@/utils/api-request-functions'
 import { isAdminRole } from '@/utils/roles'
 import { useQuery } from '@tanstack/react-query'
-import { Check, Lock } from 'lucide-react'
+import { Check, Loader2, Lock } from 'lucide-react'
 import { useNavigate, useOutletContext } from 'react-router'
+import toast from 'react-hot-toast'
+
+// "Manage billing" (Stripe's hosted Billing Portal) is the only entry
+// point for cancelling, updating the card on file, and viewing invoices —
+// no custom UI for any of that lives in this app. A company only sees it
+// once there's something to manage; hasStripeCustomer alone would be
+// wrong here (a fully-cancelled company still has one on file but nothing
+// live to manage, and would otherwise get stuck with no way to resubscribe).
+const LIVE_SUBSCRIPTION_STATUSES = ['active', 'past_due', 'unpaid']
 
 const FEATURE_LABEL = {
     gpsVerification: 'GPS clock-in verification',
@@ -25,6 +35,19 @@ export default function BillingSettings() {
     const { data } = useQuery({ queryKey: ['company-plan'], queryFn: getCompanyPlan, enabled: isAdmin })
     const { data: plans } = useQuery({ queryKey: ['plan-catalog'], queryFn: getPlanCatalog, enabled: isAdmin })
     const currentPlan = plans?.find(p => p.id === data?.plan)
+    const [openingPortal, setOpeningPortal] = useState(false)
+    const hasLiveSubscription = LIVE_SUBSCRIPTION_STATUSES.includes(data?.subscriptionStatus ?? '')
+
+    const handleManageBilling = async () => {
+        setOpeningPortal(true)
+        try {
+            const { url } = await createPortalSession()
+            window.location.href = url
+        } catch (err: any) {
+            toast.error(err?.response?.data?.msg ?? "Couldn't open billing management. Try again.")
+            setOpeningPortal(false)
+        }
+    }
 
     if (!isAdmin) {
         return (
@@ -76,24 +99,16 @@ export default function BillingSettings() {
                     ))}
                 </div>
                 <div className="flex gap-3">
-                    <Button variant="outline" size="sm" onClick={() => navigate('/settings/billing/plans')}>
-                        Change Plan
-                    </Button>
-                    {currentPlan?.id !== 'free' && <Button variant="destructive" size="sm">Cancel Subscription</Button>}
-                </div>
-            </div>
-
-            <div className="bg-card rounded-xl border border-[var(--border)] p-6 min-w-0">
-                <h3 className="text-sm font-semibold text-foreground mb-4">Payment Method</h3>
-                <div className="flex items-center gap-3 p-3.5 border border-[var(--border)] rounded-xl min-w-0">
-                    <div className="w-10 h-7 bg-slate-800 rounded flex items-center justify-center shrink-0">
-                        <span className="text-white text-[10px] font-bold">VISA</span>
-                    </div>
-                    <div className="min-w-0">
-                        <p className="text-sm font-medium text-foreground">Visa ending in 4242</p>
-                        <p className="text-xs text-muted-foreground">Expires 08/2027</p>
-                    </div>
-                    <button className="ml-auto text-xs text-blue-600 font-medium hover:text-blue-800 shrink-0">Update</button>
+                    {hasLiveSubscription ? (
+                        <Button variant="outline" size="sm" onClick={handleManageBilling} disabled={openingPortal}>
+                            {openingPortal && <Loader2 size={14} className="animate-spin" />}
+                            Manage billing
+                        </Button>
+                    ) : (
+                        <Button variant="outline" size="sm" onClick={() => navigate('/settings/billing/plans')}>
+                            Change Plan
+                        </Button>
+                    )}
                 </div>
             </div>
         </div>
