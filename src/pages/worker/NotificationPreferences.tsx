@@ -349,8 +349,13 @@ export default function NotificationPreferencesScreen() {
 
           <div className="divide-y divide-border">
             {section.rows.map((row) => {
+              // Falls back to all-off rather than crashing the whole screen —
+              // an older cached/offline copy of prefs can be missing an event
+              // the backend added after it was fetched (the backend itself
+              // now backfills this server-side, but a stale client cache
+              // predates that fix and shouldn't take the page down).
               const eventPrefs: EventNotificationPreference =
-                prefs.events[row.event];
+                prefs.events[row.event] ?? { email: false, push: false, inApp: false };
 
               return (
                 <div
