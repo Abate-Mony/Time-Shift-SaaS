@@ -268,6 +268,13 @@ export interface CompanyPlanInfo {
   subscriptionStatus: string | null;
   currentPeriodEnd: string | null;
   cancelAtPeriodEnd: boolean;
+  // Every company gets a 30-day, no-card Professional trial automatically
+  // at signup (not something chosen from Checkout) — isOnTrial is false
+  // once it ends, or the moment a real paid Stripe subscription starts,
+  // whichever comes first. trialEndsAt is only ever non-null when
+  // isOnTrial is true.
+  isOnTrial: boolean;
+  trialEndsAt: string | null;
 }
 
 // GET /companies/plans — the pricing-page catalog for all four tiers.

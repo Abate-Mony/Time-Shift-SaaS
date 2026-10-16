@@ -14,7 +14,7 @@ import type { iUser } from '@/layouts/dashboardlayout'
 import { getPrice, type Billing } from '@/utils/constants/plant'
 import { Button } from '@/components/ui/button'
 import { BillingToggle } from '@/components/billing/BillingToggle'
-import { getPlanCatalog, updateCompanyPlan, createCheckoutSession } from '@/utils/api-request-functions'
+import { getCompanyPlan, getPlanCatalog, updateCompanyPlan, createCheckoutSession } from '@/utils/api-request-functions'
 import { isAdminRole } from '@/utils/roles'
 import { queryClient } from '@/lib/queryClient'
 import { useQuery } from '@tanstack/react-query'
@@ -30,6 +30,9 @@ const CheckOutSettings = () => {
   const planId = searchParams.get('plan')
   const billing = (searchParams.get('billing') === 'annual' ? 'annual' : 'monthly') as Billing
   const { data: plans, isLoading } = useQuery({ queryKey: ['plan-catalog'], queryFn: getPlanCatalog, enabled: isAdmin })
+  // Same source of truth BillingSettings uses — whether this company is
+  // currently on its free trial (see Company.trialEndsAt).
+  const { data: companyPlan } = useQuery({ queryKey: ['company-plan'], queryFn: getCompanyPlan, enabled: isAdmin })
   const plan = plans?.find(p => p.id === planId)
 
   if (!isAdmin) {
@@ -85,6 +88,11 @@ const CheckOutSettings = () => {
 
   const isFree = plan.id === 'free'
   const price = getPrice(plan, billing)
+  // Every company already gets a free trial automatically at signup — this
+  // page is about starting REAL billing, not "starting a trial". The only
+  // thing worth telling someone here is that doing so ends an active trial
+  // early (switches from free-no-card to actually being charged now).
+  const willEndActiveTrial = !isFree && !!companyPlan?.isOnTrial
 
   const setBilling = (b: Billing) => {
     setSearchParams(prev => {
@@ -136,6 +144,11 @@ const CheckOutSettings = () => {
             ? "No card needed — you can upgrade any time."
             : 'Review your order, then confirm to start your subscription.'}
         </p>
+        {willEndActiveTrial && (
+          <p className="text-xs text-amber-700 dark:text-amber-400 mt-2 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/25 rounded-lg px-3 py-2">
+            You're currently on a free trial{companyPlan?.trialEndsAt ? ` until ${new Date(companyPlan.trialEndsAt).toLocaleDateString()}` : ''}. Subscribing now starts real billing immediately and ends the trial early.
+          </p>
+        )}
       </div>
 
       {/* Order summary */}

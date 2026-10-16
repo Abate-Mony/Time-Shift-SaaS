@@ -2,9 +2,10 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import type { iUser } from '@/layouts/dashboardlayout'
 import { getCompanyPlan, getPlanCatalog, createPortalSession } from '@/utils/api-request-functions'
+import { formatDate } from '@/utils/date'
 import { isAdminRole } from '@/utils/roles'
 import { useQuery } from '@tanstack/react-query'
-import { Check, Loader2, Lock } from 'lucide-react'
+import { Check, Loader2, Lock, Sparkles } from 'lucide-react'
 import { useNavigate, useOutletContext } from 'react-router'
 import toast from 'react-hot-toast'
 
@@ -74,6 +75,15 @@ export default function BillingSettings() {
 
     return (
         <div className="p-6 max-w-3xl mx-auto animate-fade-in flex flex-col gap-4">
+            {data?.isOnTrial && (
+                <div className="bg-amber-50 border border-amber-200 dark:bg-amber-500/10 dark:border-amber-500/25 rounded-xl px-4 py-3 flex items-center gap-3">
+                    <Sparkles size={16} className="text-amber-600 dark:text-amber-400 shrink-0" />
+                    <p className="text-sm text-amber-800 dark:text-amber-300">
+                        <span className="font-semibold">Free trial</span>
+                        {data.trialEndsAt && <> — full Professional access until {formatDate(data.trialEndsAt, 'D MMMM YYYY')}, no card needed. Subscribe any time to keep it after that.</>}
+                    </p>
+                </div>
+            )}
             <div className="bg-card rounded-xl border border-[var(--border)] p-6 min-w-0">
                 <div className="flex items-start justify-between gap-3 mb-5 min-w-0">
                     <div className="min-w-0">
