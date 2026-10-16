@@ -2,7 +2,7 @@ import { queryClient } from "@/lib/queryClient";
 import { isAxiosError } from "axios";
 import toast from "react-hot-toast";
 import customFetch from "./customFetch";
-import type { AdminProfileForm, ClientBillingInfo, CompanyPlanId, CompanyPlanInfo, CreateJobForm, EditProfileForm, EligibleWorkResponse, EventNotificationPreference, FileRef, Invoice, InvoiceAdjustmentInput, InvoiceCompanyInfo, InvoiceStatus, JobAttachment, NotificationEvent, NotificationPreferences, PlanCatalogEntry, PlanCatalogResponse, TimesheetSummaryResponse, User, WorkerDocument } from "./types";
+import type { AdminProfileForm, ClientBillingInfo, CompanyPlanId, CompanyPlanInfo, CreateJobForm, EarningsPeriod, EarningsResponse, EditProfileForm, EligibleWorkResponse, EventNotificationPreference, FileRef, Invoice, InvoiceAdjustmentInput, InvoiceCompanyInfo, InvoiceStatus, JobAttachment, NotificationEvent, NotificationPreferences, PlanCatalogEntry, PlanCatalogResponse, TimesheetSummaryResponse, User, WorkerDocument } from "./types";
 import type {
     AccessLevel,
     AccountRestriction,
@@ -1078,6 +1078,22 @@ export const getTimesheetSummary = async ({
                 },
             }
         );
+    return data;
+};
+
+// Mirrors timeshift-mobile's own getMyEarnings call — same endpoint,
+// same response shape (see utils/types.ts's EarningsResponse).
+export const getMyEarnings = async ({
+    period,
+    offset,
+}: {
+    period: EarningsPeriod;
+    offset: number;
+}) => {
+    const { data } = await customFetch.get<EarningsResponse>(
+        "/workers/me/earnings",
+        { params: { period, offset } }
+    );
     return data;
 };
 

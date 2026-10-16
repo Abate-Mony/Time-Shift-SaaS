@@ -89,7 +89,11 @@ export function ProfileScreen() {
       </div>
 
       {/* Earnings card */}
-      <div className="bg-[var(--primary)] rounded-2xl p-5 relative overflow-hidden">
+      <button
+        type="button"
+        onClick={() => navigate('/worker/profile/earnings')}
+        className="w-full text-left bg-[var(--primary)] rounded-2xl p-5 relative overflow-hidden hover:brightness-110 transition-[filter]"
+      >
         <div className="absolute inset-0 opacity-[0.04]"
           style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '20px 20px' }} />
         <div className="relative">
@@ -115,7 +119,7 @@ export function ProfileScreen() {
             ))}
           </div>
         </div>
-      </div>
+      </button>
 
       {/* Stats */}
       <Scrollable>
@@ -142,6 +146,7 @@ export function ProfileScreen() {
       {/* Settings list */}
       <div className="bg-card rounded-2xl border border-[var(--border)] shadow-sm overflow-hidden">
         {[
+          { label: 'Earnings', icon: Zap, sub: 'Pay for completed and upcoming shifts', to: "/worker/profile/earnings" },
           { label: 'Download Timesheet', icon: Download, sub: 'July 2025', to: "/worker/profile/download-time-sheet" },
           { label: 'My Documents', icon: Paperclip, sub: 'ID, right-to-work, certifications', to: "/worker/profile/documents" },
           { label: 'Time Off', icon: CalendarOff, sub: 'Request time off, track status', to: "/worker/profile/time-off" },

@@ -470,6 +470,33 @@ export interface TimesheetSummaryResponse {
   assignments: TimesheetAssignment[]
 }
 
+// ── Earnings (GET /workers/me/earnings) — mirrors timeshift-mobile's
+// utils/types.ts, same endpoint and response shape. ───────────────────────
+export type EarningsPeriod = "week" | "month";
+
+export interface EarningsTotals {
+  amount: number;
+  minutes: number;
+  shifts: number;
+}
+
+export interface EarningsShift {
+  assignmentId: string;
+  job: { _id: string; title: string; date: string; startTime: string; endTime: string; minutes: number };
+  kind: "earned" | "upcoming"; // completed vs. accepted/in-progress (estimate)
+  minutes: number;
+  payRate: number;
+  amount: number;
+  overtimePendingMinutes: number;
+}
+
+export interface EarningsResponse {
+  period: { type: EarningsPeriod; offset: number; start: string; end: string };
+  earned: EarningsTotals;
+  upcoming: EarningsTotals;
+  shifts: EarningsShift[];
+}
+
 export type AssignmentStatus = 'pending' | 'accepted' | 'declined' | 'in-progress' | 'completed' | 'cancelled'
 
 export interface WorkerRecurringShift {
