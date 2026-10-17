@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button'
 import { queryClient } from '@/lib/queryClient'
 import customFetch from '@/utils/customFetch'
-import { cancelInvoice, deleteInvoice, markInvoicePaid, sendInvoice } from '@/utils/api-request-functions'
+import { cancelInvoice, deleteInvoice, markInvoicePaid, sendInvoice, updateInvoiceStatus } from '@/utils/api-request-functions'
 import { formatCurrency } from '@/utils/format'
 import type { Invoice, InvoiceCompanyInfo, InvoiceLineItemDisplay } from '@/utils/types'
 import { useQuery, type QueryClient } from '@tanstack/react-query'
@@ -52,6 +52,7 @@ export function InvoiceDetail() {
     const [deleting, setDeleting] = useState(false)
     const [sending, setSending] = useState(false)
     const [markingPaid, setMarkingPaid] = useState(false)
+    const [markingSent, setMarkingSent] = useState(false)
     const [cancelling, setCancelling] = useState(false)
     const [downloading, setDownloading] = useState(false)
     const [showSendDialog, setShowSendDialog] = useState(false)
@@ -99,6 +100,17 @@ export function InvoiceDetail() {
         setMarkingPaid(true)
         await markInvoicePaid(invoice._id)
         setMarkingPaid(false)
+    }
+
+    // For a client with no billing email on file (e.g. only a WhatsApp
+    // number) — "Send Invoice" hard-requires an email to actually email the
+    // PDF. This instead just flips the status, for a manager who sent the
+    // invoice some other way outside the app and wants that reflected here.
+    const handleMarkSentManually = async () => {
+        if (!window.confirm(`Mark ${invoice.invoiceNumber} as sent without emailing it? Use this if you sent it another way (e.g. WhatsApp).`)) return
+        setMarkingSent(true)
+        await updateInvoiceStatus(invoice._id, 'sent')
+        setMarkingSent(false)
     }
 
     const handleCancel = async () => {
@@ -151,9 +163,20 @@ export function InvoiceDetail() {
                 </button>
                 <div className="flex items-center gap-2">
                     {invoice.status === 'draft' && (
-                        <Button variant="outline" size="sm" disabled={sending} onClick={() => setShowSendDialog(true)}>
-                            <Mail size={13} /> {sending ? 'Sending…' : 'Send Invoice'}
-                        </Button>
+                        <>
+                            <Button variant="outline" size="sm" disabled={sending} onClick={() => setShowSendDialog(true)}>
+                                <Mail size={13} /> {sending ? 'Sending…' : 'Send Invoice'}
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={markingSent}
+                                onClick={handleMarkSentManually}
+                                title="Use this if you sent the invoice another way, e.g. WhatsApp, when the client has no billing email on file"
+                            >
+                                {markingSent ? 'Marking…' : 'Mark as Sent'}
+                            </Button>
+                        </>
                     )}
                     {(invoice.status === 'sent' || invoice.status === 'overdue') && (
                         <>
