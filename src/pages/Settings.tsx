@@ -102,14 +102,40 @@ const DEFAULT_FORM_VALUES: FormValues = {
 
 function toFormValues(s: CompanySettings): FormValues {
     const { overtimeThresholdMinutes, ...rest } = s
+    // CompanySettings' type claims every field but two is always present,
+    // but that's only true for a company created after that field's schema
+    // default existed — a Mongoose `default:` never backfills an older,
+    // already-existing document. An older real company can come back from
+    // the API with any of these missing, which Zod's z.coerce.number()
+    // then fails to validate — silently blocking the whole form from ever
+    // submitting (no network request, no visible error), since nothing
+    // here previously fell back for anything but clockInGraceMinutes and
+    // lateClockOutThresholdMinutes. Falling back on every field now, not
+    // just the two that happened to get patched before.
     return {
         ...rest,
-        // Optional on CompanySettings (a company that's never touched this
-        // setting has no value stored yet) — the form always needs a real
-        // number, so fall back to the same default a brand-new company gets.
         clockInGraceMinutes: rest.clockInGraceMinutes ?? DEFAULT_FORM_VALUES.clockInGraceMinutes,
+        lateThresholdMinutes: rest.lateThresholdMinutes ?? DEFAULT_FORM_VALUES.lateThresholdMinutes,
         lateClockOutThresholdMinutes: rest.lateClockOutThresholdMinutes ?? DEFAULT_FORM_VALUES.lateClockOutThresholdMinutes,
-        overtimeThresholdHours: overtimeThresholdMinutes / 60,
+        autoClockOutEnabled: rest.autoClockOutEnabled ?? DEFAULT_FORM_VALUES.autoClockOutEnabled,
+        payFromScheduledStart: rest.payFromScheduledStart ?? DEFAULT_FORM_VALUES.payFromScheduledStart,
+        geofenceMode: rest.geofenceMode ?? DEFAULT_FORM_VALUES.geofenceMode,
+        defaultGeofenceRadiusMeters: rest.defaultGeofenceRadiusMeters ?? DEFAULT_FORM_VALUES.defaultGeofenceRadiusMeters,
+        breaksArePaid: rest.breaksArePaid ?? DEFAULT_FORM_VALUES.breaksArePaid,
+        autoDeductBreakMinutes: rest.autoDeductBreakMinutes ?? DEFAULT_FORM_VALUES.autoDeductBreakMinutes,
+        autoDeductAfterMinutes: rest.autoDeductAfterMinutes ?? DEFAULT_FORM_VALUES.autoDeductAfterMinutes,
+        overtimeMultiplier: rest.overtimeMultiplier ?? DEFAULT_FORM_VALUES.overtimeMultiplier,
+        weeklyHoursTarget: rest.weeklyHoursTarget ?? DEFAULT_FORM_VALUES.weeklyHoursTarget,
+        currency: rest.currency ?? DEFAULT_FORM_VALUES.currency,
+        defaultPayRate: rest.defaultPayRate ?? DEFAULT_FORM_VALUES.defaultPayRate,
+        timezone: rest.timezone ?? DEFAULT_FORM_VALUES.timezone,
+        weekStartsOn: rest.weekStartsOn ?? DEFAULT_FORM_VALUES.weekStartsOn,
+        generateAheadDays: rest.generateAheadDays ?? DEFAULT_FORM_VALUES.generateAheadDays,
+        openShiftsEnabled: rest.openShiftsEnabled ?? DEFAULT_FORM_VALUES.openShiftsEnabled,
+        openShiftsRequireApproval: rest.openShiftsRequireApproval ?? DEFAULT_FORM_VALUES.openShiftsRequireApproval,
+        paymentRemindersEnabled: rest.paymentRemindersEnabled ?? DEFAULT_FORM_VALUES.paymentRemindersEnabled,
+        autoGenerateRecurringInvoices: rest.autoGenerateRecurringInvoices ?? DEFAULT_FORM_VALUES.autoGenerateRecurringInvoices,
+        overtimeThresholdHours: (overtimeThresholdMinutes ?? DEFAULT_FORM_VALUES.overtimeThresholdHours * 60) / 60,
     }
 }
 
