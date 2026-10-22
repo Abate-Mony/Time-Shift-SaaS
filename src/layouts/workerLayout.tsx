@@ -1,5 +1,4 @@
 import { RestrictionBanner } from '@/components/restriction/RestrictionBanner'
-import ToggleTheme from '@/components/ToggleTheme'
 import BottomNav from '@/components/ui/BottomNav'
 import { isRestricted } from '@/data/restrictionMockData'
 import { activeWorkerJob } from '@/pages/worker/ClockScreenPage'

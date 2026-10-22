@@ -18,7 +18,6 @@ import { Bell, Briefcase, Building2, ChevronDown, Landmark, PanelLeft, Plus, Rec
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router'
 import { CommandPalette } from './CommandPalette'
-import ToggleTheme from './ToggleTheme'
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar'
 import { Button } from './ui/button'
 import CustomNavLink from './ui/link'
@@ -108,8 +107,6 @@ export function TopBar({ user, onToggleSidebar, onNavigate }: TopBarProps) {
       </button>
 
       <div className="flex items-center gap-2 ml-auto">
-        <ToggleTheme />
-
         <button
           onClick={() => onNavigate('/notifications')}
           className="relative w-9 h-9 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors"

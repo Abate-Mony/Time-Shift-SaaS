@@ -8,7 +8,6 @@ const NAV_LINKS = [
     { to: '/settings/profile', label: 'Profile' },
     { to: '/settings/company', label: 'Company' },
     { to: '/settings/notifications', label: 'Notifications' },
-    { to: '/settings/appearance', label: 'Appearance' },
     { to: '/settings/invoicing', label: 'Invoicing' },
     { to: '/settings/security', label: 'Security' },
     { to: '/settings/email', label: 'Email & Sending' },

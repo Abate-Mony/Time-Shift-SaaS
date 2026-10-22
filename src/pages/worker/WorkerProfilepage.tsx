@@ -1,4 +1,3 @@
-import ToggleTheme from "@/components/ToggleTheme";
 import { Avatar, StatusBadge } from "@/components/ui";
 import {
   AlertDialog,
@@ -68,9 +67,6 @@ export function ProfileScreen() {
             >
               Edit Profile
             </button>
-            <div className="px-2 pt-2 flex justify-end">
-              <ToggleTheme />
-            </div>
             </div>
           </div>
           <h2 className="text-base font-bold text-foreground">{user?.fullname}</h2>
