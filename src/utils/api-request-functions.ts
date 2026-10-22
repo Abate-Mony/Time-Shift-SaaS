@@ -2,7 +2,7 @@ import { queryClient } from "@/lib/queryClient";
 import { isAxiosError } from "axios";
 import toast from "react-hot-toast";
 import customFetch from "./customFetch";
-import type { AdminProfileForm, ClientBillingInfo, CompanyPlanId, CompanyPlanInfo, CreateJobForm, EarningsPeriod, EarningsResponse, EditProfileForm, EligibleWorkResponse, EventNotificationPreference, FileRef, Invoice, InvoiceAdjustmentInput, InvoiceCompanyInfo, InvoiceStatus, JobAttachment, NotificationEvent, NotificationPreferences, PlanCatalogEntry, PlanCatalogResponse, TimesheetSummaryResponse, User, WorkerDocument } from "./types";
+import type { AdminProfileForm, ClientBillingInfo, CompanyPlanId, CompanyPlanInfo, CreateJobForm, EarningsPeriod, EarningsResponse, EditProfileForm, EligibleWorkResponse, EventNotificationPreference, FileRef, Invoice, InvoiceAdjustmentInput, InvoiceCompanyInfo, InvoiceStatus, JobAttachment, ManagerContact, MyContactsResponse, NotificationEvent, NotificationPreferences, PlanCatalogEntry, PlanCatalogResponse, TeamMate, TimesheetSummaryResponse, User, WorkerDocument, WorkLocation } from "./types";
 import type {
     AccessLevel,
     AccountRestriction,
@@ -105,6 +105,31 @@ export const sendDataAssistantMessage = async (
 export const getMyDocuments = async (): Promise<WorkerDocument[]> => {
     const { data } = await customFetch.get<{ documents: WorkerDocument[] }>("/documents/me");
     return data.documents;
+};
+
+// ── Work Hub (contacts / team / locations) ──────────────────────────────
+// All three stay reachable to any worker — just read-only directories
+// scoped to their own company, no restriction gating applies.
+
+// GET /workers/me/contacts — the company's active management team, for the
+// worker-facing "Contact Manager" screen.
+export const getMyContacts = async (): Promise<MyContactsResponse> => {
+    const { data } = await customFetch.get<MyContactsResponse>("/workers/me/contacts");
+    return data;
+};
+
+// GET /workers/me/team — teammates at the worker's company, for the Team
+// Directory screen.
+export const getMyTeam = async (): Promise<TeamMate[]> => {
+    const { data } = await customFetch.get<{ teammates: TeamMate[] }>("/workers/me/team");
+    return data.teammates;
+};
+
+// GET /workers/me/locations — distinct job sites the worker has been
+// scheduled to, most recently worked first.
+export const getMyLocations = async (): Promise<WorkLocation[]> => {
+    const { data } = await customFetch.get<{ locations: WorkLocation[] }>("/workers/me/locations");
+    return data.locations;
 };
 
 export const uploadMyDocument = async ({ name, file }: { name: string; file: File }): Promise<WorkerDocument[]> => {

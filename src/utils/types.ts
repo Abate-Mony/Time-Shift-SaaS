@@ -82,6 +82,51 @@ export interface WorkerDocument {
   uploadedAt: string;
 }
 
+// ── Contacts (GET /workers/me/contacts) ──────────────────────────────────────
+// Who a worker can reach at their company — just the active management
+// team, not every user. Mirrors the mobile app's identical type.
+
+export interface ManagerContact {
+  _id: string;
+  fullname: string;
+  role: "manager" | "admin" | "owner";
+  email: string | null;
+  phone: string | null;
+  photoUrl: string | null;
+}
+
+export interface MyContactsResponse {
+  company: {
+    name: string;
+    phone: string | null;
+    website: string | null;
+    logoUrl: string | null;
+  };
+  managers: ManagerContact[];
+}
+
+// ── Team directory (GET /workers/me/team) ────────────────────────────────────
+// Deliberately lighter than ManagerContact — no phone/email, since sharing
+// a manager's contact details is their own choice (getMyContacts above),
+// not something every coworker should see about every other by default.
+
+export interface TeamMate {
+  _id: string;
+  fullname: string;
+  role: "owner" | "admin" | "manager" | "worker";
+  photoUrl: string | null;
+}
+
+// ── Work locations (GET /workers/me/locations) ───────────────────────────────
+
+export interface WorkLocation {
+  location: string;
+  address: string | null;
+  coordinates: { lat: number; lng: number } | null;
+  lastWorkedAt: string;
+  visitCount: number;
+}
+
 // Optional single file a manager attaches to a job — e.g. a photo of a door
 // passcode or access instructions — visible to assigned workers.
 export interface JobAttachment {
