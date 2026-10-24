@@ -310,10 +310,22 @@ export function CreateJob() {
   const chargeRate = watch("chargeRate") ?? 0
   const chargeAmount = watch("chargeAmount") ?? 0
   const chargeType = watch("chargeType") ?? "hourly"
+  // valueAsNumber gives NaN (not undefined) while the field is emptied
+  // mid-edit — `?? 1` doesn't catch that, so totalCost/totalCharge below
+  // would briefly go NaN too without this check.
+  const requiredWorkersRaw = watch("requiredWorkers")
+  const requiredWorkers = typeof requiredWorkersRaw === "number" && Number.isFinite(requiredWorkersRaw) ? requiredWorkersRaw : 1
 
   const shiftHours = shiftHoursFrom(startTime, endTime)
-  const totalCost = payRate * shiftHours * Math.max(selectedWorkers.length, 1)
-  const totalCharge = chargeType === "fixed" ? chargeAmount : chargeRate * shiftHours
+  // Budgeted cost for the job as staffed, not just whoever's been assigned
+  // so far — selectedWorkers.length would under-cost a job that still has
+  // open slots (e.g. 1 of 5 required workers picked mid-wizard).
+  const totalCost = payRate * shiftHours * Math.max(requiredWorkers, 1)
+  // Mirrors totalCost's scaling — chargeRate bills per worker just like
+  // payRate (see invoiceLineItems below, which gives each selected worker
+  // their own chargeRate × hours line), so an open shift staffed for several
+  // workers should price out as several workers' worth of billing, not one.
+  const totalCharge = chargeType === "fixed" ? chargeAmount : chargeRate * shiftHours * Math.max(requiredWorkers, 1)
   const margin = totalCharge - totalCost
 
   const invoiceLineItems = useMemo(
