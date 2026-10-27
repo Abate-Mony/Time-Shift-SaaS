@@ -1313,6 +1313,26 @@ export const liftRestriction = async (restrictionId: string, liftReason?: string
     }
 }
 
+export const setWorkerAutoAccept = async (workerId: string, autoAcceptAssignments: boolean): Promise<boolean> => {
+    try {
+        const { data } = await customFetch.patch<{ acceptedExisting: number }>(`/workers/${workerId}/auto-accept`, { autoAcceptAssignments })
+        if (autoAcceptAssignments) {
+            toast.success(
+                data.acceptedExisting > 0
+                    ? `Auto-accept turned on — ${data.acceptedExisting} already-pending shift${data.acceptedExisting === 1 ? '' : 's'} accepted too`
+                    : "Shifts will now auto-accept for this worker"
+            )
+        } else {
+            toast.success("Auto-accept turned off")
+        }
+        queryClient.invalidateQueries({ queryKey: ["worker-stats", workerId] })
+        return true
+    } catch (err) {
+        toast.error(getApiErrorMessage(err))
+        return false
+    }
+}
+
 export const respondToRestrictionAppeal = async (
     restrictionId: string,
     status: "accepted" | "rejected",

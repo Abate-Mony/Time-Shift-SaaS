@@ -11,6 +11,7 @@ import {
 } from 'recharts'
 import { Avatar, StatusBadge, PriorityBadge, Badge, Card } from '../components/ui'
 import { Button } from '@/components/ui/button'
+import { Switch } from '@/components/ui/switch'
 import { useNavigate, useParams, type LoaderFunctionArgs } from 'react-router'
 import { useQuery, type QueryClient } from '@tanstack/react-query'
 import customFetch from '@/utils/customFetch'
@@ -23,6 +24,7 @@ import {
     getWorkerDocuments,
     getWorkerTimesheet,
     liftRestriction,
+    setWorkerAutoAccept,
     type CreateRestrictionPayload,
     type TimesheetPeriodType,
 } from '@/utils/api-request-functions'
@@ -42,6 +44,7 @@ interface WorkerStatsResponse {
         createdAt: string
         profilePhoto?: FileRef | null
         deletionRequestedAt?: string | null
+        autoAcceptAssignments: boolean
     }
     stats: {
         hoursThisWeek: number
@@ -159,6 +162,7 @@ export function WorkerProfile() {
     const [showSuspend, setShowSuspend] = useState(false)
     const [suspending, setSuspending] = useState(false)
     const [lifting, setLifting] = useState(false)
+    const [savingAutoAccept, setSavingAutoAccept] = useState(false)
 
     const [timesheetPeriod, setTimesheetPeriod] = useState<TimesheetPeriodType>('weekly')
     const { data: timesheetData, isPending: timesheetLoading } = useQuery({
@@ -201,6 +205,12 @@ export function WorkerProfile() {
         setLifting(true)
         await liftRestriction(restriction._id)
         setLifting(false)
+    }
+
+    const handleToggleAutoAccept = async (next: boolean) => {
+        setSavingAutoAccept(true)
+        await setWorkerAutoAccept(workerId, next)
+        setSavingAutoAccept(false)
     }
 
     const [downloadingTimesheet, setDownloadingTimesheet] = useState(false)
@@ -631,6 +641,21 @@ export function WorkerProfile() {
                                     Suspend Worker
                                 </button>
                             )}
+                        </div>
+
+                        <div className="flex items-start justify-between gap-3 mt-4 pt-4 border-t border-[var(--border)]">
+                            <div className="min-w-0">
+                                <p className="text-sm font-medium text-foreground">Auto-accept shifts</p>
+                                <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+                                    New shifts assigned to this worker are accepted automatically — no response needed from them. Good for full-time staff who always work the job anyway.
+                                </p>
+                            </div>
+                            <Switch
+                                checked={worker.autoAcceptAssignments}
+                                disabled={savingAutoAccept}
+                                onCheckedChange={handleToggleAutoAccept}
+                                className="mt-0.5 shrink-0"
+                            />
                         </div>
                     </Card>
 

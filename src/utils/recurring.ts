@@ -42,7 +42,7 @@ export interface RecurringOccurrence {
 }
 
 export interface RecurringDetail extends RecurringSchedule {
-  defaultWorkers: { _id: string; fullname: string; email: string; profilePhoto?: FileRef | null }[]
+  defaultWorkers: { _id: string; fullname: string; email: string; profilePhoto?: FileRef | null; autoAcceptAssignments?: boolean }[]
   createdBy: { _id: string; fullname: string }
   createdAt: string
   occurrences: {

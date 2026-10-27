@@ -19,6 +19,8 @@ import { shiftHoursFrom, formatHours } from '@/components/create-job/wizardConfi
 import type { FileRef } from '@/utils/types'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
+import { setWorkerAutoAccept } from '@/utils/api-request-functions'
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
@@ -691,8 +693,23 @@ function SchedulePatternCard({ schedule }: { schedule: RecurringDetail }) {
 
 // ─── Default workers card ─────────────────────────────────────────────────────
 
-function DefaultWorkersCard({ workers }: { workers: { _id: string; fullname: string; email: string; profilePhoto?: FileRef | null }[] }) {
+function DefaultWorkersCard({
+    workers,
+    recurringJobId,
+}: {
+    workers: { _id: string; fullname: string; email: string; profilePhoto?: FileRef | null; autoAcceptAssignments?: boolean }[]
+    recurringJobId: string
+}) {
     const COLORS = ['var(--primary)', '#0D9488', '#7C3AED', '#B45309']
+    const [savingId, setSavingId] = useState<string | null>(null)
+
+    const handleToggle = async (workerId: string, next: boolean) => {
+        setSavingId(workerId)
+        const ok = await setWorkerAutoAccept(workerId, next)
+        if (ok) queryClient.invalidateQueries({ queryKey: ['recurring-job', recurringJobId] })
+        setSavingId(null)
+    }
+
     return (
         <div className="bg-card rounded-xl border border-[var(--border)] p-6">
             <h3 className="text-sm font-bold text-foreground mb-1">Default workers</h3>
@@ -700,7 +717,7 @@ function DefaultWorkersCard({ workers }: { workers: { _id: string; fullname: str
             {workers.length === 0 ? (
                 <p className="text-sm text-muted-foreground italic">No default workers. New shifts are created without automatic worker assignments.</p>
             ) : (
-                <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-4">
                     {workers.map((w, i) => (
                         <div key={w._id} className="flex items-center gap-3">
                             {w.profilePhoto?.url ? (
@@ -713,9 +730,17 @@ function DefaultWorkersCard({ workers }: { workers: { _id: string; fullname: str
                                     {w.fullname.split(' ').map(n => n[0]).join('').slice(0, 2)}
                                 </div>
                             )}
-                            <div className="min-w-0">
+                            <div className="min-w-0 flex-1">
                                 <p className="text-sm font-semibold text-foreground truncate">{w.fullname}</p>
                                 <p className="text-xs text-muted-foreground truncate">{w.email}</p>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                                <span className="text-[11px] text-muted-foreground">Auto-accept</span>
+                                <Switch
+                                    checked={!!w.autoAcceptAssignments}
+                                    disabled={savingId === w._id}
+                                    onCheckedChange={next => handleToggle(w._id, next)}
+                                />
                             </div>
                         </div>
                     ))}
@@ -1023,7 +1048,7 @@ export function RecurringJobDetail() {
                 {/* Left column — cards */}
                 <div className="lg:col-span-1 flex flex-col gap-4">
                     <SchedulePatternCard schedule={detail} />
-                    <DefaultWorkersCard workers={detail.defaultWorkers} />
+                    <DefaultWorkersCard workers={detail.defaultWorkers} recurringJobId={id} />
                     <ScheduleMetadataCard detail={detail} />
                 </div>
 
