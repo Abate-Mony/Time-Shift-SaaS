@@ -34,6 +34,7 @@ import { CreateJobStepper } from "@/components/create-job/CreateJobStepper"
 import { CreateJobHiddenFields } from "@/components/create-job/CreateJobHiddenFields"
 import { singleQuote } from "@/pages/CreateQuote"
 import { singleBookingRequest } from "@/utils/bookingRequests"
+import { companySettingsQuery } from "@/pages/Settings"
 import { WizardFooter } from "@/components/create-job/WizardFooter"
 import { JobDetailsStep } from "@/components/create-job/steps/JobDetailsStep"
 import { ScheduleStaffingStep } from "@/components/create-job/steps/ScheduleStaffingStep"
@@ -269,6 +270,14 @@ export function CreateJob() {
   const sourceBookingRequest = bookingRequestData
   const [lockedFromBookingRequest, setLockedFromBookingRequest] = useState<{ requestId: string; service: string } | null>(null)
   const appliedBookingRequestRef = useRef(false)
+
+  // ── Default pay rate prefill ──────────────────────────────
+  // Settings.tsx's "Default pay rate" company setting — reuses its query
+  // rather than a bespoke fetch. Applied once payRate is still exactly its
+  // untouched 0 default, so it never clobbers a rate the admin already
+  // typed, a quote's terms, or an AI draft's suggestion.
+  const { data: companySettingsData } = useQuery(companySettingsQuery)
+  const appliedDefaultPayRateRef = useRef(false)
 
   const form = useForm({
     resolver: zodResolver(createJobSchema),
@@ -569,6 +578,21 @@ export function CreateJob() {
     setLockedFromBookingRequest({ requestId: sourceBookingRequest._id, service: sourceBookingRequest.service })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sourceBookingRequest])
+
+  // Applies the company's default pay rate exactly once, the moment it
+  // first becomes available — same "apply once" guard as the quote/booking
+  // prefills above. Skipped if payRate is no longer its untouched 0 default,
+  // so it can't overwrite a value the admin already typed or that a quote/
+  // AI draft already set.
+  useEffect(() => {
+    const defaultPayRate = companySettingsData?.settings?.defaultPayRate
+    if (defaultPayRate == null || appliedDefaultPayRateRef.current) return
+    appliedDefaultPayRateRef.current = true
+    if (getValues("payRate") === 0) {
+      setValue("payRate", defaultPayRate, { shouldValidate: true })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [companySettingsData])
 
   // ── AI draft ───────────────────────────────────────────────
   // Merges only the fields the AI actually returned — never blanks out
