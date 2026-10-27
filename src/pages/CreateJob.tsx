@@ -99,6 +99,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   payload.isRecurring = raw.isRecurring === "true"
   payload.openToClaims = raw.openToClaims === "true"
   payload.requiresApproval = raw.requiresApproval === "true"
+  payload.autoAccept = raw.autoAccept === "true"
 
   const numeric = [
     "interval",
@@ -305,6 +306,7 @@ export function CreateJob() {
       notes: "",
       openToClaims: false,
       requiresApproval: true,
+      autoAccept: false,
       clockInGraceMinutes: undefined,
     },
     mode: "onSubmit",

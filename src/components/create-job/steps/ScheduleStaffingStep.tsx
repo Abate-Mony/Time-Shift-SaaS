@@ -32,6 +32,7 @@ export function ScheduleStaffingStep() {
   const supervisor = watch("supervisor")
   const openToClaims = watch("openToClaims") ?? false
   const requiresApproval = watch("requiresApproval") ?? true
+  const autoAccept = watch("autoAccept") ?? false
 
   return (
     <div className="flex flex-col gap-5 min-w-0">
@@ -220,6 +221,22 @@ export function ScheduleStaffingStep() {
               </motion.div>
             )}
           </AnimatePresence>
+        </div>
+
+        {/* Auto-accept */}
+        <div className="mt-6 pt-5 border-t border-[var(--border)] min-w-0">
+          <div className="flex items-center justify-between gap-3 min-w-0">
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-foreground">Auto-accept</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">
+                Assigned workers don't need to accept this shift — it's confirmed on their schedule right away.
+              </p>
+            </div>
+            <Switch
+              on={autoAccept}
+              onToggle={() => setValue("autoAccept", !autoAccept, { shouldValidate: true })}
+            />
+          </div>
         </div>
       </div>
     </div>

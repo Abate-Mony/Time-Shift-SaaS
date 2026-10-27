@@ -215,6 +215,7 @@ export const createJobSchema = z
         checklist: z.array(checklistItemSchema).default([]),
         openToClaims: z.boolean().default(false),
         requiresApproval: z.boolean().default(true),
+        autoAccept: z.boolean().default(false),
         // Same NaN-from-blank-input issue as geofenceRadiusMeters above.
         clockInGraceMinutes: z.preprocess(
             v => (typeof v === "number" && Number.isNaN(v) ? undefined : v),

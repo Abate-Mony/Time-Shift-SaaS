@@ -24,6 +24,7 @@ export interface RecurringSchedule {
     chargeAmount: number
     geofenceMode: 'off' | 'warn' | 'enforce' | null
     geofenceRadiusMeters: number
+    autoAccept?: boolean
   }
   maxOccurrences?: number
   occurrenceCount: number
