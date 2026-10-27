@@ -144,6 +144,7 @@ export function ProfileScreen() {
         {[
           { label: 'Work Hub', icon: LayoutGrid, sub: 'Messages, documents, pay and more', to: "/worker/profile/work-hub" },
           { label: 'Earnings', icon: Zap, sub: 'Pay for completed and upcoming shifts', to: "/worker/profile/earnings" },
+          { label: 'Overtime', icon: Clock, sub: 'Pending, approved, and rejected', to: "/worker/profile/overtime" },
           { label: 'Download Timesheet', icon: Download, sub: 'July 2025', to: "/worker/profile/download-time-sheet" },
           { label: 'My Documents', icon: Paperclip, sub: 'ID, right-to-work, certifications', to: "/worker/profile/documents" },
           { label: 'Time Off', icon: CalendarOff, sub: 'Request time off, track status', to: "/worker/profile/time-off" },

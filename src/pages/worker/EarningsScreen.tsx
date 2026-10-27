@@ -5,7 +5,7 @@ import { formatDate, formatDuration } from "@/utils/date";
 import type { EarningsPeriod, EarningsResponse, EarningsShift } from "@/utils/types";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
-import { AlertCircle, ChevronLeft, ChevronRight, Wallet } from "lucide-react";
+import { AlertCircle, ChevronLeft, ChevronRight, Clock, Wallet } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router";
 
@@ -152,6 +152,23 @@ export default function EarningsScreen() {
               ))}
             </div>
           </div>
+
+          {data.pendingOvertimeAmount > 0 && (
+            <button
+              type="button"
+              onClick={() => navigate("/worker/profile/overtime")}
+              className="flex items-start gap-2.5 bg-amber-50 border border-amber-100 rounded-2xl p-3.5 text-left hover:bg-amber-100/60 transition-colors"
+            >
+              <Clock size={16} className="text-amber-700 mt-0.5 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold text-amber-800">{money(data.pendingOvertimeAmount)} pending approval</p>
+                <p className="text-xs text-amber-700/80 mt-0.5">
+                  Overtime awaiting your manager's review isn't included in the total above.
+                </p>
+              </div>
+              <ChevronRight size={16} className="text-amber-700 mt-0.5 shrink-0" />
+            </button>
+          )}
 
           {data.shifts.length === 0 ? (
             <div className="flex flex-col items-center gap-2 py-8 text-center">

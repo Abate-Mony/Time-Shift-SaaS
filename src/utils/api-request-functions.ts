@@ -2,7 +2,7 @@ import { queryClient } from "@/lib/queryClient";
 import { isAxiosError } from "axios";
 import toast from "react-hot-toast";
 import customFetch from "./customFetch";
-import type { AdminProfileForm, ClientBillingInfo, CompanyPlanId, CompanyPlanInfo, CreateJobForm, EarningsPeriod, EarningsResponse, EditProfileForm, EligibleWorkResponse, EventNotificationPreference, FileRef, Invoice, InvoiceAdjustmentInput, InvoiceCompanyInfo, InvoiceStatus, JobAttachment, ManagerContact, MyContactsResponse, NotificationEvent, NotificationPreferences, PlanCatalogEntry, PlanCatalogResponse, TeamMate, TimesheetSummaryResponse, User, WorkerDocument, WorkLocation } from "./types";
+import type { AdminProfileForm, ClientBillingInfo, CompanyPlanId, CompanyPlanInfo, CreateJobForm, EarningsPeriod, EarningsResponse, EditProfileForm, EligibleWorkResponse, EventNotificationPreference, FileRef, Invoice, InvoiceAdjustmentInput, InvoiceCompanyInfo, InvoiceStatus, JobAttachment, ManagerContact, MyContactsResponse, NotificationEvent, NotificationPreferences, OvertimeItem, OvertimeStatus, PlanCatalogEntry, PlanCatalogResponse, TeamMate, TimesheetSummaryResponse, User, WorkerDocument, WorkLocation } from "./types";
 import type {
     AccessLevel,
     AccountRestriction,
@@ -1120,6 +1120,16 @@ export const getMyEarnings = async ({
         { params: { period, offset } }
     );
     return data;
+};
+
+// Mirrors timeshift-mobile's own getMyOvertime call — same endpoint, same
+// response shape (see utils/types.ts's OvertimeItem).
+export const getMyOvertime = async (status?: OvertimeStatus | "all") => {
+    const { data } = await customFetch.get<{ items: OvertimeItem[] }>(
+        "/workers/me/overtime",
+        { params: status && status !== "all" ? { status } : undefined }
+    );
+    return data.items;
 };
 
 // Admin/manager viewing a specific worker's timesheet summary on-screen —

@@ -547,6 +547,23 @@ export interface EarningsResponse {
   earned: EarningsTotals;
   upcoming: EarningsTotals;
   shifts: EarningsShift[];
+  pendingOvertimeAmount: number;
+}
+
+// ── Overtime (GET /workers/me/overtime) — mirrors timeshift-mobile's
+// utils/types.ts, same endpoint and response shape. ───────────────────────
+export type OvertimeStatus = "pending" | "approved" | "rejected";
+
+export interface OvertimeItem {
+  assignmentId: string;
+  job: { _id: string; title: string; date: string; location: string };
+  actualMinutes: number;
+  approvedMinutes: number;
+  overtimeMinutes: number;
+  overtimeStatus: OvertimeStatus;
+  overtimeReviewedAt: string | null;
+  managerNotes: string | null;
+  checkedOutAt: string | null;
 }
 
 export type AssignmentStatus = 'pending' | 'accepted' | 'declined' | 'in-progress' | 'completed' | 'cancelled'
