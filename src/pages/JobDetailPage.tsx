@@ -593,7 +593,7 @@ export function JobDetail() {
 
                             <button
                                 onClick={() => onNavigate(`/jobs/${id}/edit`)}
-                                title={isJobLocked(job) ? "This job has already happened — its date, time and rates are locked, but everything else (title, notes, workers, etc.) can still be edited" : undefined}
+                                title={isJobLocked(job) ? "This job has already happened — its date, time, rates, assigned workers and checklist are locked, but everything else (title, notes, etc.) can still be edited" : undefined}
                                 className="h-9 px-3.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors backdrop-blur-sm"
                             >
                                 <Edit size={13} /> Edit
@@ -1317,7 +1317,7 @@ export function JobDetail() {
 
                             <button
                                 onClick={() => onNavigate(`/jobs/${id}/edit`)}
-                                title={isJobLocked(job) ? "This job has already happened — its date, time and rates are locked, but everything else (title, notes, workers, etc.) can still be edited" : undefined}
+                                title={isJobLocked(job) ? "This job has already happened — its date, time, rates, assigned workers and checklist are locked, but everything else (title, notes, etc.) can still be edited" : undefined}
                                 className="w-full h-10 rounded-xl border border-[var(--border)] text-sm font-semibold text-muted-foreground hover:bg-muted flex items-center justify-center gap-2 transition-colors"
                             >
                                 <Edit size={13} className="text-muted-foreground" /> Edit Job
@@ -1342,7 +1342,9 @@ export function JobDetail() {
                             </div>
                             <button
                                 onClick={() => setShowAssignWorkersModal(true)}
-                                className="h-7 px-2.5 rounded-lg bg-[var(--primary)]/10 text-[var(--primary)] text-xs font-semibold hover:bg-[var(--primary)]/20 transition-colors flex items-center gap-1"
+                                disabled={isJobLocked(job)}
+                                title={isJobLocked(job) ? "This job has already happened — who's assigned is locked" : undefined}
+                                className="h-7 px-2.5 rounded-lg bg-[var(--primary)]/10 text-[var(--primary)] text-xs font-semibold hover:bg-[var(--primary)]/20 transition-colors flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-[var(--primary)]/10"
                             >
                                 <Plus size={11} /> Add
                             </button>

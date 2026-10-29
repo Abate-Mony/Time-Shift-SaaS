@@ -547,7 +547,7 @@ export function EditJob() {
                         <div className="mb-4 flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3.5 py-2.5">
                             <Lock size={13} className="text-amber-600 shrink-0" />
                             <p className="text-xs text-amber-800">
-                                This shift has {lockedReason}, so its date and time are locked — everything else on this page can still be changed.
+                                This shift has {lockedReason}, so its date, time, pay/charge rate, assigned workers, and checklist are locked — title, notes, and other details can still be changed.
                             </p>
                         </div>
                     )}
@@ -619,10 +619,20 @@ export function EditJob() {
                         Assign Workers
                     </h2>
 
+                    {locked && (
+                        <div className="mb-4 flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3.5 py-2.5">
+                            <Lock size={13} className="text-amber-600 shrink-0" />
+                            <p className="text-xs text-amber-800">
+                                This shift has {lockedReason}, so who's assigned is locked.
+                            </p>
+                        </div>
+                    )}
+
                     <button
                         type="button"
+                        disabled={locked}
                         onClick={() => setWorkerOpen(!workerOpen)}
-                        className="w-full flex items-center justify-between h-9 px-3 border border-[var(--border)] rounded-lg text-sm text-muted-foreground hover:bg-muted transition-colors"
+                        className="w-full flex items-center justify-between h-9 px-3 border border-[var(--border)] rounded-lg text-sm text-muted-foreground hover:bg-muted transition-colors disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:bg-transparent"
                     >
                         <span className="flex items-center gap-2">
                             <Users size={14} className="text-muted-foreground" />
@@ -673,9 +683,11 @@ export function EditJob() {
                                 return (
                                     <div key={id.email} className="flex items-center gap-1.5 bg-blue-50 border border-blue-200 rounded-full pl-1.5 pr-2 py-0.5">
                                         <span className="text-xs font-medium text-blue-700">{w.fullname.split(' ')[0]}</span>
-                                        <button type="button" onClick={() => toggleWorker(id.email)} className="text-blue-400 hover:text-blue-600">
-                                            <X size={11} />
-                                        </button>
+                                        {!locked && (
+                                            <button type="button" onClick={() => toggleWorker(id.email)} className="text-blue-400 hover:text-blue-600">
+                                                <X size={11} />
+                                            </button>
+                                        )}
                                     </div>
                                 )
                             })}
@@ -1004,39 +1016,53 @@ export function EditJob() {
                         Optional. Tasks workers can check off on-site — everyone assigned shares the same list.
                     </p>
 
+                    {locked && (
+                        <div className="mb-4 flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3.5 py-2.5">
+                            <Lock size={13} className="text-amber-600 shrink-0" />
+                            <p className="text-xs text-amber-800">
+                                This shift has {lockedReason}, so the checklist is locked — it's a record of what was actually asked for on-site.
+                            </p>
+                        </div>
+                    )}
+
                     <div className="flex flex-col gap-2">
                         {checklist.map((item, index) => (
                             <div key={item._id ?? index} className="flex items-center gap-2">
                                 <Input
                                     value={item.text}
+                                    readOnly={locked}
                                     onChange={e => {
                                         const next = [...checklist]
                                         next[index] = { ...next[index], text: e.target.value }
                                         setChecklist(next)
                                     }}
                                     placeholder="e.g. Clean the oven"
-                                    className="flex-1"
+                                    className={cn("flex-1", locked && "opacity-60 cursor-not-allowed pointer-events-none bg-muted")}
                                 />
-                                <button
-                                    type="button"
-                                    onClick={() => setChecklist(checklist.filter((_, i) => i !== index))}
-                                    className="w-8 h-8 shrink-0 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-rose-50 hover:text-rose-600 transition-colors"
-                                >
-                                    <Trash2 size={14} />
-                                </button>
+                                {!locked && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setChecklist(checklist.filter((_, i) => i !== index))}
+                                        className="w-8 h-8 shrink-0 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-rose-50 hover:text-rose-600 transition-colors"
+                                    >
+                                        <Trash2 size={14} />
+                                    </button>
+                                )}
                             </div>
                         ))}
                     </div>
 
-                    <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="mt-3"
-                        onClick={() => setChecklist([...checklist, { text: "", done: false }])}
-                    >
-                        <Plus size={13} /> Add item
-                    </Button>
+                    {!locked && (
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="mt-3"
+                            onClick={() => setChecklist([...checklist, { text: "", done: false }])}
+                        >
+                            <Plus size={13} /> Add item
+                        </Button>
+                    )}
                 </div>
 
                 {/* Actions */}
