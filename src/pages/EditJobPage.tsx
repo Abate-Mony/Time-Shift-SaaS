@@ -450,9 +450,18 @@ export function EditJob() {
                         <div className="grid sm:grid-cols-2 gap-4">
                             <div>
                                 <Label className="text-sm font-medium text-foreground mb-1.5 block">Client</Label>
+                                {locked && (
+                                    <div className="mb-2 flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3.5 py-2.5">
+                                        <Lock size={13} className="text-amber-600 shrink-0" />
+                                        <p className="text-xs text-amber-800">
+                                            This shift has {lockedReason}, so the client is locked.
+                                        </p>
+                                    </div>
+                                )}
                                 <ClientCombobox
                                     value={selectedClient}
                                     onChange={setSelectedClient}
+                                    disabled={locked}
                                 />
                                 {/* RHF doesn't track this field as a real input — this is
                                     what actually reaches the <Form>'s FormData on submit. */}

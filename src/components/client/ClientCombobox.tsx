@@ -181,10 +181,10 @@ function ClientResult({ client, onSelect }: { client: Client; onSelect: () => vo
 
 // ─── Selected client card ─────────────────────────────────────────────────────
 
-function SelectedClientCard({ client, onClear }: { client: ComboboxClient; onClear: () => void }) {
+function SelectedClientCard({ client, onClear, disabled }: { client: ComboboxClient; onClear: () => void; disabled?: boolean }) {
   const email = client.billingEmail || client.primaryContact?.email
   return (
-    <div className="w-full border border-[var(--border)] rounded-xl p-3 bg-card">
+    <div className={`w-full border border-[var(--border)] rounded-xl p-3 bg-card ${disabled ? 'opacity-70' : ''}`}>
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
           <p className="text-sm font-bold text-foreground truncate">{client.name}</p>
@@ -200,9 +200,11 @@ function SelectedClientCard({ client, onClear }: { client: ComboboxClient; onCle
             </p>
           )}
         </div>
-        <button onClick={onClear} className="w-6 h-6 flex items-center justify-center rounded-lg hover:bg-muted text-muted-foreground shrink-0 transition-colors">
-          <X size={13} />
-        </button>
+        {!disabled && (
+          <button type="button" onClick={onClear} className="w-6 h-6 flex items-center justify-center rounded-lg hover:bg-muted text-muted-foreground shrink-0 transition-colors">
+            <X size={13} />
+          </button>
+        )}
       </div>
     </div>
   )
@@ -249,9 +251,10 @@ interface ClientComboboxProps {
   value: ComboboxClient | null
   onChange: (client: ComboboxClient | null) => void
   onToast?: (msg: string) => void
+  disabled?: boolean
 }
 
-export function ClientCombobox({ value, onChange, onToast }: ClientComboboxProps) {
+export function ClientCombobox({ value, onChange, onToast, disabled }: ClientComboboxProps) {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [debouncedQuery, setDebouncedQuery] = useState('')
@@ -311,15 +314,16 @@ export function ClientCombobox({ value, onChange, onToast }: ClientComboboxProps
   }
 
   if (value) {
-    return <SelectedClientCard client={value} onClear={() => onChange(null)} />
+    return <SelectedClientCard client={value} onClear={() => onChange(null)} disabled={disabled} />
   }
 
   return (
     <div ref={containerRef} className="relative">
       <button
       type='button'
+        disabled={disabled}
         onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center justify-between gap-2 h-10 px-3 border border-[var(--border)] rounded-xl bg-card text-sm text-muted-foreground hover:border-slate-300 transition-colors"
+        className="w-full flex items-center justify-between gap-2 h-10 px-3 border border-[var(--border)] rounded-xl bg-card text-sm text-muted-foreground hover:border-slate-300 transition-colors disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:border-[var(--border)]"
       >
         <span>Search or select a client…</span>
         <ChevronDown size={14} className="text-muted-foreground shrink-0" />
