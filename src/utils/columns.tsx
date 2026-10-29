@@ -326,7 +326,7 @@ const INVOICE_STATUS_STYLES: Record<string, string> = {
   overdue: "bg-red-100 text-red-600",
 }
 
-function InvoiceStatusPill({ value }: { value: string }) {
+export function InvoiceStatusPill({ value }: { value: string }) {
   const key = value?.toLowerCase() ?? ""
   return (
     <span

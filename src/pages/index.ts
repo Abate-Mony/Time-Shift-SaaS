@@ -63,6 +63,7 @@ export { ClientDetailsContactsPage } from "./ClientDetails/ClientDetailsContacts
 export { ClientDetailsaJobsPage } from "./ClientDetails/ClientDetailsJobsPage"
 export { ClientDetailsSitesPage } from "./ClientDetails/ClientDetailsSitesPage"
 export { ClientDetailsQuotesPage } from "./ClientDetails/ClientDetailsQuotesPage"
+export { ClientDetailsInvoicesPage } from "./ClientDetails/ClientDetailsInvoicesPage"
 export { ClientDetailsPortalAccessPage } from "./ClientDetails/ClientDetailsPortalAccessPage"
 export { default as ClentBillingPage } from "./ClientDetails/ClientDetailsBillingPage"
 export { SuspendedAccountPage } from "./SuspendedAccountPage"

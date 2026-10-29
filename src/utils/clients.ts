@@ -1,6 +1,7 @@
 import customFetch from "@/utils/customFetch"
 import type { Client } from "@/utils/types/client"
 import type { LeadQuoteRef } from "@/utils/types/lead"
+import type { Invoice } from "@/utils/types"
 
 export interface ClientListResponse {
   clients: Client[]
@@ -51,6 +52,27 @@ export const clientDetailQuery = (id: string) => ({
   queryKey: ["client", id],
   queryFn: async (): Promise<ClientDetailResponse> => {
     const { data } = await customFetch.get<ClientDetailResponse>(`/clients/${id}`)
+    return data
+  },
+})
+
+export interface ClientInvoicesResponse {
+  invoices: Invoice[]
+  page: number
+  limit: number
+  total: number
+  totalPages: number
+}
+
+// Same /invoices endpoint and response shape the main Invoices page uses,
+// just pre-filtered to one client — not folded into clientDetailQuery above
+// since it's paginated and the Invoices tab only needs it when visited.
+export const clientInvoicesQuery = (clientId: string, page: number) => ({
+  queryKey: ["client-invoices", clientId, page],
+  queryFn: async (): Promise<ClientInvoicesResponse> => {
+    const { data } = await customFetch.get<ClientInvoicesResponse>("/invoices", {
+      params: { client: clientId, sort: "issueDate_desc", page, limit: 20 },
+    })
     return data
   },
 })

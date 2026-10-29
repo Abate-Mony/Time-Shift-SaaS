@@ -42,7 +42,7 @@ import RecurringAssignmentPage, { loader as recurringAssignmentsLoader } from "@
 import PublicQuotePage from "@/pages/PublicQuotePage";
 import { createBrowserRouter, Navigate } from "react-router";
 import DashboardLayout from "../layouts/dashboardlayout";
-import { Calendar, calendarLoader, ClentBillingPage, ClientDetail, clientDetailLoader, ClientDetailsaJobsPage, ClientDetailsContactsPage, ClientDetailsOverviewPage, ClientDetailsSitesPage, ClientDetailsQuotesPage, ClientDetailsPortalAccessPage, BookingRequests, bookingRequestsLoader, JobChangeRequests, jobChangeRequestsLoader, Clients, clientsLoader, clockLoader, CreateClientPage, CreateInvoicePage, createInvoiceLoader, CreateJob, createjobAction, CreateQuote, createQuoteLoader, CreateSitePage, DataAssistant, Dashboard, dashboardLoader, EarningsScreen, OvertimeScreen, DownloadTimesheetScreen, EditJob, editJobAction, HelpArticlePage, HelpArticleScreen, HelpCentre, HelpCentreScreen, InvoiceDetail, invoiceDetailLoader, InvoiceForm, invoiceFormLoader, Invoices, invoicesLoader, JobDetail, Jobs, jobsLoader, Leads, leadsLoader, LeadDetail, leadDetailLoader, loginAction, openShiftsLoader, ProfileScreen, Quotes, quotesLoader, RecurringJobDetail, recurringJobDetailLoader, RecurringJobs, recurringJobsLoader, Settings, settingsLoader, signupAction, singleJobLoader, singleWorkerJobLoader, SiteDetailPage, siteDetailLoader, Sites, sitesLoader, SuspendedAccountPage, Team, teamLoader, TimeOffRequestsPage, timeOffRequestsLoader, workerLoader, WorkerProfile, workerProfileLoader, workerStatsLoader, Workers, workersLoader, CheckOutSettings, ChangePlanSettings, Notifications, TeamsCreatepage, teamsCreateLoader, WorkerDocumentsScreen, WorkerTimeOffScreen, WorkHubScreen, ContactManagerScreen, TeamDirectoryScreen, WorkLocationsScreen } from "../pages";
+import { Calendar, calendarLoader, ClentBillingPage, ClientDetail, clientDetailLoader, ClientDetailsaJobsPage, ClientDetailsContactsPage, ClientDetailsOverviewPage, ClientDetailsSitesPage, ClientDetailsQuotesPage, ClientDetailsInvoicesPage, ClientDetailsPortalAccessPage, BookingRequests, bookingRequestsLoader, JobChangeRequests, jobChangeRequestsLoader, Clients, clientsLoader, clockLoader, CreateClientPage, CreateInvoicePage, createInvoiceLoader, CreateJob, createjobAction, CreateQuote, createQuoteLoader, CreateSitePage, DataAssistant, Dashboard, dashboardLoader, EarningsScreen, OvertimeScreen, DownloadTimesheetScreen, EditJob, editJobAction, HelpArticlePage, HelpArticleScreen, HelpCentre, HelpCentreScreen, InvoiceDetail, invoiceDetailLoader, InvoiceForm, invoiceFormLoader, Invoices, invoicesLoader, JobDetail, Jobs, jobsLoader, Leads, leadsLoader, LeadDetail, leadDetailLoader, loginAction, openShiftsLoader, ProfileScreen, Quotes, quotesLoader, RecurringJobDetail, recurringJobDetailLoader, RecurringJobs, recurringJobsLoader, Settings, settingsLoader, signupAction, singleJobLoader, singleWorkerJobLoader, SiteDetailPage, siteDetailLoader, Sites, sitesLoader, SuspendedAccountPage, Team, teamLoader, TimeOffRequestsPage, timeOffRequestsLoader, workerLoader, WorkerProfile, workerProfileLoader, workerStatsLoader, Workers, workersLoader, CheckOutSettings, ChangePlanSettings, Notifications, TeamsCreatepage, teamsCreateLoader, WorkerDocumentsScreen, WorkerTimeOffScreen, WorkHubScreen, ContactManagerScreen, TeamDirectoryScreen, WorkLocationsScreen } from "../pages";
 
 export const router = createBrowserRouter([
     {
@@ -115,6 +115,14 @@ export const router = createBrowserRouter([
                                 // No props passed — reads client/quotes from
                                 // ClientDetail's context, same as the other tabs.
                                 element: <ClientDetailsQuotesPage />
+                            },
+                            {
+                                path: "invoices",
+                                // No props passed — reads the client from
+                                // ClientDetail's context, same as the other
+                                // tabs; fetches its own paginated invoices
+                                // list separately (/invoices?client=...).
+                                element: <ClientDetailsInvoicesPage />
                             },
                             {
                                 path: "billing",
