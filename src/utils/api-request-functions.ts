@@ -1252,8 +1252,14 @@ export const deleteJob = async (id: string) => {
         queryClient.invalidateQueries({ queryKey: ["jobs"] })
         queryClient.invalidateQueries({ queryKey: ["job",id] })
         toast.success("Job deleted successfully")
-    } catch (e) {
-        toast.error("Failed to delete job, try again later")
+    } catch (e: any) {
+        // Surfaces the server's specific reason (e.g. a worker already
+        // clocked in) instead of a generic message, and rethrows so the
+        // caller doesn't treat a blocked delete as success — see
+        // JobDetailPage.tsx's delete button, which used to navigate away
+        // regardless of whether this actually succeeded.
+        toast.error(e?.response?.data?.msg ?? "Failed to delete job, try again later")
+        throw e
     }
 }
 

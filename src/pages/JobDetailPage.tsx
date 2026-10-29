@@ -1281,6 +1281,10 @@ export function JobDetail() {
                                             onClick={() =>
                                                 deleteJob(job!._id as string).then(() => {
                                                     navigate("/jobs");
+                                                }).catch(() => {
+                                                    // deleteJob already toasted the reason (e.g. a worker
+                                                    // has clocked in) — stay on the page instead of
+                                                    // navigating away from a delete that didn't happen.
                                                 })
                                             }
                                             className="
