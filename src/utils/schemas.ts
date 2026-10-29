@@ -77,15 +77,20 @@ export const workerSchema = z.object({
     manuallyAdjusted: z.boolean().optional(),
     adjustmentReason: z.string().optional(),
 
-    acceptedAt: z.date().optional(),
+    // z.coerce.date(), not z.date() — the API returns these as ISO strings
+    // (same reasoning as breakSchema above), and a worker who already has
+    // real values here (e.g. a completed job's assigned workers) must still
+    // pass validation on every subsequent edit, not just a freshly-toggled
+    // worker object that happens to omit them.
+    acceptedAt: z.coerce.date().optional(),
 
-    declinedAt: z.date().optional(),
+    declinedAt: z.coerce.date().optional(),
 
-    checkedInAt: z.date().optional(),
+    checkedInAt: z.coerce.date().optional(),
 
-    checkedOutAt: z.date().optional(),
+    checkedOutAt: z.coerce.date().optional(),
 
-    completedAt: z.date().optional(),
+    completedAt: z.coerce.date().optional(),
 
     cancellationReason: z
         .string()
