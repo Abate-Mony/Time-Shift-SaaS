@@ -29,6 +29,7 @@ import {
     FileText,
     Flag,
     ListChecks,
+    Lock,
     LogIn, LogOut,
     MapPin,
     MapPinOff,
@@ -1370,6 +1371,21 @@ export function JobDetail() {
                                                         <AlertCircle size={18} className='text-amber-500' />
                                                     </div>
                                                 </TooltipTrigger>
+                                            </Tooltip>
+                                        ) : w.status === "completed" ? (
+                                            // Worker already clocked in and out — removing them now
+                                            // would silently drop a worked (and billable) shift from
+                                            // the job. No remove control here; unassign via the
+                                            // worker's profile/time logs if a correction is genuinely needed.
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <div className="p-1 rounded-full" onClick={e => e.stopPropagation()}>
+                                                        <Lock size={16} className='text-slate-300' />
+                                                    </div>
+                                                </TooltipTrigger>
+                                                <TooltipContent className='bg-black'>
+                                                    <span className='font-black'>{w.fullname}</span> already completed this job — can't be removed
+                                                </TooltipContent>
                                             </Tooltip>
                                         ) : (
                                             <Tooltip>
