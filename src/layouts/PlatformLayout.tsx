@@ -1,7 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, type QueryClient } from "@tanstack/react-query";
 import { NavLink, Outlet, redirect, useLocation, type LoaderFunctionArgs } from "react-router";
-import toast from "react-hot-toast";
 import {
   LayoutDashboard,
   Building2,
@@ -21,6 +20,8 @@ import {
   X,
 } from "lucide-react";
 import { userQuery, type iUser } from "./dashboardlayout";
+import { logoutUser } from "@/utils/logout";
+import { PlatformCommandPalette } from "@/components/platform/PlatformCommandPalette";
 
 // Direct port of the Figma source's PlatformSidebar + PlatformTopBar
 // (PlatformDashboard.tsx) — same literal markup/classes, swapped from its
@@ -54,6 +55,20 @@ export default function PlatformLayout() {
   const user = data?.user as iUser | undefined;
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [paletteOpen, setPaletteOpen] = useState(false);
+
+  // ⌘K / Ctrl+K opens the command palette from anywhere in the platform
+  // console — same shortcut as the regular app's TopBar.
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setPaletteOpen((o) => !o);
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
 
   const activeNav = [...NAV_ITEMS]
     .filter((item) => (item.end ? location.pathname === item.to : location.pathname.startsWith(item.to)))
@@ -142,7 +157,10 @@ export default function PlatformLayout() {
               <p className="text-xs font-semibold text-slate-200 truncate">{user?.fullname ?? "Platform Admin"}</p>
               <p className="text-[10px] text-amber-400 font-semibold">Super Admin</p>
             </div>
-            <button className="w-6 h-6 flex items-center justify-center rounded text-slate-500 hover:text-slate-300 transition-colors">
+            <button
+              onClick={() => logoutUser()}
+              className="w-6 h-6 flex items-center justify-center rounded text-slate-500 hover:text-slate-300 transition-colors"
+            >
               <LogOut size={11} />
             </button>
           </div>
@@ -168,7 +186,7 @@ export default function PlatformLayout() {
             )}
           </div>
           <button
-            onClick={() => toast("Command palette is a design preview — not wired up yet.")}
+            onClick={() => setPaletteOpen(true)}
             className="flex items-center gap-2 h-8 px-3 bg-slate-50 border border-[#E2E8F0] rounded-lg text-xs text-slate-400 hover:bg-slate-100 transition-colors"
           >
             <Search size={11} />
@@ -183,6 +201,8 @@ export default function PlatformLayout() {
           <Outlet />
         </main>
       </div>
+
+      <PlatformCommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
     </div>
   );
 }
