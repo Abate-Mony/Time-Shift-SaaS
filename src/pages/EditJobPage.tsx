@@ -163,7 +163,7 @@ export function EditJob() {
     const navigation = useNavigation()
     const submit = useSubmit()
     const formRef = useRef<HTMLFormElement>(null)
-    const [submittingAs, setSubmittingAs] = useState<"draft" | "published" | null>(null)
+    const [submittingAs, setSubmittingAs] = useState<string | null>(null)
     const submitGuardRef = useRef(false)
     const isFormSubmitting = navigation.state === "submitting" || navigation.state === "loading"
 
@@ -303,7 +303,7 @@ export function EditJob() {
      * regardless of whether RHF validation actually passed. Nothing submits
      * here until `trigger()` has resolved and confirmed validity.
      */
-    const doSubmit = async (status: "draft" | "published") => {
+    const doSubmit = async (status: string) => {
         if (submitGuardRef.current) return
         submitGuardRef.current = true
 
@@ -1044,19 +1044,30 @@ export function EditJob() {
                     <Button type="button" variant="outline" onClick={() => onNavigate('/jobs')} disabled={isFormSubmitting}>
                         Cancel
                     </Button>
-                    <Button type="button" variant="secondary" onClick={() => doSubmit("draft")} disabled={isFormSubmitting}>
-                        {submittingAs === "draft" ? (
-                            <>
-                                <Loader2 size={15} className="animate-spin" /> Saving…
-                            </>
-                        ) : (
-                            <>
-                                <Save size={15} /> Save as Draft
-                            </>
-                        )}
-                    </Button>
-                    <Button type="button" onClick={() => doSubmit("published")} disabled={isFormSubmitting}>
-                        {submittingAs === "published" ? (
+                    {/* Once a job is locked (completed/cancelled/already happened/
+                        invoiced), its status is frozen — editing notes/workers/etc.
+                        here must never flip it back to draft or published as a side
+                        effect. "Save as Draft" only ever makes sense for a job that
+                        hasn't happened yet, so it's hidden entirely; "Save changes"
+                        resubmits the job's own current status instead of hardcoding
+                        "published". Status changes a manager actually intends (e.g.
+                        completed → cancelled) go through the dedicated Change Status
+                        control on the job detail page, not this form. */}
+                    {!locked && (
+                        <Button type="button" variant="secondary" onClick={() => doSubmit("draft")} disabled={isFormSubmitting}>
+                            {submittingAs === "draft" ? (
+                                <>
+                                    <Loader2 size={15} className="animate-spin" /> Saving…
+                                </>
+                            ) : (
+                                <>
+                                    <Save size={15} /> Save as Draft
+                                </>
+                            )}
+                        </Button>
+                    )}
+                    <Button type="button" onClick={() => doSubmit(locked ? (job?.status ?? "published") : "published")} disabled={isFormSubmitting}>
+                        {isFormSubmitting ? (
                             <>
                                 <Loader2 size={15} className="animate-spin" /> Saving…
                             </>
