@@ -18,6 +18,10 @@ dayjs.extend(utc)
 const DAY_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
 const WEEKLY_TARGET_HOURS = 40
 const UPCOMING_SHIFTS_LIMIT = 5
+// A shift the worker hasn't accepted yet (still "pending"), or one that was
+// declined/cancelled, isn't a real commitment — it must never count toward
+// "This Week"'s hours. Same set used by the mobile app's equivalent screen.
+const COMMITTED_ASSIGNMENT_STATUSES = ['accepted', 'in-progress', 'completed']
 
 // job.date comes back as a full ISO datetime string, not YYYY-MM-DD —
 // dayjs.utc(...) reads the date component as the backend actually meant it
@@ -86,7 +90,7 @@ export default function HomeScreen() {
   const weekDays = Array.from({ length: 7 }, (_, i) => {
     const date = weekStart.add(i, 'day')
     const dateStr = date.format('YYYY-MM-DD')
-    const dayJobs = weekJobs.filter(j => j.date === dateStr)
+    const dayJobs = weekJobs.filter(j => j.date === dateStr && COMMITTED_ASSIGNMENT_STATUSES.includes(j.status ?? ''))
     return {
       day: DAY_LABELS[i],
       date,
