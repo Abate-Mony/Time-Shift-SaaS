@@ -154,6 +154,12 @@ export type CreateJobForm = Omit<z.infer<typeof createJobSchema>, "client" | "wo
   workers: (Worker & { billingStatus?: BillingStatus; invoice?: string | null })[];
   billingStatus?: BillingStatus;
   invoice?: string | null;
+  // The worker's OWN assignment on this job — only present on the response
+  // from GET /workers/:id (the worker-facing single-job view), which
+  // overrides `status` with the assignment's own status and nests the rest
+  // here. Not present on the admin-facing GET /jobs/:id response, which
+  // instead exposes every assignment via `workers` above.
+  workerJobDetails?: Worker | null;
   // Not a form field — server-populated once a manager uploads a file via
   // its own endpoint (see uploadJobAttachment).
   attachment?: JobAttachment | null;

@@ -77,6 +77,28 @@ export const workerSchema = z.object({
     manuallyAdjusted: z.boolean().optional(),
     adjustmentReason: z.string().optional(),
 
+    // The opposite case from overtimeStatus above: a worker who never
+    // clocked in at all. markMissedShifts.ts sets missedShiftDetectedAt/
+    // missedShiftReviewDeadline once the job's scheduled end has passed
+    // with no checkedInAt; the worker can self-report via the app
+    // (missedShiftReviewStatus "pending") until that deadline, and
+    // reviewMissedShiftRequest resolves it.
+    missedShiftDetectedAt: z.coerce.date().nullable().optional(),
+    missedShiftReviewDeadline: z.coerce.date().nullable().optional(),
+    missedShiftReviewStatus: z.enum(["none", "pending", "approved", "declined"]).default("none"),
+    missedShiftRequestedStartTime: z.string().optional(),
+    missedShiftRequestedEndTime: z.string().optional(),
+    missedShiftReason: z.enum(["phone_died", "no_signal", "forgot_to_clock_in", "other"]).optional(),
+    missedShiftNote: z.string().optional(),
+    missedShiftRequestedAt: z.coerce.date().optional(),
+    // Populated by getJob on the backend — an object once reviewed, absent
+    // until then.
+    missedShiftReviewedBy: z.object({ _id: z.string(), fullname: z.string() }).nullable().optional(),
+    missedShiftReviewedAt: z.coerce.date().optional(),
+    missedShiftReviewNote: z.string().optional(),
+    missedShiftApprovedStartTime: z.string().optional(),
+    missedShiftApprovedEndTime: z.string().optional(),
+
     // z.coerce.date(), not z.date() — the API returns these as ISO strings
     // (same reasoning as breakSchema above), and a worker who already has
     // real values here (e.g. a completed job's assigned workers) must still

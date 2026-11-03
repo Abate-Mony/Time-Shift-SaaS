@@ -62,7 +62,10 @@ interface WorkerBreak {
   startedAt: string
   endedAt?: string | null
 }
-interface workerJobWithDetails extends CreateJobForm {
+interface workerJobWithDetails extends Omit<CreateJobForm, "workerJobDetails"> {
+  // GET /workers/active-job's own narrower shape — distinct from
+  // CreateJobForm.workerJobDetails (the full JobAssignment GET /workers/:id
+  // returns), hence the Omit above instead of a plain extends.
   workerJobDetails: {
     workerStatus: "pending" |
     "accepted" |
@@ -84,7 +87,7 @@ interface workerJobWithDetails extends CreateJobForm {
 export default function ClockScreen() {
   const navigate = useNavigate()
 
-  const job = useQuery(activeWorkerJob()).data?.job as workerJobWithDetails
+  const job = useQuery(activeWorkerJob()).data?.job as unknown as workerJobWithDetails
 
   const onFinish = () => changeWorkerJobStaus(job._id!, "completed")
   const workerJobDetails = job?.workerJobDetails ?? {}

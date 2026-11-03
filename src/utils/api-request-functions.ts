@@ -521,6 +521,54 @@ export const toggleChecklistItem = async (jobId: string, itemId: string, done: b
     }
 };
 
+// Worker-facing — self-reports hours for a shift the backend's
+// markMissedShifts cron already flagged as missed (never clocked in at
+// all). Still needs a manager's approve/decline before any time lands on
+// the assignment — see reviewMissedShiftRequest below, and timeshift-
+// -mobile's own copy of these two functions.
+export const requestMissedShiftReview = async (
+    jobId: string,
+    assignmentId: string,
+    input: { startTime: string; endTime: string; reason: string; note?: string }
+): Promise<boolean> => {
+    try {
+        await customFetch.post(`/workers/assignments/${assignmentId}/missed-shift-request`, input);
+        toast.success("Review requested");
+        await queryClient.invalidateQueries({ queryKey: ["job", jobId] });
+        return true;
+    } catch (err) {
+        const message = isAxiosError(err)
+            ? err.response?.data?.msg ?? err.response?.data?.message ?? "Something went wrong."
+            : err instanceof Error
+                ? err.message
+                : "Something went wrong.";
+
+        toast.error(message);
+        return false;
+    }
+};
+
+// Pulls back a pending request before a manager looks at it — goes back
+// to "none" so the worker can resubmit, still bound by the original
+// missedShiftReviewDeadline.
+export const withdrawMissedShiftRequest = async (jobId: string, assignmentId: string): Promise<boolean> => {
+    try {
+        await customFetch.delete(`/workers/assignments/${assignmentId}/missed-shift-request`);
+        toast.success("Request withdrawn");
+        await queryClient.invalidateQueries({ queryKey: ["job", jobId] });
+        return true;
+    } catch (err) {
+        const message = isAxiosError(err)
+            ? err.response?.data?.msg ?? err.response?.data?.message ?? "Something went wrong."
+            : err instanceof Error
+                ? err.message
+                : "Something went wrong.";
+
+        toast.error(message);
+        return false;
+    }
+};
+
 // ── Shift-completion note & photos ───────────────────────────────────────
 // Both operate on the assignment, not the job — reached from the "shift
 // complete" summary screen after the job has already been marked completed
@@ -720,6 +768,40 @@ export const markAssignmentNoShow = async (assignmentId: string, reason: string)
         await customFetch.patch(`/workers/assignments/${assignmentId}/no-show`, { reason });
 
         toast.success("Marked as no-show.");
+
+        await queryClient.invalidateQueries({ queryKey: ["job"] });
+        return true;
+    } catch (err) {
+        const message =
+            isAxiosError(err)
+                ? err.response?.data?.msg ??
+                err.response?.data?.message ??
+                "Something went wrong."
+                : err instanceof Error
+                    ? err.message
+                    : "Something went wrong.";
+
+        toast.error(message);
+        return false;
+    }
+};
+
+// Resolves a worker's self-reported missed-shift request (they never
+// clocked in, markMissedShifts.ts flagged it, they requested review from
+// the app) — only ever callable while missedShiftReviewStatus is
+// "pending". "approve" synthesizes checkedInAt/checkedOutAt from the given
+// (or originally-requested) times and completes the assignment, same
+// shape as manuallyAdjustAssignment's result. "decline" leaves it open for
+// the worker to resubmit until the original 48h deadline.
+export const reviewMissedShiftRequest = async (
+    assignmentId: string,
+    decision: "approve" | "decline",
+    opts?: { approvedStartTime?: string; approvedEndTime?: string; reviewNote?: string }
+): Promise<boolean> => {
+    try {
+        await customFetch.patch(`/workers/assignments/${assignmentId}/missed-shift-request/review`, { decision, ...opts });
+
+        toast.success(decision === "approve" ? "Hours approved" : "Request declined");
 
         await queryClient.invalidateQueries({ queryKey: ["job"] });
         return true;

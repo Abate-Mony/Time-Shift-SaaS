@@ -3,7 +3,7 @@ import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { backLinkState, useBackLink } from '@/hooks/useBackLink'
 import { queryClient } from '@/lib/queryClient'
-import { deleteJob, deleteJobAttachment, duplicateJob, manuallyAdjustAssignment, markAssignmentNoShow, reviewAssignmentOvertime, reviewOpenShiftClaim, updateJobWorkers, uploadJobAttachment } from '@/utils/api-request-functions'
+import { deleteJob, deleteJobAttachment, duplicateJob, manuallyAdjustAssignment, markAssignmentNoShow, reviewAssignmentOvertime, reviewMissedShiftRequest, reviewOpenShiftClaim, updateJobWorkers, uploadJobAttachment } from '@/utils/api-request-functions'
 import customFetch from '@/utils/customFetch'
 import { formatDate, formatDuration, getShiftProgress } from '@/utils/date'
 import { formatCurrency } from '@/utils/format'
@@ -383,6 +383,22 @@ export function JobDetail() {
     const [adjustingId, setAdjustingId] = useState<string | null>(null)
     const [adjustHours, setAdjustHours] = useState("")
 
+    // Missed-shift review — the opposite case from overtime above: a worker
+    // who never clocked in at all. markMissedShifts.ts (backend cron) flags
+    // it, the worker self-reports hours from the app, and this resolves
+    // that request. Independent per worker, same as overtime.
+    const missedShiftMutation = useMutation({
+        mutationFn: ({ assignmentId, decision, approvedStartTime, approvedEndTime, reviewNote }: {
+            assignmentId: string
+            decision: "approve" | "decline"
+            approvedStartTime?: string
+            approvedEndTime?: string
+            reviewNote?: string
+        }) => reviewMissedShiftRequest(assignmentId, decision, { approvedStartTime, approvedEndTime, reviewNote }),
+    })
+    const [missedShiftTimes, setMissedShiftTimes] = useState<Record<string, { start: string; end: string }>>({})
+    const [missedShiftNotes, setMissedShiftNotes] = useState<Record<string, string>>({})
+
     // Manual hours entry — for a shift with missing/wrong clock data (phone
     // died, forgot to clock in/out) rather than the overtime-review flow
     // above, which only ever applies to a shift that already clocked both
@@ -470,6 +486,13 @@ export function JobDetail() {
         other: "Other",
     }
 
+    const MISSED_SHIFT_REASON_LABELS: Record<string, string> = {
+        phone_died: "Phone died",
+        no_signal: "No signal",
+        forgot_to_clock_in: "Forgot to clock in",
+        other: "Other",
+    }
+
     // Job-level status only (draft/published/completed/cancelled) — distinct
     // from a worker's own assignment status, which this same `status` field
     // is also reused for elsewhere (see the note on CreateJobForm's status
@@ -525,6 +548,7 @@ export function JobDetail() {
     // "worked longer than scheduled" heuristic above — this is what actually
     // gates payroll, and what a manager needs to resolve before approving.
     const pendingOvertimeWorkers = assignedWorkers.filter(w => w.overtimeStatus === "pending")
+    const pendingMissedShiftWorkers = assignedWorkers.filter(w => w.missedShiftReviewStatus === "pending")
     const back = useBackLink({ to: "/jobs", label: "Jobs" })
     return (
         <div className="p-6 animate-fade-in">
@@ -761,6 +785,98 @@ export function JobDetail() {
                                                     </button>
                                                 </div>
                                             )}
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                        </Card>
+                    )}
+
+                    {/* Missed-shift review — a worker who never clocked in at all
+                        (markMissedShifts.ts flagged it) self-reported hours from the
+                        app; approve (optionally adjusting the times first) completes
+                        the assignment, decline leaves it open for them to resubmit
+                        until their original 48h deadline. */}
+                    {pendingMissedShiftWorkers.length > 0 && (
+                        <Card className="border-amber-200 bg-amber-50/60">
+                            <div className="px-5 pt-5 pb-4 border-b border-amber-200/70 flex items-center gap-2.5">
+                                <UserMinus size={14} className="text-amber-600 shrink-0" />
+                                <div>
+                                    <h3 className="text-sm font-semibold text-amber-800">
+                                        {pendingMissedShiftWorkers.length} missed-shift request{pendingMissedShiftWorkers.length > 1 ? 's' : ''} to review
+                                    </h3>
+                                    <p className="text-xs text-amber-700/80 mt-0.5">
+                                        They never clocked in — review what they say happened before any hours count.
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="p-5 flex flex-col gap-3">
+                                {pendingMissedShiftWorkers.map(w => {
+                                    const times = missedShiftTimes[w._id!] ?? {
+                                        start: w.missedShiftRequestedStartTime ?? '',
+                                        end: w.missedShiftRequestedEndTime ?? '',
+                                    }
+                                    const note = missedShiftNotes[w._id!] ?? ''
+                                    return (
+                                        <div key={w._id} className="bg-card border border-amber-200 rounded-xl p-3.5 flex flex-col gap-2.5">
+                                            <div className="flex items-center gap-2 min-w-0">
+                                                <Avatar initials={getInitials(w.fullname)} size="sm" index={0} src={w.profilePhoto?.url} />
+                                                <div className="min-w-0">
+                                                    <p className="text-sm font-semibold text-foreground truncate">{w.fullname}</p>
+                                                    <p className="text-[11px] text-amber-700">
+                                                        Requested {w.missedShiftRequestedStartTime}–{w.missedShiftRequestedEndTime} · {MISSED_SHIFT_REASON_LABELS[w.missedShiftReason ?? ''] || w.missedShiftReason}
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            {w.missedShiftNote && (
+                                                <p className="text-[11px] text-muted-foreground bg-amber-50 border border-amber-100 rounded-lg px-2.5 py-1.5">
+                                                    <span className="font-semibold">Worker's note: </span>{w.missedShiftNote}
+                                                </p>
+                                            )}
+
+                                            <div className="flex items-center gap-2">
+                                                <Input
+                                                    type="time"
+                                                    value={times.start}
+                                                    onChange={e => setMissedShiftTimes(prev => ({ ...prev, [w._id!]: { ...times, start: e.target.value } }))}
+                                                    className="h-8 flex-1 min-w-0 px-2.5 border border-amber-300 rounded-lg text-xs bg-card focus:outline-none focus:ring-2 focus:ring-amber-300"
+                                                />
+                                                <span className="text-xs text-amber-700">to</span>
+                                                <Input
+                                                    type="time"
+                                                    value={times.end}
+                                                    onChange={e => setMissedShiftTimes(prev => ({ ...prev, [w._id!]: { ...times, end: e.target.value } }))}
+                                                    className="h-8 flex-1 min-w-0 px-2.5 border border-amber-300 rounded-lg text-xs bg-card focus:outline-none focus:ring-2 focus:ring-amber-300"
+                                                />
+                                            </div>
+                                            <Input
+                                                value={note}
+                                                onChange={e => setMissedShiftNotes(prev => ({ ...prev, [w._id!]: e.target.value }))}
+                                                placeholder="Note to the worker (optional)"
+                                                className="h-8 px-2.5 border border-amber-300 rounded-lg text-xs bg-card focus:outline-none focus:ring-2 focus:ring-amber-300"
+                                            />
+
+                                            <div className="flex items-center gap-2">
+                                                <button
+                                                    onClick={() => missedShiftMutation.mutate({
+                                                        assignmentId: w._id!, decision: "approve",
+                                                        approvedStartTime: times.start, approvedEndTime: times.end,
+                                                        reviewNote: note || undefined,
+                                                    })}
+                                                    disabled={missedShiftMutation.isPending || !times.start || !times.end}
+                                                    className="flex-1 h-8 rounded-lg bg-emerald-500 text-white text-xs font-semibold hover:bg-emerald-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                                                >
+                                                    Approve hours
+                                                </button>
+                                                <button
+                                                    onClick={() => missedShiftMutation.mutate({ assignmentId: w._id!, decision: "decline", reviewNote: note || undefined })}
+                                                    disabled={missedShiftMutation.isPending}
+                                                    className="h-8 px-3 rounded-lg border border-rose-200 text-rose-500 text-xs font-semibold hover:bg-rose-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0"
+                                                >
+                                                    Decline
+                                                </button>
+                                            </div>
                                         </div>
                                     )
                                 })}

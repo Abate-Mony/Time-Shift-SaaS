@@ -1,6 +1,6 @@
-import { PriorityBadge, StatusBadge } from "@/components/ui"
+import { Badge, PriorityBadge, StatusBadge } from "@/components/ui"
 import { queryClient } from "@/lib/queryClient"
-import { changeWorkerJobStaus, toggleChecklistItem } from "@/utils/api-request-functions"
+import { changeWorkerJobStaus, requestMissedShiftReview, toggleChecklistItem, withdrawMissedShiftRequest } from "@/utils/api-request-functions"
 import customFetch from "@/utils/customFetch"
 import { formatDate, formatDuration, formatTimeUntil } from "@/utils/date"
 import { useShiftStartGate } from "@/hooks/useShiftStartGate"
@@ -9,7 +9,7 @@ import { ensurePushSubscription } from "@/utils/pushSubscription"
 import { buildMapUrl, MAP_SERVICES, type MapService } from "@/utils/mapLinks"
 import type { CreateJobForm } from "@/utils/types"
 import { useMutation, useQuery } from "@tanstack/react-query"
-import { AlertCircle, AlertTriangle, Briefcase, CalendarDays, Check, CheckCircle2, ChevronLeft, Circle, Clock, Dot, ListChecks, Loader2, MapPin, Navigation, Paperclip, RefreshCw, Timer, X } from "lucide-react"
+import { AlertCircle, AlertTriangle, Briefcase, CalendarDays, Check, CheckCircle2, ChevronLeft, Circle, Clock, Dot, ListChecks, Loader2, MapPin, Navigation, Paperclip, RefreshCw, Send, Timer, X } from "lucide-react"
 import { useCompanyPlan } from "@/hooks/useCompanyPlan"
 import { useNavigate, useParams, type LoaderFunctionArgs } from "react-router"
 import { useState } from "react"
@@ -44,6 +44,326 @@ export const loader = async ({ params, request }: LoaderFunctionArgs) => {
         searchValues: { ...search }
     })
 }
+const MISSED_SHIFT_REASON_LABELS: Record<string, string> = {
+    phone_died: "Phone died",
+    no_signal: "No signal",
+    forgot_to_clock_in: "Forgot to clock in",
+    other: "Other",
+}
+
+// Computes and renders whichever of the 5 missed-shift states applies
+// right now (Main/Pending/Approved/Declined/Closed) — a pure function of
+// assignment fields + the current time, same component split as
+// timeshift-mobile's own copy of this screen.
+function MissedShiftCard({
+    job,
+    assignment,
+    onRequestReview,
+    onWithdraw,
+    withdrawing,
+}: {
+    job: { title: string }
+    assignment: NonNullable<CreateJobForm["workerJobDetails"]>
+    onRequestReview: () => void
+    onWithdraw: () => void
+    withdrawing: boolean
+}) {
+    const reviewStatus = assignment.missedShiftReviewStatus ?? "none"
+    const deadline = assignment.missedShiftReviewDeadline ? new Date(assignment.missedShiftReviewDeadline) : null
+    const isClosed = !!deadline && new Date() > deadline && reviewStatus !== "approved"
+
+    if (reviewStatus === "approved") {
+        const approvedStart = assignment.missedShiftApprovedStartTime
+        const approvedEnd = assignment.missedShiftApprovedEndTime
+        const timesChanged = approvedStart !== assignment.missedShiftRequestedStartTime || approvedEnd !== assignment.missedShiftRequestedEndTime
+        return (
+            <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 flex flex-col gap-3">
+                <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
+                        <CheckCircle2 size={16} className="text-emerald-600" />
+                    </div>
+                    <div>
+                        <p className="text-sm font-bold text-emerald-800">
+                            Hours approved{assignment.approvedMinutes != null ? ` · ${formatDuration(assignment.approvedMinutes)} recorded` : ""}
+                        </p>
+                        <p className="text-xs text-emerald-700 mt-0.5">
+                            {timesChanged ? "Your manager changed the time. " : ""}These hours are now on your timesheet.
+                        </p>
+                    </div>
+                </div>
+                <dl className="bg-card border border-emerald-200 rounded-xl px-3 divide-y divide-emerald-100">
+                    {timesChanged && (
+                        <div className="flex items-center justify-between py-2 text-xs">
+                            <dt className="text-muted-foreground">You asked for</dt>
+                            <dd className="font-semibold text-muted-foreground line-through">{assignment.missedShiftRequestedStartTime}–{assignment.missedShiftRequestedEndTime}</dd>
+                        </div>
+                    )}
+                    <div className="flex items-center justify-between py-2 text-xs">
+                        <dt className="text-muted-foreground">Approved</dt>
+                        <dd className="font-bold text-foreground">{approvedStart}–{approvedEnd}</dd>
+                    </div>
+                    {!!assignment.missedShiftReviewedBy && (
+                        <div className="flex items-center justify-between py-2 text-xs">
+                            <dt className="text-muted-foreground">By</dt>
+                            <dd className="font-bold text-foreground">
+                                {assignment.missedShiftReviewedBy.fullname}
+                                {assignment.missedShiftReviewedAt ? ` · ${formatDate(assignment.missedShiftReviewedAt, "ddd D MMM, HH:mm")}` : ""}
+                            </dd>
+                        </div>
+                    )}
+                </dl>
+                {!!assignment.missedShiftReviewNote && (
+                    <p className="text-xs text-emerald-700 leading-relaxed">
+                        <span className="font-bold">Manager note: </span>{assignment.missedShiftReviewNote}
+                    </p>
+                )}
+            </div>
+        )
+    }
+
+    if (reviewStatus === "pending") {
+        return (
+            <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex flex-col gap-3">
+                <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
+                        <Clock size={16} className="text-amber-700" />
+                    </div>
+                    <div>
+                        <p className="text-sm font-bold text-amber-800">Review requested</p>
+                        <p className="text-xs text-amber-700 mt-0.5">Waiting for your manager. You&apos;ll get a notification when they decide.</p>
+                    </div>
+                </div>
+                <dl className="bg-card border border-amber-200 rounded-xl px-3 divide-y divide-amber-100">
+                    <div className="flex items-center justify-between py-2 text-xs">
+                        <dt className="text-muted-foreground">Hours</dt>
+                        <dd className="font-bold text-foreground">{assignment.missedShiftRequestedStartTime}–{assignment.missedShiftRequestedEndTime}</dd>
+                    </div>
+                    <div className="flex items-center justify-between py-2 text-xs">
+                        <dt className="text-muted-foreground">Reason</dt>
+                        <dd className="font-bold text-foreground">{MISSED_SHIFT_REASON_LABELS[assignment.missedShiftReason ?? ""] ?? assignment.missedShiftReason}</dd>
+                    </div>
+                    {!!assignment.missedShiftRequestedAt && (
+                        <div className="flex items-center justify-between py-2 text-xs">
+                            <dt className="text-muted-foreground">Sent</dt>
+                            <dd className="font-bold text-foreground">{formatDate(assignment.missedShiftRequestedAt, "ddd D MMM, HH:mm")}</dd>
+                        </div>
+                    )}
+                </dl>
+                <Button type="button" variant="outline" className="border-amber-300 text-amber-700 hover:bg-amber-100" disabled={withdrawing} onClick={onWithdraw}>
+                    {withdrawing ? <Loader2 size={14} className="mr-2 animate-spin" /> : null}
+                    Withdraw request
+                </Button>
+            </div>
+        )
+    }
+
+    if (isClosed) {
+        return (
+            <div className="bg-card border border-[var(--border)] rounded-2xl p-4 flex flex-col gap-3">
+                <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center shrink-0">
+                        <AlertTriangle size={16} className="text-muted-foreground" />
+                    </div>
+                    <div>
+                        <p className="text-sm font-bold text-foreground">Review window closed</p>
+                        <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+                            {deadline ? `Requests for this shift closed on ${formatDate(deadline, "ddd D MMM, HH:mm")} (48 hours after it ended). ` : ""}
+                            Contact your manager if you still need it reviewed.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        )
+    }
+
+    if (reviewStatus === "declined") {
+        return (
+            <div className="bg-red-50 border border-red-200 rounded-2xl p-4 flex flex-col gap-3">
+                <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+                        <X size={16} className="text-red-700" />
+                    </div>
+                    <div>
+                        <p className="text-sm font-bold text-red-800">Request declined</p>
+                        <p className="text-xs text-red-700 mt-0.5">No hours were recorded for this shift.</p>
+                    </div>
+                </div>
+                {!!assignment.missedShiftReviewNote && (
+                    <div className="bg-card border border-red-200 rounded-xl px-3 py-2.5">
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide mb-1">
+                            Manager note{assignment.missedShiftReviewedBy ? ` · ${assignment.missedShiftReviewedBy.fullname}` : ""}
+                        </p>
+                        <p className="text-sm text-foreground leading-relaxed">{assignment.missedShiftReviewNote}</p>
+                    </div>
+                )}
+                <Button type="button" className="bg-[var(--primary)] hover:bg-primary/90" onClick={onRequestReview}>
+                    Send a new request
+                </Button>
+                {!!deadline && (
+                    <p className="flex items-center gap-1.5 text-xs text-red-700">
+                        <Clock size={13} /> You can resend until {formatDate(deadline, "ddd D MMM, HH:mm")}
+                    </p>
+                )}
+            </div>
+        )
+    }
+
+    // "none" — the default state right after the shift gets flagged, no
+    // request submitted yet.
+    return (
+        <>
+            <div className="h-11 rounded-xl bg-red-50 flex items-center justify-center gap-2 text-red-700 text-sm font-semibold">
+                <AlertTriangle size={14} /> Shift window missed
+            </div>
+            <div className="bg-card border border-[var(--border)] rounded-2xl p-4 flex flex-col gap-3">
+                <div>
+                    <p className="text-sm font-bold text-foreground">Worked this shift but couldn&apos;t clock in?</p>
+                    <p className="text-xs text-muted-foreground mt-1 leading-relaxed">Send your hours to your manager. Nothing is paid until they approve it.</p>
+                </div>
+                <Button type="button" className="bg-[var(--primary)] hover:bg-primary/90" onClick={onRequestReview}>
+                    <Send size={14} className="mr-2" /> Request review
+                </Button>
+                {!!deadline && (
+                    <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl px-2.5 py-2">
+                        <Clock size={13} className="text-amber-700 shrink-0" />
+                        <p className="text-xs text-amber-800">Request by <span className="font-bold">{formatDate(deadline, "ddd D MMM, HH:mm")}</span></p>
+                    </div>
+                )}
+            </div>
+        </>
+    )
+}
+
+// The "Request a review" drawer — same Drawer component this screen
+// already uses for Cancel/Release, defaulting start/end to the job's
+// scheduled window.
+function MissedShiftRequestDrawer({
+    open,
+    onOpenChange,
+    job,
+    loading,
+    onSubmit,
+}: {
+    open: boolean
+    onOpenChange: (open: boolean) => void
+    job: { title: string; startTime: string; endTime: string } | undefined
+    loading: boolean
+    onSubmit: (input: { startTime: string; endTime: string; reason: string; note?: string }) => void
+}) {
+    const [startTime, setStartTime] = useState(job?.startTime ?? "")
+    const [endTime, setEndTime] = useState(job?.endTime ?? "")
+    const [reason, setReason] = useState("phone_died")
+    const [note, setNote] = useState("")
+
+    return (
+        <Drawer open={open} onOpenChange={o => {
+            onOpenChange(o)
+            if (o) {
+                setStartTime(job?.startTime ?? "")
+                setEndTime(job?.endTime ?? "")
+                setReason("phone_died")
+                setNote("")
+            }
+        }}>
+            <DrawerTrigger asChild className="hidden"><Button variant="outline">Open</Button></DrawerTrigger>
+            <DrawerContent className="max-w-md mx-auto">
+                <DrawerHeader className="text-left">
+                    <DrawerDescription />
+                </DrawerHeader>
+                <div className="px-4 pb-2">
+                    <div className="rounded-2xl border border-border bg-card p-4 shadow-sm flex flex-col gap-4">
+                        <div>
+                            <h3 className="text-sm font-bold text-foreground">Request a review</h3>
+                            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                                {job?.title} · scheduled {job?.startTime}–{job?.endTime}. Your manager will confirm the hours.
+                            </p>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-2">
+                                <Label htmlFor="missedStart">Started</Label>
+                                <input
+                                    id="missedStart"
+                                    type="text"
+                                    value={startTime}
+                                    onChange={e => setStartTime(e.target.value)}
+                                    placeholder="HH:mm"
+                                    disabled={loading}
+                                    className="h-11 w-full rounded-xl border border-border bg-muted px-3 text-sm font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/30"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="missedEnd">Finished</Label>
+                                <input
+                                    id="missedEnd"
+                                    type="text"
+                                    value={endTime}
+                                    onChange={e => setEndTime(e.target.value)}
+                                    placeholder="HH:mm"
+                                    disabled={loading}
+                                    className="h-11 w-full rounded-xl border border-border bg-muted px-3 text-sm font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/30"
+                                />
+                            </div>
+                        </div>
+                        <p className="-mt-2 text-xs text-muted-foreground">Must be within {job?.startTime}–{job?.endTime}</p>
+
+                        <div className="space-y-2">
+                            <Label>What happened?</Label>
+                            <div className="flex flex-wrap gap-2">
+                                {Object.entries(MISSED_SHIFT_REASON_LABELS).map(([value, label]) => (
+                                    <button
+                                        key={value}
+                                        type="button"
+                                        disabled={loading}
+                                        onClick={() => setReason(value)}
+                                        className={`h-9 px-3.5 rounded-full border text-xs font-semibold transition-colors ${reason === value
+                                            ? "border-[var(--primary)] bg-[var(--primary)] text-white"
+                                            : "border-border bg-card text-muted-foreground hover:bg-muted"
+                                            }`}
+                                    >
+                                        {label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="missedNote">
+                                Note <span className="font-normal text-muted-foreground">optional</span>
+                            </Label>
+                            <Textarea
+                                id="missedNote"
+                                value={note}
+                                onChange={e => setNote(e.target.value.slice(0, 1000))}
+                                placeholder="Anything your manager should know"
+                                className="min-h-[80px] resize-none"
+                            />
+                        </div>
+
+                        <div className="flex gap-2">
+                            <Button type="button" variant="outline" className="flex-1" disabled={loading} onClick={() => onOpenChange(false)}>
+                                Cancel
+                            </Button>
+                            <Button
+                                type="button"
+                                className="flex-1 bg-[var(--primary)] hover:bg-primary/90"
+                                disabled={loading || !startTime || !endTime}
+                                onClick={() => onSubmit({ startTime, endTime, reason, note: note.trim() || undefined })}
+                            >
+                                {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                                Submit request
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+                <DrawerFooter className="pt-2">
+                    <DrawerClose asChild><Button variant="outline">Close</Button></DrawerClose>
+                </DrawerFooter>
+            </DrawerContent>
+        </Drawer>
+    )
+}
+
 export default function JobDetailScreen() {
     const id = useParams().id
     const navigate = useNavigate()
@@ -51,6 +371,30 @@ export default function JobDetailScreen() {
     const job = useQuery(singleWorkerJob(id)).data?.job
     const [loadingAction, setLoadingAction] = useState<'accept' | 'reject' | 'start' | null>(null)
     const { canStart, minutesUntilStart, hasExpired } = useShiftStartGate(job?.date, job?.startTime, job?.endTime)
+
+    // Missed shift (never clocked in at all) — see markMissedShifts.ts on
+    // the backend. missedShiftDetectedAt being set is the actual signal;
+    // job.status stays "accepted" the whole time, nothing else moves it.
+    const assignment = job?.workerJobDetails
+    const isMissedShift = !!assignment?.missedShiftDetectedAt && assignment.missedShiftReviewStatus !== "approved"
+    const [showMissedShiftRequest, setShowMissedShiftRequest] = useState(false)
+    const [isSubmittingMissedShift, setIsSubmittingMissedShift] = useState(false)
+    const [isWithdrawingMissedShift, setIsWithdrawingMissedShift] = useState(false)
+
+    const submitMissedShiftRequest = async (input: { startTime: string; endTime: string; reason: string; note?: string }) => {
+        if (!id || !assignment?._id) return
+        setIsSubmittingMissedShift(true)
+        const ok = await requestMissedShiftReview(id, assignment._id, input)
+        setIsSubmittingMissedShift(false)
+        if (ok) setShowMissedShiftRequest(false)
+    }
+
+    const withdrawMissedShift = async () => {
+        if (!id || !assignment?._id) return
+        setIsWithdrawingMissedShift(true)
+        await withdrawMissedShiftRequest(id, assignment._id)
+        setIsWithdrawingMissedShift(false)
+    }
 
     const checklistMutation = useMutation({
         mutationFn: ({ itemId, done }: { itemId: string; done: boolean }) => toggleChecklistItem(id!, itemId, done),
@@ -169,7 +513,13 @@ export default function JobDetailScreen() {
                                 <p className="text-[10px] font-semibold text-white/50 uppercase tracking-widest mb-1.5">{job?.client?.name}</p>
                                 <h2 className="text-base font-bold text-white leading-snug">{job?.title}</h2>
                             </div>
-                            <StatusBadge status={job?.status || "pending"} />
+                            {assignment?.missedShiftReviewStatus === "pending" ? (
+                                <Badge variant="warning">In review</Badge>
+                            ) : isMissedShift ? (
+                                <Badge variant="danger">Missed</Badge>
+                            ) : (
+                                <StatusBadge status={job?.status || "pending"} />
+                            )}
                         </div>
                         <div className="flex items-center gap-3 mt-4">
                             <div className="flex items-center gap-2 bg-white/10 rounded-xl px-3 py-2">
@@ -200,6 +550,16 @@ export default function JobDetailScreen() {
                     ))}
                 </div>
             </div>
+
+            {!!assignment?.missedShiftDetectedAt && (
+                <MissedShiftCard
+                    job={job!}
+                    assignment={assignment}
+                    onRequestReview={() => setShowMissedShiftRequest(true)}
+                    onWithdraw={withdrawMissedShift}
+                    withdrawing={isWithdrawingMissedShift}
+                />
+            )}
 
             {/* Notes */}
             {job?.description && (
@@ -644,6 +1004,14 @@ export default function JobDetailScreen() {
                     </div>
                 </div>
             )}
+
+            <MissedShiftRequestDrawer
+                open={showMissedShiftRequest}
+                onOpenChange={setShowMissedShiftRequest}
+                job={job}
+                loading={isSubmittingMissedShift}
+                onSubmit={submitMissedShiftRequest}
+            />
         </div>
     )
 }
