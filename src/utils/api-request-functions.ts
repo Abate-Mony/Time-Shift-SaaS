@@ -2,7 +2,7 @@ import { queryClient } from "@/lib/queryClient";
 import { isAxiosError } from "axios";
 import toast from "react-hot-toast";
 import customFetch from "./customFetch";
-import type { AdminProfileForm, ClientBillingInfo, CompanyPlanId, CompanyPlanInfo, CreateJobForm, EarningsPeriod, EarningsResponse, EditProfileForm, EligibleWorkResponse, EventNotificationPreference, FileRef, Invoice, InvoiceAdjustmentInput, InvoiceCompanyInfo, InvoiceStatus, JobAttachment, ManagerContact, MyContactsResponse, NotificationEvent, NotificationPreferences, OvertimeItem, OvertimeStatus, PlanCatalogEntry, PlanCatalogResponse, TeamMate, TimesheetSummaryResponse, User, WorkerDocument, WorkLocation } from "./types";
+import type { AdminProfileForm, ClientBillingInfo, CompanyPlanId, CompanyPlanInfo, CompanyProfile, CompanyProfileForm, CreateJobForm, EarningsPeriod, EarningsResponse, EditProfileForm, EligibleWorkResponse, EventNotificationPreference, FileRef, Invoice, InvoiceAdjustmentInput, InvoiceCompanyInfo, InvoiceStatus, JobAttachment, ManagerContact, MyContactsResponse, NotificationEvent, NotificationPreferences, OvertimeItem, OvertimeStatus, PlanCatalogEntry, PlanCatalogResponse, TeamMate, TimesheetSummaryResponse, User, WorkerDocument, WorkLocation } from "./types";
 import type {
     AccessLevel,
     AccountRestriction,
@@ -1083,6 +1083,32 @@ export const updateAdminProfile = async (profile: AdminProfileForm): Promise<boo
         await queryClient.invalidateQueries({
             queryKey: ["user"],
         });
+        return true;
+    } catch (err) {
+        toast.error(getApiErrorMessage(err));
+        return false;
+    }
+};
+
+// ── Company profile ──────────────────────────────────────────────────────
+// Name/industry/size/website/registration number — admin AND manager (see
+// companyRouter.ts's /profile route; distinct from the operational
+// /companies/settings and the logo, both admin-only).
+export const getCompanyProfile = async (): Promise<CompanyProfile> => {
+    const { data } = await customFetch.get<{ profile: CompanyProfile }>("/companies/profile");
+    return data.profile;
+};
+
+export const updateCompanyProfile = async (profile: CompanyProfileForm): Promise<boolean> => {
+    try {
+        await customFetch.patch("/companies/profile", profile);
+
+        toast.success("Company profile updated");
+
+        await queryClient.invalidateQueries({ queryKey: ["company-profile"] });
+        // The sidebar/topbar read company.name off the session user object —
+        // keep that in sync too so a renamed company shows up immediately.
+        await queryClient.invalidateQueries({ queryKey: ["user"] });
         return true;
     } catch (err) {
         toast.error(getApiErrorMessage(err));

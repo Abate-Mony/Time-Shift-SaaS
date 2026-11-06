@@ -32,6 +32,7 @@ import {
 import { Avatar } from './ui'
 import CustomNavLink from './ui/link'
 import { Button } from './ui/button'
+import { HoverCard, HoverCardContent, HoverCardTrigger } from './ui/hover-card'
 
 // Grouped by theme rather than one flat list — 19 links in a row (the old
 // "Main"/"Reporting" split) got hard to scan as items like Leads, Time Off
@@ -156,7 +157,7 @@ export function Sidebar({ collapsed, onToggleSidebar, user }: SidebarProps) {
           onClick={onToggleSidebar}
         />
       }
-      <aside className={`${collapsed ? 'lg:w-16 w-0 overflow-hidden' : 'w-60'} z-30 h-dvh bg-[#0F172A] border flex flex-col fixed left-0 top-0 transition-all duration-200`}>
+      <aside className={`${collapsed ? 'lg:w-16 w-0 ' : 'w-60'} z-30 h-dvh bg-[#0F172A] border flex flex-col fixed left-0 top-0 transition-all duration-200`}>
         {/* Logo */}
         <div className='flex flex-1 min-h-0 flex-col'>
           <div className="h-[60px] flex items-center px-5 border-b border-white/6 shrink-0 ">
@@ -200,7 +201,7 @@ export function Sidebar({ collapsed, onToggleSidebar, user }: SidebarProps) {
           )}
 
           {/* Main nav */}
-          <nav className="flex-1 min-h-0 overflow-y-auto py-3 px-3 flex flex-col gap-0.5">
+          <nav className="flex-1 min-h-0 overflow-y-auto  py-3 px-3 flex flex-col gap-0.5">
             {navGroups.map((group, i) => {
               // Dashboard — ungrouped, always a single plain link either way.
               if (!group.label) {
@@ -236,36 +237,48 @@ export function Sidebar({ collapsed, onToggleSidebar, user }: SidebarProps) {
                 const active = isGroupActive(group.items)
                 const RailIcon = GROUP_RAIL_ICON[label] ?? group.items[0].icon
                 return (
-                  <div key={label} className="relative group/flyout">
+                  <div key={label} >
                     {i > 1 && <div className="my-2 border-t border-white/[0.06]" />}
-                    <button
-                      type="button"
-                      aria-label={label}
-                      className={cn(
-                        'w-full flex items-center justify-center h-9 rounded-lg transition-colors',
-                        active ? 'bg-white/10' : 'hover:bg-white/5'
-                      )}
-                    >
-                      <RailIcon size={16} className={cn('text-blue-400', active && 'text-current')} />
-                    </button>
-
-                    <div className="invisible opacity-0 translate-x-1 group-hover/flyout:visible group-hover/flyout:opacity-100 group-hover/flyout:translate-x-0 group-focus-within/flyout:visible group-focus-within/flyout:opacity-100 group-focus-within/flyout:translate-x-0 absolute left-full top-0 ml-2 w-52 bg-[#0F172A] border border-white/10 rounded-xl shadow-xl py-2 px-1.5 z-40 transition-all duration-150">
-                      <p className="text-[10px] font-semibold text-white/30 uppercase tracking-widest px-2 mb-1">{label}</p>
-                      {group.items.map(item => (
-                        <CustomNavLink
-                          key={item.id}
-                          to={item.id}
-                          layoutId='side-bar-flyout'
-                          show
-                          selectedClassName='text-white! bg-white/10'
-                          animateClassName="inset-0 size-full bg-gray-500/15"
-                          className="w-full text-white/60 hover:text-white/90 hover:bg-white/5 flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm transition-colors relative group"
+                    <HoverCard openDelay={100} closeDelay={100}>
+                      <HoverCardTrigger asChild>
+                        <button
+                          type="button"
+                          aria-label={label}
+                          className={cn(
+                            'w-full flex items-center justify-center h-9 rounded-lg transition-colors',
+                            active ? 'bg-white/10' : 'hover:bg-white/5'
+                          )}
                         >
-                          <item.icon size={14} className={cn('text-blue-400 group-[.slide-active]:text-current')} />
-                          <span className="flex-1 text-left font-medium">{item.label}</span>
-                        </CustomNavLink>
-                      ))}
-                    </div>
+                          <RailIcon size={16} className={cn('text-blue-400', active && 'text-white')} />
+                        </button>
+                      </HoverCardTrigger>
+                      {/* Radix positions this `fixed` via Floating UI, so it
+                          escapes the nav's overflow-y-auto clipping instead
+                          of being cut off like a plain absolutely-positioned
+                          div would be. */}
+                      <HoverCardContent
+                        side="right"
+                        align="start"
+                        sideOffset={10}
+                        className="w-52 bg-[#0F172A] border border-white/10 rounded-xl shadow-xl py-3.5  px-1.5"
+                      >
+                        <p className="text-[10px] font-semibold text-white/30 uppercase tracking-widest px-2 mb-1">{label}</p>
+                        {group.items.map(item => (
+                          <CustomNavLink
+                            key={item.id}
+                            to={item.id}
+                            layoutId='side-bar-flyout'
+                            show
+                            selectedClassName='text-white! bg-white/10'
+                            animateClassName="inset-0 size-full bg-gray-500/15"
+                            className="w-full text-white/60 hover:text-white/90  gap-x-2 hover:bg-white/5 flex flex-row items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm transition-colors relative group "
+                          >
+                            <item.icon size={14} className={cn('text-blue-400 inline group-[.slide-active]:text-current mr-2')} />
+                            <span className="flex-1 text-left font-medium">{item.label}</span>
+                          </CustomNavLink>
+                        ))}
+                      </HoverCardContent>
+                    </HoverCard>
                   </div>
                 )
               }
@@ -282,7 +295,7 @@ export function Sidebar({ collapsed, onToggleSidebar, user }: SidebarProps) {
                     className="w-full flex items-center justify-between px-2 mb-1 mt-4 group/header"
                   >
                     <span className="text-[10px] font-semibold text-white/25 uppercase tracking-widest group-hover/header:text-white/40 transition-colors">
-                      {label}
+                      {label} 
                     </span>
                     <ChevronDown size={11} className={cn('text-white/25 transition-transform', !expanded && '-rotate-90')} />
                   </button>

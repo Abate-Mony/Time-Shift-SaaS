@@ -7,6 +7,7 @@ import customFetch from "@/utils/customFetch"
 import { isAxiosError } from "axios"
 import useError from "@/utils/useError"
 import type { User as iUser } from "@/utils/types"
+import { BUSINESS_TYPES, COMPANY_SIZES } from "@/utils/constants/company"
 import { useState, useEffect, useRef, useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
@@ -63,16 +64,9 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 }
 
 // ── Business types ────────────────────────────────────────────────────────────
-const BUSINESS_TYPES = [
-  "Cleaning Company", "Security Company", "Care Agency", "Construction",
-  "Hospitality", "Warehouse", "Logistics", "Healthcare", "Retail",
-  "Manufacturing", "Education", "Other",
-]
-
-const COMPANY_SIZES = [
-  "1–10 workers", "11–25 workers", "26–50 workers",
-  "51–100 workers", "100+",
-]
+// BUSINESS_TYPES/COMPANY_SIZES now live in utils/constants/company.ts —
+// shared with the Settings > Company profile editor, which posts to the
+// same backend enums.
 
 const COUNTRIES = [
   "United Kingdom", "United States", "Ireland", "Australia",
@@ -183,7 +177,7 @@ function SearchableSelect({
   label, name, value, onChange, options, placeholder, error, optional,
 }: {
   label: string; name: string; value: string; onChange: (v: string) => void
-  options: string[]; placeholder?: string; error?: string; optional?: boolean
+  options: readonly string[]; placeholder?: string; error?: string; optional?: boolean
 }) {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState("")

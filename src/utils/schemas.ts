@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { BUSINESS_TYPES } from "./constants/company"
 const breakSchema = z.object({
     startedAt: z.coerce.date(),
     endedAt: z.coerce.date().optional(),
@@ -271,6 +272,21 @@ export const adminProfileSchema = z.object({
         .string()
         .trim()
         .optional(),
+});
+
+// Settings > Company — admin AND manager (see companyRouter.ts's /profile
+// route; every other company-level mutation elsewhere is admin/owner-only,
+// this one deliberately isn't). Mirrors the backend's companyProfileSchema
+// (companyController.ts) field-for-field; website/registrationNumber allow
+// an empty string so either can be cleared, not just set. Company size is
+// NOT here — it reads as tied to the subscription plan, not something
+// anyone should self-report, so the backend only ever exposes it read-only
+// (COMPANY_PROFILE_READ_ONLY_EXTRA_FIELDS) and this schema can't submit it.
+export const companyProfileSchema = z.object({
+    name: z.string().trim().min(1, "Company name is required").max(200),
+    businessType: z.enum(BUSINESS_TYPES),
+    website: z.string().trim().max(300, "Keep it under 300 characters").optional().or(z.literal("")),
+    registrationNumber: z.string().trim().max(100, "Keep it under 100 characters").optional().or(z.literal("")),
 });
 
 export const editProfileSchema = z.object({

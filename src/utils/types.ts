@@ -1,5 +1,5 @@
 import type z from "zod";
-import type { adminProfileSchema, createJobSchema, editProfileSchema, invoiceLineItemSchema, invoiceSchema, Worker } from "./schemas";
+import type { adminProfileSchema, companyProfileSchema, createJobSchema, editProfileSchema, invoiceLineItemSchema, invoiceSchema, Worker } from "./schemas";
 import type { ClientAddress, ClientContact, ClientStatus, ChargeType } from "./types/client";
 
 // A job/assignment's billable-unit state — fixed-price jobs track this on
@@ -179,6 +179,16 @@ export type EditProfileForm = z.output<typeof editProfileSchema>;
 export type EditProfileFormInput = z.input<typeof editProfileSchema>;
 
 export type AdminProfileForm = z.infer<typeof adminProfileSchema>;
+
+export type CompanyProfileForm = z.infer<typeof companyProfileSchema>;
+
+// GET /companies/profile's actual response — the editable fields above plus
+// "size", which the backend only ever exposes read-only (it reads as tied
+// to the subscription plan, not something this form can submit — see
+// companyController.ts's COMPANY_PROFILE_READ_ONLY_EXTRA_FIELDS).
+export interface CompanyProfile extends CompanyProfileForm {
+    size: string;
+}
 
 export type InvoiceLineItem = z.infer<typeof invoiceLineItemSchema>;
 export type InvoiceForm = z.infer<typeof invoiceSchema>;
