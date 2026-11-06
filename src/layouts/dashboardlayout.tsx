@@ -69,23 +69,18 @@ export const userQuery = {
 export default function DashboardLayout() {
     const navigation = useNavigation()
     const location = useLocation();
-
+    const isDesktop = useMediaQuery({
+        query: "(min-width: 1024px)",
+    });
     const isRouteChange =
         navigation.state === "loading" &&
         navigation.location &&
         navigation.location.pathname !== location.pathname;
-    const [page, setPage] = useState<Page>('dashboard')
-    const [sidebarCollapsed, setSidebarCollapsed] = useState(true)
-
-    const navigate = (id: string) => setPage(id as Page)
+    const [sidebarCollapsed, setSidebarCollapsed] = useState(!isDesktop)
 
     const sidebarWidth = sidebarCollapsed ? 64 : 240
 
-    // Pages that don't use the normal layout (full-bleed)
-    const isFullBleed = page === 'messages'
-    const isDesktop = useMediaQuery({
-        query: "(min-width: 1024px)",
-    });
+
     const { data } = useQuery(userQuery)
     const user = data?.user as iUser
 
@@ -106,26 +101,22 @@ export default function DashboardLayout() {
             <ScrollToTop />
             <div className="flex h-screen  overflow-hidden bg-muted dark:bg-background">
 
-                <Sidebar active={page} collapsed={sidebarCollapsed} onToggleSidebar={() => setSidebarCollapsed(c => !c)} user={user} />
+                <Sidebar  collapsed={sidebarCollapsed} onToggleSidebar={() => setSidebarCollapsed(c => !c)} user={user} />
 
                 <div
-                    className="flex-1 flex flex-col min-w-0 transition-all duration-200"
+                    className="flex-1 flex flex-col min-w-0 transition-all duration-200 overflow-hidden"
                     style={{ marginLeft: isDesktop ? sidebarWidth : 0 }}
                 >
 
 
-                    {page === 'worker-app' ? (
-                        <div className="flex-1 overflow-y-auto">
-                            <WorkerApp />
-                        </div>
-                    ) : (
+                 
                         <>
                             <TopBar
                                 user={user}
                                 onToggleSidebar={() => setSidebarCollapsed(c => !c)}
-                                onNavigate={navigate}
+                                // onNavigate={navigate}
                             />
-                            <main className={`flex-1 overflow-y-auto  ${isFullBleed ? '' : ''}`}>
+                            <main className={`flex-1 overflow-y-auto  `}>
                                 {
                                     <Outlet context={{ user }} />
                                 }
@@ -136,7 +127,6 @@ export default function DashboardLayout() {
                                 }
                             </main>
                         </>
-                    )}
                 </div>
             </div>
         </>

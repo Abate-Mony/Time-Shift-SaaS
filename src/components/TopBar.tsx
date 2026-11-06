@@ -16,7 +16,7 @@ import type { User } from '@/utils/types'
 import { useQuery } from '@tanstack/react-query'
 import { Bell, Briefcase, Building2, ChevronDown, Landmark, PanelLeft, Plus, Receipt, Search } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router'
+import { Link, useNavigate } from 'react-router'
 import { CommandPalette } from './CommandPalette'
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar'
 import { Button } from './ui/button'
@@ -25,7 +25,6 @@ import CustomNavLink from './ui/link'
 interface TopBarProps {
   // onNewJob: () => void
   onToggleSidebar: () => void
-  onNavigate: (id: string) => void
   user: User
 }
 
@@ -36,7 +35,11 @@ const NEW_ITEMS = [
   { label: 'Sites', to: '/sites/create', icon: Landmark },
 ]
 
-export function TopBar({ user, onToggleSidebar, onNavigate }: TopBarProps) {
+export function TopBar({ user, onToggleSidebar }: TopBarProps) {
+  const navigate = useNavigate()
+  const onNavigate = (to: string) => {
+    navigate(to)
+  }
   const [paletteOpen, setPaletteOpen] = useState(false)
   // const { resolvedTheme, setTheme } = useTheme()
 

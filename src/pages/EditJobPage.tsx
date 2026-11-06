@@ -27,6 +27,7 @@ import { Form, redirect, useLoaderData, useNavigate, useNavigation, useParams, u
 import { Avatar, Input } from '../components/ui'
 import { ApplyRatePrompt, ClientCombobox, type ComboboxClient } from '@/components/client/ClientCombobox'
 import { isJobLocked } from '@/utils/jobLock'
+import { useBackLink } from '@/hooks/useBackLink'
 import { Label } from '@/components/ui/label'
 import { singleJobChangeRequest } from '@/utils/jobChangeRequests'
 
@@ -160,6 +161,7 @@ export function EditJob() {
     const [saved, setSaved] = useState(false)
     const navigate = useNavigate()
     const onNavigate = (path: string) => navigate(path)
+    const back = useBackLink({ to: "/jobs", label: "Jobs" })
     const navigation = useNavigation()
     const submit = useSubmit()
     const formRef = useRef<HTMLFormElement>(null)
@@ -377,7 +379,7 @@ export function EditJob() {
         <div className=" px-2 pt-2.5 lg:p-6 max-w-3xl mx-auto animate-fade-in">
             {/* Header */}
             <div className="flex items-center gap-3 mb-7">
-                <button onClick={() => onNavigate('jobs')} className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors">
+                <button onClick={() => onNavigate(back.to)} className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors">
                     <ChevronLeft size={16} />
                 </button>
                 <div>
@@ -1076,7 +1078,7 @@ export function EditJob() {
 
                 {/* Actions */}
                 <div className="flex items-center gap-3 justify-end pt-2 pb-6">
-                    <Button type="button" variant="outline" onClick={() => onNavigate('/jobs')} disabled={isFormSubmitting}>
+                    <Button type="button" variant="outline" onClick={() => onNavigate(back.to)} disabled={isFormSubmitting}>
                         Cancel
                     </Button>
                     {/* Once a job is locked (completed/cancelled/already happened/

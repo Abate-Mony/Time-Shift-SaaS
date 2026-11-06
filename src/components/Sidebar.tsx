@@ -1,3 +1,6 @@
+import { useState } from 'react'
+import { useLocation } from 'react-router'
+import { AnimatePresence, motion } from 'framer-motion'
 import type { iUser } from '@/layouts/dashboardlayout'
 import { cn } from '@/lib/utils'
 import { getInitials } from '@/utils/getInitials'
@@ -30,29 +33,87 @@ import { Avatar } from './ui'
 import CustomNavLink from './ui/link'
 import { Button } from './ui/button'
 
-const navItems = [
-  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { id: 'jobs', label: 'Jobs', icon: Briefcase },
-  { id: 'workers', label: 'Workers', icon: Users },
-  { id: 'clients', label: 'Client', icon: SquareUser },
-  { id: 'team', label: 'Teams', icon: MapPin },
-  { id: 'leads', label: 'Leads', icon: Podium },
-  { id: 'time-off', label: 'Time Off', icon: CalendarOff },
-  { id: 'booking-requests', label: 'Booking Requests', icon: CalendarCheck },
-  { id: 'job-change-requests', label: 'Change Requests', icon: CalendarCheck },
-  { id: 'calendar', label: 'Calendar', icon: Calendar },
-  { id: 'sites', label: 'Sites', icon: MapPin },
-  // { id: 'messages', label: 'Messages', icon: MessageSquare, badge: 2 },
+// Grouped by theme rather than one flat list — 19 links in a row (the old
+// "Main"/"Reporting" split) got hard to scan as items like Leads, Time Off
+// and the two request types were added. Dashboard stays ungrouped (no
+// header) since it's the landing page, not part of any one theme.
+const navGroups: { label: string | null; items: { id: string; label: string; icon: typeof LayoutDashboard }[] }[] = [
+  {
+    label: null,
+    items: [
+      { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    ],
+  },
+  {
+    label: 'Scheduling',
+    items: [
+      { id: 'jobs', label: 'Jobs', icon: Briefcase },
+      { id: 'calendar', label: 'Calendar', icon: Calendar },
+      { id: 'sites', label: 'Sites', icon: MapPin },
+      { id: 'booking-requests', label: 'Booking Requests', icon: CalendarCheck },
+      { id: 'job-change-requests', label: 'Change Requests', icon: CalendarCheck },
+    ],
+  },
+  {
+    label: 'Team',
+    items: [
+      { id: 'workers', label: 'Workers', icon: Users },
+      { id: 'team', label: 'Teams', icon: MapPin },
+      { id: 'time-off', label: 'Time Off', icon: CalendarOff },
+    ],
+  },
+  {
+    label: 'Clients',
+    items: [
+      { id: 'clients', label: 'Client', icon: SquareUser },
+      { id: 'leads', label: 'Leads', icon: Podium },
+    ],
+  },
+  {
+    label: 'Reporting',
+    items: [
+      { id: 'reports', label: 'Reports', icon: BarChart3 },
+      { id: 'invoices', label: 'Invoices', icon: Receipt },
+      { id: 'analytics', label: 'Analytics', icon: Zap },
+      { id: 'quotes', label: 'Qoutes', icon: Quote },
+      { id: 'assistant', label: 'Assistant', icon: Sparkles },
+    ],
+  },
 ]
 
-const secondaryItems = [
-  { id: 'reports', label: 'Reports', icon: BarChart3 },
-  { id: 'invoices', label: 'Invoices', icon: Receipt },
-  // { id: 'timesheets', label: 'Timesheets', icon: FileText },
-  { id: 'analytics', label: 'Analytics', icon: Zap },
-  { id: 'quotes', label: 'Qoutes', icon: Quote },
-  { id: 'assistant', label: 'Assistant', icon: Sparkles },
-]
+// One representative icon per group for the collapsed icon-rail — the rail
+// only has room for a single icon, not every item in the group (hovering it
+// reveals the real items via a flyout).
+const GROUP_RAIL_ICON: Record<string, typeof LayoutDashboard> = {
+  Scheduling: Calendar,
+  Team: Users,
+  Clients: SquareUser,
+  Reporting: BarChart3,
+}
+
+// Which groups are expanded in the full-width sidebar — per-viewer, so kept
+// in localStorage rather than component state alone (reload-safe, never
+// synced anywhere, matches the "lightweight per-viewer convenience" use of
+// browser storage elsewhere in the app).
+const EXPANDED_GROUPS_KEY = 'sidebar-expanded-groups'
+
+function readExpandedGroups(): Record<string, boolean> {
+  try {
+    const raw = localStorage.getItem(EXPANDED_GROUPS_KEY)
+    return raw ? JSON.parse(raw) : {}
+  } catch {
+    return {}
+  }
+}
+
+function writeExpandedGroups(state: Record<string, boolean>) {
+  try {
+    localStorage.setItem(EXPANDED_GROUPS_KEY, JSON.stringify(state))
+  } catch {
+    // Private browsing / disabled storage — groups just default back to
+    // expanded next load, nothing breaks.
+  }
+}
 
 const bottomItems = [
   { id: 'notifications', label: 'Notifications', icon: Bell },
@@ -61,7 +122,6 @@ const bottomItems = [
 ]
 
 interface SidebarProps {
-  active: string
 
   collapsed?: boolean,
   onToggleSidebar?: () => void,
@@ -69,6 +129,23 @@ interface SidebarProps {
 }
 
 export function Sidebar({ collapsed, onToggleSidebar, user }: SidebarProps) {
+  const location = useLocation()
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(readExpandedGroups)
+
+  const isGroupExpanded = (label: string) => expandedGroups[label] ?? true
+  const toggleGroup = (label: string) => {
+    setExpandedGroups(prev => {
+      const next = { ...prev, [label]: !(prev[label] ?? true) }
+      writeExpandedGroups(next)
+      return next
+    })
+  }
+
+  // CustomNavLink's own isActive only lights up the exact item clicked —
+  // the collapsed rail shows one icon per whole group, so it needs to know
+  // if ANY of that group's items is the current route.
+  const isGroupActive = (items: { id: string }[]) =>
+    items.some(item => location.pathname === `/${item.id}` || location.pathname.startsWith(`/${item.id}/`))
 
   const fullname = user?.fullname
   const role = user?.role
@@ -124,48 +201,122 @@ export function Sidebar({ collapsed, onToggleSidebar, user }: SidebarProps) {
 
           {/* Main nav */}
           <nav className="flex-1 min-h-0 overflow-y-auto py-3 px-3 flex flex-col gap-0.5">
-            {!collapsed && <p className="text-[10px] font-semibold text-white/25 uppercase tracking-widest px-2 mb-1 mt-1">Main</p>}
-            {navItems.map(item => (
-              <CustomNavLink
-                to={item.id}
-                layoutId='side-bar-items'
+            {navGroups.map((group, i) => {
+              // Dashboard — ungrouped, always a single plain link either way.
+              if (!group.label) {
+                return (
+                  <div key={`group-${i}`} className="flex flex-col gap-0.5">
+                    {group.items.map(item => (
+                      <CustomNavLink
+                        key={item.id}
+                        to={item.id}
+                        layoutId='side-bar-items'
+                        show
+                        selectedClassName=''
+                        animateClassName="inset-0 size-full bg-gray-500/15"
+                        className="w-full text-white/50 hover:text-white/75 px-2.5 hover:bg-white/3 justify-center h-auto items-center gap-2.5 py-2 rounded-lg text-sm transition-colors relative group"
+                      >
+                        <div className='w-full flex items-center space-x-1.5 h-full justify-between'>
+                          <item.icon size={16} className={cn('text-blue-400 group-[.slide-active]:text-current')} />
+                          {!collapsed && <span className="flex-1 text-left font-medium">{item.label}</span>}
+                        </div>
+                      </CustomNavLink>
+                    ))}
+                  </div>
+                )
+              }
 
-                show
-                selectedClassName=''
-                animateClassName="inset-0 size-full bg-gray-500/15"
-                className={`w-full  text-white/50 hover:text-white/75 px-2.5 hover:bg-white/3  justify-center  h-auto items-center gap-2.5  py-2 rounded-lg text-sm transition-colors relative group`}
+              const label = group.label
 
-              >
-                <div className='w-full flex items-center  space-x-1.5 h-full justify-between '>
-                  <item.icon size={16} className={cn('text-blue-400 group-[.slide-active]:text-current')} />
-                  {!collapsed && <span className="flex-1 text-left font-medium">{item.label}</span>}
+              // Collapsed (icon rail) — the whole group collapses to one
+              // icon; hovering (or keyboard-focusing) it reveals all of the
+              // group's real items, each with its own icon + label, in a
+              // flyout panel to the right.
+              if (collapsed) {
+                const active = isGroupActive(group.items)
+                const RailIcon = GROUP_RAIL_ICON[label] ?? group.items[0].icon
+                return (
+                  <div key={label} className="relative group/flyout">
+                    {i > 1 && <div className="my-2 border-t border-white/[0.06]" />}
+                    <button
+                      type="button"
+                      aria-label={label}
+                      className={cn(
+                        'w-full flex items-center justify-center h-9 rounded-lg transition-colors',
+                        active ? 'bg-white/10' : 'hover:bg-white/5'
+                      )}
+                    >
+                      <RailIcon size={16} className={cn('text-blue-400', active && 'text-current')} />
+                    </button>
+
+                    <div className="invisible opacity-0 translate-x-1 group-hover/flyout:visible group-hover/flyout:opacity-100 group-hover/flyout:translate-x-0 group-focus-within/flyout:visible group-focus-within/flyout:opacity-100 group-focus-within/flyout:translate-x-0 absolute left-full top-0 ml-2 w-52 bg-[#0F172A] border border-white/10 rounded-xl shadow-xl py-2 px-1.5 z-40 transition-all duration-150">
+                      <p className="text-[10px] font-semibold text-white/30 uppercase tracking-widest px-2 mb-1">{label}</p>
+                      {group.items.map(item => (
+                        <CustomNavLink
+                          key={item.id}
+                          to={item.id}
+                          layoutId='side-bar-flyout'
+                          show
+                          selectedClassName='text-white! bg-white/10'
+                          animateClassName="inset-0 size-full bg-gray-500/15"
+                          className="w-full text-white/60 hover:text-white/90 hover:bg-white/5 flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm transition-colors relative group"
+                        >
+                          <item.icon size={14} className={cn('text-blue-400 group-[.slide-active]:text-current')} />
+                          <span className="flex-1 text-left font-medium">{item.label}</span>
+                        </CustomNavLink>
+                      ))}
+                    </div>
+                  </div>
+                )
+              }
+
+              // Expanded — accordion. Collapsed groups default to open so
+              // nothing hides on first visit; the choice to close one is
+              // remembered via localStorage (see readExpandedGroups).
+              const expanded = isGroupExpanded(label)
+              return (
+                <div key={label} className="flex flex-col gap-0.5">
+                  <button
+                    type="button"
+                    onClick={() => toggleGroup(label)}
+                    className="w-full flex items-center justify-between px-2 mb-1 mt-4 group/header"
+                  >
+                    <span className="text-[10px] font-semibold text-white/25 uppercase tracking-widest group-hover/header:text-white/40 transition-colors">
+                      {label}
+                    </span>
+                    <ChevronDown size={11} className={cn('text-white/25 transition-transform', !expanded && '-rotate-90')} />
+                  </button>
+                  <AnimatePresence initial={false}>
+                    {expanded && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.18 }}
+                        className="overflow-hidden flex flex-col gap-0.5"
+                      >
+                        {group.items.map(item => (
+                          <CustomNavLink
+                            key={item.id}
+                            to={item.id}
+                            layoutId='side-bar-items'
+                            show
+                            selectedClassName=''
+                            animateClassName="inset-0 size-full bg-gray-500/15"
+                            className="w-full text-white/50 hover:text-white/75 px-2.5 hover:bg-white/3 justify-center h-auto items-center gap-2.5 py-2 rounded-lg text-sm transition-colors relative group"
+                          >
+                            <div className='w-full flex items-center space-x-1.5 h-full justify-between'>
+                              <item.icon size={16} className={cn('text-blue-400 group-[.slide-active]:text-current')} />
+                              <span className="flex-1 text-left font-medium">{item.label}</span>
+                            </div>
+                          </CustomNavLink>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
-              </CustomNavLink>
-            ))}
-
-            {!collapsed && <p className="text-[10px] font-semibold text-white/25 uppercase tracking-widest px-2 mb-1 mt-4">Reporting</p>}
-            {collapsed && <div className="my-2 border-t border-white/[0.06]" />}
-            {secondaryItems.map(item => (
-              <CustomNavLink
-                layoutId='side-bar-items'
-
-                to={item.id}
-                show
-                selectedClassName=''
-                animateClassName="inset-0 size-full bg-gray-500/15 shadow-sm"
-                className={`w-full  text-white/50 hover:text-white/75  justify-between
-                h-auto hover:bg-white/3 flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm transition-colors relative group`}
-
-              >
-                <div className='flex items-center  space-x-1.5'>
-
-                  <item.icon size={16} className={cn('text-blue-400 group-[.slide-active]:text-current')} />
-                  {!collapsed && <span className="flex-1 text-left font-medium">{item.label}</span>}
-                </div>
-
-
-              </CustomNavLink>
-            ))}
+              )
+            })}
           </nav>
 
           {/* Bottom nav */}

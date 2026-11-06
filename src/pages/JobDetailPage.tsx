@@ -3,7 +3,7 @@ import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { backLinkState, useBackLink } from '@/hooks/useBackLink'
 import { queryClient } from '@/lib/queryClient'
-import { deleteJob, deleteJobAttachment, duplicateJob, manuallyAdjustAssignment, markAssignmentNoShow, reviewAssignmentOvertime, reviewMissedShiftRequest, reviewOpenShiftClaim, updateJobWorkers, uploadJobAttachment } from '@/utils/api-request-functions'
+import { deleteJob, deleteJobAttachment, duplicateJob, manuallyAdjustAssignment, markAssignmentNoShow, resolveAssignmentBreak, reviewAssignmentOvertime, reviewMissedShiftRequest, reviewOpenShiftClaim, updateJobWorkers, uploadJobAttachment } from '@/utils/api-request-functions'
 import customFetch from '@/utils/customFetch'
 import { formatDate, formatDuration, getShiftProgress } from '@/utils/date'
 import { formatCurrency } from '@/utils/format'
@@ -373,15 +373,35 @@ export function JobDetail() {
     // sets a specific adjusted figure. Independent per worker, so one
     // flagged assignment never blocks resolving (or approving) another.
     const overtimeMutation = useMutation({
-        mutationFn: ({ assignmentId, decision, approvedMinutes }: {
+        mutationFn: ({ assignmentId, decision, approvedMinutes, checkedOutAt, managerNotes }: {
             assignmentId: string
-            decision: "approve" | "reject" | "adjust"
+            decision: "approve" | "reject" | "adjust" | "correct_finish_time"
             approvedMinutes?: number
-        }) => reviewAssignmentOvertime(assignmentId, decision, { approvedMinutes }),
+            checkedOutAt?: string
+            managerNotes?: string
+        }) => reviewAssignmentOvertime(assignmentId, decision, { approvedMinutes, checkedOutAt, managerNotes }),
+        onSuccess: () => setAdjustingId(null),
+    })
+    // A worker's unfinished break (closeAssignmentAutomatically.ts leaves it
+    // unresolved rather than guessing an end time) is a separate action from
+    // the overtime decision above — resolving it is required before
+    // approve/reject/adjust will run.
+    const resolveBreakMutation = useMutation({
+        mutationFn: ({ assignmentId, endedAt, cancelled, managerNotes }: {
+            assignmentId: string
+            endedAt?: string
+            cancelled?: boolean
+            managerNotes: string
+        }) => resolveAssignmentBreak(assignmentId, { endedAt, cancelled, managerNotes }),
         onSuccess: () => setAdjustingId(null),
     })
     const [adjustingId, setAdjustingId] = useState<string | null>(null)
+    const [adjustMode, setAdjustMode] = useState<"adjust" | "correct_finish_time" | "resolve_break">("adjust")
     const [adjustHours, setAdjustHours] = useState("")
+    const [correctedFinishAt, setCorrectedFinishAt] = useState("")
+    const [breakEndedAt, setBreakEndedAt] = useState("")
+    const [breakCancelled, setBreakCancelled] = useState(false)
+    const [actionReason, setActionReason] = useState("")
 
     // Missed-shift review — the opposite case from overtime above: a worker
     // who never clocked in at all. markMissedShifts.ts (backend cron) flags
@@ -616,7 +636,7 @@ export function JobDetail() {
                         <div className="flex items-center gap-2 shrink-0">
 
                             <button
-                                onClick={() => onNavigate(`/jobs/${id}/edit`)}
+                                onClick={() => onNavigate(`/jobs/${id}/edit`, backLinkState(job.title))}
                                 title={isJobLocked(job) ? "This job has already happened — its date, time, rates, assigned workers and checklist are locked, but everything else (title, notes, etc.) can still be edited" : undefined}
                                 className="h-9 px-3.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors backdrop-blur-sm"
                             >
@@ -687,22 +707,38 @@ export function JobDetail() {
                 {/* Left — 2 cols */}
                 <div className="lg:col-span-2 flex flex-col gap-5">
 
-                    {/* Overtime review — surfaced here unconditionally (not gated behind
+                    {/* Timesheet review — surfaced here unconditionally (not gated behind
                         the "Approve & Complete" sheet below) because most jobs now
                         auto-complete the instant every worker clocks out, regardless of
                         overtimeStatus. Without this, a flagged shift on an already-
-                        "completed" job had no reachable UI to approve/adjust/reject it. */}
-                    {pendingOvertimeWorkers.length > 0 && (
+                        "completed" job had no reachable UI to approve/adjust/reject it.
+                        Covers two distinct reasons under one overtimeStatus gate: genuine
+                        overtime (worked past schedule) and a missed clock-out
+                        (closeAssignmentAutomatically.ts force-closed the shift — the
+                        recorded finish time is only ever its best automatic guess, never
+                        verified) — "approve overtime" is actively misleading for the
+                        second case, especially at +0 minutes over. */}
+                    {pendingOvertimeWorkers.length > 0 && (() => {
+                        const allAutoClosed = pendingOvertimeWorkers.every(w => w.clockOutReason === "auto_closed")
+                        const anyAutoClosed = pendingOvertimeWorkers.some(w => w.clockOutReason === "auto_closed")
+                        const heading = allAutoClosed
+                            ? `Missed clock-out${pendingOvertimeWorkers.length > 1 ? 's' : ''} requiring review`
+                            : !anyAutoClosed
+                                ? `${pendingOvertimeWorkers.length} worker${pendingOvertimeWorkers.length > 1 ? 's' : ''} need overtime review`
+                                : "Timesheets requiring review"
+                        const subheading = allAutoClosed
+                            ? "The system closed these shifts automatically — confirm the recorded finish, correct it, or resolve an unfinished break below."
+                            : !anyAutoClosed
+                                ? "Clocked time ran past the scheduled shift — approve, adjust, or reject the extra time below."
+                                : "Some shifts ran over, others were auto-closed for a missed clock-out — each card below shows its own reason."
+
+                        return (
                         <Card className="border-amber-200 bg-amber-50/60">
                             <div className="px-5 pt-5 pb-4 border-b border-amber-200/70 flex items-center gap-2.5">
                                 <Flag size={14} className="text-amber-600 shrink-0" />
                                 <div>
-                                    <h3 className="text-sm font-semibold text-amber-800">
-                                        {pendingOvertimeWorkers.length} worker{pendingOvertimeWorkers.length > 1 ? 's' : ''} need overtime review
-                                    </h3>
-                                    <p className="text-xs text-amber-700/80 mt-0.5">
-                                        Clocked time ran past the scheduled shift — approve, adjust, or reject the extra time below.
-                                    </p>
+                                    <h3 className="text-sm font-semibold text-amber-800">{heading}</h3>
+                                    <p className="text-xs text-amber-700/80 mt-0.5">{subheading}</p>
                                 </div>
                             </div>
                             <div className="p-5 flex flex-col gap-3">
@@ -710,7 +746,19 @@ export function JobDetail() {
                                     const scheduledMinutes = job?.minutes ?? 0
                                     const actual = w.actualMinutes ?? getWorkerMinutes(w)
                                     const over = w.overtimeMinutes || Math.max(0, actual - scheduledMinutes)
-                                    const isAdjusting = adjustingId === w._id
+                                    const isEditing = adjustingId === w._id
+                                    const isAutoClosed = w.clockOutReason === "auto_closed"
+                                    const hasOpenBreak = w.breaks?.some(b => b.startedAt && !b.endedAt)
+
+                                    function startEdit(mode: "adjust" | "correct_finish_time" | "resolve_break") {
+                                        setAdjustingId(w._id!)
+                                        setAdjustMode(mode)
+                                        setActionReason("")
+                                        if (mode === "adjust") setAdjustHours((scheduledMinutes / 60).toFixed(2))
+                                        if (mode === "correct_finish_time") setCorrectedFinishAt(w.checkedOutAt ? dayjs(w.checkedOutAt).format("YYYY-MM-DDTHH:mm") : "")
+                                        if (mode === "resolve_break") { setBreakEndedAt(""); setBreakCancelled(false) }
+                                    }
+
                                     return (
                                         <div key={w._id} className="bg-card border border-amber-200 rounded-xl p-3.5 flex flex-col gap-2.5">
                                             <div className="flex items-center gap-2 min-w-0">
@@ -723,6 +771,13 @@ export function JobDetail() {
                                                 </div>
                                             </div>
 
+                                            {(isAutoClosed || hasOpenBreak) && (
+                                                <div className="flex items-center gap-1.5">
+                                                    {isAutoClosed && <span className="text-[10px] font-semibold text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded">Missed clock-out</span>}
+                                                    {hasOpenBreak && <span className="text-[10px] font-semibold text-rose-700 bg-rose-100 px-1.5 py-0.5 rounded">Unfinished break</span>}
+                                                </div>
+                                            )}
+
                                             {(w.clockOutNote || w.clockOutReason) && (
                                                 <p className="text-[11px] text-muted-foreground bg-amber-50 border border-amber-100 rounded-lg px-2.5 py-1.5">
                                                     <span className="font-semibold">Worker's note: </span>
@@ -730,7 +785,7 @@ export function JobDetail() {
                                                 </p>
                                             )}
 
-                                            {isAdjusting ? (
+                                            {isEditing && adjustMode === "adjust" ? (
                                                 <div className="flex items-center gap-2">
                                                     <Input
                                                         type="number"
@@ -760,28 +815,124 @@ export function JobDetail() {
                                                         Cancel
                                                     </button>
                                                 </div>
+                                            ) : isEditing && adjustMode === "correct_finish_time" ? (
+                                                <div className="flex flex-col gap-2">
+                                                    <Input
+                                                        type="datetime-local"
+                                                        autoFocus
+                                                        value={correctedFinishAt}
+                                                        onChange={e => setCorrectedFinishAt(e.target.value)}
+                                                        className="h-8 px-2.5 border border-amber-300 rounded-lg text-xs bg-card focus:outline-none focus:ring-2 focus:ring-amber-300"
+                                                    />
+                                                    <Input
+                                                        type="text"
+                                                        value={actionReason}
+                                                        onChange={e => setActionReason(e.target.value)}
+                                                        placeholder="Reason (required)"
+                                                        className="h-8 px-2.5 border border-amber-300 rounded-lg text-xs bg-card focus:outline-none focus:ring-2 focus:ring-amber-300"
+                                                    />
+                                                    <div className="flex items-center gap-2">
+                                                        <button
+                                                            onClick={() => {
+                                                                if (!correctedFinishAt || !actionReason.trim()) return
+                                                                overtimeMutation.mutate({
+                                                                    assignmentId: w._id!, decision: "correct_finish_time",
+                                                                    checkedOutAt: new Date(correctedFinishAt).toISOString(), managerNotes: actionReason.trim(),
+                                                                })
+                                                            }}
+                                                            disabled={overtimeMutation.isPending || !correctedFinishAt || !actionReason.trim()}
+                                                            className="h-8 px-3 rounded-lg bg-amber-600 text-white text-xs font-semibold hover:bg-amber-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0"
+                                                        >
+                                                            Save
+                                                        </button>
+                                                        <button onClick={() => setAdjustingId(null)} className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground shrink-0">
+                                                            Cancel
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ) : isEditing && adjustMode === "resolve_break" ? (
+                                                <div className="flex flex-col gap-2">
+                                                    <label className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                                                        <input type="checkbox" checked={breakCancelled} onChange={e => setBreakCancelled(e.target.checked)} />
+                                                        This break never happened — mark it accidental
+                                                    </label>
+                                                    {!breakCancelled && (
+                                                        <Input
+                                                            type="datetime-local"
+                                                            value={breakEndedAt}
+                                                            onChange={e => setBreakEndedAt(e.target.value)}
+                                                            placeholder="Actual break end time"
+                                                            className="h-8 px-2.5 border border-amber-300 rounded-lg text-xs bg-card focus:outline-none focus:ring-2 focus:ring-amber-300"
+                                                        />
+                                                    )}
+                                                    <Input
+                                                        type="text"
+                                                        value={actionReason}
+                                                        onChange={e => setActionReason(e.target.value)}
+                                                        placeholder="Reason (required)"
+                                                        className="h-8 px-2.5 border border-amber-300 rounded-lg text-xs bg-card focus:outline-none focus:ring-2 focus:ring-amber-300"
+                                                    />
+                                                    <div className="flex items-center gap-2">
+                                                        <button
+                                                            onClick={() => {
+                                                                if (!actionReason.trim() || (!breakCancelled && !breakEndedAt)) return
+                                                                resolveBreakMutation.mutate({
+                                                                    assignmentId: w._id!,
+                                                                    ...(breakCancelled ? { cancelled: true } : { endedAt: new Date(breakEndedAt).toISOString() }),
+                                                                    managerNotes: actionReason.trim(),
+                                                                })
+                                                            }}
+                                                            disabled={resolveBreakMutation.isPending || !actionReason.trim() || (!breakCancelled && !breakEndedAt)}
+                                                            className="h-8 px-3 rounded-lg bg-amber-600 text-white text-xs font-semibold hover:bg-amber-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0"
+                                                        >
+                                                            Save
+                                                        </button>
+                                                        <button onClick={() => setAdjustingId(null)} className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground shrink-0">
+                                                            Cancel
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ) : hasOpenBreak ? (
+                                                // Approve/reject/adjust refuses server-side while a break is
+                                                // open (reviewAssignmentOvertime) — resolving it is the only
+                                                // action available until then.
+                                                <button
+                                                    onClick={() => startEdit("resolve_break")}
+                                                    className="h-8 px-3 rounded-lg bg-rose-500 text-white text-xs font-semibold hover:bg-rose-600 transition-colors"
+                                                >
+                                                    Resolve unfinished break
+                                                </button>
                                             ) : (
-                                                <div className="flex items-center gap-2">
+                                                <div className="flex items-center gap-2 flex-wrap">
                                                     <button
                                                         onClick={() => overtimeMutation.mutate({ assignmentId: w._id!, decision: "approve" })}
                                                         disabled={overtimeMutation.isPending}
                                                         className="flex-1 h-8 rounded-lg bg-emerald-500 text-white text-xs font-semibold hover:bg-emerald-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                                                     >
-                                                        Approve overtime
+                                                        {isAutoClosed ? "Confirm recorded finish" : "Approve overtime"}
                                                     </button>
                                                     <button
-                                                        onClick={() => { setAdjustingId(w._id!); setAdjustHours((scheduledMinutes / 60).toFixed(2)) }}
+                                                        onClick={() => startEdit("adjust")}
                                                         disabled={overtimeMutation.isPending}
                                                         className="h-8 px-3 rounded-lg border border-amber-300 text-amber-700 text-xs font-semibold hover:bg-amber-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0"
                                                     >
-                                                        Adjust
+                                                        {isAutoClosed ? "Approve final minutes" : "Adjust"}
                                                     </button>
+                                                    {isAutoClosed && (
+                                                        <button
+                                                            onClick={() => startEdit("correct_finish_time")}
+                                                            disabled={overtimeMutation.isPending}
+                                                            className="h-8 px-3 rounded-lg border border-amber-300 text-amber-700 text-xs font-semibold hover:bg-amber-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0"
+                                                        >
+                                                            Correct finish time
+                                                        </button>
+                                                    )}
                                                     <button
                                                         onClick={() => overtimeMutation.mutate({ assignmentId: w._id!, decision: "reject" })}
                                                         disabled={overtimeMutation.isPending}
                                                         className="h-8 px-3 rounded-lg border border-rose-200 text-rose-500 text-xs font-semibold hover:bg-rose-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0"
                                                     >
-                                                        Reject
+                                                        {isAutoClosed ? "Reject extra time" : "Reject"}
                                                     </button>
                                                 </div>
                                             )}
@@ -790,7 +941,8 @@ export function JobDetail() {
                                 })}
                             </div>
                         </Card>
-                    )}
+                        )
+                    })()}
 
                     {/* Missed-shift review — a worker who never clocked in at all
                         (markMissedShifts.ts flagged it) self-reported hours from the
@@ -1298,7 +1450,7 @@ export function JobDetail() {
                                                     <div className="mb-5 flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl px-3.5 py-3">
                                                         <Flag size={13} className="text-amber-600 shrink-0" />
                                                         <p className="text-xs text-amber-800">
-                                                            {pendingOvertimeWorkers.length} worker{pendingOvertimeWorkers.length > 1 ? 's' : ''} still need overtime review — resolve the flagged card{pendingOvertimeWorkers.length > 1 ? 's' : ''} above before approving.
+                                                            {pendingOvertimeWorkers.length} worker{pendingOvertimeWorkers.length > 1 ? 's' : ''} still need{pendingOvertimeWorkers.some(w => w.clockOutReason === "auto_closed") ? " timesheet" : " overtime"} review — resolve the flagged card{pendingOvertimeWorkers.length > 1 ? 's' : ''} above before approving.
                                                         </p>
                                                     </div>
                                                 )}
@@ -1421,7 +1573,7 @@ export function JobDetail() {
                             }
                             {(job?.status === 'assigned' || job?.status === 'accepted' || job.status === 'draft') && (
                                 <button
-                                    onClick={() => onNavigate(`/jobs/${id}/edit?edit=assigned-workers#assigned-worker`)}
+                                    onClick={() => onNavigate(`/jobs/${id}/edit?edit=assigned-workers#assigned-worker`, backLinkState(job.title))}
                                     className="w-full h-11 rounded-xl bg-[var(--primary)] text-white text-sm font-bold  transition-colors flex items-center justify-center gap-2 shadow-sm shadow-[var(--primary)]/20"
                                 >
                                     <Users size={14} /> Assign Workers
@@ -1432,7 +1584,7 @@ export function JobDetail() {
 
 
                             <button
-                                onClick={() => onNavigate(`/jobs/${id}/edit`)}
+                                onClick={() => onNavigate(`/jobs/${id}/edit`, backLinkState(job.title))}
                                 title={isJobLocked(job) ? "This job has already happened — its date, time, rates, assigned workers and checklist are locked, but everything else (title, notes, etc.) can still be edited" : undefined}
                                 className="w-full h-10 rounded-xl border border-[var(--border)] text-sm font-semibold text-muted-foreground hover:bg-muted flex items-center justify-center gap-2 transition-colors"
                             >
@@ -1947,7 +2099,7 @@ export function JobDetail() {
                     <Card className="p-5">
                         <div className="flex items-center justify-between mb-3">
                             <h3 className="text-sm font-semibold text-foreground">Attachments</h3>
-                            <Link to={`/jobs/${id}/edit?edit=attachments`} className="flex items-center gap-1.5">
+                            <Link to={`/jobs/${id}/edit?edit=attachments`} state={backLinkState(job.title)} className="flex items-center gap-1.5">
                                 <button className="text-xs text-blue-600 font-semibold hover:text-blue-800 transition-colors"
                                 >+ Add</button>
                             </Link>
