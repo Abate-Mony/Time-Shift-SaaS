@@ -4,7 +4,7 @@
     "target": {
       "namespace": "android_app",
       "package_name": "com.onclockly.app",
-      "sha256_cert_fingerprints": ["REPLACE_WITH_SHA256_FINGERPRINT"]
+      "sha256_cert_fingerprints": ["7E:E8:AB:C8:59:1D:0B:07:7F:7F:15:BD:EF:43:E7:06:1C:F0:21:38:BA:C4:7E:2C:24:E0:F2:87:D5:17:CC:1A"]
     }
   }
 ]
