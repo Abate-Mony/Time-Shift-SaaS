@@ -172,6 +172,12 @@ export type CreateJobForm = Omit<z.infer<typeof createJobSchema>, "client" | "wo
   // jobController.ts's resolveSourceQuote. Read-only once a Job exists;
   // only ever written by CreateJob.tsx's quote-prefill flow.
   sourceQuote?: string | { _id: string; quoteNumber: string } | null;
+  // Set once the client rates a completed booking from the client portal/app
+  // (PATCH /portal/bookings/:id/review) — read-only here, null until then.
+  // Resubmitting overwrites these in place rather than appending a history.
+  clientRating?: number | null;
+  clientReviewComment?: string | null;
+  clientReviewedAt?: string | null;
 };
 // Payload shape sent to the API (post-transform: no empty-string gender).
 export type EditProfileForm = z.output<typeof editProfileSchema>;

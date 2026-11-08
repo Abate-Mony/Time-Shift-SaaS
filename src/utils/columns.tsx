@@ -18,6 +18,7 @@ import { queryClient } from "@/lib/queryClient"
 import toast from "react-hot-toast"
 import { AnimatedTooltip } from "@/components/ui/animated-tooltip"
 import { Checkbox } from "@/components/ui/checkbox"
+import { StarRating } from "@/components/ui"
 import { formatCurrency } from "./format"
 import { formatDate, formatDuration, getShiftProgress } from "./date"
 import { deleteInvoice, deleteJob, duplicateJob } from "./api-request-functions"
@@ -236,6 +237,21 @@ export const jobsColumns: ColumnDef<CreateJobForm>[] = [
     accessorKey: "status",
     header: "Status",
     cell: ({ getValue }) => <StatusPill value={getValue() as string} />,
+  },
+
+  {
+    // Only a completed job can ever have one (portalController.ts's
+    // submitBookingReview rejects otherwise) — a dash everywhere else means
+    // "not applicable", not "no reviews yet so far".
+    id: "rating",
+    header: "Rating",
+    enableSorting: false,
+    cell: ({ row }) => {
+      const { status, clientRating } = row.original
+      if (status !== "completed") return <span className="text-xs text-slate-300">—</span>
+      if (clientRating == null) return <span className="text-xs text-muted-foreground">Not rated</span>
+      return <StarRating rating={clientRating} size="sm" />
+    },
   },
 
   {

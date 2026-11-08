@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils';
+import { Star } from 'lucide-react'
 import { type ReactNode, type ButtonHTMLAttributes, type InputHTMLAttributes } from 'react'
 
 // ── Badge ──────────────────────────────────────────────────────────────────
@@ -50,6 +51,32 @@ export function PriorityBadge({ priority }: { priority: string }) {
   }
   const p = map[priority] ?? { label: priority, variant: 'neutral' as BadgeVariant }
   return <Badge variant={p.variant}>{p.label}</Badge>
+}
+
+// ── Star Rating ────────────────────────────────────────────────────────────
+// A client's 1-5 star rating on a completed job (Job.clientRating, set via
+// the portal's PATCH /portal/bookings/:id/review) — read-only here, this app
+// never submits one. `size` controls both the icon and the optional numeric
+// label next to it, so the jobs table (compact) and job detail page (roomier)
+// can each use the same component.
+export function StarRating({ rating, size = 'sm' }: { rating: number; size?: 'sm' | 'md' }) {
+  const iconSize = size === 'sm' ? 12 : 15
+  return (
+    <span className="inline-flex items-center gap-1" title={`${rating} out of 5 stars`}>
+      <span className="inline-flex items-center gap-0.5">
+        {[1, 2, 3, 4, 5].map(n => (
+          <Star
+            key={n}
+            size={iconSize}
+            className={n <= Math.round(rating) ? 'fill-amber-400 text-amber-400' : 'fill-none text-border'}
+          />
+        ))}
+      </span>
+      <span className={cn('font-semibold text-muted-foreground tabular-nums', size === 'sm' ? 'text-xs' : 'text-sm')}>
+        {rating.toFixed(1)}
+      </span>
+    </span>
+  )
 }
 
 // ── Avatar ─────────────────────────────────────────────────────────────────

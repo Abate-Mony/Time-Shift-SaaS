@@ -44,6 +44,7 @@ import {
     Send,
     ShieldCheck,
     SquareX,
+    Star,
     StickyNote,
     Timer,
     Trash2,
@@ -57,7 +58,7 @@ import {
 import { useEffect, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
 import { Link, useNavigate, useParams } from 'react-router'
-import { Avatar, Card, Divider, PriorityBadge, StatusBadge } from '../components/ui'
+import { Avatar, Card, Divider, PriorityBadge, StarRating, StatusBadge } from '../components/ui'
 import { singleJob } from './EditJobPage'
 
 // Same key as the worker app's JobDetailspage.tsx — if the same person uses
@@ -1183,6 +1184,38 @@ export function JobDetail() {
                             )}
                         </div>
                     </Card>
+
+                    {/* Client review — set once via the portal/app's own
+                        PATCH /portal/bookings/:id/review, only once this job is
+                        completed (see portalController.ts's submitBookingReview).
+                        Read-only here; resubmitting from the portal overwrites it
+                        in place rather than keeping a history. */}
+                    {job.status === 'completed' && (
+                        <Card>
+                            <div className="px-5 pt-5 pb-4 border-b border-[var(--border)]">
+                                <h3 className="text-sm font-semibold text-foreground">Client Review</h3>
+                            </div>
+                            {job.clientRating == null ? (
+                                <div className="px-5 py-4 text-sm text-muted-foreground">
+                                    The client hasn't rated this job yet.
+                                </div>
+                            ) : (
+                                <div className="px-5 py-4 flex flex-col gap-2">
+                                    <div className="flex items-center justify-between gap-3">
+                                        <StarRating rating={job.clientRating} size="md" />
+                                        {job.clientReviewedAt && (
+                                            <span className="text-xs text-muted-foreground shrink-0">
+                                                {formatDate(job.clientReviewedAt, 'D MMM YYYY')}
+                                            </span>
+                                        )}
+                                    </div>
+                                    {job.clientReviewComment && (
+                                        <p className="text-sm text-foreground leading-relaxed">"{job.clientReviewComment}"</p>
+                                    )}
+                                </div>
+                            )}
+                        </Card>
+                    )}
 
                     {/* Checklist — read-only here (add/edit happens on the Edit Job
                         page); this view is so a manager can see progress without
