@@ -539,7 +539,8 @@ export function JobDetail() {
             toast.success("Job status updated")
             setStatusEditOpen(false)
         },
-        onError: () => toast.error("Couldn't update job status. Try again."),
+        onError: (err: any) =>
+            toast.error(err.response?.data?.msg ?? err.response?.data?.message ?? "Couldn't update job status. Try again."),
     })
 
     const statusColor: Record<string, string> = {
