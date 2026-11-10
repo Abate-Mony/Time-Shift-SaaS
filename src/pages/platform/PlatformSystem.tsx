@@ -1,10 +1,24 @@
-import { useQuery, type QueryClient } from "@tanstack/react-query";
-import { Zap, Database } from "lucide-react";
-import { platformSystemQuery } from "@/utils/platform-api";
+import { useState } from "react";
+import { useMutation, useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
+import toast from "react-hot-toast";
+import dayjs from "dayjs";
+import { Zap, Database, Play } from "lucide-react";
+import { ConfirmModal } from "@/components/platform/figma/primitives";
+import { platformSystemQuery, platformCronQuery, runPlatformCronJob, type PlatformCronJob } from "@/utils/platform-api";
 
 export const platformSystemLoader = (queryClient: QueryClient) => async () => {
-  await queryClient.ensureQueryData(platformSystemQuery);
+  await Promise.all([
+    queryClient.ensureQueryData(platformSystemQuery),
+    queryClient.ensureQueryData(platformCronQuery),
+  ]);
   return null;
+};
+
+const CRON_STATUS: Record<PlatformCronJob["lastStatus"], { label: string; dot: string; text: string }> = {
+  success: { label: "Success", dot: "bg-emerald-500", text: "text-emerald-700" },
+  failed: { label: "Failed", dot: "bg-red-500", text: "text-red-700" },
+  running: { label: "Running", dot: "bg-amber-500 animate-pulse", text: "text-amber-700" },
+  never_run: { label: "Never run", dot: "bg-slate-300", text: "text-slate-400" },
 };
 
 // Visual layout ported directly from the Figma source's SystemScreen card
@@ -29,6 +43,20 @@ const SERVICES = [
 
 export function PlatformSystem() {
   const { data: system } = useQuery(platformSystemQuery);
+  const { data: cronJobs } = useQuery(platformCronQuery);
+  const queryClient = useQueryClient();
+  const [confirmJob, setConfirmJob] = useState<PlatformCronJob | null>(null);
+
+  const runMutation = useMutation({
+    mutationFn: (name: string) => runPlatformCronJob(name),
+    onSuccess: (data) => {
+      toast[data.success ? "success" : "error"](data.msg);
+      queryClient.invalidateQueries({ queryKey: ["platform", "cron"] });
+      setConfirmJob(null);
+    },
+    onError: (err: any) => toast.error(err.response?.data?.msg ?? "Failed to run job."),
+  });
+
   if (!system) return null;
 
   return (
@@ -62,6 +90,65 @@ export function PlatformSystem() {
           );
         })}
       </div>
+
+      <div className="bg-white border border-[#E2E8F0] rounded-lg overflow-hidden">
+        <div className="px-4 py-3 border-b border-[#F1F5F9]">
+          <h3 className="text-sm font-bold text-slate-800">Scheduled Jobs</h3>
+          <p className="text-xs text-slate-400 mt-0.5">Every cron job registered in the app, with its real last-run status.</p>
+        </div>
+        <table className="w-full border-collapse">
+          <thead>
+            <tr className="border-b border-[#F1F5F9] bg-[#F8FAFC]">
+              {["Job", "Schedule", "Last run", "Status", "Last error", ""].map((h) => (
+                <th key={h} className="text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider px-4 py-2">{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {cronJobs?.map((job) => {
+              const sc = CRON_STATUS[job.lastStatus];
+              return (
+                <tr key={job.name} className="border-b border-[#F1F5F9] last:border-0">
+                  <td className="px-4 py-3 text-sm font-semibold text-slate-800">{job.label}</td>
+                  <td className="px-4 py-3 text-xs text-slate-500">{job.schedule}</td>
+                  <td className="px-4 py-3 text-xs text-slate-400 whitespace-nowrap">
+                    {job.lastRunAt ? `${dayjs(job.lastRunAt).format("D MMM, HH:mm:ss")} (${job.lastTriggeredBy})` : "—"}
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-1.5">
+                      <div className={`w-2 h-2 rounded-full ${sc.dot}`} />
+                      <span className={`text-xs font-semibold ${sc.text}`}>{sc.label}</span>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-xs text-red-600 max-w-[260px] truncate" title={job.lastError ?? undefined}>
+                    {job.lastError ?? "—"}
+                  </td>
+                  <td className="px-4 py-3">
+                    <button
+                      onClick={() => setConfirmJob(job)}
+                      className="h-7 px-2.5 flex items-center gap-1.5 text-xs font-semibold text-slate-600 border border-[#E2E8F0] rounded-md hover:bg-slate-50 transition-colors"
+                    >
+                      <Play size={11} /> Run now
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {confirmJob && (
+        <ConfirmModal
+          title={`Run "${confirmJob.label}" now?`}
+          body="This runs the job immediately, outside its normal schedule. Its outcome will be recorded here and in the audit log."
+          confirmLabel="Run job"
+          showReason={false}
+          busy={runMutation.isPending}
+          onConfirm={() => runMutation.mutate(confirmJob.name)}
+          onClose={() => setConfirmJob(null)}
+        />
+      )}
     </div>
   );
 }

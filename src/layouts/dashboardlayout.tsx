@@ -10,6 +10,7 @@ import ScrollToTop from '@/utils/scroll-to-top'
 import type { FileRef, User } from '@/utils/types'
 import { ensureNotificationPermission } from '@/utils/notifications'
 import { ensurePushSubscription } from '@/utils/pushSubscription'
+import { AnnouncementBanner } from '@/components/announcements/AnnouncementBanner'
 export interface iUser extends User {
     company: {
         plan: string,
@@ -116,6 +117,7 @@ export default function DashboardLayout() {
                                 onToggleSidebar={() => setSidebarCollapsed(c => !c)}
                                 // onNavigate={navigate}
                             />
+                            <AnnouncementBanner />
                             <main className={`flex-1 overflow-y-auto  `}>
                                 {
                                     <Outlet context={{ user }} />

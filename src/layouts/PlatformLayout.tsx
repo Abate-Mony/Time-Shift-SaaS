@@ -18,6 +18,9 @@ import {
   Bell,
   Menu,
   X,
+  AlertOctagon,
+  UserCog,
+  Megaphone,
 } from "lucide-react";
 import { userQuery, type iUser } from "./dashboardlayout";
 import { logoutUser } from "@/utils/logout";
@@ -48,6 +51,9 @@ const NAV_ITEMS = [
   { to: "/platform/emails", label: "Email Operations", icon: Mail },
   { to: "/platform/audit", label: "Audit Logs", icon: ShieldCheck },
   { to: "/platform/system", label: "System", icon: Server },
+  { to: "/platform/errors", label: "Error Log", icon: AlertOctagon },
+  { to: "/platform/admins", label: "Platform Admins", icon: UserCog },
+  { to: "/platform/announcements", label: "Announcements", icon: Megaphone },
 ];
 
 export default function PlatformLayout() {

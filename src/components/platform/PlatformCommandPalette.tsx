@@ -15,6 +15,9 @@ import {
   ArrowLeft,
   Loader2,
   CornerDownLeft,
+  AlertOctagon,
+  UserCog,
+  Megaphone,
 } from "lucide-react"
 
 import customFetch from "@/utils/customFetch"
@@ -52,6 +55,9 @@ const STATIC_LINKS: ResultItem[] = [
   { id: "nav-emails", title: "Email Operations", subtitle: "Domain & delivery status", to: "/platform/emails", icon: <Mail size={15} /> },
   { id: "nav-audit", title: "Audit Logs", subtitle: "Platform admin activity", to: "/platform/audit", icon: <ShieldCheck size={15} /> },
   { id: "nav-system", title: "System", subtitle: "API & database health", to: "/platform/system", icon: <Server size={15} /> },
+  { id: "nav-errors", title: "Error Log", subtitle: "Webhook, email & cron failures", to: "/platform/errors", icon: <AlertOctagon size={15} /> },
+  { id: "nav-admins", title: "Platform Admins", subtitle: "Who has console access", to: "/platform/admins", icon: <UserCog size={15} /> },
+  { id: "nav-announcements", title: "Announcements", subtitle: "Messages pushed to tenant dashboards", to: "/platform/announcements", icon: <Megaphone size={15} /> },
   { id: "nav-back", title: "Back to app", subtitle: "Leave the platform console", to: "/", icon: <ArrowLeft size={15} /> },
 ]
 

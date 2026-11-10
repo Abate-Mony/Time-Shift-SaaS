@@ -258,3 +258,146 @@ export const platformAuditDetailQuery = (eventId: string) => ({
     return data.event;
   },
 });
+
+// ── Scheduled jobs (cron health) ────────────────────────────────────────
+
+export type CronJobStatus = "success" | "failed" | "running" | "never_run";
+
+export interface PlatformCronJob {
+  name: string;
+  label: string;
+  schedule: string;
+  lastRunAt: string | null;
+  lastFinishedAt: string | null;
+  lastStatus: CronJobStatus;
+  lastDurationMs: number | null;
+  lastError: string | null;
+  lastTriggeredBy: "schedule" | "manual" | null;
+  runCount: number;
+  failCount: number;
+}
+
+export const platformCronQuery = {
+  queryKey: ["platform", "cron"],
+  queryFn: async () => {
+    const { data } = await customFetch.get<{ success: true; data: PlatformCronJob[] }>("/platform/cron");
+    return data.data;
+  },
+};
+
+export const runPlatformCronJob = async (name: string) => {
+  const { data } = await customFetch.post<{ success: boolean; msg: string }>(`/platform/cron/${name}/run`);
+  return data;
+};
+
+// ── Error log (webhook / email / cron failures) ─────────────────────────
+
+export type PlatformErrorSource = "stripe_webhook" | "email" | "cron";
+
+export interface PlatformErrorLogItem {
+  id: string;
+  source: PlatformErrorSource;
+  message: string;
+  metadata: unknown;
+  resolved: boolean;
+  resolvedAt: string | null;
+  createdAt: string;
+}
+
+export const platformErrorsQuery = (params: Record<string, string | undefined>) => ({
+  queryKey: ["platform", "errors", params],
+  queryFn: async () => {
+    const { data } = await customFetch.get<{ success: true; data: PlatformErrorLogItem[]; pagination: PlatformPagination }>(
+      "/platform/errors",
+      { params }
+    );
+    return data;
+  },
+});
+
+export const resolvePlatformError = async (errorId: string) => {
+  const { data } = await customFetch.patch<{ success: true }>(`/platform/errors/${errorId}/resolve`);
+  return data;
+};
+
+// ── Platform admins ──────────────────────────────────────────────────────
+
+export type PlatformRole = "super_admin" | "support_admin" | "billing_admin";
+
+export interface PlatformAdminListItem {
+  id: string;
+  name: string;
+  email: string;
+  platformRole: PlatformRole;
+  createdAt: string;
+}
+
+export const platformAdminsQuery = (params: Record<string, string | undefined>) => ({
+  queryKey: ["platform", "admins", params],
+  queryFn: async () => {
+    const { data } = await customFetch.get<{ success: true; data: PlatformAdminListItem[]; pagination: PlatformPagination }>(
+      "/platform/admins",
+      { params }
+    );
+    return data;
+  },
+});
+
+export const grantPlatformAdmin = async (email: string, role: PlatformRole, reason: string) => {
+  const { data } = await customFetch.post<{ success: true; admin: PlatformAdminListItem }>("/platform/admins/grant", {
+    email,
+    role,
+    reason,
+  });
+  return data;
+};
+
+export const revokePlatformAdmin = async (userId: string, reason: string) => {
+  const { data } = await customFetch.post<{ success: true }>(`/platform/admins/${userId}/revoke`, { reason });
+  return data;
+};
+
+// ── Announcements ─────────────────────────────────────────────────────────
+
+export type AnnouncementSeverity = "info" | "warning" | "critical";
+export type AnnouncementAudience = "all" | "plan" | "company";
+
+export interface PlatformAnnouncementItem {
+  id: string;
+  message: string;
+  severity: AnnouncementSeverity;
+  audience: AnnouncementAudience;
+  targetPlans: Plan[];
+  targetCompanies: string[];
+  startsAt: string;
+  endsAt: string | null;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export const platformAnnouncementsQuery = {
+  queryKey: ["platform", "announcements"],
+  queryFn: async () => {
+    const { data } = await customFetch.get<{ success: true; data: PlatformAnnouncementItem[] }>("/platform/announcements");
+    return data.data;
+  },
+};
+
+export interface CreateAnnouncementInput {
+  message: string;
+  severity: AnnouncementSeverity;
+  audience: AnnouncementAudience;
+  targetPlans?: Plan[];
+  targetCompanies?: string[];
+  endsAt?: string | null;
+}
+
+export const createPlatformAnnouncement = async (input: CreateAnnouncementInput) => {
+  const { data } = await customFetch.post<{ success: true; id: string }>("/platform/announcements", input);
+  return data;
+};
+
+export const setPlatformAnnouncementActive = async (announcementId: string, isActive: boolean) => {
+  const { data } = await customFetch.patch<{ success: true }>(`/platform/announcements/${announcementId}`, { isActive });
+  return data;
+};

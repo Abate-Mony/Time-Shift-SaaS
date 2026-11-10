@@ -56,6 +56,20 @@ export type AIJobDraftResponse = {
     unmatchedClientName: string | null;
 };
 
+export type ActiveAnnouncement = {
+    id: string;
+    message: string;
+    severity: "info" | "warning" | "critical";
+};
+
+// GET /announcements/active — platform-admin-pushed messages (maintenance
+// windows, incident notices) scoped to this company/plan. See
+// AnnouncementBanner.tsx, the only consumer.
+export const getActiveAnnouncements = async (): Promise<ActiveAnnouncement[]> => {
+    const { data } = await customFetch.get<{ success: true; data: ActiveAnnouncement[] }>("/announcements/active");
+    return data.data;
+};
+
 // POST /ai/job-draft — turns a free-text prompt into a structured job draft.
 // AI-only, no side effects: nothing is saved until the manager reviews and
 // submits it through the normal CreateJob wizard.

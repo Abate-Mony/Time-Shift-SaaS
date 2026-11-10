@@ -691,6 +691,30 @@ export const router = createBrowserRouter([
                             })),
                     },
                     {
+                        path: "errors",
+                        lazy: () =>
+                            import("@/pages/platform/PlatformErrors").then((m) => ({
+                                Component: m.PlatformErrors,
+                                loader: m.platformErrorsLoader(queryClient),
+                            })),
+                    },
+                    {
+                        path: "admins",
+                        lazy: () =>
+                            import("@/pages/platform/PlatformAdmins").then((m) => ({
+                                Component: m.PlatformAdmins,
+                                loader: m.platformAdminsLoader(queryClient),
+                            })),
+                    },
+                    {
+                        path: "announcements",
+                        lazy: () =>
+                            import("@/pages/platform/PlatformAnnouncements").then((m) => ({
+                                Component: m.PlatformAnnouncements,
+                                loader: m.platformAnnouncementsLoader(queryClient),
+                            })),
+                    },
+                    {
                         path: "*",
                         element: <NotFound />,
                     },
