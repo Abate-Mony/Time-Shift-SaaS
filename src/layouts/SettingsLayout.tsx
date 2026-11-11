@@ -26,7 +26,8 @@ export default function SettingsLayout() {
     // arrow buttons' visibility and the fade overlays, so a cut-off tab
     // (like "Billing" at 1920px) is never silently invisible with no hint
     // there's more. Re-measured on scroll and on resize, since overflow
-    // itself depends on viewport width.
+    // itself depends on viewport width. Only the mobile horizontal tab bar
+    // needs this — the desktop sidebar below never overflows.
     const [canScrollLeft, setCanScrollLeft] = useState(false)
     const [canScrollRight, setCanScrollRight] = useState(false)
 
@@ -67,7 +68,8 @@ export default function SettingsLayout() {
                     <p className="text-sm text-muted-foreground mt-0.5">Manage your account preferences</p>
                 </div>
 
-                <div className="relative min-w-0">
+                {/* Mobile / narrow screens — horizontal scrollable tab bar */}
+                <div className="relative min-w-0 lg:hidden">
                     {canScrollLeft && (
                         <>
                             <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-10 bg-gradient-to-r from-background to-transparent z-10" />
@@ -85,9 +87,8 @@ export default function SettingsLayout() {
                     <div ref={scrollerRef} className="flex items-center gap-1.5 overflow-x-auto scroll-smooth">
                         {NAV_LINKS.map(link => (
                             <CustomNavLink
-                            layoutId='setting-layout-links'
+                                layoutId='setting-layout-links-mobile'
                                 animateClassName="inset-0 size-full bg-gray-500/25"
-
                                 show
                                 key={link.to}
                                 to={link.to}
@@ -118,7 +119,31 @@ export default function SettingsLayout() {
                 </div>
             </div>
 
-            <Outlet context={{ user }} />
+            <div className="flex gap-6 max-w-6xl mx-auto px-6 pb-6">
+                {/* Desktop / wide screens — vertical sidebar nav */}
+                <nav className="hidden lg:flex flex-col gap-1 w-52 shrink-0 sticky top-6 h-[calc(100vh-1.5rem)] overflow-y-auto overscroll-contain">
+                    {NAV_LINKS.map(link => (
+                        <CustomNavLink
+                            layoutId='setting-layout-links-desktop'
+                            animateClassName="inset-0 size-full bg-gray-500/25"
+                            show
+                            key={link.to}
+                            to={link.to}
+                            end={link.end}
+                            className={({ isActive }) => cn(
+                                'w-full text-left px-3 py-2 text-sm font-medium rounded-lg transition-colors',
+                                isActive ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                            )}
+                        >
+                            {link.label}
+                        </CustomNavLink>
+                    ))}
+                </nav>
+
+                <div className="flex-1 min-w-0">
+                    <Outlet context={{ user }} />
+                </div>
+            </div>
         </div>
     )
 }
