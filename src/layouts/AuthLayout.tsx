@@ -1,11 +1,20 @@
 import type { QueryClient } from "@tanstack/react-query";
-import { Outlet } from "react-router";
-// import { userQuery } from "./dashboardlayout";
+import { Outlet, redirect } from "react-router";
+import { userQuery } from "./dashboardlayout";
+
+// Mirrors dashboardlayout's own loader redirects, so a signed-in user who
+// lands back on /auth (e.g. a stale bookmark/back-button) is bounced to the
+// same place they'd land from "/" rather than seeing the login form again.
 export const authLoader = (queryClient: QueryClient) => async () => {
   try {
-    // const { user } = await queryClient.ensureQueryData(userQuery);
-    // console.log("user here ")
-    // return redirect(user.role === "worker" ? "/worker" : "/");
+    const { user } = await queryClient.ensureQueryData(userQuery);
+    if (user.role === "worker") {
+      return redirect("/worker");
+    }
+    if (!user.company && user.platformRole) {
+      return redirect("/platform");
+    }
+    return redirect("/");
   } catch {
     return null;   // not logged in — show the form
   }
