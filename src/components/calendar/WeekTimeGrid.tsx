@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import dayjs, { type Dayjs } from 'dayjs'
 import { AlertTriangle, Check } from 'lucide-react'
 import type { CreateJobForm } from '@/utils/types'
-import { Avatar } from '../ui'
 import {
   activeWorkers,
   jobSpan,
@@ -23,6 +22,34 @@ const blockClass: Record<string, string> = {
   draft: 'bg-card text-foreground border border-dashed border-muted-foreground',
 }
 const FLAGGED = 'bg-[var(--warning-bg)] text-amber-950 dark:text-amber-100 border-2 border-amber-500'
+
+const AVATAR_TINTS = [
+  'bg-blue-100 text-blue-800',
+  'bg-violet-100 text-violet-800',
+  'bg-emerald-100 text-emerald-800',
+  'bg-amber-100 text-amber-900',
+  'bg-rose-100 text-rose-800',
+  'bg-cyan-100 text-cyan-800',
+]
+
+/** "rose mary smith" → "RS" */
+function initialsOf(name?: string | null) {
+  const parts = (name ?? '').trim().split(/\s+/).filter(Boolean)
+  if (parts.length === 0) return '?'
+  const first = parts[0][0]
+  const last = parts.length > 1 ? parts[parts.length - 1][0] : (parts[0][1] ?? '')
+  return (first + last).toUpperCase()
+}
+
+function MiniAvatar({ name, src, index }: { name?: string; src?: string | null; index: number }) {
+  const cls = 'size-5 -ml-1 first:ml-0 rounded-full ring-2 ring-card shrink-0'
+  if (src) return <img src={src} alt={name ?? ''} title={name} className={`${cls} object-cover`} />
+  return (
+    <span title={name} className={`${cls} ${AVATAR_TINTS[index % AVATAR_TINTS.length]} inline-flex items-center justify-center text-[8px] font-bold`}>
+      {initialsOf(name)}
+    </span>
+  )
+}
 
 const fmtHour = (h: number) => `${String(h).padStart(2, '0')}:00`
 
@@ -152,13 +179,15 @@ export function WeekTimeGrid({ dates, getJobsForDate, issues, selectedDate, sele
                     backgroundImage: `repeating-linear-gradient(to bottom, var(--border) 0px, var(--border) 1px, transparent 1px, transparent ${HOUR_PX}px)`,
                   }}
                 >
-                  {placed.map(({ job, s, e, lane, lanes }) => {
+                  {placed.map(({ job, s, e, lane, lanes, span }) => {
                     const jobIssues = (job._id && issues.get(job._id)) || []
                     const flagged = jobIssues.length > 0
                     const workers = activeWorkers(job) as any[]
                     const status = job.status ?? 'published'
                     const height = Math.max((e - s) * HOUR_PX - 4, 24)
                     const compact = height < 44
+                    const tall = height >= 88
+                    const maxAvatars = span / lanes >= 0.5 ? 4 : 2
                     const isSelectedJob = job._id === selectedJobId
                     const label = `${job.title}, ${job.startTime} to ${job.endTime}, ${STATUS_LABEL[status] ?? status}${flagged ? `, ${jobIssues.map(i => i.message).join(', ')}` : ''}`
                     return (
@@ -177,32 +206,35 @@ export function WeekTimeGrid({ dates, getJobsForDate, issues, selectedDate, sele
                           top: (s - startHour) * HOUR_PX + 2,
                           height,
                           left: `calc(${(lane / lanes) * 100}% + 3px)`,
-                          width: `calc(${100 / lanes}% - 6px)`,
+                          width: `calc(${(span / lanes) * 100}% - 6px)`,
                         }}
                       >
-                        <span className="flex items-center gap-1 min-w-0">
-                          {flagged && <AlertTriangle size={12} className="shrink-0 text-amber-600" aria-hidden />}
-                          {!flagged && status === 'completed' && <Check size={12} strokeWidth={3} className="shrink-0" aria-hidden />}
-                          <span className={`text-xs font-semibold leading-4 truncate ${status === 'cancelled' ? 'line-through' : ''}`}>
+                        <span className={`flex gap-1 min-w-0 ${tall ? 'items-start' : 'items-center'}`}>
+                          {flagged && <AlertTriangle size={12} className="shrink-0 text-amber-600 mt-0.5" aria-hidden />}
+                          {!flagged && status === 'completed' && <Check size={12} strokeWidth={3} className="shrink-0 mt-0.5" aria-hidden />}
+                          <span className={`text-xs font-semibold leading-4 min-w-0 ${tall ? 'line-clamp-2 break-words hyphens-auto' : 'truncate'} ${status === 'cancelled' ? 'line-through' : ''}`}>
                             {job.title?.split('—')[0].trim()}
                           </span>
                         </span>
                         {!compact && (
-                          <span className="flex items-center gap-1.5 min-w-0">
-                            <span className="text-[11px] leading-4 opacity-90 tabular-nums whitespace-nowrap">
-                              {job.startTime}–{job.endTime}
-                            </span>
-                            {workers.length === 0 && status !== 'cancelled' && (
-                              <span className="text-[9px] font-bold uppercase bg-amber-200 text-amber-900 rounded px-1">Unassigned</span>
-                            )}
-                            {workers.length > 0 && height >= 64 && (
-                              <span className="ml-auto flex -space-x-1.5">
-                                {workers.slice(0, 3).map((w, i) => (
-                                  <Avatar key={w.worker ?? i} initials={w?.fullname?.slice(0, 2) ?? '?'} size="sm" index={i} src={w?.profilePhoto?.url} />
-                                ))}
-                              </span>
-                            )}
+                          <span className="text-[11px] leading-4 opacity-90 tabular-nums whitespace-nowrap overflow-hidden text-ellipsis">
+                            {job.startTime}–{job.endTime}
                           </span>
+                        )}
+                        {/* Staff get their own row so narrow (overlapping) blocks still show them */}
+                        {!compact && status !== 'cancelled' && (
+                          workers.length === 0 ? (
+                            <span className="self-start text-[9px] font-bold uppercase bg-amber-200 text-amber-900 rounded px-1 leading-4">Unassigned</span>
+                          ) : (
+                            <span className="flex flex-wrap items-center gap-y-0.5 pl-1">
+                              {workers.slice(0, maxAvatars).map((w, i) => (
+                                <MiniAvatar key={w.worker ?? i} name={w.fullname} src={w.profilePhoto?.url} index={i} />
+                              ))}
+                              {workers.length > maxAvatars && (
+                                <span className="ml-0.5 text-[10px] font-semibold opacity-80">+{workers.length - maxAvatars}</span>
+                              )}
+                            </span>
+                          )
                         )}
                       </button>
                     )

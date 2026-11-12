@@ -99,12 +99,14 @@ export interface PlacedJob {
   e: number
   lane: number
   lanes: number
+  /** How many lanes this block can stretch across before hitting an overlapping job */
+  span: number
 }
 
 /** Side-by-side lanes for overlapping jobs within one day column. */
 export function layoutDay(jobs: CreateJobForm[]): PlacedJob[] {
   const placed: PlacedJob[] = jobs
-    .map(job => ({ job, ...jobSpan(job), lane: 0, lanes: 1 }))
+    .map(job => ({ job, ...jobSpan(job), lane: 0, lanes: 1, span: 1 }))
     .sort((a, b) => a.s - b.s || b.e - a.e)
 
   const laneEnds: number[] = []
@@ -121,6 +123,14 @@ export function layoutDay(jobs: CreateJobForm[]): PlacedJob[] {
         if (q.s < p.e && p.s < q.e) p.lanes = Math.max(p.lanes, q.lane + 1, q.lanes)
       }
     }
+  }
+  // Let a block widen into empty lanes to its right (Google Calendar style)
+  for (const p of placed) {
+    let span = p.lanes - p.lane
+    for (const q of placed) {
+      if (q !== p && q.lane > p.lane && q.s < p.e && p.s < q.e) span = Math.min(span, q.lane - p.lane)
+    }
+    p.span = Math.max(1, span)
   }
   return placed
 }
