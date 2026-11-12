@@ -20,6 +20,7 @@ import { formatCurrency } from "@/utils/format"
 import { useCreateJob } from "../CreateJobContext"
 import { formatHours } from "../wizardConfig"
 import { describeRecurring } from "../describeRecurring"
+import { parseRateInput } from "@/utils/workerPay"
 
 type SectionProps = {
   title: string
@@ -140,6 +141,7 @@ export function ReviewStep() {
     form,
     selectedClient,
     selectedWorkers,
+    workerPayRates,
     recurring,
     users,
     shiftHours,
@@ -419,6 +421,22 @@ export function ReviewStep() {
                     {worker.email}
                   </p>
                 </div>
+
+                {(() => {
+                  const custom = parseRateInput(workerPayRates[worker.email])
+                  const rate = custom ?? (Number(v.payRate) || 0)
+                  return (
+                    <span
+                      className={`shrink-0 text-[11px] font-semibold rounded-full px-2.5 py-0.5 tabular-nums ${
+                        custom !== undefined
+                          ? "bg-blue-100 text-blue-900 dark:bg-blue-500/20 dark:text-blue-200"
+                          : "bg-card text-muted-foreground border border-border"
+                      }`}
+                    >
+                      {formatCurrency(rate)}/hr{custom !== undefined ? " · custom" : ""}
+                    </span>
+                  )
+                })()}
               </div>
             ))}
           </div>

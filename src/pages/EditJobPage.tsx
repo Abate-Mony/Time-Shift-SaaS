@@ -30,6 +30,7 @@ import { isJobLocked } from '@/utils/jobLock'
 import { useBackLink } from '@/hooks/useBackLink'
 import { Label } from '@/components/ui/label'
 import { singleJobChangeRequest } from '@/utils/jobChangeRequests'
+import { withCustomPayRates } from "@/utils/workerPay";
 
 type AssignedWorker = CreateJobForm["workers"][number]
 
@@ -657,7 +658,7 @@ export function EditJob() {
                         would just have the last duplicate win, and an empty selection
                         would render no input at all, silently failing to clear workers). */}
                     {selectedWorkers.length > 0 && (
-                        <input type="hidden" name="workers" value={JSON.stringify(selectedWorkers)} />
+                        <input type="hidden" name="workers" value={JSON.stringify(withCustomPayRates(selectedWorkers))} />
                     )}
                     <FieldError message={errors.workers?.message as string | undefined} />
 

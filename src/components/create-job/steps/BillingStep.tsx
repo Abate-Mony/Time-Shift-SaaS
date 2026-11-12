@@ -7,6 +7,8 @@ import { formatCurrency } from "@/utils/format"
 import { useCreateJob } from "../CreateJobContext"
 import { FieldError } from "../FieldError"
 import { Label } from "@/components/ui/label"
+import { parseRateInput } from "@/utils/workerPay"
+import { WorkerPayRates } from "../WorkerPayRates"
 
 const CHARGE_TYPES = [
   { value: "hourly", label: "Hourly rate", sub: "Bills by hours worked" },
@@ -14,8 +16,14 @@ const CHARGE_TYPES = [
 ] as const
 
 export function BillingStep() {
-  const { form, selectedClient, selectedWorkers, shiftHours, totalCost, totalCharge, margin, lockedFromQuote } =
+  const { form, selectedClient, selectedWorkers, workerPayRates, shiftHours, totalCost, totalCharge, margin, lockedFromQuote } =
     useCreateJob()
+  const hasCustomRates = selectedWorkers.some(w => workerPayRates[w.email] !== undefined)
+  const requiredRaw = form.watch("requiredWorkers")
+  const openSlots = Math.max(
+    (typeof requiredRaw === "number" && Number.isFinite(requiredRaw) ? Math.max(requiredRaw, 1) : 1) - selectedWorkers.length,
+    0
+  )
 
   const { register, setValue, watch, formState: { errors } } = form
 
@@ -49,7 +57,7 @@ export function BillingStep() {
 
         <div className="max-w-xs min-w-0">
           <Input
-            label="Worker pay rate"
+            label={selectedWorkers.length ? "Default pay rate" : "Worker pay rate"}
             type="number"
             step="0.01"
             min="0"
@@ -59,10 +67,14 @@ export function BillingStep() {
             className={cn(errors.payRate && "border-red-500!")}
           />
           <p className="text-[11px] text-muted-foreground mt-1">
-            Per hour, paid to each assigned worker
+            {selectedWorkers.length
+              ? "Per hour. Everyone gets this unless you set their own rate below."
+              : "Per hour, paid to each assigned worker"}
           </p>
           <FieldError message={errors.payRate?.message as string} />
         </div>
+
+        <WorkerPayRates />
       </div>
 
       {/* What you charge */}
@@ -230,6 +242,31 @@ export function BillingStep() {
                 </div>
               ))}
             </div>
+
+            {/* Per-worker cost lines — only worth the space once rates differ */}
+            {hasCustomRates && (
+              <ul className="mt-3 flex flex-col gap-1.5 text-xs min-w-0">
+                {selectedWorkers.map(w => {
+                  const rate = parseRateInput(workerPayRates[w.email]) ?? payRate
+                  return (
+                    <li key={w.email} className="flex items-center justify-between gap-3 min-w-0">
+                      <span className="truncate text-muted-foreground">
+                        <span className="text-foreground font-medium">{w.fullname}</span> · {shiftHours}h × {formatCurrency(rate)}
+                      </span>
+                      <span className="font-semibold tabular-nums shrink-0">{formatCurrency(rate * shiftHours)}</span>
+                    </li>
+                  )
+                })}
+                {openSlots > 0 && (
+                  <li className="flex items-center justify-between gap-3 min-w-0">
+                    <span className="truncate text-muted-foreground">
+                      <span className="text-foreground font-medium">{openSlots} open slot{openSlots === 1 ? "" : "s"}</span> · {shiftHours}h × {formatCurrency(payRate)}
+                    </span>
+                    <span className="font-semibold tabular-nums shrink-0">{formatCurrency(payRate * shiftHours * openSlots)}</span>
+                  </li>
+                )}
+              </ul>
+            )}
           </div>
         )}
       </div>

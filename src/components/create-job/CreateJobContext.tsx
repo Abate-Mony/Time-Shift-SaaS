@@ -25,6 +25,10 @@ export interface CreateJobContextValue {
 
   selectedWorkers: SelectedWorker[]
   toggleWorker: (email: string) => void
+  /** email → raw rate text for workers paid other than the default */
+  workerPayRates: Record<string, string>
+  /** Pass undefined to put the worker back on the default rate */
+  setWorkerPayRate: (email: string, rate: string | undefined) => void
   workerOpen: boolean
   setWorkerOpen: (open: boolean) => void
 
