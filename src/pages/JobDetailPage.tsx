@@ -20,6 +20,7 @@ import {
     Check,
     CheckCircle2,
     ChevronLeft,
+    ChevronRight,
     CircleCheck,
     Clock,
     Coffee,
@@ -631,7 +632,17 @@ export function JobDetail() {
                                 <PriorityBadge priority={job.priority} />
                             </div>
                             <h1 className="text-xl font-bold text-white leading-snug mb-1">{job.title}</h1>
-                            <p className="text-sm text-white/60">{job.client?.name}</p>
+                            {job.client?._id ? (
+                                <Link
+                                    to={`/clients/${job.client._id}`}
+                                    state={backLinkState(job.title)}
+                                    className="text-sm text-white/70 hover:text-white underline-offset-2 hover:underline"
+                                >
+                                    {job.client.name}
+                                </Link>
+                            ) : (
+                                <p className="text-sm text-white/60">{job.client?.name}</p>
+                            )}
                         </div>
 
                         {/* Hero actions */}
@@ -1064,7 +1075,31 @@ export function JobDetail() {
                                 { icon: Clock, label: 'Start Time', value: job.startTime },
                                 { icon: Clock, label: 'Finish Time', value: job.endTime },
                                 { icon: Timer, label: 'Shift Duration', value: `${formatDuration(job.minutes)} per worker` },
-                                { icon: Briefcase, label: 'Client / Company', value: job.client?.name ?? 'No client' },
+                                job.client?._id ? {
+                                    icon: Briefcase,
+                                    label: 'Client / Company',
+                                    // Name + trailing action both link to the client, matching the
+                                    // "Directions" / "View quote" pattern on the other rows
+                                    value: (
+                                        <Link
+                                            to={`/clients/${job.client._id}`}
+                                            state={backLinkState(job.title)}
+                                            className="text-sm font-medium text-foreground hover:text-blue-700 hover:underline underline-offset-2"
+                                        >
+                                            {job.client.name}
+                                        </Link>
+                                    ),
+                                    action: (
+                                        <Link
+                                            to={`/clients/${job.client._id}`}
+                                            state={backLinkState(job.title)}
+                                            aria-label={`View client ${job.client.name}`}
+                                            className="flex items-center gap-0.5 text-xs font-semibold text-blue-600 hover:text-blue-800 transition-colors"
+                                        >
+                                            View client <ChevronRight size={12} />
+                                        </Link>
+                                    ),
+                                } : { icon: Briefcase, label: 'Client / Company', value: job.client?.name ?? 'No client' },
                                 { icon: Flag, label: 'Priority', value: <PriorityBadge priority={job.priority} /> },
                                 ...(job.sourceQuote ? [{
                                     icon: FileText,
