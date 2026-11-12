@@ -18,13 +18,15 @@ import dayjs from 'dayjs'
 import isoWeek from 'dayjs/plugin/isoWeek'
 import utc from 'dayjs/plugin/utc'
 import { motion } from "framer-motion"
-import { ChevronLeft, ChevronRight, Clock, Luggage, MapPin } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { AlertTriangle, ChevronLeft, ChevronRight, Clock, Luggage, MapPin } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useMediaQuery } from 'react-responsive'
 import { Link, type LoaderFunctionArgs } from 'react-router'
 import { backLinkState } from '@/hooks/useBackLink'
 import { Avatar, EmptyState, StatusBadge } from '../components/ui'
 import AnimatedHeadLessUi from '@/components/animated-headless-ui'
+import { WeekTimeGrid } from '@/components/calendar/WeekTimeGrid'
+import { findIssues, jobDateStr, jobSpan, type JobIssue } from '@/components/calendar/calendarUtils'
 dayjs.extend(utc)
 dayjs.extend(isoWeek)
 
@@ -72,20 +74,73 @@ function toDateStr(year: number, month: number, day: number) {
   return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
 }
 
+// Chip styles for the month grid. Cancelled is deliberately the quietest —
+// it needs no action, so it shouldn't be the loudest thing on the page.
 const jobColors: Record<string, string> = {
-  'in-progress': 'bg-blue-500',
-  'published': 'bg-[var(--primary)]',
-  'completed': 'bg-emerald-500',
-  'cancelled': 'bg-red-500',
-  'draft': 'bg-slate-400',
+  'in-progress': 'bg-blue-600 text-white',
+  'published': 'bg-[var(--primary)] text-white',
+  'completed': 'bg-emerald-700 text-white',
+  'cancelled': 'bg-muted text-muted-foreground line-through',
+  'draft': 'bg-card text-foreground border border-dashed border-muted-foreground',
+}
+const chipClass = (job: CreateJobForm, flagged: boolean) =>
+  `${jobColors[job.status ?? ''] ?? jobColors.draft} ${flagged ? 'ring-2 ring-amber-500 ring-inset' : ''}`
+
+const LEGEND = [
+  { label: 'Published', swatch: 'bg-[var(--primary)]' },
+  { label: 'In progress', swatch: 'bg-blue-600' },
+  { label: 'Completed', swatch: 'bg-emerald-700' },
+  { label: 'Cancelled', swatch: 'bg-muted border border-dashed border-muted-foreground' },
+  { label: 'Draft', swatch: 'bg-card border border-dashed border-muted-foreground' },
+  { label: 'Needs attention', swatch: 'bg-[var(--warning-bg)] border-2 border-amber-500' },
+]
+
+type IssueRow = { job: CreateJobForm; issues: JobIssue[] }
+
+const NeedsAttention = ({ rows }: { rows: IssueRow[] }) => {
+  if (rows.length === 0) return null
+  return (
+    <div className="bg-card rounded-xl border border-[var(--border)] p-4 mb-3 flex-none">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-sm font-semibold text-foreground">Needs attention</h3>
+        <span className="text-xs font-bold text-amber-900 bg-amber-100 dark:bg-amber-500/20 dark:text-amber-200 rounded-full px-2 py-0.5">
+          {rows.length}
+        </span>
+      </div>
+      <div className="flex flex-col gap-2 max-h-56 overflow-y-auto scrollto">
+        {rows.map(({ job, issues }) => (
+          <Link
+            key={job._id}
+            to={`/jobs/${job._id}`}
+            state={backLinkState('Calendar')}
+            className="flex gap-2.5 items-start rounded-lg border border-[var(--border)] p-2.5 hover:border-amber-500 hover:bg-[var(--warning-bg)] transition-colors"
+          >
+            <AlertTriangle size={14} className="text-amber-600 shrink-0 mt-0.5" aria-hidden />
+            <span className="min-w-0">
+              <span className="block text-xs font-semibold text-foreground">
+                {issues.map(i => i.message).join(' · ')}
+              </span>
+              <span className="block text-[11px] text-muted-foreground truncate">
+                {dayjs.utc(job.date).format('ddd D')} · {job.startTime} · {job.title}
+              </span>
+            </span>
+          </Link>
+        ))}
+      </div>
+    </div>
+  )
 }
 
 const DisplayCalendar = ({
   selectedDate,
   selectedJobs,
+  issueRows,
+  issues,
 }: {
   selectedDate: string | null
   selectedJobs: CreateJobForm[]
+  issueRows: IssueRow[]
+  issues: Map<string, JobIssue[]>
 }) => {
   return (
     <motion.div
@@ -108,6 +163,7 @@ const DisplayCalendar = ({
         }
       }}
       className='flex flex-col max-h-[calc(100svh-10rem)]   scrollto!'>
+      <NeedsAttention rows={issueRows} />
       <div className="bg-card rounded-xl border border-[var(--border)] p-5 flex-1 overflow-y-auto scrollto">
         <h3 className="text-sm font-semibold text-foreground mb-1">
           {selectedDate ? dayjs(selectedDate).format('D MMMM') : 'Select a day'}
@@ -143,6 +199,12 @@ const DisplayCalendar = ({
                     </p>
                     <StatusBadge status={job?.status || ''} />
                   </div>
+                  {job._id && issues.get(job._id)?.map(i => (
+                    <p key={i.kind} className="flex items-start gap-1.5 text-[11px] text-amber-900 dark:text-amber-200 bg-[var(--warning-bg)] rounded-md px-2 py-1 mb-2">
+                      <AlertTriangle size={11} className="shrink-0 mt-0.5" aria-hidden />
+                      {i.detail}
+                    </p>
+                  ))}
                   <div className="flex flex-col gap-1.5">
                     <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                       <Clock size={11} className="shrink-0" />
@@ -184,15 +246,9 @@ const DisplayCalendar = ({
           Legend
         </p>
         <div className="flex overflow-x-auto scrollto sm:flex-col gap-2">
-          {[
-            { label: 'Published', color: 'bg-[var(--primary)]' },
-            { label: 'In Progress', color: 'bg-blue-500' },
-            { label: 'Completed', color: 'bg-emerald-500' },
-            { label: 'Cancelled', color: 'bg-red-500' },
-            { label: 'Draft', color: 'bg-slate-400' },
-          ].map(l => (
+          {LEGEND.map(l => (
             <div key={l.label} className="flex items-center   gap-2">
-              <span className={`w-3 h-2 rounded-sm ${l.color}`} />
+              <span className={`w-3 h-2.5 rounded-sm shrink-0 ${l.swatch}`} />
               <span className="text-xs text-muted-foreground flex truncate">{l.label}</span>
             </div>
           ))}
@@ -230,7 +286,7 @@ export function Calendar() {
   const end = rangeEnd.format('YYYY-MM-DD')
 
   const { data, isLoading } = useQuery(calendarQuery({ start, end }))
-  const jobs = data?.jobs ?? []
+  const jobs = useMemo(() => data?.jobs ?? [], [data])
   const [selectedDate, setSelectedDate] = useState<string | null>(() => dayjs().format('YYYY-MM-DD'))
   const [open, setOpen] = useState(false)
   // Must match the side detail panel's own breakpoint (`lg:block` below) —
@@ -250,22 +306,47 @@ export function Calendar() {
 
   // Compare in UTC — stored dates like 2026-08-09T23:00:00.000Z must land on the 9th,
   // not shift to the 10th via local-timezone conversion
-  const getJobsForDate = (dateStr: string) => {
-    return jobs.filter((j: any) => dayjs.utc(j.date).format('YYYY-MM-DD') === dateStr)
-  }
+  const getJobsForDate = useCallback(
+    (dateStr: string) => jobs.filter(j => jobDateStr(j) === dateStr),
+    [jobs],
+  )
+  const [showCancelled, setShowCancelled] = useState(true)
+
+  // Unassigned / understaffed / double-booked jobs in the visible range
+  const issues = useMemo(() => findIssues(jobs), [jobs])
+  const issueRows = useMemo<IssueRow[]>(
+    () =>
+      jobs
+        .filter(j => j._id && issues.has(j._id))
+        .sort((a, b) => jobDateStr(a).localeCompare(jobDateStr(b)) || jobSpan(a).s - jobSpan(b).s)
+        .map(job => ({ job, issues: issues.get(job._id!)! })),
+    [jobs, issues],
+  )
 
   const getJobsForDay = (day: number) => getJobsForDate(toDateStr(year, month, day))
 
-  const selectedJobs = selectedDate ? getJobsForDate(selectedDate) : []
+  const selectedJobs = (selectedDate ? getJobsForDate(selectedDate) : [])
+    .filter(j => showCancelled || j.status !== 'cancelled')
+    .sort((a, b) => jobSpan(a).s - jobSpan(b).s)
 
   const days = getDaysInMonth(year, month)
   const firstDay = getFirstDayOfMonth(year, month)
-  const weekDates = Array.from({ length: 7 }).map((_, i) => currentDate.startOf('isoWeek').add(i, 'day'))
+  const weekStartKey = currentDate.startOf('isoWeek').format('YYYY-MM-DD')
+  const weekDates = useMemo(
+    () => Array.from({ length: 7 }).map((_, i) => dayjs(weekStartKey).add(i, 'day')),
+    [weekStartKey],
+  )
+  const dayKey = currentDate.format('YYYY-MM-DD')
+  const dayDates = useMemo(() => [dayjs(dayKey)], [dayKey])
 
   const navUnit = view
 
   const prev = () => setCurrentDate(d => d.subtract(1, navUnit))
   const next = () => setCurrentDate(d => d.add(1, navUnit))
+  const goToday = () => {
+    setCurrentDate(dayjs())
+    setSelectedDate(dayjs().format('YYYY-MM-DD'))
+  }
 
   const selectDay = (dateStr: string) => {
     setSelectedDate(dateStr)
@@ -295,7 +376,19 @@ export function Calendar() {
           <h1 className="text-xl font-semibold text-foreground tracking-tight">Calendar</h1>
           <p className="text-sm text-muted-foreground mt-0.5">Visual overview of all scheduled jobs</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <button
+            type="button"
+            role="switch"
+            aria-checked={showCancelled}
+            onClick={() => setShowCancelled(v => !v)}
+            className="h-8 px-3 rounded-lg border border-[var(--border)] text-xs font-medium text-muted-foreground hover:bg-muted flex items-center gap-2 mr-1"
+          >
+            <span className={`relative w-7 h-4 rounded-full transition-colors ${showCancelled ? 'bg-[var(--primary)]' : 'bg-muted-foreground/40'}`}>
+              <span className={`absolute top-0.5 size-3 rounded-full bg-white transition-all ${showCancelled ? 'left-3.5' : 'left-0.5'}`} />
+            </span>
+            Show cancelled
+          </button>
           {(['Month', 'Week', 'Day'] as const).map(v => {
             const key = v.toLowerCase() as ViewMode
             return (
@@ -341,18 +434,31 @@ export function Calendar() {
           }}
           key={view} className="flex-1 bg-card rounded-xl border border-[var(--border)] overflow-hidden ">
           {/* Date nav */}
-          <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border)]">
+          <div className="flex items-center justify-between gap-2 px-3 sm:px-5 py-4 border-b border-[var(--border)]">
+            <div className="flex items-center gap-1">
             <button
+              type="button"
+              onClick={goToday}
+              className="h-8 px-3 rounded-lg border border-[var(--border)] text-xs font-semibold text-foreground hover:bg-muted transition-colors"
+            >
+              Today
+            </button>
+            <button
+              type="button"
+              aria-label={`Previous ${view}`}
               onClick={prev}
               className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors"
             >
               <ChevronLeft size={16} />
             </button>
+            </div>
             <h2 className="text-sm font-semibold text-foreground">
               {headerTitle}
               {isLoading && <span className="ml-2 text-xs text-muted-foreground font-normal">loading…</span>}
             </h2>
             <button
+              type="button"
+              aria-label={`Next ${view}`}
               onClick={next}
               className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors"
             >
@@ -383,12 +489,16 @@ export function Calendar() {
                   const day = i + 1
                   const dateStr = toDateStr(year, month, day)
                   const dayJobs = getJobsForDay(day)
+                    .filter(j => showCancelled || j.status !== 'cancelled')
+                    .sort((a, b) => jobSpan(a).s - jobSpan(b).s)
+                  const dayHasIssue = dayJobs.some(j => j._id && issues.has(j._id))
                   const isToday =
                     day === today.date() && month === today.month() && year === today.year()
                   const isSelected = dateStr === selectedDate
 
                   return (
                     <AnimatedHeadLessUi
+                      key={day}
                       animatedClassName='bg-black top-auto bottom-0 h-[2px]!'
                       index={i}
                       hoverIndex={hoverIndex}
@@ -402,7 +512,8 @@ export function Calendar() {
                         className={`h-28 border-b border-r border-border p-2 cursor-pointer transition-colors hover:bg-muted/60 ${isSelected ? 'bg-[var(--primary)]/10' : ''
                           }`}
                       >
-                        <div className="flex justify-end mb-1">
+                        <div className="flex items-center justify-end gap-1 mb-1">
+                          {dayHasIssue && <AlertTriangle size={12} className="text-amber-600 mr-auto" aria-label="Needs attention" />}
 
                           <span
                             className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold
@@ -417,12 +528,14 @@ export function Calendar() {
                           </span>
                         </div>
                         <div className="flex flex-col gap-0.5">
-                          {dayJobs.slice(0, 2).map((job: any) => (
+                          {dayJobs.slice(0, 2).map(job => (
                             <div
                               key={job._id}
-                              className={`${jobColors[job.status] ?? 'bg-slate-400'} rounded px-1.5 py-0.5`}
+                              title={`${job.startTime}–${job.endTime} ${job.title}`}
+                              className={`${chipClass(job, !!job._id && issues.has(job._id))} rounded px-1.5 py-0.5`}
                             >
-                              <p className="text-[10px] text-white font-medium truncate">
+                              <p className="text-[10px] font-medium truncate">
+                                <span className="tabular-nums opacity-80 mr-1">{job.startTime}</span>
                                 {job.title?.split('—')[0].trim()}
                               </p>
                             </div>
@@ -441,138 +554,31 @@ export function Calendar() {
             </>
           )}
 
-          {view === 'week' && (
-            <>
-              {/* Day headers with dates */}
-              <div className="grid grid-cols-7 border-b border-[var(--border)]">
-                {weekDates.map(d => {
-                  const isToday = d.isSame(today, 'day')
-                  return (
-                    <div
-                      key={d.format('YYYY-MM-DD')}
-                      className="py-2.5 text-center border-r border-[var(--border)] last:border-r-0"
-                    >
-                      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">{d.format('ddd')}</p>
-                      <p className={`text-sm font-semibold mt-0.5 ${isToday ? 'text-[var(--primary)]' : 'text-foreground'}`}>
-                        {d.format('D')}
-                      </p>
-                    </div>
-                  )
-                })}
-              </div>
-
-              {/* Day columns */}
-              <div className="grid grid-cols-7">
-                {weekDates.map(d => {
-                  const dateStr = d.format('YYYY-MM-DD')
-                  const dayJobs = getJobsForDate(dateStr)
-                  const isSelected = dateStr === selectedDate
-
-                  return (
-                    <div
-                      key={dateStr}
-                      onClick={() => selectDay(dateStr)}
-                      className={`h-72 border-b border-r border-border last:border-r-0 p-2 cursor-pointer transition-colors hover:bg-muted/60 ${isSelected ? 'bg-[var(--primary)]/10' : ''
-                        }`}
-                    >
-                      <div className="flex flex-col gap-0.5">
-                        {dayJobs.slice(0, 6).map((job: any) => (
-                          <div
-                            key={job._id}
-                            className={`${jobColors[job.status] ?? 'bg-slate-400'} rounded px-1.5 py-0.5`}
-                          >
-                            <p className="text-[10px] text-white font-medium truncate">
-                              {job.title?.split('—')[0].trim()}
-                            </p>
-                          </div>
-                        ))}
-                        {dayJobs.length > 6 && (
-                          <p className="text-[10px] text-muted-foreground font-medium px-1">
-                            +{dayJobs.length - 6} more
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            </>
-          )}
-
-          {view === 'day' && (
-            <div className="p-5">
-              <p className="text-xs text-muted-foreground mb-4">
-                {selectedJobs.length} job{selectedJobs.length !== 1 ? 's' : ''} scheduled
-              </p>
-              {selectedJobs.length === 0 ? (
-                <div className="text-center py-12">
-                  <p className="text-xs text-muted-foreground">No jobs on this day</p>
-                </div>
-              ) : (
-                <div className="flex flex-col gap-3">
-                  {selectedJobs.map((job: any) => {
-                    const assignedWorkers = job?.workers ?? []
-                    return (
-                      <Link to={`/jobs/${job._id}`}
-                        state={backLinkState('Calendar')}
-                        key={job._id} className="border border-[var(--border)] rounded-xl p-3.5 block">
-                        <div className="flex items-start justify-between gap-2 mb-2">
-                          <p className="text-xs font-semibold text-foreground leading-snug">
-                            {job?.title} 
-                          </p>
-                          <StatusBadge status={job?.status || ''} />
-                        </div>
-                        <div className="flex flex-col gap-1.5">
-                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                            <Clock size={11} className="shrink-0" />
-                            {job.startTime} – {job.endTime}
-                          </div>
-                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                            <MapPin size={11} className="shrink-0" />
-                            <span className="truncate">{job?.location?.split(',')[0]}</span>
-                          </div>
-                        </div>
-                        {assignedWorkers.length > 0 && (
-                          <div className="flex items-center gap-1 mt-3">
-                            {assignedWorkers.slice(0, 4).map((w: any, i: number) => (
-                              <Avatar
-                                key={w._id ?? w.fullname ?? i}
-                                initials={w?.fullname?.slice(0, 2) ?? '?'}
-                                size="sm"
-                                index={i}
-                                src={w?.profilePhoto?.url}
-                              />
-                            ))}
-                            {assignedWorkers.length > 4 && (
-                              <span className="text-[10px] text-muted-foreground ml-1">
-                                +{assignedWorkers.length - 4}
-                              </span>
-                            )}
-                          </div>
-                        )}
-                      </Link>
-                    )
-                  })}
-                </div>
-              )}
-            </div>
+          {(view === 'week' || view === 'day') && (
+            <WeekTimeGrid
+              dates={view === 'week' ? weekDates : dayDates}
+              getJobsForDate={getJobsForDate}
+              issues={issues}
+              selectedDate={selectedDate}
+              onSelectDay={selectDay}
+              showCancelled={showCancelled}
+            />
           )}
         </motion.div>
 
         {/* Day detail panel */}
-        {view !== 'day' && (
-          <div className="hidden lg:block w-72 shrink-0">
-            <DisplayCalendar
-              selectedDate={selectedDate}
-              selectedJobs={selectedJobs}
-            />
-          </div>
-        )}
+        <div className="hidden lg:block w-80 shrink-0">
+          <DisplayCalendar
+            selectedDate={selectedDate}
+            selectedJobs={selectedJobs}
+            issueRows={issueRows}
+            issues={issues}
+          />
+        </div>
       </div>
 
       {/* Mobile drawer */}
-      {view !== 'day' && (
-        <Drawer open={open} onOpenChange={setOpen}>
+      <Drawer open={open} onOpenChange={setOpen}>
           <DrawerTrigger asChild className="hidden">
             <Button variant="outline">Open</Button>
           </DrawerTrigger>
@@ -585,6 +591,8 @@ export function Calendar() {
               <DisplayCalendar
                 selectedDate={selectedDate}
                 selectedJobs={selectedJobs}
+                issueRows={issueRows}
+                issues={issues}
               />
             </div>
             <DrawerFooter className="pt-2">
@@ -593,8 +601,7 @@ export function Calendar() {
               </DrawerClose>
             </DrawerFooter>
           </DrawerContent>
-        </Drawer>
-      )}
+      </Drawer>
     </div>
   )
 }
