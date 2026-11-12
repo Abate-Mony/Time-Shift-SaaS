@@ -19,7 +19,7 @@ import isoWeek from 'dayjs/plugin/isoWeek'
 import utc from 'dayjs/plugin/utc'
 import { motion } from "framer-motion"
 import { AlertTriangle, ChevronLeft, ChevronRight, Clock, Luggage, MapPin } from 'lucide-react'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useMediaQuery } from 'react-responsive'
 import { Link, type LoaderFunctionArgs } from 'react-router'
 import { backLinkState } from '@/hooks/useBackLink'
@@ -136,12 +136,23 @@ const DisplayCalendar = ({
   selectedJobs,
   issueRows,
   issues,
+  selectedJobId,
+  onOpenDay,
 }: {
   selectedDate: string | null
   selectedJobs: CreateJobForm[]
   issueRows: IssueRow[]
   issues: Map<string, JobIssue[]>
+  selectedJobId?: string | null
+  onOpenDay?: () => void
 }) => {
+  // Bring the job picked in the grid into view in this panel
+  const listRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (!selectedJobId) return
+    const el = listRef.current?.querySelector<HTMLElement>(`[data-job-id="${selectedJobId}"]`)
+    el?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+  }, [selectedJobId, selectedDate])
   return (
     <motion.div
       key={selectedDate}
@@ -164,10 +175,21 @@ const DisplayCalendar = ({
       }}
       className='flex flex-col max-h-[calc(100svh-10rem)]   scrollto!'>
       <NeedsAttention rows={issueRows} />
-      <div className="bg-card rounded-xl border border-[var(--border)] p-5 flex-1 overflow-y-auto scrollto">
-        <h3 className="text-sm font-semibold text-foreground mb-1">
-          {selectedDate ? dayjs(selectedDate).format('D MMMM') : 'Select a day'}
-        </h3>
+      <div ref={listRef} className="bg-card rounded-xl border border-[var(--border)] p-5 flex-1 min-h-48 overflow-y-auto scrollto">
+        <div className="flex items-center justify-between gap-2 mb-1">
+          <h3 className="text-sm font-semibold text-foreground">
+            {selectedDate ? dayjs(selectedDate).format('dddd D MMMM') : 'Select a day'}
+          </h3>
+          {onOpenDay && selectedDate && (
+            <button
+              type="button"
+              onClick={onOpenDay}
+              className="text-xs font-semibold text-[var(--primary)] hover:underline shrink-0"
+            >
+              Open day →
+            </button>
+          )}
+        </div>
         <p className="text-xs text-muted-foreground mb-4">
           {selectedJobs.length} job{selectedJobs.length !== 1 ? 's' : ''} scheduled
         </p>
@@ -191,7 +213,8 @@ const DisplayCalendar = ({
                   state={backLinkState('Calendar')}
                   to={`/jobs/${job._id}`}
                   key={job._id}
-                  className="border border-[var(--border)] rounded-xl p-3.5"
+                  data-job-id={job._id}
+                  className={`border rounded-xl p-3.5 transition-colors ${job._id === selectedJobId ? 'border-[var(--primary)] ring-2 ring-[var(--primary)]/30' : 'border-[var(--border)] hover:border-muted-foreground/40'}`}
                 >
                   <div className="flex items-start justify-between gap-2 mb-2">
                     <p className="text-xs font-semibold text-foreground leading-snug">
@@ -348,10 +371,29 @@ export function Calendar() {
     setSelectedDate(dayjs().format('YYYY-MM-DD'))
   }
 
+  const [selectedJobId, setSelectedJobId] = useState<string | null>(null)
+
   const selectDay = (dateStr: string) => {
     setSelectedDate(dateStr)
+    setSelectedJobId(null)
     if (isDesktop) return
     setOpen(true)
+  }
+
+  // Clicking a job in the grid shows its day in the panel (drawer on mobile)
+  // with that job highlighted; the panel card links through to the job page
+  const selectJob = (dateStr: string, jobId: string) => {
+    setSelectedDate(dateStr)
+    setSelectedJobId(jobId)
+    if (isDesktop) return
+    setOpen(true)
+  }
+
+  const openDay = () => {
+    if (!selectedDate) return
+    setCurrentDate(dayjs(selectedDate))
+    handleFiltersChange({ view: 'day' })
+    setOpen(false)
   }
 
   const today = dayjs()
@@ -560,7 +602,9 @@ export function Calendar() {
               getJobsForDate={getJobsForDate}
               issues={issues}
               selectedDate={selectedDate}
+              selectedJobId={selectedJobId}
               onSelectDay={selectDay}
+              onSelectJob={selectJob}
               showCancelled={showCancelled}
             />
           )}
@@ -573,6 +617,8 @@ export function Calendar() {
             selectedJobs={selectedJobs}
             issueRows={issueRows}
             issues={issues}
+            selectedJobId={selectedJobId}
+            onOpenDay={view === 'day' ? undefined : openDay}
           />
         </div>
       </div>
@@ -593,6 +639,8 @@ export function Calendar() {
                 selectedJobs={selectedJobs}
                 issueRows={issueRows}
                 issues={issues}
+                selectedJobId={selectedJobId}
+                onOpenDay={view === 'day' ? undefined : openDay}
               />
             </div>
             <DrawerFooter className="pt-2">

@@ -1,9 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Link } from 'react-router'
 import dayjs, { type Dayjs } from 'dayjs'
 import { AlertTriangle, Check } from 'lucide-react'
 import type { CreateJobForm } from '@/utils/types'
-import { backLinkState } from '@/hooks/useBackLink'
 import { Avatar } from '../ui'
 import {
   activeWorkers,
@@ -33,11 +31,14 @@ interface Props {
   getJobsForDate: (dateStr: string) => CreateJobForm[]
   issues: Map<string, JobIssue[]>
   selectedDate: string | null
+  selectedJobId?: string | null
   onSelectDay: (dateStr: string) => void
+  /** Clicking a job selects its day and highlights the job in the side panel */
+  onSelectJob: (dateStr: string, jobId: string) => void
   showCancelled: boolean
 }
 
-export function WeekTimeGrid({ dates, getJobsForDate, issues, selectedDate, onSelectDay, showCancelled }: Props) {
+export function WeekTimeGrid({ dates, getJobsForDate, issues, selectedDate, selectedJobId, onSelectDay, onSelectJob, showCancelled }: Props) {
   const [now, setNow] = useState(() => dayjs())
   useEffect(() => {
     const id = setInterval(() => setNow(dayjs()), 60_000)
@@ -88,7 +89,7 @@ export function WeekTimeGrid({ dates, getJobsForDate, issues, selectedDate, onSe
           <div />
           {columns.map(({ d, dateStr, jobs }) => {
             const isToday = d.isSame(now, 'day')
-            const isSelected = dateStr === selectedDate
+            const isSelected = dates.length > 1 && dateStr === selectedDate
             const live = jobs.filter(j => j.status !== 'cancelled')
             const staffedHours = live.reduce((sum, j) => {
               const { s, e } = jobSpan(j)
@@ -101,7 +102,7 @@ export function WeekTimeGrid({ dates, getJobsForDate, issues, selectedDate, onSe
                 key={dateStr}
                 onClick={() => onSelectDay(dateStr)}
                 aria-pressed={isSelected}
-                className={`text-left px-2.5 py-2 border-l border-[var(--border)] transition-colors hover:bg-muted/60 ${isSelected ? 'bg-[var(--primary)]/10' : isToday ? 'bg-[var(--primary)]/5' : ''}`}
+                className={`text-left px-2.5 py-2 border-l border-[var(--border)] border-b-2 cursor-pointer transition-colors hover:bg-muted/60 ${isSelected ? 'bg-[var(--primary)]/10 border-b-[var(--primary)]' : `border-b-transparent ${isToday ? 'bg-[var(--primary)]/5' : ''}`}`}
               >
                 <div className="flex items-center gap-1.5">
                   <span className={`text-[11px] font-semibold uppercase tracking-wide ${isToday ? 'text-[var(--primary)]' : 'text-muted-foreground'}`}>
@@ -141,11 +142,12 @@ export function WeekTimeGrid({ dates, getJobsForDate, issues, selectedDate, onSe
 
             {columns.map(({ d, dateStr, placed }) => {
               const isToday = d.isSame(now, 'day')
+              const isSelected = dates.length > 1 && dateStr === selectedDate
               return (
                 <div
                   key={dateStr}
                   onClick={() => onSelectDay(dateStr)}
-                  className={`relative border-l border-[var(--border)] cursor-pointer ${isToday ? 'bg-[var(--primary)]/[0.03]' : ''}`}
+                  className={`relative border-l border-[var(--border)] cursor-pointer hover:bg-muted/40 ${isSelected ? 'bg-[var(--primary)]/[0.06]' : isToday ? 'bg-[var(--primary)]/[0.03]' : ''}`}
                   style={{
                     backgroundImage: `repeating-linear-gradient(to bottom, var(--border) 0px, var(--border) 1px, transparent 1px, transparent ${HOUR_PX}px)`,
                   }}
@@ -157,16 +159,20 @@ export function WeekTimeGrid({ dates, getJobsForDate, issues, selectedDate, onSe
                     const status = job.status ?? 'published'
                     const height = Math.max((e - s) * HOUR_PX - 4, 24)
                     const compact = height < 44
+                    const isSelectedJob = job._id === selectedJobId
                     const label = `${job.title}, ${job.startTime} to ${job.endTime}, ${STATUS_LABEL[status] ?? status}${flagged ? `, ${jobIssues.map(i => i.message).join(', ')}` : ''}`
                     return (
-                      <Link
+                      <button
+                        type="button"
                         key={job._id}
-                        to={`/jobs/${job._id}`}
-                        state={backLinkState('Calendar')}
-                        onClick={ev => ev.stopPropagation()}
+                        onClick={ev => {
+                          ev.stopPropagation()
+                          if (job._id) onSelectJob(dateStr, job._id)
+                        }}
                         aria-label={label}
+                        aria-pressed={isSelectedJob}
                         title={label}
-                        className={`absolute rounded-lg px-2 py-1 overflow-hidden flex flex-col gap-0.5 hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 ${flagged ? FLAGGED : (blockClass[status] ?? blockClass.published)}`}
+                        className={`absolute text-left cursor-pointer rounded-lg px-2 py-1 overflow-hidden flex flex-col gap-0.5 hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 ${flagged ? FLAGGED : (blockClass[status] ?? blockClass.published)} ${isSelectedJob ? 'ring-2 ring-offset-1 ring-[var(--primary)] z-[5]' : ''}`}
                         style={{
                           top: (s - startHour) * HOUR_PX + 2,
                           height,
@@ -198,7 +204,7 @@ export function WeekTimeGrid({ dates, getJobsForDate, issues, selectedDate, onSe
                             )}
                           </span>
                         )}
-                      </Link>
+                      </button>
                     )
                   })}
 
