@@ -49,7 +49,14 @@ customFetch.interceptors.response.use(
       error.response?.status === 401 &&
       config &&
       !config._retry &&
-      !isAuthEndpoint(config.url)
+      !isAuthEndpoint(config.url) &&
+      // authLoader (every /auth/* route) probes userQuery just to check
+      // "is anyone logged in" and already treats a failure as "show the
+      // login form" (see AuthLayout.tsx's catch { return null }). Without
+      // this guard, a dead/missing refresh token here would still call
+      // logoutUser(), which does a hard window.location.replace back to
+      // /auth — re-running authLoader, 401ing again, looping forever.
+      !window.location.pathname.startsWith("/auth")
     ) {
       config._retry = true;
 
