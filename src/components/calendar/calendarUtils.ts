@@ -132,3 +132,13 @@ export const STATUS_LABEL: Record<string, string> = {
   cancelled: 'Cancelled',
   draft: 'Draft',
 }
+
+export type FilterStatus = 'published' | 'in-progress' | 'completed' | 'cancelled' | 'draft'
+
+export const STATUS_FILTERS: { status: FilterStatus; label: string }[] = [
+  { status: 'published', label: 'Published' },
+  { status: 'in-progress', label: 'In progress' },
+  { status: 'completed', label: 'Completed' },
+  { status: 'cancelled', label: 'Cancelled' },
+  { status: 'draft', label: 'Draft' },
+]

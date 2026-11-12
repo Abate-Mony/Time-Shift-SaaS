@@ -26,7 +26,8 @@ import { backLinkState } from '@/hooks/useBackLink'
 import { Avatar, EmptyState, StatusBadge } from '../components/ui'
 import AnimatedHeadLessUi from '@/components/animated-headless-ui'
 import { WeekTimeGrid } from '@/components/calendar/WeekTimeGrid'
-import { findIssues, jobDateStr, jobSpan, type JobIssue } from '@/components/calendar/calendarUtils'
+import { findIssues, jobDateStr, jobSpan, STATUS_FILTERS, type FilterStatus, type JobIssue } from '@/components/calendar/calendarUtils'
+import { StatusFilterBar } from '@/components/calendar/StatusFilterBar'
 dayjs.extend(utc)
 dayjs.extend(isoWeek)
 
@@ -54,6 +55,8 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   await queryClient.ensureQueryData(calendarQuery(params))
   return { searchValues: params }
 }
+
+const HIDDEN_KEY = 'onclockly.calendar.hiddenStatuses'
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 const MONTHS = [
@@ -85,15 +88,6 @@ const jobColors: Record<string, string> = {
 }
 const chipClass = (job: CreateJobForm, flagged: boolean) =>
   `${jobColors[job.status ?? ''] ?? jobColors.draft} ${flagged ? 'ring-2 ring-amber-500 ring-inset' : ''}`
-
-const LEGEND = [
-  { label: 'Published', swatch: 'bg-[var(--primary)]' },
-  { label: 'In progress', swatch: 'bg-blue-600' },
-  { label: 'Completed', swatch: 'bg-emerald-700' },
-  { label: 'Cancelled', swatch: 'bg-muted border border-dashed border-muted-foreground' },
-  { label: 'Draft', swatch: 'bg-card border border-dashed border-muted-foreground' },
-  { label: 'Needs attention', swatch: 'bg-[var(--warning-bg)] border-2 border-amber-500' },
-]
 
 type IssueRow = { job: CreateJobForm; issues: JobIssue[] }
 
@@ -263,20 +257,6 @@ const DisplayCalendar = ({
         )}
       </div>
 
-      {/* Legend */}
-      <div className="bg-card rounded-xl border border-[var(--border)] p-4 mt-3 flex-none">
-        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-          Legend
-        </p>
-        <div className="flex overflow-x-auto scrollto sm:flex-col gap-2">
-          {LEGEND.map(l => (
-            <div key={l.label} className="flex items-center   gap-2">
-              <span className={`w-3 h-2.5 rounded-sm shrink-0 ${l.swatch}`} />
-              <span className="text-xs text-muted-foreground flex truncate">{l.label}</span>
-            </div>
-          ))}
-        </div>
-      </div>
     </motion.div >
   )
 }
@@ -333,10 +313,42 @@ export function Calendar() {
     (dateStr: string) => jobs.filter(j => jobDateStr(j) === dateStr),
     [jobs],
   )
-  const [showCancelled, setShowCancelled] = useState(true)
+  // Status filters double as the colour key. Hidden statuses are remembered
+  // per browser so e.g. "hide completed" sticks between visits.
+  const [hiddenStatuses, setHiddenStatuses] = useState<Set<FilterStatus>>(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(HIDDEN_KEY) ?? '[]')
+      return new Set(Array.isArray(saved) ? saved : [])
+    } catch {
+      return new Set()
+    }
+  })
+  const [onlyIssues, setOnlyIssues] = useState(false)
+  const updateHidden = (next: Set<FilterStatus>) => {
+    setHiddenStatuses(next)
+    try { localStorage.setItem(HIDDEN_KEY, JSON.stringify([...next])) } catch { /* storage unavailable */ }
+  }
+  const toggleStatus = (status: FilterStatus) => {
+    const next = new Set(hiddenStatuses)
+    if (next.has(status)) next.delete(status)
+    else next.add(status)
+    updateHidden(next)
+  }
 
   // Unassigned / understaffed / double-booked jobs in the visible range
   const issues = useMemo(() => findIssues(jobs), [jobs])
+
+  const isVisible = useCallback(
+    (job: CreateJobForm) =>
+      !hiddenStatuses.has(job.status as FilterStatus) &&
+      (!onlyIssues || (!!job._id && issues.has(job._id))),
+    [hiddenStatuses, onlyIssues, issues],
+  )
+  const statusCounts = useMemo(() => {
+    const counts = Object.fromEntries(STATUS_FILTERS.map(f => [f.status, 0])) as Record<FilterStatus, number>
+    for (const j of jobs) if (j.status && j.status in counts) counts[j.status as FilterStatus]++
+    return counts
+  }, [jobs])
   const issueRows = useMemo<IssueRow[]>(
     () =>
       jobs
@@ -349,7 +361,7 @@ export function Calendar() {
   const getJobsForDay = (day: number) => getJobsForDate(toDateStr(year, month, day))
 
   const selectedJobs = (selectedDate ? getJobsForDate(selectedDate) : [])
-    .filter(j => showCancelled || j.status !== 'cancelled')
+    .filter(isVisible)
     .sort((a, b) => jobSpan(a).s - jobSpan(b).s)
 
   const days = getDaysInMonth(year, month)
@@ -419,18 +431,6 @@ export function Calendar() {
           <p className="text-sm text-muted-foreground mt-0.5">Visual overview of all scheduled jobs</p>
         </div>
         <div className="flex flex-wrap items-center justify-end gap-2">
-          <button
-            type="button"
-            role="switch"
-            aria-checked={showCancelled}
-            onClick={() => setShowCancelled(v => !v)}
-            className="h-8 px-3 rounded-lg border border-[var(--border)] text-xs font-medium text-muted-foreground hover:bg-muted flex items-center gap-2 mr-1"
-          >
-            <span className={`relative w-7 h-4 rounded-full transition-colors ${showCancelled ? 'bg-[var(--primary)]' : 'bg-muted-foreground/40'}`}>
-              <span className={`absolute top-0.5 size-3 rounded-full bg-white transition-all ${showCancelled ? 'left-3.5' : 'left-0.5'}`} />
-            </span>
-            Show cancelled
-          </button>
           {(['Month', 'Week', 'Day'] as const).map(v => {
             const key = v.toLowerCase() as ViewMode
             return (
@@ -508,6 +508,16 @@ export function Calendar() {
             </button>
           </div>
 
+          <StatusFilterBar
+            counts={statusCounts}
+            hidden={hiddenStatuses}
+            onToggle={toggleStatus}
+            issueCount={issueRows.length}
+            onlyIssues={onlyIssues}
+            onToggleIssues={() => setOnlyIssues(v => !v)}
+            onReset={() => { updateHidden(new Set()); setOnlyIssues(false) }}
+          />
+
           {view === 'month' && (
             <>
               {/* Day headers */}
@@ -531,7 +541,7 @@ export function Calendar() {
                   const day = i + 1
                   const dateStr = toDateStr(year, month, day)
                   const dayJobs = getJobsForDay(day)
-                    .filter(j => showCancelled || j.status !== 'cancelled')
+                    .filter(isVisible)
                     .sort((a, b) => jobSpan(a).s - jobSpan(b).s)
                   const dayHasIssue = dayJobs.some(j => j._id && issues.has(j._id))
                   const isToday =
@@ -605,7 +615,7 @@ export function Calendar() {
               selectedJobId={selectedJobId}
               onSelectDay={selectDay}
               onSelectJob={selectJob}
-              showCancelled={showCancelled}
+              isVisible={isVisible}
             />
           )}
         </motion.div>
