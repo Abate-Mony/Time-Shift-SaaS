@@ -19,6 +19,7 @@ import type { EmailSettings, EmailSettingsResponse, SendTestEmailResult } from "
 import type { ApiKeyInfo, CreateApiKeyResponse } from "./types/apiKey";
 import type { PublicQuoteLinkInfo } from "./types/quoteLink";
 import type { QuoteWorkflowResponse, QuoteWorkflowState } from "./types/quoteWorkflow";
+import { withCustomPayRates } from "./workerPay";
 
 // Shape of POST /ai/job-draft's response. Every field on `draft` is a
 // best-effort guess the model made from a free-text prompt — nothing here
@@ -1187,7 +1188,7 @@ export const updateJobWorkers = async (
     successMessage = "Workers updated"
 ): Promise<boolean> => {
     try {
-        await customFetch.patch(`/jobs/${jobId}`, { workers })
+        await customFetch.patch(`/jobs/${jobId}`, { workers: withCustomPayRates(workers) })
 
         toast.success(successMessage)
 

@@ -1756,6 +1756,11 @@ export function JobDetail() {
                                         <div className="flex-1 min-w-0">
                                             <p className="text-sm font-medium text-foreground group-hover:text-blue-700 transition-colors">{w.fullname}</p>
                                             <p className="text-[10px] text-muted-foreground">{w.email}</p>
+                                            {w.payRateIsCustom && (
+                                                <span className="inline-block mt-1 text-[10px] font-semibold rounded-full px-2 py-0.5 bg-blue-100 text-blue-900 dark:bg-blue-500/20 dark:text-blue-200 tabular-nums">
+                                                    {formatCurrency(w.payRate ?? 0)}/hr · own rate
+                                                </span>
+                                            )}
                                             {(() => {
                                                 // Taker of another worker's offered shift — approving
                                                 // their claim also takes the giver off this job.
@@ -2140,7 +2145,7 @@ export function JobDetail() {
                         <div className="flex flex-col gap-2.5">
                             {[
                                 { label: 'Workers', value: `${assignedWorkers.length}` },
-                                { label: 'Pay Rate', value: job?.payRate ? `${formatCurrency(job.payRate)}/hr` : '—' },
+                                { label: assignedWorkers.some(w => w.payRateIsCustom) ? 'Default pay rate' : 'Pay Rate', value: job?.payRate ? `${formatCurrency(job.payRate)}/hr` : '—' },
                                 {
                                     label: 'Charge Rate',
                                     value: job?.chargeType === 'fixed'

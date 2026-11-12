@@ -144,6 +144,13 @@ export const workerSchema = z.object({
         .number()
         .default(0),
 
+    // Set by the backend when this worker is paid their own rate instead of
+    // the job's default (see utils/workerPay.ts).
+    payRateIsCustom: z.boolean().optional(),
+
+    // Request-only: a per-worker rate override sent on create/update.
+    customPayRate: z.number().min(0).nullable().optional(),
+
     totalPay: z
         .number()
         .default(0),

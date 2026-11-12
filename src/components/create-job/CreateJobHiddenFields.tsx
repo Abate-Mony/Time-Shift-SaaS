@@ -1,6 +1,7 @@
 import { Input } from "../ui/input"
 import { useCreateJob } from "./CreateJobContext"
 import { mapRecurringStateToPayload } from "@/utils/mapRecurringStateToPayload"
+import { parseRateInput } from "@/utils/workerPay"
 
 /**
  * Every value that lives outside RHF-registered inputs, rendered ONCE in the
@@ -14,7 +15,7 @@ import { mapRecurringStateToPayload } from "@/utils/mapRecurringStateToPayload"
  * container div, which lays out even when type="hidden".
  */
 export function CreateJobHiddenFields() {
-  const { form, selectedClient, selectedSite, selectedWorkers, recurring, generateInvoice, invoiceDueDate, invoiceLineItems, lockedFromQuote, lockedFromBookingRequest } =
+  const { form, selectedClient, selectedSite, selectedWorkers, workerPayRates, recurring, generateInvoice, invoiceDueDate, invoiceLineItems, lockedFromQuote, lockedFromBookingRequest } =
     useCreateJob()
 
   const { watch } = form
@@ -68,7 +69,16 @@ export function CreateJobHiddenFields() {
 
       {/* Staffing */}
       {selectedWorkers.length > 0 && (
-      <Input type="hidden" name="workers" value={JSON.stringify(selectedWorkers)} />
+      <Input
+        type="hidden"
+        name="workers"
+        value={JSON.stringify(
+          selectedWorkers.map(w => {
+            const custom = parseRateInput(workerPayRates[w.email])
+            return custom === undefined ? w : { ...w, customPayRate: custom }
+          })
+        )}
+      />
       )}
       {supervisor &&<Input type="hidden" name="supervisor" value={supervisor} />}
     <Input type="hidden" name="openToClaims" value={String(openToClaims)} />

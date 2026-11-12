@@ -50,6 +50,7 @@ import {
   shiftHoursFrom,
 } from "@/components/create-job/wizardConfig"
 import { clearAutosavedDraft } from "@/components/create-job/useDraftAutosave"
+import { parseRateInput } from "@/utils/workerPay"
 
 // ─────────────────────────────────────────────────────────────
 // Data
@@ -228,6 +229,17 @@ export function CreateJob() {
 
   // ── Local (non-RHF) state ─────────────────────────────────
   const [selectedWorkers, setSelectedWorkers] = useState<SelectedWorker[]>([])
+  // email → raw rate text, for workers paid something other than the
+  // default pay rate. Kept apart from selectedWorkers (which RHF validates
+  // against workerSchema) so a half-typed rate never blocks the form.
+  const [workerPayRates, setWorkerPayRates] = useState<Record<string, string>>({})
+  const setWorkerPayRate = (email: string, rate: string | undefined) =>
+    setWorkerPayRates(prev => {
+      const next = { ...prev }
+      if (rate === undefined) delete next[email]
+      else next[email] = rate
+      return next
+    })
   const [workerOpen, setWorkerOpen] = useState(false)
   const [recurring, setRecurring] = useState<RecurringState>(defaultRecurring)
   const [selectedClient, setSelectedClient] = useState<ComboboxClient | null>(null)
@@ -331,7 +343,13 @@ export function CreateJob() {
   // Budgeted cost for the job as staffed, not just whoever's been assigned
   // so far — selectedWorkers.length would under-cost a job that still has
   // open slots (e.g. 1 of 5 required workers picked mid-wizard).
-  const totalCost = payRate * shiftHours * Math.max(requiredWorkers, 1)
+  // Each assigned worker at their own rate (if set), open slots at the default.
+  const assignedPay = selectedWorkers.reduce(
+    (sum, w) => sum + (parseRateInput(workerPayRates[w.email]) ?? payRate),
+    0
+  )
+  const openSlots = Math.max(Math.max(requiredWorkers, 1) - selectedWorkers.length, 0)
+  const totalCost = (assignedPay + openSlots * payRate) * shiftHours
   // Mirrors totalCost's scaling — chargeRate bills per worker just like
   // payRate (see invoiceLineItems below, which gives each selected worker
   // their own chargeRate × hours line), so an open shift staffed for several
@@ -682,6 +700,8 @@ export function CreateJob() {
     users,
     selectedWorkers,
     toggleWorker,
+    workerPayRates,
+    setWorkerPayRate,
     workerOpen,
     setWorkerOpen,
     recurring,
