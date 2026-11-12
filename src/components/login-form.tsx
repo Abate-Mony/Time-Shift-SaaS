@@ -95,7 +95,7 @@ function BrandPanel() {
             <span className="text-white font-bold text-sm">W</span>
           </div>
           <span className="text-white font-semibold text-lg tracking-tight">
-            work<span className="text-blue-400">.wrk</span>
+            On<span className="text-blue-400">clockly</span>
           </span>
         </div>
 
