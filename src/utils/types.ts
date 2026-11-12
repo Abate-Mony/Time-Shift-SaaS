@@ -512,7 +512,8 @@ export const ACTIVITY_TYPES = [
   "assignment_break_ended",
   "assignment_auto_completed",
   "assignment_manually_adjusted",
-  "assignment_no_show"
+  "assignment_no_show",
+  "assignment_pay_rate_changed"
 ] as const;
 export type ActivityType = (typeof ACTIVITY_TYPES)[number];
 

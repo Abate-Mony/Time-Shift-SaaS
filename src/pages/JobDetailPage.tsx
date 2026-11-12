@@ -3,7 +3,7 @@ import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { backLinkState, useBackLink } from '@/hooks/useBackLink'
 import { queryClient } from '@/lib/queryClient'
-import { deleteJob, deleteJobAttachment, duplicateJob, manuallyAdjustAssignment, markAssignmentNoShow, resolveAssignmentBreak, reviewAssignmentOvertime, reviewMissedShiftRequest, reviewOpenShiftClaim, updateJobWorkers, uploadJobAttachment } from '@/utils/api-request-functions'
+import { deleteJob, deleteJobAttachment, duplicateJob, manuallyAdjustAssignment, markAssignmentNoShow, resolveAssignmentBreak, reviewAssignmentOvertime, reviewMissedShiftRequest, reviewOpenShiftClaim, updateAssignmentPayRate, updateJobWorkers, uploadJobAttachment } from '@/utils/api-request-functions'
 import customFetch from '@/utils/customFetch'
 import { formatDate, formatDuration, getShiftProgress } from '@/utils/date'
 import { formatCurrency } from '@/utils/format'
@@ -12,7 +12,7 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 import dayjs from 'dayjs'
 import {
     AlertCircle,
-    Ban, Bot,
+    Ban, Banknote, Bot,
     Briefcase,
     Building2,
     Calendar,
@@ -82,6 +82,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { cn } from '@/lib/utils'
 import { getInitials } from '@/utils/getInitials'
 import { isJobLocked } from '@/utils/jobLock'
+import { parseRateInput } from '@/utils/workerPay'
 import type { ActivityType, CreateJobForm } from '@/utils/types'
 import type { LucideIcon } from "lucide-react"
 
@@ -120,6 +121,7 @@ export const recordFormatUI: Record<ActivityType, { icon: LucideIcon; className:
     assignment_overtime_reviewed: { icon: Flag, className: "bg-slate-500", label: "reviewed overtime" },
     assignment_manually_adjusted: { icon: Pencil, className: "bg-blue-500", label: "recorded hours manually" },
     assignment_no_show: { icon: Ban, className: "bg-rose-500", label: "marked as a no-show" },
+    assignment_pay_rate_changed: { icon: Banknote, className: "bg-blue-500", label: "changed a pay rate" },
 
     // ── Misc ───────────────────────────────────────────────────────
     note_added: { icon: StickyNote, className: "bg-sky-500", label: "added a note" },
@@ -448,6 +450,22 @@ export function JobDetail() {
         setManualHours(job?.minutes ? (job.minutes / 60).toFixed(2) : "")
         setManualDate(job?.date ? dayjs(job.date).format("YYYY-MM-DD") : "")
         setManualReason("")
+    }
+
+    // Per-worker pay rate — Time Logs card's own row action, separate from
+    // the create/edit-job wizard. Seeded from the worker's current rate
+    // (custom or default) every time it opens, same as the manual-entry
+    // dialog above, so it never goes stale from an earlier open.
+    const [payRateWorker, setPayRateWorker] = useState<AssignedWorker | null>(null)
+    const [payRateInput, setPayRateInput] = useState("")
+    const payRateMutation = useMutation({
+        mutationFn: ({ assignmentId, rate }: { assignmentId: string; rate: number | null }) =>
+            updateAssignmentPayRate(assignmentId, rate),
+        onSuccess: () => setPayRateWorker(null),
+    })
+    const openPayRateEditor = (w: AssignedWorker) => {
+        setPayRateWorker(w)
+        setPayRateInput(String(w.payRate ?? job?.payRate ?? 0))
     }
 
     // No-show — the mirror of manual hours entry above: the worker was
@@ -1338,6 +1356,11 @@ export function JobDetail() {
                                                             <Pencil size={8} /> Manually entered
                                                         </span>
                                                     )}
+                                                    {w.payRateIsCustom && (
+                                                        <span className="inline-flex items-center gap-1 text-[9px] font-semibold text-blue-700 bg-blue-100 px-1.5 py-0.5 rounded-full mt-1">
+                                                            <Banknote size={8} /> {formatCurrency(w.payRate ?? 0)}/hr · own rate
+                                                        </span>
+                                                    )}
                                                     {w.cancellationType === "no_show" && (
                                                         <span className="inline-flex items-center gap-1 text-[9px] font-semibold text-rose-700 bg-rose-100 px-1.5 py-0.5 rounded-full mt-1">
                                                             <Ban size={8} /> No-show
@@ -1380,6 +1403,22 @@ export function JobDetail() {
                                                     </TooltipTrigger>
                                                     <TooltipContent>Record hours worked</TooltipContent>
                                                 </Tooltip>
+                                                {["pending", "accepted"].includes(w.status ?? "") && !isJobLocked(job) && (
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <button
+                                                                type="button"
+                                                                onClick={e => { e.stopPropagation(); openPayRateEditor(w) }}
+                                                                className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors shrink-0"
+                                                            >
+                                                                <Banknote size={13} />
+                                                            </button>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>
+                                                            {w.payRateIsCustom ? `${formatCurrency(w.payRate ?? 0)}/hr · own rate` : "Set own pay rate"}
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                )}
                                                 {!w.checkedInAt && !["completed", "cancelled", "declined"].includes(w.status ?? "") && (
                                                     <Tooltip>
                                                         <TooltipTrigger asChild>
@@ -2282,6 +2321,67 @@ export function JobDetail() {
                             }}
                         >
                             {manualAdjustMutation.isPending ? "Saving…" : "Record hours"}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Per-worker pay rate — same "custom rate, falls back to the
+                job's default" model as the create-job wizard's WorkerPayRates,
+                just editable after the fact from the Time Logs card. */}
+            <Dialog open={payRateWorker !== null} onOpenChange={open => !open && setPayRateWorker(null)}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Set pay rate</DialogTitle>
+                        <DialogDescription>
+                            {payRateWorker?.fullname} — overrides the job's default of {formatCurrency(job?.payRate ?? 0)}/hr for this worker only.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="space-y-1.5">
+                        <Label htmlFor="pay-rate-input">Pay rate</Label>
+                        <div className="flex items-center h-10 px-2.5 gap-1 rounded-lg border border-input bg-background focus-within:ring-2 focus-within:ring-ring">
+                            <span className="text-sm font-semibold text-muted-foreground">£</span>
+                            <input
+                                id="pay-rate-input"
+                                type="number"
+                                inputMode="decimal"
+                                step="0.01"
+                                min="0"
+                                value={payRateInput}
+                                onChange={e => setPayRateInput(e.target.value)}
+                                className="flex-1 min-w-0 bg-transparent outline-none text-sm font-semibold text-foreground tabular-nums"
+                            />
+                            <span className="text-xs text-muted-foreground">/hr</span>
+                        </div>
+                    </div>
+
+                    <DialogFooter>
+                        {payRateWorker?.payRateIsCustom && (
+                            <Button
+                                variant="outline"
+                                disabled={payRateMutation.isPending}
+                                onClick={() => {
+                                    if (!payRateWorker?._id) return
+                                    payRateMutation.mutate({ assignmentId: payRateWorker._id, rate: null })
+                                }}
+                            >
+                                Use default
+                            </Button>
+                        )}
+                        <Button variant="outline" onClick={() => setPayRateWorker(null)} disabled={payRateMutation.isPending}>
+                            Cancel
+                        </Button>
+                        <Button
+                            disabled={payRateMutation.isPending || parseRateInput(payRateInput) === undefined}
+                            onClick={() => {
+                                if (!payRateWorker?._id) return
+                                const rate = parseRateInput(payRateInput)
+                                if (rate === undefined) return
+                                payRateMutation.mutate({ assignmentId: payRateWorker._id, rate })
+                            }}
+                        >
+                            {payRateMutation.isPending ? "Saving…" : "Save"}
                         </Button>
                     </DialogFooter>
                 </DialogContent>

@@ -44,6 +44,11 @@ export interface RecurringOccurrence {
 
 export interface RecurringDetail extends RecurringSchedule {
   defaultWorkers: { _id: string; fullname: string; email: string; profilePhoto?: FileRef | null; autoAcceptAssignments?: boolean }[]
+  // Default workers paid something other than the template's payRate —
+  // unpopulated (worker is a raw id), cross-referenced against
+  // defaultWorkers above for display. Every occurrence generated from here
+  // on uses this; already-generated assignments are never rewritten.
+  workerPayRates?: { worker: string; payRate: number }[]
   createdBy: { _id: string; fullname: string }
   createdAt: string
   occurrences: {

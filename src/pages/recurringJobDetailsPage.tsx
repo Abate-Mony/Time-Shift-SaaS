@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-    ChevronLeft, Edit2, StopCircle, PlayCircle,
+    ChevronLeft, Edit2, Pencil, StopCircle, PlayCircle, RotateCcw,
     X, AlertTriangle, Clock, Users, Calendar, Info, MapPin,
 } from 'lucide-react'
 import {
@@ -21,6 +21,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { setWorkerAutoAccept } from '@/utils/api-request-functions'
+import { formatCurrency } from '@/utils/format'
+import { parseRateInput } from '@/utils/workerPay'
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
@@ -256,6 +258,8 @@ export interface EditPatternForm {
     endDate: string
     maxOccurrences: string
     defaultWorkerIds: string[]
+    /** worker id → raw rate text, for default workers paid other than the template's rate */
+    workerPayRates: Record<string, string>
     startTime: string
     endTime: string
     payRate: string
@@ -296,6 +300,9 @@ function EditPatternDialog({
         endDate: d.endDate ? d.endDate.slice(0, 10) : '',
         maxOccurrences: d.maxOccurrences ? String(d.maxOccurrences) : '',
         defaultWorkerIds: d.defaultWorkers.map(w => w._id),
+        workerPayRates: Object.fromEntries(
+            (d.workerPayRates ?? []).map(r => [r.worker, String(r.payRate)])
+        ),
         startTime: d.templateJob.startTime,
         endTime: d.templateJob.endTime,
         payRate: String(d.templateJob.payRate ?? 0),
@@ -320,6 +327,12 @@ function EditPatternDialog({
         ...f,
         defaultWorkerIds: f.defaultWorkerIds.includes(id) ? f.defaultWorkerIds.filter(x => x !== id) : [...f.defaultWorkerIds, id],
     }))
+    const setWorkerPayRate = (workerId: string, rate: string | undefined) => setForm(f => {
+        const next = { ...f.workerPayRates }
+        if (rate === undefined) delete next[workerId]
+        else next[workerId] = rate
+        return { ...f, workerPayRates: next }
+    })
 
     const daysMissing = form.frequency === 'weekly' && form.daysOfWeek.length === 0
     const timeMissing = !form.startTime || !form.endTime
@@ -333,6 +346,11 @@ function EditPatternDialog({
     // or intend to change), so compare them as sets, not sequences.
     const sameMembers = (a: (string | number)[], b: (string | number)[]) =>
         a.length === b.length && [...a].sort().every((v, i) => v === [...b].sort()[i])
+    const sameRates = (a: Record<string, string>, b: Record<string, string>) => {
+        const aKeys = Object.keys(a)
+        const bKeys = Object.keys(b)
+        return aKeys.length === bKeys.length && aKeys.every(k => a[k] === b[k])
+    }
 
     const initial = initialFormRef.current
     const isDirty =
@@ -342,6 +360,7 @@ function EditPatternDialog({
         form.endDate !== initial.endDate ||
         form.maxOccurrences !== initial.maxOccurrences ||
         !sameMembers(form.defaultWorkerIds, initial.defaultWorkerIds) ||
+        !sameRates(form.workerPayRates, initial.workerPayRates) ||
         form.startTime !== initial.startTime ||
         form.endTime !== initial.endTime ||
         form.payRate !== initial.payRate ||
@@ -637,6 +656,73 @@ function EditPatternDialog({
                             </div>
                         )}
                     </div>
+
+                    {/* Rate per worker — same model as the create-job wizard's
+                        WorkerPayRates: every default worker is on the
+                        template's rate unless given their own. Applies to
+                        every occurrence generated from here on; shifts
+                        already created (especially accepted ones) keep
+                        whatever they were assigned at. */}
+                    {form.defaultWorkerIds.length > 0 && (
+                        <div className="flex flex-col gap-2">
+                            <label className="text-sm font-semibold text-foreground">Rate per worker</label>
+                            <p className="text-xs text-muted-foreground -mt-1">Default workers paid something other than the template's rate.</p>
+                            <ul className="divide-y divide-border border border-border rounded-xl overflow-hidden">
+                                {form.defaultWorkerIds.map(id => {
+                                    const w = workers.find(w => w._id === id)
+                                    if (!w) return null
+                                    const raw = form.workerPayRates[id]
+                                    const isCustom = raw !== undefined
+                                    return (
+                                        <li key={id} className="px-3 py-2.5">
+                                            <div className="flex flex-wrap items-center gap-2.5">
+                                                <div className="flex-1 min-w-32">
+                                                    <p className="text-sm font-medium text-foreground truncate">{w.fullname}</p>
+                                                    <p className="text-[11px] text-muted-foreground truncate">{w.email}</p>
+                                                </div>
+                                                {isCustom ? (
+                                                    <div className="flex flex-wrap items-center gap-2">
+                                                        <label className="flex items-center h-9 w-32 px-2 gap-1 rounded-lg border-2 border-[var(--primary)] bg-card focus-within:ring-2 focus-within:ring-blue-500/40">
+                                                            <span className="text-sm font-semibold text-muted-foreground">£</span>
+                                                            <input
+                                                                type="number"
+                                                                inputMode="decimal"
+                                                                step="0.01"
+                                                                min="0"
+                                                                aria-label={`Pay rate for ${w.fullname}`}
+                                                                value={raw}
+                                                                onChange={e => setWorkerPayRate(id, e.target.value)}
+                                                                className="flex-1 min-w-0 bg-transparent outline-none text-sm font-bold text-foreground tabular-nums"
+                                                            />
+                                                            <span className="text-xs text-muted-foreground">/hr</span>
+                                                        </label>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setWorkerPayRate(id, undefined)}
+                                                            className="h-9 px-2 flex items-center gap-1.5 text-xs font-semibold text-[var(--primary)] hover:underline cursor-pointer"
+                                                        >
+                                                            <RotateCcw size={13} /> Use default
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-sm font-semibold text-foreground tabular-nums">{formatCurrency(Number(form.payRate) || 0)}/hr</span>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setWorkerPayRate(id, form.payRate)}
+                                                            className="h-9 px-3 flex items-center gap-1.5 rounded-lg border border-border bg-card text-xs font-semibold text-foreground hover:bg-muted transition-colors"
+                                                        >
+                                                            <Pencil size={12} /> Set own rate
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </li>
+                                    )
+                                })}
+                            </ul>
+                        </div>
+                    )}
 
                     {/* Auto-accept */}
                     <div className="flex items-start justify-between gap-3 rounded-xl border border-border p-3.5">
@@ -968,6 +1054,9 @@ export function RecurringJobDetail() {
                 // send it when set, leave the existing value alone otherwise.
                 maxOccurrences: form.maxOccurrences ? Number(form.maxOccurrences) : undefined,
                 defaultWorkers: form.defaultWorkerIds,
+                workerPayRates: form.defaultWorkerIds
+                    .map(id => ({ worker: id, payRate: parseRateInput(form.workerPayRates[id]) }))
+                    .filter((r): r is { worker: string; payRate: number } => r.payRate !== undefined),
                 startTime: form.startTime,
                 endTime: form.endTime,
                 payRate: form.payRate === '' ? undefined : Number(form.payRate),

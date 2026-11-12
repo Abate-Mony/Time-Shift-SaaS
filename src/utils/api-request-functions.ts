@@ -810,6 +810,42 @@ export const manuallyAdjustAssignment = async (
     }
 };
 
+// Sets or clears one worker's custom pay rate on an existing job, from the
+// Time Logs card's own per-row action — no need to resend the whole roster
+// through updateJob. `payRate: null` reverts the worker to the job's
+// default rate. Only works while the assignment is still pending/accepted
+// and the job isn't locked (see jobLock.ts) — the backend enforces the
+// same rule independently either way.
+export const updateAssignmentPayRate = async (
+    assignmentId: string,
+    payRate: number | null,
+    reason?: string
+): Promise<boolean> => {
+    try {
+        await customFetch.patch(`/workers/assignments/${assignmentId}/pay-rate`, {
+            payRate,
+            reason,
+        });
+
+        toast.success(payRate === null ? "Reverted to the default pay rate." : "Pay rate updated.");
+
+        await queryClient.invalidateQueries({ queryKey: ["job"] });
+        return true;
+    } catch (err) {
+        const message =
+            isAxiosError(err)
+                ? err.response?.data?.msg ??
+                err.response?.data?.message ??
+                "Something went wrong."
+                : err instanceof Error
+                    ? err.message
+                    : "Something went wrong.";
+
+        toast.error(message);
+        return false;
+    }
+};
+
 // Records that a scheduled worker never showed up at all — distinct from
 // manuallyAdjustAssignment above (worker did the work, clock data's just
 // missing/wrong). Reuses the assignment's existing "cancelled" status with

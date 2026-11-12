@@ -450,9 +450,17 @@ export function CreateJob() {
       // "client" is excluded: it isn't a registered field at all (the
       // combobox drives `selectedClient` directly), so RHF's copy is just
       // the untouched default and would stomp the correct hidden input.
+      // "workers" is excluded for the same reason from the other direction:
+      // toggleWorker() syncs RHF's copy to the plain roster (no rate info)
+      // on every add/remove, but setWorkerPayRate() never does — so RHF's
+      // value is always missing customPayRate, while
+      // CreateJobHiddenFields's own hidden input (always mounted, so never
+      // lost to a step unmounting) already serializes the real,
+      // rate-enriched roster. Falling back to RHF here would silently wipe
+      // every per-worker pay rate the manager just set.
       const values = getValues() as Record<string, unknown>
       for (const key of ALL_FIELDS) {
-        if (key === "client") continue
+        if (key === "client" || key === "workers") continue
         const v = values[key]
         if (v === undefined || v === null || v === "") continue
         fd.set(key, typeof v === "object" ? JSON.stringify(v) : String(v))
