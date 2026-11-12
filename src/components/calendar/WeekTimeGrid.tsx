@@ -35,10 +35,11 @@ interface Props {
   onSelectDay: (dateStr: string) => void
   /** Clicking a job selects its day and highlights the job in the side panel */
   onSelectJob: (dateStr: string, jobId: string) => void
-  showCancelled: boolean
+  /** Status / needs-attention filters from the toolbar */
+  isVisible: (job: CreateJobForm) => boolean
 }
 
-export function WeekTimeGrid({ dates, getJobsForDate, issues, selectedDate, selectedJobId, onSelectDay, onSelectJob, showCancelled }: Props) {
+export function WeekTimeGrid({ dates, getJobsForDate, issues, selectedDate, selectedJobId, onSelectDay, onSelectJob, isVisible }: Props) {
   const [now, setNow] = useState(() => dayjs())
   useEffect(() => {
     const id = setInterval(() => setNow(dayjs()), 60_000)
@@ -49,10 +50,10 @@ export function WeekTimeGrid({ dates, getJobsForDate, issues, selectedDate, sele
     () =>
       dates.map(d => {
         const dateStr = d.format('YYYY-MM-DD')
-        const jobs = getJobsForDate(dateStr).filter(j => showCancelled || j.status !== 'cancelled')
+        const jobs = getJobsForDate(dateStr).filter(isVisible)
         return { d, dateStr, jobs, placed: layoutDay(jobs) }
       }),
-    [dates, getJobsForDate, showCancelled],
+    [dates, getJobsForDate, isVisible],
   )
 
   // Widen the visible hours if any job falls outside 07:00–20:00
