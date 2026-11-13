@@ -54,6 +54,16 @@ const SECTIONS: {
             { event: 'time_off_requested', label: 'Time off requested', description: 'When a worker requests time off' },
         ],
     },
+    {
+        title: 'Shift Coverage',
+        rows: [
+            { event: 'shift_unfilled', label: 'Shift unfilled (day before)', description: 'A published shift tomorrow still has nobody confirmed' },
+            { event: 'shift_unfilled_urgent', label: 'Shift unfilled (urgent)', description: 'A shift starts in about an hour with nobody confirmed' },
+            { event: 'shift_auto_closed', label: 'Shift auto-closed', description: 'A worker forgot to clock out and their shift was closed automatically' },
+            { event: 'missed_shift_review_requested', label: 'Missed-shift review requested', description: 'A worker says they worked but couldn’t clock in, and wants it reviewed' },
+            { event: 'job_starting_soon', label: 'Job starting soon', description: 'A job you created starts in about an hour' },
+        ],
+    },
 ]
 
 function PreferenceRowSkeleton({ switches = 1 }: { switches?: number }) {

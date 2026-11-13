@@ -463,7 +463,12 @@ export type NotificationEvent =
   | "timesheet_rejected"
   | "time_off_requested"
   | "time_off_reviewed"
-  | "shift_time_changed";
+  | "shift_time_changed"
+  | "shift_auto_closed"
+  | "missed_shift_review_requested"
+  | "shift_unfilled"
+  | "shift_unfilled_urgent"
+  | "job_starting_soon";
 
 export type EventNotificationPreference = {
   email: boolean;
