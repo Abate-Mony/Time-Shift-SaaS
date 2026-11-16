@@ -1,18 +1,27 @@
 import { Link } from "react-router"
 import { motion } from "framer-motion"
+import { useQuery } from "@tanstack/react-query"
+import dayjs from "dayjs"
 import { Clock, Calendar, ArrowRight, Briefcase } from "lucide-react"
+import customFetch from "@/utils/customFetch"
+import { pickNextShift, shiftDayLabel } from "@/utils/nextShift"
+import type { CreateJobForm } from "@/utils/types"
 
-export function NoActiveShift({
-  nextShift,
-}: {
-  nextShift?: {
-    _id: string
-    title: string
-    date: string
-    startTime: string
-    location: string
-  } | null
-}) {
+export function NoActiveShift() {
+  // The next accepted shift that hasn't finished yet — same rule as the
+  // mobile app's Clock tab. Fetches a few from today on and picks the
+  // earliest still ahead (see utils/nextShift.ts for why).
+  const { data: nextShift, isLoading } = useQuery({
+    queryKey: ["jobs", "accepted", "next"],
+    queryFn: async () => {
+      const { data } = await customFetch.get<{ jobs: CreateJobForm[] }>("/workers", {
+        params: { status: "accepted", start: dayjs().format("YYYY-MM-DD"), limit: 20 },
+      })
+      return pickNextShift(data.jobs ?? [])
+    },
+    refetchInterval: 60_000, // drop a shift once it ends while the page is open
+  })
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
@@ -58,7 +67,13 @@ export function NoActiveShift({
       </div>
 
       {/* Next shift, if there is one */}
-      {nextShift ? (
+      {isLoading ? (
+        <div className="bg-card rounded-2xl border border-[var(--border)] p-4 shadow-sm animate-pulse" aria-busy="true">
+          <div className="h-3 w-16 rounded bg-muted mb-3" />
+          <div className="h-4 w-2/3 rounded bg-muted mb-2" />
+          <div className="h-3 w-1/2 rounded bg-muted" />
+        </div>
+      ) : nextShift ? (
         <Link
           to={`/worker/jobs/${nextShift._id}`}
           className="bg-card rounded-2xl border border-[var(--border)] p-4 shadow-sm hover:border-slate-300 transition-colors block"
@@ -72,7 +87,8 @@ export function NoActiveShift({
 
           <p className="text-sm font-semibold text-foreground mb-1">{nextShift.title}</p>
           <p className="text-xs text-muted-foreground mb-3">
-            {nextShift.date} · {nextShift.startTime} · {nextShift.location}
+            {shiftDayLabel(nextShift.date)} · {nextShift.startTime}–{nextShift.endTime}
+            {nextShift.location ? ` · ${nextShift.location}` : ""}
           </p>
 
           <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600">
