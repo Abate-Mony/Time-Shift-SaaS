@@ -209,14 +209,17 @@ export function RowMenu({ items }: { items: Array<{ label: string; icon: typeof 
 // ─── Confirmation modal ──────────────────────────────────────────────────
 
 export function ConfirmModal({
-  title, body, consequence, confirmLabel, danger, busy, showReason = true, onConfirm, onClose, children,
+  title, body, consequence, confirmLabel, danger, busy, showReason = true, confirmText, onConfirm, onClose, children,
 }: {
   title: string; body: string; consequence?: string; confirmLabel: string;
   danger?: boolean; busy?: boolean; showReason?: boolean;
+  /** For destructive actions: the admin must type this exactly to enable the button */
+  confirmText?: string;
   onConfirm: (reason: string) => void; onClose: () => void; children?: ReactNode;
 }) {
   const [reason, setReason] = useState("");
-  const canConfirm = !showReason || reason.trim().length > 0;
+  const [typed, setTyped] = useState("");
+  const canConfirm = (!showReason || reason.trim().length > 0) && (!confirmText || typed.trim() === confirmText);
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40" onClick={onClose}>
       <motion.div
@@ -259,6 +262,19 @@ export function ConfirmModal({
                 onChange={(e) => setReason(e.target.value)}
                 rows={3}
                 className="w-full border border-[#E2E8F0] rounded-lg px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/20 focus:border-[#1E3A5F]/50 resize-none"
+              />
+            </div>
+          )}
+          {confirmText && (
+            <div>
+              <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
+                Type <span className="normal-case font-mono text-slate-700">{confirmText}</span> to confirm
+              </label>
+              <input
+                value={typed}
+                onChange={(e) => setTyped(e.target.value)}
+                autoComplete="off"
+                className="w-full h-9 border border-[#E2E8F0] rounded-lg px-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400"
               />
             </div>
           )}

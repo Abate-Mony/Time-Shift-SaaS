@@ -7,7 +7,9 @@ import {
   Avatar, StatusBadge, TH, TD, PlatformTable, THead, TBody, Row, EmptyRow,
   RowMenu, ConfirmModal, SearchInput, PillFilter,
 } from "@/components/platform/figma/primitives";
-import { platformCompaniesQuery, updateCompanyStatus, type CompanyStatus } from "@/utils/platform-api";
+import { platformCompaniesQuery, updateCompanyStatus, type CompanyStatus, type PlatformTag } from "@/utils/platform-api";
+import { HealthBadge, TagChip, TAG_LABELS } from "@/components/platform/SupportBits";
+import { usePlatformPermissions } from "@/hooks/usePlatformPermissions";
 import { useState } from "react";
 import dayjs from "dayjs";
 
@@ -25,6 +27,7 @@ export function PlatformCompanies() {
   const navigation = useNavigation();
   const isLoading = navigation.state === "loading";
   const queryClient = useQueryClient();
+  const { isSuper } = usePlatformPermissions();
 
   const { data } = useQuery(platformCompaniesQuery(searchValues));
   const [search, setSearch] = useState(searchValues.search ?? "");
@@ -89,6 +92,30 @@ export function PlatformCompanies() {
             <option key={p} value={p} className="capitalize">{p.charAt(0).toUpperCase() + p.slice(1)}</option>
           ))}
         </select>
+
+        <select
+          aria-label="Health"
+          value={searchValues.health ?? "all"}
+          onChange={(e) => setParam("health", e.target.value === "all" ? undefined : e.target.value)}
+          className={`h-8 px-3 border rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/12 ${searchValues.health === "at_risk" ? "border-red-300 text-red-700 font-semibold" : "border-[#E2E8F0] text-slate-600"}`}
+        >
+          <option value="all">Any health</option>
+          <option value="at_risk">At risk</option>
+          <option value="watch">Watch</option>
+          <option value="healthy">Healthy</option>
+        </select>
+
+        <select
+          aria-label="Tag"
+          value={searchValues.tag ?? "all"}
+          onChange={(e) => setParam("tag", e.target.value === "all" ? undefined : e.target.value)}
+          className="h-8 px-3 border border-[#E2E8F0] rounded-lg text-xs text-slate-600 bg-white focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/12"
+        >
+          <option value="all">Any tag</option>
+          {(Object.keys(TAG_LABELS) as PlatformTag[]).map((t) => (
+            <option key={t} value={t}>{TAG_LABELS[t]}</option>
+          ))}
+        </select>
       </div>
 
       <div className={isLoading ? "opacity-60 transition-opacity" : "transition-opacity"}>
@@ -97,6 +124,7 @@ export function PlatformCompanies() {
             <TH>Company</TH>
             <TH>Owner</TH>
             <TH>Plan</TH>
+            <TH>Health</TH>
             <TH>Workers</TH>
             <TH>Status</TH>
             <TH>Created</TH>
@@ -104,7 +132,7 @@ export function PlatformCompanies() {
           </THead>
           <TBody>
             {data?.data.length === 0 && (
-              <EmptyRow colSpan={7}>
+              <EmptyRow colSpan={8}>
                 <Building2 size={20} className="text-slate-200 mx-auto mb-2" />
                 No companies match these filters.
               </EmptyRow>
@@ -117,11 +145,28 @@ export function PlatformCompanies() {
                   <TD>
                     <div className="flex items-center gap-2.5">
                       <Avatar name={company.name} />
-                      <p className="font-semibold text-slate-900 text-sm">{company.name}</p>
+                      <div className="min-w-0">
+                        <p className="font-semibold text-slate-900 text-sm">{company.name}</p>
+                        {(company.tags?.length > 0 || company.deletionScheduledAt) && (
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {company.deletionScheduledAt && (
+                              <span className="inline-flex items-center h-5 px-1.5 rounded border text-[10px] font-semibold bg-red-50 text-red-800 border-red-200">
+                                Deleting {dayjs(company.deletionScheduledAt).format("D MMM")}
+                              </span>
+                            )}
+                            {company.tags?.map((t) => <TagChip key={t} tag={t} />)}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </TD>
                   <TD className="text-slate-500 text-xs">{company.owner?.email ?? "—"}</TD>
                   <TD><span className="text-xs font-semibold text-slate-700 capitalize">{company.plan}</span></TD>
+                  <TD>
+                    {company.health ? (
+                      <HealthBadge level={company.health.level} score={company.health.score} title={company.health.reasons.join("\n") || "No issues"} />
+                    ) : "—"}
+                  </TD>
                   <TD>
                     <div>
                       <span className="text-sm font-semibold text-slate-800">{company.workerUsage.active}</span>
@@ -142,9 +187,9 @@ export function PlatformCompanies() {
                     <RowMenu
                       items={[
                         { label: "View company", icon: Eye, onClick: () => navigate(`/platform/companies/${company.id}`) },
-                        company.status === "active"
+                        ...(!isSuper ? [] : [company.status === "active"
                           ? { label: "Suspend company", icon: Ban, danger: true, onClick: () => setStatusDialog({ companyId: company.id, companyName: company.name, next: "suspended" }) }
-                          : { label: "Restore company", icon: RotateCcw, onClick: () => setStatusDialog({ companyId: company.id, companyName: company.name, next: "active" }) },
+                          : { label: "Restore company", icon: RotateCcw, onClick: () => setStatusDialog({ companyId: company.id, companyName: company.name, next: "active" }) }]),
                       ]}
                     />
                   </TD>

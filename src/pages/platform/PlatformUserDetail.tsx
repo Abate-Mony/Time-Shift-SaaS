@@ -6,6 +6,8 @@ import dayjs from "dayjs";
 import { ChevronLeft, Ban, RotateCcw } from "lucide-react";
 import { Avatar, StatusBadge, RowMenu, ConfirmModal } from "@/components/platform/figma/primitives";
 import { platformUserDetailQuery, updateUserStatus } from "@/utils/platform-api";
+import { usePlatformPermissions } from "@/hooks/usePlatformPermissions";
+import { UserSupportPanels } from "@/components/platform/UserSupportPanels";
 
 // No dedicated user-detail screen exists in the Figma source (only a Users
 // list) — restyled with the same raw-markup primitives as the rest of the
@@ -21,6 +23,7 @@ export function PlatformUserDetail() {
   const queryClient = useQueryClient();
   const { data: user } = useQuery(platformUserDetailQuery(userId));
   const [dialogOpen, setDialogOpen] = useState(false);
+  const { isSuper } = usePlatformPermissions();
 
   const statusMutation = useMutation({
     mutationFn: (vars: { status: "active" | "disabled"; reason: string }) => updateUserStatus(userId, vars.status, vars.reason),
@@ -47,16 +50,17 @@ export function PlatformUserDetail() {
             <div className="flex items-center gap-2 flex-wrap">
               <h1 className="text-xl font-bold text-slate-900">{user.name}</h1>
               <StatusBadge status={user.accountStatus} />
+              {!user.isVerified && <span className="px-2 py-0.5 rounded text-[11px] font-bold ring-1 bg-amber-50 text-amber-700 ring-amber-200">Unverified</span>}
             </div>
             <p className="text-xs text-slate-400 mt-1">{user.email}</p>
           </div>
-          <RowMenu
+          {isSuper && <RowMenu
             items={[
               user.accountStatus === "active"
                 ? { label: "Disable account", icon: Ban, danger: true, onClick: () => setDialogOpen(true) }
                 : { label: "Restore account", icon: RotateCcw, onClick: () => setDialogOpen(true) },
             ]}
-          />
+          />}
         </div>
       </div>
 
@@ -64,7 +68,7 @@ export function PlatformUserDetail() {
         <div className="bg-white border border-[#E2E8F0] rounded-lg divide-y divide-[#F8FAFC]">
           <div className="px-4 py-3"><p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Company role</p></div>
           {[
-            { label: "Company", value: user.company?.name ?? "—" },
+            { label: "Company", value: user.company ? <button type="button" onClick={() => navigate(`/platform/companies/${user.company!.id}`)} className="hover:underline">{user.company.name}</button> : "—" },
             { label: "Role", value: <span className="capitalize">{user.role}</span> },
             { label: "Status", value: <StatusBadge status={user.accountStatus} /> },
           ].map((f) => (
@@ -102,6 +106,8 @@ export function PlatformUserDetail() {
           ))}
         </div>
       </div>
+
+      <UserSupportPanels user={user} />
 
       {dialogOpen && (
         <ConfirmModal
