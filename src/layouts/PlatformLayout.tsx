@@ -32,7 +32,9 @@ import { PlatformCommandPalette } from "@/components/platform/PlatformCommandPal
 export const platformLoader = (queryClient: QueryClient) => async (_args: LoaderFunctionArgs) => {
   try {
     const { user } = await queryClient.ensureQueryData(userQuery);
-    if (user.platformRole !== "super_admin") {
+    // Any platform role may open the console; what each role can change is
+    // enforced per route by the backend (and mirrored by usePlatformPermissions).
+    if (!user.platformRole) {
       return redirect("/");
     }
     return null;
@@ -52,7 +54,7 @@ const NAV_ITEMS = [
   { to: "/platform/audit", label: "Audit Logs", icon: ShieldCheck },
   { to: "/platform/system", label: "System", icon: Server },
   { to: "/platform/errors", label: "Error Log", icon: AlertOctagon },
-  { to: "/platform/admins", label: "Platform Admins", icon: UserCog },
+  { to: "/platform/admins", label: "Platform Admins", icon: UserCog, superOnly: true },
   { to: "/platform/announcements", label: "Announcements", icon: Megaphone },
 ];
 
@@ -127,7 +129,7 @@ export default function PlatformLayout() {
 
         {/* Nav */}
         <nav className="flex-1 px-2 py-1 overflow-y-auto">
-          {NAV_ITEMS.map(({ to, label, icon: Icon, end }) => (
+          {NAV_ITEMS.filter(item => !("superOnly" in item) || user?.platformRole === "super_admin").map(({ to, label, icon: Icon, end }) => (
             <NavLink
               key={to}
               to={to}

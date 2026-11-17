@@ -13,6 +13,9 @@ export interface PlatformPagination {
   totalPages: number;
 }
 
+export type HealthLevel = "healthy" | "watch" | "at_risk";
+export type PlatformTag = "vip" | "at_risk" | "beta" | "partner" | "churned" | "needs_follow_up";
+
 export interface PlatformCompanyListItem {
   id: string;
   name: string;
@@ -20,7 +23,24 @@ export interface PlatformCompanyListItem {
   plan: Plan;
   workerUsage: { active: number; limit: number | null; unlimited: boolean };
   status: CompanyStatus;
+  tags: PlatformTag[];
+  health: { level: HealthLevel; score: number; reasons: string[] } | null;
+  deletionScheduledAt: string | null;
   createdAt: string;
+}
+
+export interface CompanyHealth {
+  level: HealthLevel;
+  score: number;
+  reasons: string[];
+  signals: {
+    createdAt: string;
+    lastManagerLoginAt: string | null;
+    jobsLast30Days: number;
+    activeWorkers: number;
+    subscriptionStatus: string | null;
+    onboarding: { firstJob: boolean; workerInvited: boolean; firstInvoice: boolean };
+  };
 }
 
 export interface PlatformCompanyDetail {
@@ -38,6 +58,18 @@ export interface PlatformCompanyDetail {
     workers: number; managers: number; admins: number;
     clients: number; sites: number; jobs: number; quotes: number; invoices: number;
   };
+  tags: PlatformTag[];
+  featureFlags: string[];
+  health: CompanyHealth | null;
+  billing: {
+    stripeCustomerId: string | null;
+    stripeDashboardUrl: string | null;
+    subscriptionStatus: string | null;
+    currentPeriodEnd: string | null;
+    cancelAtPeriodEnd: boolean;
+    trialEndsAt: string | null;
+  };
+  deletionScheduledAt: string | null;
   createdAt: string;
 }
 
@@ -65,6 +97,11 @@ export interface PlatformUserListItem {
 
 export interface PlatformUserDetail extends PlatformUserListItem {
   lastLoginAt: string | null;
+  isVerified: boolean;
+  phone: string | null;
+  sessions: { createdAt: string | null; expiresAt: string }[];
+  push: { web: number; mobile: number; lastNotification: { title: string; createdAt: string } | null };
+  possibleDuplicates: { id: string; name: string; email: string; company: { id: string; name: string } | null }[];
 }
 
 export interface PlatformEmailSettings {
@@ -401,3 +438,106 @@ export const setPlatformAnnouncementActive = async (announcementId: string, isAc
   const { data } = await customFetch.patch<{ success: true }>(`/platform/announcements/${announcementId}`, { isActive });
   return data;
 };
+
+// ── Support tools (platformSupportController.ts on the backend) ──────────
+
+const post = async <T = { success: true; msg?: string }>(url: string, body?: unknown) => (await customFetch.post<T>(url, body)).data;
+const patch = async <T = { success: true; msg?: string }>(url: string, body?: unknown) => (await customFetch.patch<T>(url, body)).data;
+
+export interface FeatureFlagDef { key: string; label: string; description: string }
+
+export const platformFeatureFlagsQuery = {
+  queryKey: ["platform", "feature-flags"],
+  queryFn: async () => (await customFetch.get<{ success: true; data: FeatureFlagDef[]; tags: PlatformTag[] }>("/platform/feature-flags")).data,
+  staleTime: Infinity,
+};
+
+export interface PlatformNote { id: string; body: string; author: { id: string; email: string }; createdAt: string }
+
+export const platformCompanyNotesQuery = (companyId: string) => ({
+  queryKey: ["platform", "companies", companyId, "notes"],
+  queryFn: async () => (await customFetch.get<{ success: true; data: PlatformNote[] }>(`/platform/companies/${companyId}/notes`)).data.data,
+});
+export const addCompanyNote = (companyId: string, body: string) => post(`/platform/companies/${companyId}/notes`, { body });
+export const deleteCompanyNote = async (companyId: string, noteId: string) =>
+  (await customFetch.delete(`/platform/companies/${companyId}/notes/${noteId}`)).data;
+export const updateCompanyTags = (companyId: string, tags: PlatformTag[]) => patch(`/platform/companies/${companyId}/tags`, { tags });
+
+export const extendCompanyTrial = (companyId: string, days: number, reason: string) =>
+  post(`/platform/companies/${companyId}/trial/extend`, { days, reason });
+export const retryCompanyPayment = (companyId: string, reason: string) =>
+  post(`/platform/companies/${companyId}/billing/retry-payment`, { reason });
+export const updateCompanyFeatureFlags = (companyId: string, flags: string[], reason: string) =>
+  patch(`/platform/companies/${companyId}/feature-flags`, { flags, reason });
+
+export interface PlatformApiKey {
+  id: string; name: string; keyPrefix: string; isActive: boolean;
+  lastUsedAt: string | null; createdAt: string; revokedAt: string | null;
+}
+export const platformCompanyApiKeysQuery = (companyId: string) => ({
+  queryKey: ["platform", "companies", companyId, "api-keys"],
+  queryFn: async () =>
+    (await customFetch.get<{ success: true; data: PlatformApiKey[] }>(`/platform/companies/${companyId}/api-keys`)).data.data,
+});
+export const revokeCompanyApiKey = (companyId: string, keyId: string, reason: string) =>
+  post(`/platform/companies/${companyId}/api-keys/${keyId}/revoke`, { reason });
+
+export interface SupportSession { id: string; reason: string; expiresAt: string; createdAt: string; ownerNotified: boolean }
+export const platformSupportAccessQuery = (companyId: string) => ({
+  queryKey: ["platform", "companies", companyId, "support-access"],
+  queryFn: async () =>
+    (await customFetch.get<{ success: true; session: SupportSession | null }>(`/platform/companies/${companyId}/support-access`)).data.session,
+});
+export const startSupportAccess = (companyId: string, reason: string, minutes: 15 | 30 | 60, notifyOwner: boolean) =>
+  post<{ success: true; session: SupportSession }>(`/platform/companies/${companyId}/support-access`, { reason, minutes, notifyOwner });
+export const endSupportAccess = (companyId: string) => post(`/platform/companies/${companyId}/support-access/end`);
+
+export interface SupportJob {
+  id: string; title: string; date: string; startTime: string; endTime: string; status: string;
+  location?: string; requiredWorkers?: number; client: string | null;
+  workers: { name: string; status: string; clockIn: string | null; clockOut: string | null }[];
+}
+export interface SupportInvoice { id: string; number: string; client: string | null; total: number; status: string; dueDate: string | null; createdAt: string }
+
+export const platformSupportJobsQuery = (companyId: string, sessionId: string | undefined, from: string, to: string) => ({
+  queryKey: ["platform", "companies", companyId, "support", "jobs", sessionId, from, to],
+  queryFn: async () =>
+    (await customFetch.get<{ success: true; data: SupportJob[] }>(`/platform/companies/${companyId}/support/jobs`, { params: { from, to } })).data.data,
+  enabled: !!sessionId,
+});
+export const platformSupportInvoicesQuery = (companyId: string, sessionId: string | undefined) => ({
+  queryKey: ["platform", "companies", companyId, "support", "invoices", sessionId],
+  queryFn: async () =>
+    (await customFetch.get<{ success: true; data: SupportInvoice[] }>(`/platform/companies/${companyId}/support/invoices`)).data.data,
+  enabled: !!sessionId,
+});
+
+/** Downloads the company's data export as a .json file. */
+export const exportCompanyData = async (companyId: string, reason: string) => {
+  const res = await customFetch.post(`/platform/companies/${companyId}/export`, { reason }, { responseType: "blob" });
+  const disposition = String(res.headers["content-disposition"] ?? "");
+  const name = /filename="([^"]+)"/.exec(disposition)?.[1] ?? `company-${companyId}-export.json`;
+  const url = URL.createObjectURL(res.data as Blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = name;
+  a.click();
+  URL.revokeObjectURL(url);
+};
+export const scheduleCompanyDeletion = (companyId: string, confirmName: string, reason: string) =>
+  post(`/platform/companies/${companyId}/deletion`, { confirmName, reason });
+export const cancelCompanyDeletion = async (companyId: string, reason: string) =>
+  (await customFetch.delete(`/platform/companies/${companyId}/deletion`, { data: { reason } })).data;
+
+export const sendUserPasswordReset = (userId: string, reason: string) => post(`/platform/users/${userId}/password-reset`, { reason });
+export const resendUserVerification = (userId: string, reason: string) => post(`/platform/users/${userId}/resend-verification`, { reason });
+export const changeUserEmail = (userId: string, email: string, reason: string) => patch(`/platform/users/${userId}/email`, { email, reason });
+export const revokeUserSessions = (userId: string, reason: string) => post(`/platform/users/${userId}/sign-out-everywhere`, { reason });
+export const sendUserTestNotification = (userId: string) => post(`/platform/users/${userId}/test-notification`);
+export const moveUserCompany = (userId: string, companyId: string, reason: string) => patch(`/platform/users/${userId}/company`, { companyId, reason });
+export const anonymiseUser = (userId: string, confirmEmail: string, reason: string) =>
+  post(`/platform/users/${userId}/anonymise`, { confirmEmail, reason });
+
+/** Shows the server's error message from a failed platform call. */
+export const platformErrorMessage = (err: unknown, fallback: string) =>
+  (err as any)?.response?.data?.msg ?? (err as any)?.response?.data?.message ?? fallback;

@@ -20,6 +20,9 @@ import {
   type Plan,
   type CompanyStatus,
 } from "@/utils/platform-api";
+import { usePlatformPermissions } from "@/hooks/usePlatformPermissions";
+import { ApiKeysPanel, BillingCard, HealthCard, NotesPanel, SettingsPanel, SupportAccessPanel, TagsCard } from "@/components/platform/CompanySupportPanels";
+import { HealthBadge, TagChip } from "@/components/platform/SupportBits";
 
 export const platformCompanyDetailLoader = (queryClient: QueryClient) => async ({ params }: LoaderFunctionArgs) => {
   const companyId = params.companyId as string;
@@ -27,7 +30,7 @@ export const platformCompanyDetailLoader = (queryClient: QueryClient) => async (
   return null;
 };
 
-const TABS = ["overview", "users", "usage", "email", "activity"] as const;
+const TABS = ["overview", "notes", "support", "keys", "users", "usage", "email", "settings", "activity"] as const;
 type Tab = (typeof TABS)[number];
 
 const pct = (a: number, b: number) => (b === 0 ? "0%" : `${Math.min(100, Math.round((a / b) * 100))}%`);
@@ -37,6 +40,7 @@ export function PlatformCompanyDetail() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { data: company } = useQuery(platformCompanyDetailQuery(companyId));
+  const { canSupport, canBilling, isSuper } = usePlatformPermissions();
   const { data: companyUsers } = useQuery(platformCompanyUsersQuery(companyId, {}));
   const { data: usage } = useQuery(platformCompanyUsageQuery(companyId));
   const { data: emailSettings } = useQuery(platformCompanyEmailQuery(companyId));
@@ -92,7 +96,19 @@ export function PlatformCompanyDetail() {
 
   return (
     <div className="p-6 flex flex-col gap-5">
-      {company.status !== "active" && (
+      {company.deletionScheduledAt && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
+          <AlertTriangle size={16} className="text-red-600 mt-0.5 shrink-0" />
+          <div className="flex-1">
+            <p className="text-sm font-bold text-red-800">Scheduled for deletion on {dayjs(company.deletionScheduledAt).format("D MMM YYYY")}</p>
+            <p className="text-sm text-red-700 mt-0.5">All of this company's data will be permanently deleted on that date.</p>
+          </div>
+          <button onClick={() => setTab("settings")} className="h-7 px-3 bg-white border border-red-300 text-red-800 text-xs font-semibold rounded-lg hover:bg-red-100 shrink-0">
+            Manage
+          </button>
+        </div>
+      )}
+      {company.status !== "active" && !company.deletionScheduledAt && (
         <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
           <div className="flex items-start gap-3">
             <AlertTriangle size={16} className="text-amber-600 mt-0.5 shrink-0" />
@@ -100,12 +116,14 @@ export function PlatformCompanyDetail() {
               <p className="text-sm font-bold text-amber-800">Company {company.status === "suspended" ? "suspended" : "disabled"}</p>
               <p className="text-sm text-amber-700 mt-0.5">Users from this company cannot access OnClockly.</p>
             </div>
+            {isSuper && (
             <button
               onClick={() => setStatusDialog("active")}
               className="h-7 px-3 bg-amber-600 text-white text-xs font-semibold rounded-lg hover:bg-amber-700 transition-colors shrink-0"
             >
               Restore company
             </button>
+            )}
           </div>
         </div>
       )}
@@ -120,6 +138,8 @@ export function PlatformCompanyDetail() {
             <div className="flex items-center gap-2 flex-wrap">
               <h1 className="text-xl font-bold text-slate-900">{company.name}</h1>
               <StatusBadge status={company.status} />
+              {company.health && <HealthBadge level={company.health.level} score={company.health.score} />}
+              {company.tags.map((t) => <TagChip key={t} tag={t} />)}
             </div>
             <div className="flex items-center gap-3 mt-1 flex-wrap">
               <span className="text-xs text-slate-400 font-mono">ID: {company.id}</span>
@@ -131,12 +151,16 @@ export function PlatformCompanyDetail() {
           <div className="flex items-center gap-2 shrink-0">
             <RowMenu
               items={[
-                { label: "Change plan", icon: CreditCard, onClick: () => { setPlan(company.plan); setPlanDialog(true); } },
+                ...(canBilling ? [{ label: "Change plan", icon: CreditCard, onClick: () => { setPlan(company.plan); setPlanDialog(true); } }] : []),
                 { label: "Open audit history", icon: ShieldCheck, onClick: () => navigate(`/platform/audit?company=${company.id}`) },
-                company.status === "active"
-                  ? { label: "Suspend company", icon: Ban, danger: true, onClick: () => setStatusDialog("suspended") }
-                  : { label: "Restore company", icon: RotateCcw, onClick: () => setStatusDialog("active") },
-                { label: "Disable company", icon: Trash2, danger: true, onClick: () => setStatusDialog("disabled") },
+                ...(isSuper
+                  ? [
+                      company.status === "active"
+                        ? { label: "Suspend company", icon: Ban, danger: true, onClick: () => setStatusDialog("suspended") }
+                        : { label: "Restore company", icon: RotateCcw, onClick: () => setStatusDialog("active") },
+                      { label: "Disable company", icon: Trash2, danger: true, onClick: () => setStatusDialog("disabled") },
+                    ]
+                  : []),
               ]}
             />
           </div>
@@ -176,15 +200,16 @@ export function PlatformCompanyDetail() {
           </div>
 
           <div className="flex flex-col gap-4">
+            <HealthCard company={company} />
             <div className="bg-white border border-[#E2E8F0] rounded-lg p-4">
               <div className="flex items-center justify-between mb-3">
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Plan & Usage</p>
-                <button
+                {canBilling && <button
                   onClick={() => { setPlan(company.plan); setPlanDialog(true); }}
                   className="text-[11px] font-semibold text-[#1E3A5F] hover:underline"
                 >
                   Change plan
-                </button>
+                </button>}
               </div>
               <p className="text-lg font-bold text-slate-900 mb-1 capitalize">{company.plan}</p>
               <div className="flex items-center justify-between text-xs mb-2">
@@ -218,6 +243,18 @@ export function PlatformCompanyDetail() {
         </div>
       )}
 
+      {tab === "overview" && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 -mt-1">
+          <BillingCard company={company} />
+          <TagsCard company={company} />
+        </div>
+      )}
+
+      {tab === "notes" && <NotesPanel companyId={company.id} />}
+      {tab === "support" && <SupportAccessPanel company={company} />}
+      {tab === "keys" && <ApiKeysPanel companyId={company.id} />}
+      {tab === "settings" && <SettingsPanel company={company} />}
+
       {tab === "users" && (
         <div className="bg-white border border-[#E2E8F0] rounded-lg overflow-hidden">
           <table className="w-full border-collapse">
@@ -232,7 +269,7 @@ export function PlatformCompanyDetail() {
               {companyUsers?.data.length === 0 && <EmptyRow colSpan={5}>No users found.</EmptyRow>}
               {companyUsers?.data.map((u) => (
                 <Row key={u.id}>
-                  <TD><p className="font-semibold text-slate-800 text-sm">{u.name}</p></TD>
+                  <TD><button type="button" onClick={() => navigate(`/platform/users/${u.id}`)} className="font-semibold text-slate-800 text-sm hover:text-[#1E3A5F] hover:underline text-left">{u.name}</button></TD>
                   <TD className="text-xs text-slate-500">{u.email}</TD>
                   <TD><span className="text-xs font-semibold capitalize text-slate-700">{u.role}</span></TD>
                   <TD><StatusBadge status={u.accountStatus} /></TD>
@@ -286,7 +323,7 @@ export function PlatformCompanyDetail() {
               </div>
             ))}
           </div>
-          {emailSettings.provider === "custom" && (
+          {emailSettings.provider === "custom" && canSupport && (
             <div className="flex gap-2 flex-wrap">
               <button
                 disabled={retryVerificationMutation.isPending}

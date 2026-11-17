@@ -338,7 +338,7 @@ export function Sidebar({ collapsed, onToggleSidebar, user }: SidebarProps) {
                 from company role (see utils/types.ts's PlatformRole) —
                 shown here only as an entry point into /platform, never as
                 another item alongside the tenant nav above. */}
-            {user?.platformRole === 'super_admin' && (
+            {!!user?.platformRole && (
               <CustomNavLink
                 to="/platform"
                 show
