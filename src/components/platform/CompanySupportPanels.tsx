@@ -11,10 +11,10 @@ import { ConfirmModal } from "@/components/platform/figma/primitives";
 import { usePlatformPermissions } from "@/hooks/usePlatformPermissions";
 import {
   addCompanyNote, cancelCompanyDeletion, deleteCompanyNote, endSupportAccess, exportCompanyData, extendCompanyTrial,
-  platformCompanyNotesQuery, platformErrorMessage, platformFeatureFlagsQuery, platformSupportAccessQuery,
-  platformSupportInvoicesQuery, platformSupportJobsQuery, retryCompanyPayment, scheduleCompanyDeletion,
+  platformCompanyApiKeysQuery, platformCompanyNotesQuery, platformErrorMessage, platformFeatureFlagsQuery, platformSupportAccessQuery,
+  platformSupportInvoicesQuery, platformSupportJobsQuery, retryCompanyPayment, revokeCompanyApiKey, scheduleCompanyDeletion,
   startSupportAccess, updateCompanyFeatureFlags, updateCompanyTags,
-  type PlatformCompanyDetail, type PlatformTag,
+  type PlatformApiKey, type PlatformCompanyDetail, type PlatformTag,
 } from "@/utils/platform-api";
 import { ActionButton, Card, HealthBadge, TagChip, TAG_LABELS } from "./SupportBits";
 
@@ -282,6 +282,73 @@ export function NotesPanel({ companyId }: { companyId: string }) {
           </article>
         ))}
       </div>
+    </div>
+  );
+}
+
+// ─── API keys ──────────────────────────────────────────────────────────────
+
+export function ApiKeysPanel({ companyId }: { companyId: string }) {
+  const { canSupport } = usePlatformPermissions();
+  const queryClient = useQueryClient();
+  const { data: keys } = useQuery(platformCompanyApiKeysQuery(companyId));
+  const [revoking, setRevoking] = useState<PlatformApiKey | null>(null);
+  const refresh = () => {
+    queryClient.invalidateQueries({ queryKey: ["platform", "companies", companyId, "api-keys"] });
+    queryClient.invalidateQueries({ queryKey: ["platform", "audit"] });
+  };
+  const revoke = useMutation({
+    mutationFn: (reason: string) => revokeCompanyApiKey(companyId, revoking!.id, reason),
+    onSuccess: () => { toast.success(`"${revoking?.name}" revoked.`); setRevoking(null); refresh(); },
+    onError: (e) => toast.error(platformErrorMessage(e, "Couldn't revoke this key.")),
+  });
+
+  return (
+    <div className="max-w-2xl flex flex-col gap-3">
+      <p className="text-xs text-slate-500">
+        Credentials this company issued for its own external integrations (its booking website, Zapier, etc.) —
+        never the raw key, just what it was for and whether it's still active.
+      </p>
+      <div className="bg-white border border-[#E2E8F0] rounded-lg divide-y divide-[#F1F5F9]">
+        {keys?.length === 0 && <p className="p-4 text-sm text-slate-400">No API keys issued.</p>}
+        {keys?.map((k) => (
+          <div key={k.id} className="p-4 flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-slate-900 truncate">{k.name}</p>
+              <p className="text-[11px] text-slate-400 font-mono mt-0.5">…{k.keyPrefix}</p>
+              <p className="text-[11px] text-slate-400 mt-0.5">
+                Created {fmt(k.createdAt)} · Last used {k.lastUsedAt ? fmt(k.lastUsedAt, "D MMM YYYY, HH:mm") : "never"}
+              </p>
+            </div>
+            {k.isActive ? (
+              canSupport && (
+                <button
+                  type="button"
+                  onClick={() => setRevoking(k)}
+                  className="h-8 px-3 shrink-0 rounded-lg border border-red-200 text-red-600 text-xs font-semibold hover:bg-red-50"
+                >
+                  Revoke
+                </button>
+              )
+            ) : (
+              <span className="text-[11px] font-semibold text-slate-400 shrink-0">Revoked {fmt(k.revokedAt)}</span>
+            )}
+          </div>
+        ))}
+      </div>
+      <AnimatePresence>
+        {revoking && (
+          <ConfirmModal
+            title="Revoke this API key?"
+            body={`"${revoking.name}" will stop working immediately — any integration using it (e.g. a booking website) will fail until the company issues a new one.`}
+            confirmLabel="Revoke"
+            danger
+            busy={revoke.isPending}
+            onConfirm={(reason) => revoke.mutate(reason)}
+            onClose={() => setRevoking(null)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

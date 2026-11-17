@@ -470,6 +470,18 @@ export const retryCompanyPayment = (companyId: string, reason: string) =>
 export const updateCompanyFeatureFlags = (companyId: string, flags: string[], reason: string) =>
   patch(`/platform/companies/${companyId}/feature-flags`, { flags, reason });
 
+export interface PlatformApiKey {
+  id: string; name: string; keyPrefix: string; isActive: boolean;
+  lastUsedAt: string | null; createdAt: string; revokedAt: string | null;
+}
+export const platformCompanyApiKeysQuery = (companyId: string) => ({
+  queryKey: ["platform", "companies", companyId, "api-keys"],
+  queryFn: async () =>
+    (await customFetch.get<{ success: true; data: PlatformApiKey[] }>(`/platform/companies/${companyId}/api-keys`)).data.data,
+});
+export const revokeCompanyApiKey = (companyId: string, keyId: string, reason: string) =>
+  post(`/platform/companies/${companyId}/api-keys/${keyId}/revoke`, { reason });
+
 export interface SupportSession { id: string; reason: string; expiresAt: string; createdAt: string; ownerNotified: boolean }
 export const platformSupportAccessQuery = (companyId: string) => ({
   queryKey: ["platform", "companies", companyId, "support-access"],

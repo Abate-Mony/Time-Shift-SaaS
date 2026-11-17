@@ -21,7 +21,7 @@ import {
   type CompanyStatus,
 } from "@/utils/platform-api";
 import { usePlatformPermissions } from "@/hooks/usePlatformPermissions";
-import { BillingCard, HealthCard, NotesPanel, SettingsPanel, SupportAccessPanel, TagsCard } from "@/components/platform/CompanySupportPanels";
+import { ApiKeysPanel, BillingCard, HealthCard, NotesPanel, SettingsPanel, SupportAccessPanel, TagsCard } from "@/components/platform/CompanySupportPanels";
 import { HealthBadge, TagChip } from "@/components/platform/SupportBits";
 
 export const platformCompanyDetailLoader = (queryClient: QueryClient) => async ({ params }: LoaderFunctionArgs) => {
@@ -30,7 +30,7 @@ export const platformCompanyDetailLoader = (queryClient: QueryClient) => async (
   return null;
 };
 
-const TABS = ["overview", "notes", "support", "users", "usage", "email", "settings", "activity"] as const;
+const TABS = ["overview", "notes", "support", "keys", "users", "usage", "email", "settings", "activity"] as const;
 type Tab = (typeof TABS)[number];
 
 const pct = (a: number, b: number) => (b === 0 ? "0%" : `${Math.min(100, Math.round((a / b) * 100))}%`);
@@ -252,6 +252,7 @@ export function PlatformCompanyDetail() {
 
       {tab === "notes" && <NotesPanel companyId={company.id} />}
       {tab === "support" && <SupportAccessPanel company={company} />}
+      {tab === "keys" && <ApiKeysPanel companyId={company.id} />}
       {tab === "settings" && <SettingsPanel company={company} />}
 
       {tab === "users" && (
