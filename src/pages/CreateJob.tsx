@@ -26,7 +26,7 @@ import type { ComboboxClient } from "@/components/client/ClientCombobox"
 import type { ComboboxSite } from "@/components/site/SiteCombobox"
 import { defaultRecurring, type RecurringState } from "@/components/RecurringJobSection"
 
-import { CreateJobProvider, type SelectedWorker } from "@/components/create-job/CreateJobContext"
+import { CreateJobProvider, type ScheduleDay, type ScheduleMode, type SelectedWorker } from "@/components/create-job/CreateJobContext"
 import { AIJobDraftDialog } from "@/components/create-job/AIJobDraftDialog"
 import { JobAttachmentField } from "@/components/create-job/JobAttachmentField"
 import type { AIJobDraftResponse } from "@/utils/api-request-functions"
@@ -116,7 +116,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     else delete payload[key]
   })
 
-  const json = ["daysOfWeek", "coordinates"]
+  // "Several days": only sent when that mode is on (CreateJobHiddenFields)
+  const json = ["daysOfWeek", "coordinates", "schedule"]
   json.forEach(key => {
     if (raw[key]) {
       try {
@@ -142,6 +143,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
     if (raw.status !== "draft" && raw.sourceQuote && data?.job?._id) {
       toast.success(`Job created from ${raw.sourceQuoteNumber || "quote"}`)
+    } else if ((data?.createdCount ?? 0) > 1) {
+      toast.success(`${data.createdCount} jobs created — one for each day`)
     } else {
       toast.success(
         raw.status === "draft" ? "Draft saved" : "Job created successfully!"
@@ -203,6 +206,15 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 // Page
 // ─────────────────────────────────────────────────────────────
 
+/** Why a "Several days" selection can't be submitted yet, or null. */
+function multiDayProblem(days: ScheduleDay[]): string | null {
+  if (days.length === 0) return "Pick at least one day on the calendar."
+  const bad = days.find(d => !d.startTime || !d.endTime || d.startTime === d.endTime)
+  if (bad) return `Set a start and finish time for ${dayjs(bad.date).format("ddd D MMM")}.`
+  if (days.length > 60) return "You can book at most 60 days at once."
+  return null
+}
+
 export function CreateJob() {
   const navigate = useNavigate()
   const navigation = useNavigation()
@@ -242,6 +254,11 @@ export function CreateJob() {
     })
   const [workerOpen, setWorkerOpen] = useState(false)
   const [recurring, setRecurring] = useState<RecurringState>(defaultRecurring)
+  // "Several days": hand-picked dates, one job per day. "repeat" is the
+  // recurring schedule above (recurring.enabled), so it's derived from that.
+  const [multiMode, setMultiMode] = useState(false)
+  const [multiDays, setMultiDays] = useState<Record<string, { startTime?: string; endTime?: string }>>({})
+  const [perDayTimes, setPerDayTimes] = useState(false)
   const [selectedClient, setSelectedClient] = useState<ComboboxClient | null>(null)
   const [showApplyRate, setShowApplyRate] = useState(false)
   const [previousChargeRate, setPreviousChargeRate] = useState<number | null>(null)
@@ -340,6 +357,40 @@ export function CreateJob() {
   const requiredWorkers = typeof requiredWorkersRaw === "number" && Number.isFinite(requiredWorkersRaw) ? requiredWorkersRaw : 1
 
   const shiftHours = shiftHoursFrom(startTime, endTime)
+
+  // ── When: one day / several days / repeats ──────────────────
+  const multiDayBlockedReason = lockedFromQuote
+    ? "Jobs created from a quote are booked one day at a time."
+    : lockedFromBookingRequest
+      ? "A booking request is for a single day."
+      : null
+  const scheduleMode: ScheduleMode = recurring.enabled ? "repeat" : multiMode && !multiDayBlockedReason ? "multi" : "one"
+  const setScheduleMode = (mode: ScheduleMode) => {
+    setMultiMode(mode === "multi")
+    if (recurring.enabled !== (mode === "repeat")) setRecurring({ ...recurring, enabled: mode === "repeat" })
+  }
+  const scheduleDays: ScheduleDay[] = useMemo(() => {
+    if (scheduleMode !== "multi") return []
+    return Object.keys(multiDays)
+      .sort()
+      .map(date => {
+        const own = perDayTimes ? multiDays[date] : {}
+        const s = own?.startTime || startTime
+        const e = own?.endTime || endTime
+        return { date, startTime: s, endTime: e, hours: shiftHoursFrom(s, e) }
+      })
+  }, [scheduleMode, multiDays, perDayTimes, startTime, endTime])
+  const dayCount = scheduleMode === "multi" ? scheduleDays.length : 1
+  const totalHours = scheduleMode === "multi" ? scheduleDays.reduce((sum, d) => sum + d.hours, 0) : shiftHours
+
+  // The form's single `date` follows the first picked day, so the rest of
+  // the wizard (validation, recurring summary, quotes) keeps working.
+  const firstPickedDay = scheduleDays[0]?.date
+  useEffect(() => {
+    if (scheduleMode === "multi" && firstPickedDay && form.getValues("date") !== firstPickedDay) {
+      form.setValue("date", firstPickedDay, { shouldValidate: !!form.formState.errors.date })
+    }
+  }, [scheduleMode, firstPickedDay, form])
   // Budgeted cost for the job as staffed, not just whoever's been assigned
   // so far — selectedWorkers.length would under-cost a job that still has
   // open slots (e.g. 1 of 5 required workers picked mid-wizard).
@@ -349,12 +400,13 @@ export function CreateJob() {
     0
   )
   const openSlots = Math.max(Math.max(requiredWorkers, 1) - selectedWorkers.length, 0)
-  const totalCost = (assignedPay + openSlots * payRate) * shiftHours
+  const totalCost = (assignedPay + openSlots * payRate) * totalHours
   // Mirrors totalCost's scaling — chargeRate bills per worker just like
   // payRate (see invoiceLineItems below, which gives each selected worker
   // their own chargeRate × hours line), so an open shift staffed for several
   // workers should price out as several workers' worth of billing, not one.
-  const totalCharge = chargeType === "fixed" ? chargeAmount : chargeRate * shiftHours * Math.max(requiredWorkers, 1)
+  // A fixed price is per job — so per day when booking several days.
+  const totalCharge = chargeType === "fixed" ? chargeAmount * dayCount : chargeRate * totalHours * Math.max(requiredWorkers, 1)
   const margin = totalCharge - totalCost
 
   const invoiceLineItems = useMemo(
@@ -383,6 +435,15 @@ export function CreateJob() {
   }
 
   const goNext = async () => {
+    // Checked first: with no days picked the hidden `date` field is empty,
+    // and its error has no visible input to point at in this mode.
+    if (currentStep === 2 && scheduleMode === "multi") {
+      const problem = multiDayProblem(scheduleDays)
+      if (problem) {
+        toast.error(problem)
+        return
+      }
+    }
     const fields = STEP_FIELDS[currentStep] ?? []
     const valid = fields.length ? await trigger(fields as any) : true
     if (!valid) {
@@ -419,6 +480,15 @@ export function CreateJob() {
       // URL, or jumped ahead with the stepper) never registers its inputs —
       // so an argument-less trigger() checks nothing for it and resolves
       // true even though the schema would reject the values.
+      if (scheduleMode === "multi") {
+        const problem = status === "draft" ? "Drafts are for single-day jobs — publish to book several days" : multiDayProblem(scheduleDays)
+        if (problem) {
+          toast.error(problem)
+          if (status !== "draft" && currentStep !== 2) goToStep(2)
+          return
+        }
+      }
+
       const fields = status === "draft" ? DRAFT_REQUIRED_FIELDS : ALL_FIELDS
       const valid = await trigger(fields as any)
 
@@ -714,6 +784,14 @@ export function CreateJob() {
     setWorkerOpen,
     recurring,
     setRecurring,
+    scheduleMode,
+    setScheduleMode,
+    multiDays,
+    setMultiDays,
+    perDayTimes,
+    setPerDayTimes,
+    scheduleDays,
+    multiDayBlockedReason,
     selectedClient,
     handleClientSelect,
     showApplyRate,
@@ -734,6 +812,7 @@ export function CreateJob() {
     setInvoiceRates,
     invoiceLineItems,
     shiftHours,
+    totalHours,
     totalCost,
     totalCharge,
     margin,
@@ -928,6 +1007,7 @@ export function CreateJob() {
             onBack={goBack}
             onNext={goNext}
             onSaveDraft={() => doSubmit("draft")}
+            draftDisabledReason={scheduleMode === "multi" ? "Drafts are for single-day jobs — publish to book several days" : undefined}
             onPublish={() => doSubmit("published")}
             onCancel={() => navigate(lockedFromQuote ? `/quotes/${lockedFromQuote.quoteId}` : lockedFromBookingRequest ? "/booking-requests" : "/jobs")}
           />

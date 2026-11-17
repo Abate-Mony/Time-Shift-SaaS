@@ -11,6 +11,8 @@ interface Props {
   onSaveDraft: () => void
   onPublish: () => void
   onCancel: () => void
+  /** Set to disable "Save draft" and say why (e.g. booking several days) */
+  draftDisabledReason?: string
 }
 
 export function WizardFooter({
@@ -22,6 +24,7 @@ export function WizardFooter({
   onSaveDraft,
   onPublish,
   onCancel,
+  draftDisabledReason,
 }: Props) {
   const isReview = currentStep === TOTAL_STEPS
   const canSaveDraft = currentStep >= DRAFT_AVAILABLE_FROM_STEP
@@ -50,7 +53,8 @@ export function WizardFooter({
             type="button"
             variant="secondary"
             onClick={onSaveDraft}
-            disabled={isSubmitting}
+            disabled={isSubmitting || !!draftDisabledReason}
+            title={draftDisabledReason}
           >
             {submittingAs === "draft" ? (
               <>

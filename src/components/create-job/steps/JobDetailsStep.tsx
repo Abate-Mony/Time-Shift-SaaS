@@ -1,8 +1,7 @@
-import { Calendar, Clock, MapPin } from "lucide-react"
+import { MapPin } from "lucide-react"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui"
 import { cn } from "@/lib/utils"
-import dayjs from "dayjs"
 import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import SearchLocation from "@/components/locationSearchComponent"
@@ -10,7 +9,6 @@ import { ApplyRatePrompt, ClientCombobox } from "@/components/client/ClientCombo
 import { SiteCombobox } from "@/components/site/SiteCombobox"
 import { clientSitesQuery } from "@/utils/sites"
 import { useCreateJob } from "../CreateJobContext"
-import { formatHours } from "../wizardConfig"
 import { FieldError } from "../FieldError"
 import { Label } from "@/components/ui/label"
 
@@ -34,7 +32,6 @@ export function JobDetailsStep() {
     setLocationMode,
     selectedSite,
     handleSiteSelect,
-    shiftHours,
     lockedFromQuote,
   } = useCreateJob()
 
@@ -42,8 +39,6 @@ export function JobDetailsStep() {
 
   const priority = watch("priority")
   const address = watch("address")
-  const startTime = watch("startTime")
-  const endTime = watch("endTime")
 
   // Quote-conversion only: the accepted quote itself had no Site, but the
   // (locked) client might still have one on file worth suggesting — asked,
@@ -263,56 +258,6 @@ export function JobDetailsStep() {
         )}
       </div>
 
-      {/* Date & time */}
-      <div className="bg-card rounded-xl border border-[var(--border)] p-6 min-w-0">
-        <h2 className="text-sm font-semibold text-foreground mb-4">Date & time</h2>
-
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 min-w-0">
-          <div className="min-w-0">
-            <Input
-              label="Date"
-              type="date"
-              min={dayjs().format("YYYY-MM-DD")}
-              icon={<Calendar size={14} />}
-              {...register("date")}
-              className={cn(errors.date && "border-red-500!")}
-            />
-            <FieldError message={errors.date?.message as string} />
-          </div>
-
-          <div className="min-w-0">
-            <Input
-              label="Start time"
-              type="time"
-              icon={<Clock size={14} />}
-              {...register("startTime")}
-              className={cn(errors.startTime && "border-red-500!")}
-            />
-            <FieldError message={errors.startTime?.message as string} />
-          </div>
-
-          <div className="min-w-0">
-            <Input
-              label="End time"
-              type="time"
-              icon={<Clock size={14} />}
-              {...register("endTime")}
-              className={cn(errors.endTime && "border-red-500!")}
-            />
-            <FieldError message={errors.endTime?.message as string} />
-          </div>
-        </div>
-
-        {shiftHours > 0 && (
-          <div className="mt-3 bg-blue-50 border border-blue-100 rounded-lg px-4 py-2.5 flex items-center gap-2 min-w-0">
-            <Clock size={14} className="text-blue-500 shrink-0" />
-            <p className="text-sm text-blue-700 min-w-0">
-              <span className="font-semibold">{formatHours(shiftHours)}</span> shift duration
-              {endTime < startTime && <span className="text-blue-500"> · overnight</span>}
-            </p>
-          </div>
-        )}
-      </div>
     </div>
   )
 }

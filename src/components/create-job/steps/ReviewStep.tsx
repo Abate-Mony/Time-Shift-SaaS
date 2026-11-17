@@ -145,6 +145,9 @@ export function ReviewStep() {
     recurring,
     users,
     shiftHours,
+    totalHours,
+    scheduleMode,
+    scheduleDays,
     totalCost,
     totalCharge,
     margin,
@@ -278,11 +281,28 @@ export function ReviewStep() {
       {/* When & Where */}
       <Section
         title="When & where"
-        description="Shift date, time and work location"
-        step={1}
+        description={scheduleMode === "multi" ? `${scheduleDays.length} days — one job each` : "Shift date, time and work location"}
+        step={2}
         onEdit={goToStep}
         icon={<CalendarDays size={16} />}
       >
+        {scheduleMode === "multi" ? (
+          <div className="py-2.5 border-b border-[var(--border)]">
+            <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1.5">
+              <CalendarDays size={13} /> {scheduleDays.length} day{scheduleDays.length === 1 ? "" : "s"} · {formatHours(totalHours)} per worker
+            </p>
+            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1">
+              {scheduleDays.map(d => (
+                <li key={d.date} className="flex items-center justify-between gap-3 text-sm">
+                  <span className="font-medium text-foreground">{dayjs(d.date).format("ddd D MMM YYYY")}</span>
+                  <span className="text-muted-foreground tabular-nums">
+                    {d.startTime}–{d.endTime} · {formatHours(d.hours)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6">
           <DetailRow
             icon={<CalendarDays size={13} />}
@@ -326,6 +346,7 @@ export function ReviewStep() {
             }
           />
         </div>
+        )}
 
         {hasLocation && (
           <div className="mt-2 rounded-xl border border-border bg-muted px-4 py-3">

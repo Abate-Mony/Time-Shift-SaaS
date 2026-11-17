@@ -13,8 +13,9 @@ export const TOTAL_STEPS = STEPS.length
 
 /** Fields validated before advancing past each step. */
 export const STEP_FIELDS: Record<number, string[]> = {
-  1: ["title", "description", "client", "priority", "location", "date", "startTime", "endTime"],
-  2: ["requiredWorkers", "workers", "supervisor"],
+  1: ["title", "description", "client", "priority", "location"],
+  // Date & time live with staffing, so double-bookings can be checked as days are picked
+  2: ["date", "startTime", "endTime", "requiredWorkers", "workers", "supervisor"],
   3: ["payRate", "chargeType", "chargeRate", "chargeAmount"],
   4: ["instructions", "checklist", "notes", "clockInGraceMinutes", "geofenceMode", "geofenceRadiusMeters"],
   5: [],
@@ -29,9 +30,9 @@ export const FIELD_STEP_MAP: Record<string, number> = {
   location: 1,
   address: 1,
   coordinates: 1,
-  date: 1,
-  startTime: 1,
-  endTime: 1,
+  date: 2,
+  startTime: 2,
+  endTime: 2,
 
   workers: 2,
   requiredWorkers: 2,
