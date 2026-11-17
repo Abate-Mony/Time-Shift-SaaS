@@ -5,6 +5,12 @@ import type { ComboboxClient } from "@/components/client/ClientCombobox"
 import type { ComboboxSite } from "@/components/site/SiteCombobox"
 import type { CreateJobForm, User } from "@/utils/types"
 
+/** How the job is scheduled: a single date, hand-picked dates, or a repeat pattern. */
+export type ScheduleMode = "one" | "multi" | "repeat"
+
+/** A day in a "Several days" booking, with its effective times. */
+export type ScheduleDay = { date: string; startTime: string; endTime: string; hours: number }
+
 export type SelectedWorker = {
   fullname: string
   email: string
@@ -74,8 +80,23 @@ export interface CreateJobContextValue {
   setInvoiceRates: React.Dispatch<React.SetStateAction<Record<string, number>>>
   invoiceLineItems: { description: string; hours: number; rate: number }[]
 
+  // ── When ("Several days" booking) ──
+  scheduleMode: ScheduleMode
+  setScheduleMode: (mode: ScheduleMode) => void
+  /** date (YYYY-MM-DD) → per-day time overrides; keys are the picked days */
+  multiDays: Record<string, { startTime?: string; endTime?: string }>
+  setMultiDays: React.Dispatch<React.SetStateAction<Record<string, { startTime?: string; endTime?: string }>>>
+  perDayTimes: boolean
+  setPerDayTimes: (on: boolean) => void
+  /** Picked days with their effective times, sorted — empty unless mode is "multi" */
+  scheduleDays: ScheduleDay[]
+  /** Why "Several days" can't be used here (quote / booking request), or null */
+  multiDayBlockedReason: string | null
+
   // Derived
   shiftHours: number
+  /** Shift hours across every day (= shiftHours unless booking several days) */
+  totalHours: number
   totalCost: number
   totalCharge: number
   margin: number

@@ -16,7 +16,7 @@ const CHARGE_TYPES = [
 ] as const
 
 export function BillingStep() {
-  const { form, selectedClient, selectedWorkers, workerPayRates, shiftHours, totalCost, totalCharge, margin, lockedFromQuote } =
+  const { form, selectedClient, selectedWorkers, workerPayRates, totalHours: shiftHours, scheduleMode, scheduleDays, totalCost, totalCharge, margin, lockedFromQuote } =
     useCreateJob()
   const hasCustomRates = selectedWorkers.some(w => workerPayRates[w.email] !== undefined)
   const requiredRaw = form.watch("requiredWorkers")
@@ -242,6 +242,13 @@ export function BillingStep() {
                 </div>
               ))}
             </div>
+
+            {scheduleMode === "multi" && scheduleDays.length > 1 && (
+              <p className="mt-3 text-xs text-muted-foreground">
+                Totals cover all {scheduleDays.length} days ({shiftHours}h per worker).
+                {form.watch("chargeType") === "fixed" && " A fixed price is charged per job, so once per day."}
+              </p>
+            )}
 
             {/* Per-worker cost lines — only worth the space once rates differ */}
             {hasCustomRates && (

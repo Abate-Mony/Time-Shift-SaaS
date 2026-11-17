@@ -7,6 +7,7 @@ import { PlanLockBadge } from "@/components/billing/PlanLockBadge"
 import { useCompanyPlan } from "@/hooks/useCompanyPlan"
 import { useCreateJob } from "../CreateJobContext"
 import { FieldError } from "../FieldError"
+import { WhenSection } from "../WhenSection"
 import SearchComponent from "@/components/Search"
 
 export function ScheduleStaffingStep() {
@@ -19,6 +20,7 @@ export function ScheduleStaffingStep() {
     setWorkerOpen,
     recurring,
     setRecurring,
+    scheduleMode,
   } = useCreateJob()
 
   const { hasFeature } = useCompanyPlan()
@@ -36,8 +38,13 @@ export function ScheduleStaffingStep() {
 
   return (
     <div className="flex flex-col gap-5 min-w-0">
-      {/* Recurrence */}
-      <RecurringJobSection value={recurring} onChange={setRecurring} startDate={date} sectionIndex={1} disabled={!canRecurring} />
+      {/* When: one day / several days / repeats */}
+      <WhenSection />
+
+      {/* Recurrence settings — only once "Repeats" is chosen */}
+      {scheduleMode === "repeat" && (
+        <RecurringJobSection value={recurring} onChange={setRecurring} startDate={date} sectionIndex={1} disabled={!canRecurring} />
+      )}
 
       {/* Staffing */}
       <div className="bg-card rounded-xl border border-[var(--border)] p-6 min-w-0">

@@ -15,7 +15,7 @@ import { parseRateInput } from "@/utils/workerPay"
  * container div, which lays out even when type="hidden".
  */
 export function CreateJobHiddenFields() {
-  const { form, selectedClient, selectedSite, selectedWorkers, workerPayRates, recurring, generateInvoice, invoiceDueDate, invoiceLineItems, lockedFromQuote, lockedFromBookingRequest } =
+  const { form, selectedClient, selectedSite, selectedWorkers, workerPayRates, scheduleMode, scheduleDays, recurring, generateInvoice, invoiceDueDate, invoiceLineItems, lockedFromQuote, lockedFromBookingRequest } =
     useCreateJob()
 
   const { watch } = form
@@ -65,6 +65,15 @@ export function CreateJobHiddenFields() {
       )}
       {recurringPayload.endDate && (
       <Input type="hidden" name="endDate" value={recurringPayload.endDate} />
+      )}
+
+      {/* "Several days": one job per day; the backend ignores date/startTime/endTime when this is sent */}
+      {scheduleMode === "multi" && scheduleDays.length > 0 && (
+        <Input
+          type="hidden"
+          name="schedule"
+          value={JSON.stringify(scheduleDays.map(({ date, startTime, endTime }) => ({ date, startTime, endTime })))}
+        />
       )}
 
       {/* Staffing */}
