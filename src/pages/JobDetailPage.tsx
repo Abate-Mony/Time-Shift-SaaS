@@ -30,6 +30,7 @@ import {
     FileText,
     Flag,
     ListChecks,
+    Loader2,
     Lock,
     LogIn, LogOut,
     MapPin,
@@ -69,11 +70,13 @@ const PREFERRED_MAP_STORAGE_KEY = "preferredMapService"
 import { Button } from '@/components/ui/button'
 import {
     Dialog,
+    DialogClose,
     DialogContent,
     DialogDescription,
     DialogFooter,
     DialogHeader,
     DialogTitle,
+    DialogTrigger,
 } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
@@ -562,6 +565,18 @@ export function JobDetail() {
             toast.error(err.response?.data?.msg ?? err.response?.data?.message ?? "Couldn't update job status. Try again."),
     })
 
+    // deleteJob itself already toasts success/error and invalidates
+    // ["jobs"]/["job", id] — this only needs to navigate away on success and
+    // leave the dialog open on failure (e.g. a worker already clocked in)
+    // so the user sees why and can cancel instead of losing the job either way.
+    const deleteJobMutation = useMutation({
+        mutationFn: () => deleteJob(id!),
+        onSuccess: () => {
+            setDeleteJobModalOpen(false)
+            navigate("/jobs")
+        },
+    })
+
     const statusColor: Record<string, string> = {
         'in-progress': 'from-blue-600 to-blue-700',
         'assigned': 'from-[var(--primary)] to-[#2D5A8E]',
@@ -591,6 +606,8 @@ export function JobDetail() {
     const pendingOvertimeWorkers = assignedWorkers.filter(w => w.overtimeStatus === "pending")
     const pendingMissedShiftWorkers = assignedWorkers.filter(w => w.missedShiftReviewStatus === "pending")
     const back = useBackLink({ to: "/jobs", label: "Jobs" })
+    const [deleteJobModalOpen, setDeleteJobModalOpen] = useState<boolean>(false);
+    const [cancelJobModalOpen, setCancelJobModalOpen] = useState<boolean>(false);
     return (
         <div className="p-6 animate-fade-in">
             {/* Breadcrumb */}
@@ -764,214 +781,214 @@ export function JobDetail() {
                                 : "Some shifts ran over, others were auto-closed for a missed clock-out — each card below shows its own reason."
 
                         return (
-                        <Card className="border-amber-200 bg-amber-50/60">
-                            <div className="px-5 pt-5 pb-4 border-b border-amber-200/70 flex items-center gap-2.5">
-                                <Flag size={14} className="text-amber-600 shrink-0" />
-                                <div>
-                                    <h3 className="text-sm font-semibold text-amber-800">{heading}</h3>
-                                    <p className="text-xs text-amber-700/80 mt-0.5">{subheading}</p>
+                            <Card className="border-amber-200 bg-amber-50/60">
+                                <div className="px-5 pt-5 pb-4 border-b border-amber-200/70 flex items-center gap-2.5">
+                                    <Flag size={14} className="text-amber-600 shrink-0" />
+                                    <div>
+                                        <h3 className="text-sm font-semibold text-amber-800">{heading}</h3>
+                                        <p className="text-xs text-amber-700/80 mt-0.5">{subheading}</p>
+                                    </div>
                                 </div>
-                            </div>
-                            <div className="p-5 flex flex-col gap-3">
-                                {pendingOvertimeWorkers.map(w => {
-                                    const scheduledMinutes = job?.minutes ?? 0
-                                    const actual = w.actualMinutes ?? getWorkerMinutes(w)
-                                    const over = w.overtimeMinutes || Math.max(0, actual - scheduledMinutes)
-                                    const isEditing = adjustingId === w._id
-                                    const isAutoClosed = w.clockOutReason === "auto_closed"
-                                    const hasOpenBreak = w.breaks?.some(b => b.startedAt && !b.endedAt)
+                                <div className="p-5 flex flex-col gap-3">
+                                    {pendingOvertimeWorkers.map(w => {
+                                        const scheduledMinutes = job?.minutes ?? 0
+                                        const actual = w.actualMinutes ?? getWorkerMinutes(w)
+                                        const over = w.overtimeMinutes || Math.max(0, actual - scheduledMinutes)
+                                        const isEditing = adjustingId === w._id
+                                        const isAutoClosed = w.clockOutReason === "auto_closed"
+                                        const hasOpenBreak = w.breaks?.some(b => b.startedAt && !b.endedAt)
 
-                                    function startEdit(mode: "adjust" | "correct_finish_time" | "resolve_break") {
-                                        setAdjustingId(w._id!)
-                                        setAdjustMode(mode)
-                                        setActionReason("")
-                                        if (mode === "adjust") setAdjustHours((scheduledMinutes / 60).toFixed(2))
-                                        if (mode === "correct_finish_time") setCorrectedFinishAt(w.checkedOutAt ? dayjs(w.checkedOutAt).format("YYYY-MM-DDTHH:mm") : "")
-                                        if (mode === "resolve_break") { setBreakEndedAt(""); setBreakCancelled(false) }
-                                    }
+                                        function startEdit(mode: "adjust" | "correct_finish_time" | "resolve_break") {
+                                            setAdjustingId(w._id!)
+                                            setAdjustMode(mode)
+                                            setActionReason("")
+                                            if (mode === "adjust") setAdjustHours((scheduledMinutes / 60).toFixed(2))
+                                            if (mode === "correct_finish_time") setCorrectedFinishAt(w.checkedOutAt ? dayjs(w.checkedOutAt).format("YYYY-MM-DDTHH:mm") : "")
+                                            if (mode === "resolve_break") { setBreakEndedAt(""); setBreakCancelled(false) }
+                                        }
 
-                                    return (
-                                        <div key={w._id} className="bg-card border border-amber-200 rounded-xl p-3.5 flex flex-col gap-2.5">
-                                            <div className="flex items-center gap-2 min-w-0">
-                                                <Avatar initials={getInitials(w.fullname)} size="sm" index={0} src={w.profilePhoto?.url} />
-                                                <div className="min-w-0">
-                                                    <p className="text-sm font-semibold text-foreground truncate">{w.fullname}</p>
-                                                    <p className="text-[11px] text-amber-700">
-                                                        Worked {formatDuration(actual)} · scheduled {formatDuration(scheduledMinutes)} · +{formatDuration(over)} over
+                                        return (
+                                            <div key={w._id} className="bg-card border border-amber-200 rounded-xl p-3.5 flex flex-col gap-2.5">
+                                                <div className="flex items-center gap-2 min-w-0">
+                                                    <Avatar initials={getInitials(w.fullname)} size="sm" index={0} src={w.profilePhoto?.url} />
+                                                    <div className="min-w-0">
+                                                        <p className="text-sm font-semibold text-foreground truncate">{w.fullname}</p>
+                                                        <p className="text-[11px] text-amber-700">
+                                                            Worked {formatDuration(actual)} · scheduled {formatDuration(scheduledMinutes)} · +{formatDuration(over)} over
+                                                        </p>
+                                                    </div>
+                                                </div>
+
+                                                {(isAutoClosed || hasOpenBreak) && (
+                                                    <div className="flex items-center gap-1.5">
+                                                        {isAutoClosed && <span className="text-[10px] font-semibold text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded">Missed clock-out</span>}
+                                                        {hasOpenBreak && <span className="text-[10px] font-semibold text-rose-700 bg-rose-100 px-1.5 py-0.5 rounded">Unfinished break</span>}
+                                                    </div>
+                                                )}
+
+                                                {(w.clockOutNote || w.clockOutReason) && (
+                                                    <p className="text-[11px] text-muted-foreground bg-amber-50 border border-amber-100 rounded-lg px-2.5 py-1.5">
+                                                        <span className="font-semibold">Worker's note: </span>
+                                                        {w.clockOutNote || CLOCK_OUT_REASON_LABELS[w.clockOutReason ?? ''] || w.clockOutReason}
                                                     </p>
-                                                </div>
-                                            </div>
+                                                )}
 
-                                            {(isAutoClosed || hasOpenBreak) && (
-                                                <div className="flex items-center gap-1.5">
-                                                    {isAutoClosed && <span className="text-[10px] font-semibold text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded">Missed clock-out</span>}
-                                                    {hasOpenBreak && <span className="text-[10px] font-semibold text-rose-700 bg-rose-100 px-1.5 py-0.5 rounded">Unfinished break</span>}
-                                                </div>
-                                            )}
-
-                                            {(w.clockOutNote || w.clockOutReason) && (
-                                                <p className="text-[11px] text-muted-foreground bg-amber-50 border border-amber-100 rounded-lg px-2.5 py-1.5">
-                                                    <span className="font-semibold">Worker's note: </span>
-                                                    {w.clockOutNote || CLOCK_OUT_REASON_LABELS[w.clockOutReason ?? ''] || w.clockOutReason}
-                                                </p>
-                                            )}
-
-                                            {isEditing && adjustMode === "adjust" ? (
-                                                <div className="flex items-center gap-2">
-                                                    <Input
-                                                        type="number"
-                                                        step="0.25"
-                                                        min="0"
-                                                        autoFocus
-                                                        value={adjustHours}
-                                                        onChange={e => setAdjustHours(e.target.value)}
-                                                        placeholder="Hours to pay"
-                                                        className="h-8 flex-1 min-w-0 px-2.5 border border-amber-300 rounded-lg text-xs bg-card focus:outline-none focus:ring-2 focus:ring-amber-300"
-                                                    />
-                                                    <button
-                                                        onClick={() => {
-                                                            const hrs = parseFloat(adjustHours)
-                                                            if (!Number.isFinite(hrs) || hrs < 0) return
-                                                            overtimeMutation.mutate({ assignmentId: w._id!, decision: "adjust", approvedMinutes: Math.round(hrs * 60) })
-                                                        }}
-                                                        disabled={overtimeMutation.isPending || !adjustHours}
-                                                        className="h-8 px-3 rounded-lg bg-amber-600 text-white text-xs font-semibold hover:bg-amber-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0"
-                                                    >
-                                                        Save
-                                                    </button>
-                                                    <button
-                                                        onClick={() => setAdjustingId(null)}
-                                                        className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground shrink-0"
-                                                    >
-                                                        Cancel
-                                                    </button>
-                                                </div>
-                                            ) : isEditing && adjustMode === "correct_finish_time" ? (
-                                                <div className="flex flex-col gap-2">
-                                                    <Input
-                                                        type="datetime-local"
-                                                        autoFocus
-                                                        value={correctedFinishAt}
-                                                        onChange={e => setCorrectedFinishAt(e.target.value)}
-                                                        className="h-8 px-2.5 border border-amber-300 rounded-lg text-xs bg-card focus:outline-none focus:ring-2 focus:ring-amber-300"
-                                                    />
-                                                    <Input
-                                                        type="text"
-                                                        value={actionReason}
-                                                        onChange={e => setActionReason(e.target.value)}
-                                                        placeholder="Reason (required)"
-                                                        className="h-8 px-2.5 border border-amber-300 rounded-lg text-xs bg-card focus:outline-none focus:ring-2 focus:ring-amber-300"
-                                                    />
+                                                {isEditing && adjustMode === "adjust" ? (
                                                     <div className="flex items-center gap-2">
+                                                        <Input
+                                                            type="number"
+                                                            step="0.25"
+                                                            min="0"
+                                                            autoFocus
+                                                            value={adjustHours}
+                                                            onChange={e => setAdjustHours(e.target.value)}
+                                                            placeholder="Hours to pay"
+                                                            className="h-8 flex-1 min-w-0 px-2.5 border border-amber-300 rounded-lg text-xs bg-card focus:outline-none focus:ring-2 focus:ring-amber-300"
+                                                        />
                                                         <button
                                                             onClick={() => {
-                                                                if (!correctedFinishAt || !actionReason.trim()) return
-                                                                overtimeMutation.mutate({
-                                                                    assignmentId: w._id!, decision: "correct_finish_time",
-                                                                    checkedOutAt: new Date(correctedFinishAt).toISOString(), managerNotes: actionReason.trim(),
-                                                                })
+                                                                const hrs = parseFloat(adjustHours)
+                                                                if (!Number.isFinite(hrs) || hrs < 0) return
+                                                                overtimeMutation.mutate({ assignmentId: w._id!, decision: "adjust", approvedMinutes: Math.round(hrs * 60) })
                                                             }}
-                                                            disabled={overtimeMutation.isPending || !correctedFinishAt || !actionReason.trim()}
+                                                            disabled={overtimeMutation.isPending || !adjustHours}
                                                             className="h-8 px-3 rounded-lg bg-amber-600 text-white text-xs font-semibold hover:bg-amber-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0"
                                                         >
                                                             Save
                                                         </button>
-                                                        <button onClick={() => setAdjustingId(null)} className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground shrink-0">
+                                                        <button
+                                                            onClick={() => setAdjustingId(null)}
+                                                            className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground shrink-0"
+                                                        >
                                                             Cancel
                                                         </button>
                                                     </div>
-                                                </div>
-                                            ) : isEditing && adjustMode === "resolve_break" ? (
-                                                <div className="flex flex-col gap-2">
-                                                    <label className="flex items-center gap-2 text-[11px] text-muted-foreground">
-                                                        <input type="checkbox" checked={breakCancelled} onChange={e => setBreakCancelled(e.target.checked)} />
-                                                        This break never happened — mark it accidental
-                                                    </label>
-                                                    {!breakCancelled && (
+                                                ) : isEditing && adjustMode === "correct_finish_time" ? (
+                                                    <div className="flex flex-col gap-2">
                                                         <Input
                                                             type="datetime-local"
-                                                            value={breakEndedAt}
-                                                            onChange={e => setBreakEndedAt(e.target.value)}
-                                                            placeholder="Actual break end time"
+                                                            autoFocus
+                                                            value={correctedFinishAt}
+                                                            onChange={e => setCorrectedFinishAt(e.target.value)}
                                                             className="h-8 px-2.5 border border-amber-300 rounded-lg text-xs bg-card focus:outline-none focus:ring-2 focus:ring-amber-300"
                                                         />
-                                                    )}
-                                                    <Input
-                                                        type="text"
-                                                        value={actionReason}
-                                                        onChange={e => setActionReason(e.target.value)}
-                                                        placeholder="Reason (required)"
-                                                        className="h-8 px-2.5 border border-amber-300 rounded-lg text-xs bg-card focus:outline-none focus:ring-2 focus:ring-amber-300"
-                                                    />
-                                                    <div className="flex items-center gap-2">
-                                                        <button
-                                                            onClick={() => {
-                                                                if (!actionReason.trim() || (!breakCancelled && !breakEndedAt)) return
-                                                                resolveBreakMutation.mutate({
-                                                                    assignmentId: w._id!,
-                                                                    ...(breakCancelled ? { cancelled: true } : { endedAt: new Date(breakEndedAt).toISOString() }),
-                                                                    managerNotes: actionReason.trim(),
-                                                                })
-                                                            }}
-                                                            disabled={resolveBreakMutation.isPending || !actionReason.trim() || (!breakCancelled && !breakEndedAt)}
-                                                            className="h-8 px-3 rounded-lg bg-amber-600 text-white text-xs font-semibold hover:bg-amber-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0"
-                                                        >
-                                                            Save
-                                                        </button>
-                                                        <button onClick={() => setAdjustingId(null)} className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground shrink-0">
-                                                            Cancel
-                                                        </button>
+                                                        <Input
+                                                            type="text"
+                                                            value={actionReason}
+                                                            onChange={e => setActionReason(e.target.value)}
+                                                            placeholder="Reason (required)"
+                                                            className="h-8 px-2.5 border border-amber-300 rounded-lg text-xs bg-card focus:outline-none focus:ring-2 focus:ring-amber-300"
+                                                        />
+                                                        <div className="flex items-center gap-2">
+                                                            <button
+                                                                onClick={() => {
+                                                                    if (!correctedFinishAt || !actionReason.trim()) return
+                                                                    overtimeMutation.mutate({
+                                                                        assignmentId: w._id!, decision: "correct_finish_time",
+                                                                        checkedOutAt: new Date(correctedFinishAt).toISOString(), managerNotes: actionReason.trim(),
+                                                                    })
+                                                                }}
+                                                                disabled={overtimeMutation.isPending || !correctedFinishAt || !actionReason.trim()}
+                                                                className="h-8 px-3 rounded-lg bg-amber-600 text-white text-xs font-semibold hover:bg-amber-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0"
+                                                            >
+                                                                Save
+                                                            </button>
+                                                            <button onClick={() => setAdjustingId(null)} className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground shrink-0">
+                                                                Cancel
+                                                            </button>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            ) : hasOpenBreak ? (
-                                                // Approve/reject/adjust refuses server-side while a break is
-                                                // open (reviewAssignmentOvertime) — resolving it is the only
-                                                // action available until then.
-                                                <button
-                                                    onClick={() => startEdit("resolve_break")}
-                                                    className="h-8 px-3 rounded-lg bg-rose-500 text-white text-xs font-semibold hover:bg-rose-600 transition-colors"
-                                                >
-                                                    Resolve unfinished break
-                                                </button>
-                                            ) : (
-                                                <div className="flex items-center gap-2 flex-wrap">
+                                                ) : isEditing && adjustMode === "resolve_break" ? (
+                                                    <div className="flex flex-col gap-2">
+                                                        <label className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                                                            <input type="checkbox" checked={breakCancelled} onChange={e => setBreakCancelled(e.target.checked)} />
+                                                            This break never happened — mark it accidental
+                                                        </label>
+                                                        {!breakCancelled && (
+                                                            <Input
+                                                                type="datetime-local"
+                                                                value={breakEndedAt}
+                                                                onChange={e => setBreakEndedAt(e.target.value)}
+                                                                placeholder="Actual break end time"
+                                                                className="h-8 px-2.5 border border-amber-300 rounded-lg text-xs bg-card focus:outline-none focus:ring-2 focus:ring-amber-300"
+                                                            />
+                                                        )}
+                                                        <Input
+                                                            type="text"
+                                                            value={actionReason}
+                                                            onChange={e => setActionReason(e.target.value)}
+                                                            placeholder="Reason (required)"
+                                                            className="h-8 px-2.5 border border-amber-300 rounded-lg text-xs bg-card focus:outline-none focus:ring-2 focus:ring-amber-300"
+                                                        />
+                                                        <div className="flex items-center gap-2">
+                                                            <button
+                                                                onClick={() => {
+                                                                    if (!actionReason.trim() || (!breakCancelled && !breakEndedAt)) return
+                                                                    resolveBreakMutation.mutate({
+                                                                        assignmentId: w._id!,
+                                                                        ...(breakCancelled ? { cancelled: true } : { endedAt: new Date(breakEndedAt).toISOString() }),
+                                                                        managerNotes: actionReason.trim(),
+                                                                    })
+                                                                }}
+                                                                disabled={resolveBreakMutation.isPending || !actionReason.trim() || (!breakCancelled && !breakEndedAt)}
+                                                                className="h-8 px-3 rounded-lg bg-amber-600 text-white text-xs font-semibold hover:bg-amber-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0"
+                                                            >
+                                                                Save
+                                                            </button>
+                                                            <button onClick={() => setAdjustingId(null)} className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground shrink-0">
+                                                                Cancel
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                ) : hasOpenBreak ? (
+                                                    // Approve/reject/adjust refuses server-side while a break is
+                                                    // open (reviewAssignmentOvertime) — resolving it is the only
+                                                    // action available until then.
                                                     <button
-                                                        onClick={() => overtimeMutation.mutate({ assignmentId: w._id!, decision: "approve" })}
-                                                        disabled={overtimeMutation.isPending}
-                                                        className="flex-1 h-8 rounded-lg bg-emerald-500 text-white text-xs font-semibold hover:bg-emerald-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                                                        onClick={() => startEdit("resolve_break")}
+                                                        className="h-8 px-3 rounded-lg bg-rose-500 text-white text-xs font-semibold hover:bg-rose-600 transition-colors"
                                                     >
-                                                        {isAutoClosed ? "Confirm recorded finish" : "Approve overtime"}
+                                                        Resolve unfinished break
                                                     </button>
-                                                    <button
-                                                        onClick={() => startEdit("adjust")}
-                                                        disabled={overtimeMutation.isPending}
-                                                        className="h-8 px-3 rounded-lg border border-amber-300 text-amber-700 text-xs font-semibold hover:bg-amber-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0"
-                                                    >
-                                                        {isAutoClosed ? "Approve final minutes" : "Adjust"}
-                                                    </button>
-                                                    {isAutoClosed && (
+                                                ) : (
+                                                    <div className="flex items-center gap-2 flex-wrap">
                                                         <button
-                                                            onClick={() => startEdit("correct_finish_time")}
+                                                            onClick={() => overtimeMutation.mutate({ assignmentId: w._id!, decision: "approve" })}
+                                                            disabled={overtimeMutation.isPending}
+                                                            className="flex-1 h-8 rounded-lg bg-emerald-500 text-white text-xs font-semibold hover:bg-emerald-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                                                        >
+                                                            {isAutoClosed ? "Confirm recorded finish" : "Approve overtime"}
+                                                        </button>
+                                                        <button
+                                                            onClick={() => startEdit("adjust")}
                                                             disabled={overtimeMutation.isPending}
                                                             className="h-8 px-3 rounded-lg border border-amber-300 text-amber-700 text-xs font-semibold hover:bg-amber-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0"
                                                         >
-                                                            Correct finish time
+                                                            {isAutoClosed ? "Approve final minutes" : "Adjust"}
                                                         </button>
-                                                    )}
-                                                    <button
-                                                        onClick={() => overtimeMutation.mutate({ assignmentId: w._id!, decision: "reject" })}
-                                                        disabled={overtimeMutation.isPending}
-                                                        className="h-8 px-3 rounded-lg border border-rose-200 text-rose-500 text-xs font-semibold hover:bg-rose-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0"
-                                                    >
-                                                        {isAutoClosed ? "Reject extra time" : "Reject"}
-                                                    </button>
-                                                </div>
-                                            )}
-                                        </div>
-                                    )
-                                })}
-                            </div>
-                        </Card>
+                                                        {isAutoClosed && (
+                                                            <button
+                                                                onClick={() => startEdit("correct_finish_time")}
+                                                                disabled={overtimeMutation.isPending}
+                                                                className="h-8 px-3 rounded-lg border border-amber-300 text-amber-700 text-xs font-semibold hover:bg-amber-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0"
+                                                            >
+                                                                Correct finish time
+                                                            </button>
+                                                        )}
+                                                        <button
+                                                            onClick={() => overtimeMutation.mutate({ assignmentId: w._id!, decision: "reject" })}
+                                                            disabled={overtimeMutation.isPending}
+                                                            className="h-8 px-3 rounded-lg border border-rose-200 text-rose-500 text-xs font-semibold hover:bg-rose-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0"
+                                                        >
+                                                            {isAutoClosed ? "Reject extra time" : "Reject"}
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )
+                                    })}
+                                </div>
+                            </Card>
                         )
                     })()}
 
@@ -1186,7 +1203,7 @@ export function JobDetail() {
                             a door passcode or access instructions. */}
                         <div className="mx-5 mb-5 mt-2">
                             <Input
-                            
+
                                 ref={attachmentInputRef}
                                 type="file"
                                 accept="image/jpeg,image/png,image/webp,application/pdf"
@@ -1636,9 +1653,10 @@ export function JobDetail() {
                                     </Popover>
                                     <div className="flex gap-2.5 mt-2">
                                         {job.status !== "cancelled" && (
-                                            <Button
-                                                onClick={() => updateStatusMutation.mutate("cancelled")}
-                                                className="
+                                            <Dialog open={cancelJobModalOpen} onOpenChange={setCancelJobModalOpen}>
+                                                <DialogTrigger asChild>
+                                                    <button
+                                                        className="
         flex-1 h-10 rounded-xl
         border border-amber-200
         bg-amber-50
@@ -1647,23 +1665,43 @@ export function JobDetail() {
         flex items-center justify-center gap-2
         transition-colors cursor-pointer mt-1
       "
-                                            >
-                                                <SquareX size={13} />
-                                                Cancel Job
-                                            </Button>
+                                                    >
+                                                        <SquareX size={13} />
+                                                        Cancel Job
+                                                    </button>
+                                                </DialogTrigger>
+                                                <DialogContent showCloseButton={false}>
+                                                    <DialogHeader>
+                                                        <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-500/15 flex items-center justify-center mb-1">
+                                                            <TriangleAlert size={18} className="text-amber-600 dark:text-amber-400" />
+                                                        </div>
+                                                        <DialogTitle>Cancel this job?</DialogTitle>
+                                                        <DialogDescription>
+                                                            {job?.title ? <>This cancels <span className="font-semibold text-foreground">{job.title}</span> and notifies</> : "This cancels the job and notifies"} any assigned workers. You can&apos;t unassign or re-publish a cancelled job.
+                                                        </DialogDescription>
+                                                    </DialogHeader>
+                                                    <div className="flex items-center justify-end w-full gap-2">
+                                                        <DialogClose asChild>
+                                                            <Button type="button" variant="outline" disabled={updateStatusMutation.isPending}>Cancel</Button>
+                                                        </DialogClose>
+                                                        <Button
+                                                            type="button"
+                                                            className="bg-amber-500 hover:bg-amber-600 text-white"
+                                                            size="lg"
+                                                            disabled={updateStatusMutation.isPending}
+                                                            onClick={() => updateStatusMutation.mutate("cancelled", { onSuccess: () => setCancelJobModalOpen(false) })}
+                                                        >
+                                                            {updateStatusMutation.isPending && <Loader2 size={14} className="animate-spin" />}
+                                                            {updateStatusMutation.isPending ? "Cancelling…" : "Cancel Job"}
+                                                        </Button>
+                                                    </div>
+                                                </DialogContent>
+                                            </Dialog>
                                         )}
-
-                                        <button
-                                            onClick={() =>
-                                                deleteJob(job!._id as string).then(() => {
-                                                    navigate("/jobs");
-                                                }).catch(() => {
-                                                    // deleteJob already toasted the reason (e.g. a worker
-                                                    // has clocked in) — stay on the page instead of
-                                                    // navigating away from a delete that didn't happen.
-                                                })
-                                            }
-                                            className="
+                                        <Dialog open={deleteJobModalOpen} onOpenChange={setDeleteJobModalOpen}>
+                                            <DialogTrigger asChild>
+                                                <button
+                                                    className="
       flex-1 h-10 rounded-xl
       border border-red-200
       bg-red-50
@@ -1672,10 +1710,40 @@ export function JobDetail() {
       flex items-center justify-center gap-2
       transition-colors cursor-pointer mt-1
     "
-                                        >
-                                            <Trash2 size={13} />
-                                            Delete Job
-                                        </button>
+                                                >
+                                                    <Trash2 size={13} />
+                                                    Delete Job
+                                                </button>
+                                            </DialogTrigger>
+                                            <DialogContent showCloseButton={false}>
+                                                <DialogHeader>
+                                                    <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-500/15 flex items-center justify-center mb-1">
+                                                        <TriangleAlert size={18} className="text-red-600 dark:text-red-400" />
+                                                    </div>
+                                                    <DialogTitle>Delete this job?</DialogTitle>
+                                                    <DialogDescription>
+                                                        {job?.title ? <>This permanently deletes <span className="font-semibold text-foreground">{job.title}</span>,</> : "This permanently deletes the job,"} its attachments, and all assigned-worker records. This can&apos;t be undone.
+                                                    </DialogDescription>
+                                                </DialogHeader>
+                                                <div className="flex items-center justify-end w-full gap-2">
+                                                    <DialogClose asChild>
+                                                        <Button type="button" variant="outline" disabled={deleteJobMutation.isPending}>Cancel</Button>
+                                                    </DialogClose>
+                                                    <Button
+                                                        type="button"
+                                                        className="bg-red-500 hover:bg-red-600 text-white"
+                                                        size="lg"
+                                                        variant="destructive"
+                                                        disabled={deleteJobMutation.isPending}
+                                                        onClick={() => deleteJobMutation.mutate()}
+                                                    >
+                                                        {deleteJobMutation.isPending && <Loader2 size={14} className="animate-spin" />}
+                                                        {deleteJobMutation.isPending ? "Deleting…" : "Delete Job"}
+                                                    </Button>
+                                                </div>
+                                            </DialogContent>
+                                        </Dialog>
+
                                     </div>
                                 </>
                             }
