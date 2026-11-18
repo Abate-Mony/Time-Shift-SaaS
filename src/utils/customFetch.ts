@@ -45,6 +45,22 @@ customFetch.interceptors.response.use(
   async (error: AxiosError) => {
     const config = error.config as RetriableConfig | undefined;
 
+    // Platform-wide kill switch (see maintenanceModeMiddleware.ts on the
+    // backend) — a hard redirect, not a router navigate, since this can
+    // fire from any page including ones outside the router's data-loading
+    // flow. Known, accepted race: a protected route's own loader `catch`
+    // (e.g. dashboardlayout.tsx's `redirect("/auth")`) may still fire right
+    // after this — the full navigation below wins, same as the existing
+    // logoutUser() precedent just below.
+    if (
+      error.response?.status === 503 &&
+      (error.response.data as { code?: string } | undefined)?.code === "MAINTENANCE_MODE" &&
+      !window.location.pathname.startsWith("/maintenance")
+    ) {
+      window.location.replace("/maintenance");
+      return Promise.reject(error);
+    }
+
     if (
       error.response?.status === 401 &&
       config &&
