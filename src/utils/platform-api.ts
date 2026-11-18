@@ -330,6 +330,70 @@ export const resetEmailDomain = async (companyId: string, reason: string) => {
   return data.settings;
 };
 
+// ── Cross-company usage & email rollups ─────────────────────────────────
+// Distinct from PlatformUsage/platformCompanyUsageQuery above, which are
+// scoped to one company — these are platform-wide.
+
+export interface PlatformUsageSummary {
+  companiesActive: number;
+  workersActive: number;
+  jobsCreated30d: number;
+  clockEvents30d: number;
+  emailFailures30d: number;
+}
+
+export const platformUsageSummaryQuery = {
+  queryKey: ["platform", "usage-summary"],
+  queryFn: async () => {
+    const { data } = await customFetch.get<{ success: true; usage: PlatformUsageSummary }>("/platform/usage");
+    return data.usage;
+  },
+};
+
+export type EmailDomainStatus = "not_connected" | "pending" | "verified" | "failed";
+
+export interface PlatformEmailDomainRow {
+  companyId: string;
+  companyName: string;
+  domain: string;
+  status: EmailDomainStatus;
+  sender: string;
+  verifiedAt: string | null;
+  lastCheckedAt: string | null;
+}
+
+export const platformEmailDomainsQuery = {
+  queryKey: ["platform", "email-domains"],
+  queryFn: async () => {
+    const { data } = await customFetch.get<{
+      success: true;
+      data: PlatformEmailDomainRow[];
+      metrics: { verified: number; pending: number; failed: number; failedToday: number };
+    }>("/platform/email-domains");
+    return data;
+  },
+};
+
+export interface PlatformDnsRecord {
+  type: string;
+  name: string;
+  value: string;
+  priority?: number;
+  status: "pending" | "verified" | "failed";
+}
+
+// Hits a live Resend API call, not a DB read — callers pass `enabled` so
+// this only fires while a records drawer is actually open.
+export const platformEmailDomainRecordsQuery = (companyId: string) => ({
+  queryKey: ["platform", "email-domains", companyId, "records"],
+  queryFn: async () => {
+    const { data } = await customFetch.get<{ success: true; status: EmailDomainStatus; records: PlatformDnsRecord[] }>(
+      `/platform/email-domains/${companyId}/records`
+    );
+    return data;
+  },
+});
+
 // ── Users ────────────────────────────────────────────────────────────────
 
 export const platformUsersQuery = (params: Record<string, string | undefined>) => ({

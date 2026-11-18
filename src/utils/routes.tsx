@@ -658,6 +658,7 @@ export const router = createBrowserRouter([
                         lazy: () =>
                             import("@/pages/platform/PlatformUsage").then((m) => ({
                                 Component: m.PlatformUsage,
+                                loader: m.platformUsageLoader(queryClient),
                             })),
                     },
                     {
@@ -665,6 +666,7 @@ export const router = createBrowserRouter([
                         lazy: () =>
                             import("@/pages/platform/PlatformEmails").then((m) => ({
                                 Component: m.PlatformEmails,
+                                loader: m.platformEmailsLoader(queryClient),
                             })),
                     },
                     {
