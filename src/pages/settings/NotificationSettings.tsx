@@ -64,6 +64,23 @@ const SECTIONS: {
             { event: 'job_starting_soon', label: 'Job starting soon', description: 'A job you created starts in about an hour' },
         ],
     },
+    // Client-portal actions that need staff attention — every event here
+    // broadcasts to every active owner/admin/manager in the company (see
+    // notifyStaffOfBookingRequest / the equivalent quote-request and
+    // job-change-request helpers), with no narrower targeting by client or
+    // site. Previously had no UI row at all despite being fully wired on
+    // the backend, so every company was silently stuck on the hardcoded
+    // default (on) with no way to see or change it.
+    {
+        title: 'Client Requests',
+        rows: [
+            { event: 'booking_request_submitted', label: 'New booking request', description: 'A client submits a booking request through the portal' },
+            { event: 'job_change_request_submitted', label: 'New change request', description: 'A client asks to reschedule or cancel a booked job' },
+            { event: 'quote_request_submitted', label: 'New quote request', description: 'Someone submits a quote request' },
+            { event: 'quote_request_unaddressed', label: 'Quote request unsent', description: "A quote request hasn't been sent 24 hours after it came in" },
+            { event: 'booking_reviewed', label: 'Booking reviewed', description: 'A client rates a completed job you created' },
+        ],
+    },
 ]
 
 function PreferenceRowSkeleton({ switches = 1 }: { switches?: number }) {

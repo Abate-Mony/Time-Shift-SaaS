@@ -468,7 +468,12 @@ export type NotificationEvent =
   | "missed_shift_review_requested"
   | "shift_unfilled"
   | "shift_unfilled_urgent"
-  | "job_starting_soon";
+  | "job_starting_soon"
+  | "booking_request_submitted"
+  | "job_change_request_submitted"
+  | "quote_request_submitted"
+  | "quote_request_unaddressed"
+  | "booking_reviewed";
 
 export type EventNotificationPreference = {
   email: boolean;
