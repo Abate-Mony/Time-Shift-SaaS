@@ -125,7 +125,7 @@ export function PlatformAudit() {
       </div>
 
       <form onSubmit={submitSearch} className="flex items-center gap-2">
-        <SearchInput value={search} onChange={setSearch} placeholder="Search action, actor, or company…" className="flex-1 max-w-sm" />
+        <SearchInput value={search} onChange={setSearch} placeholder="Search actor email or target…" className="flex-1 max-w-sm" />
       </form>
 
       <div className={isLoading ? "opacity-60 transition-opacity" : "transition-opacity"}>

@@ -176,6 +176,67 @@ export const platformSystemQuery = {
   },
 };
 
+// ── Maintenance mode ─────────────────────────────────────────────────────
+
+export interface PlatformMaintenanceStatus {
+  enabled: boolean;
+  message: string | null;
+  enabledAt: string | null;
+  enabledBy: string | null;
+}
+
+export const platformMaintenanceQuery = {
+  queryKey: ["platform", "system", "maintenance"],
+  queryFn: async () => {
+    const { data } = await customFetch.get<{ success: true; maintenanceMode: PlatformMaintenanceStatus }>(
+      "/platform/system/maintenance"
+    );
+    return data.maintenanceMode;
+  },
+};
+
+export const enableMaintenanceMode = async (message: string | undefined, reason: string) => {
+  const { data } = await customFetch.post<{ success: true; msg: string }>("/platform/system/maintenance/enable", { message, reason });
+  return data;
+};
+
+export const disableMaintenanceMode = async (reason: string) => {
+  const { data } = await customFetch.post<{ success: true; msg: string }>("/platform/system/maintenance/disable", { reason });
+  return data;
+};
+
+// Public, unauthenticated probe — no platform role required. Used by
+// MaintenancePage.tsx, which renders outside every layout and must keep
+// working even while every protected route is 503ing.
+export const getPublicMaintenanceStatus = async () => {
+  const { data } = await customFetch.get<{ enabled: boolean; message: string | null }>("/system/maintenance");
+  return data;
+};
+
+// ── Metrics trend ────────────────────────────────────────────────────────
+// Fed by a daily snapshot cron that started recording from whenever it was
+// first deployed — there's no history before that, so a fresh deploy's
+// chart will be short/empty at first. See PlatformOverview.tsx's own note.
+
+export interface PlatformMetricsSnapshotPoint {
+  date: string;
+  companiesTotal: number;
+  companiesActive: number;
+  companiesNew: number;
+  workersActive: number;
+  jobsCreated: number;
+}
+
+export const platformMetricsTrendQuery = (days = 30) => ({
+  queryKey: ["platform", "metrics", "trend", days],
+  queryFn: async () => {
+    const { data } = await customFetch.get<{ success: true; data: PlatformMetricsSnapshotPoint[] }>("/platform/metrics/trend", {
+      params: { days },
+    });
+    return data.data;
+  },
+});
+
 // ── Companies ────────────────────────────────────────────────────────────
 
 export const platformCompaniesQuery = (params: Record<string, string | undefined>) => ({
@@ -234,6 +295,26 @@ export const updateCompanyPlanOverride = async (companyId: string, plan: Plan, r
   return data;
 };
 
+export interface BulkActionResult {
+  success: boolean;
+  succeeded: string[];
+  failed: { companyId: string; error: string }[];
+}
+
+// One call per bulk action, regardless of how many companies it touches —
+// each company still gets its own audit-log row server-side (tagged
+// metadata.bulk), this just avoids N individual requests burning through
+// the platform mutation rate limit on a single click.
+export const bulkUpdateCompanyStatus = async (companyIds: string[], status: CompanyStatus, reason: string) => {
+  const { data } = await customFetch.patch<BulkActionResult>("/platform/companies/bulk/status", { companyIds, status, reason });
+  return data;
+};
+
+export const bulkUpdateCompanyTags = async (companyIds: string[], tags: PlatformTag[], reason?: string) => {
+  const { data } = await customFetch.patch<BulkActionResult>("/platform/companies/bulk/tags", { companyIds, tags, reason });
+  return data;
+};
+
 export const retryEmailDomainVerification = async (companyId: string) => {
   const { data } = await customFetch.post<{ success: true; settings: PlatformEmailSettings }>(
     `/platform/email-domains/${companyId}/retry-verification`
@@ -248,6 +329,70 @@ export const resetEmailDomain = async (companyId: string, reason: string) => {
   );
   return data.settings;
 };
+
+// ── Cross-company usage & email rollups ─────────────────────────────────
+// Distinct from PlatformUsage/platformCompanyUsageQuery above, which are
+// scoped to one company — these are platform-wide.
+
+export interface PlatformUsageSummary {
+  companiesActive: number;
+  workersActive: number;
+  jobsCreated30d: number;
+  clockEvents30d: number;
+  emailFailures30d: number;
+}
+
+export const platformUsageSummaryQuery = {
+  queryKey: ["platform", "usage-summary"],
+  queryFn: async () => {
+    const { data } = await customFetch.get<{ success: true; usage: PlatformUsageSummary }>("/platform/usage");
+    return data.usage;
+  },
+};
+
+export type EmailDomainStatus = "not_connected" | "pending" | "verified" | "failed";
+
+export interface PlatformEmailDomainRow {
+  companyId: string;
+  companyName: string;
+  domain: string;
+  status: EmailDomainStatus;
+  sender: string;
+  verifiedAt: string | null;
+  lastCheckedAt: string | null;
+}
+
+export const platformEmailDomainsQuery = {
+  queryKey: ["platform", "email-domains"],
+  queryFn: async () => {
+    const { data } = await customFetch.get<{
+      success: true;
+      data: PlatformEmailDomainRow[];
+      metrics: { verified: number; pending: number; failed: number; failedToday: number };
+    }>("/platform/email-domains");
+    return data;
+  },
+};
+
+export interface PlatformDnsRecord {
+  type: string;
+  name: string;
+  value: string;
+  priority?: number;
+  status: "pending" | "verified" | "failed";
+}
+
+// Hits a live Resend API call, not a DB read — callers pass `enabled` so
+// this only fires while a records drawer is actually open.
+export const platformEmailDomainRecordsQuery = (companyId: string) => ({
+  queryKey: ["platform", "email-domains", companyId, "records"],
+  queryFn: async () => {
+    const { data } = await customFetch.get<{ success: true; status: EmailDomainStatus; records: PlatformDnsRecord[] }>(
+      `/platform/email-domains/${companyId}/records`
+    );
+    return data;
+  },
+});
 
 // ── Users ────────────────────────────────────────────────────────────────
 

@@ -40,6 +40,7 @@ import InvitationSuccessPage from "@/pages/acceptInvites/InvitationSuccessPage";
 import NewUserInvitePage from "@/pages/acceptInvites/NewUserInvitePage";
 import RecurringAssignmentPage, { loader as recurringAssignmentsLoader } from "@/pages/worker/RecurringAssignmentPage";
 import PublicQuotePage from "@/pages/PublicQuotePage";
+import { MaintenancePage } from "@/pages/MaintenancePage";
 import { createBrowserRouter, Navigate } from "react-router";
 import DashboardLayout from "../layouts/dashboardlayout";
 import { Calendar, calendarLoader, ClentBillingPage, ClientDetail, clientDetailLoader, ClientDetailsaJobsPage, ClientDetailsContactsPage, ClientDetailsOverviewPage, ClientDetailsSitesPage, ClientDetailsQuotesPage, ClientDetailsInvoicesPage, ClientDetailsPortalAccessPage, BookingRequests, bookingRequestsLoader, JobChangeRequests, jobChangeRequestsLoader, Clients, clientsLoader, clockLoader, CreateClientPage, CreateInvoicePage, createInvoiceLoader, CreateJob, createjobAction, CreateQuote, createQuoteLoader, CreateSitePage, DataAssistant, Dashboard, dashboardLoader, EarningsScreen, OvertimeScreen, DownloadTimesheetScreen, EditJob, editJobAction, HelpArticlePage, HelpArticleScreen, HelpCentre, HelpCentreScreen, InvoiceDetail, invoiceDetailLoader, InvoiceForm, invoiceFormLoader, Invoices, invoicesLoader, JobDetail, Jobs, jobsLoader, Leads, leadsLoader, LeadDetail, leadDetailLoader, loginAction, openShiftsLoader, ProfileScreen, Quotes, quotesLoader, RecurringJobDetail, recurringJobDetailLoader, RecurringJobs, recurringJobsLoader, Settings, settingsLoader, signupAction, singleJobLoader, singleWorkerJobLoader, SiteDetailPage, siteDetailLoader, Sites, sitesLoader, SuspendedAccountPage, Team, teamLoader, TimeOffRequestsPage, timeOffRequestsLoader, workerLoader, WorkerProfile, workerProfileLoader, workerStatsLoader, Workers, workersLoader, CheckOutSettings, ChangePlanSettings, Notifications, TeamsCreatepage, teamsCreateLoader, WorkerDocumentsScreen, WorkerTimeOffScreen, WorkHubScreen, ContactManagerScreen, TeamDirectoryScreen, WorkLocationsScreen } from "../pages";
@@ -657,6 +658,7 @@ export const router = createBrowserRouter([
                         lazy: () =>
                             import("@/pages/platform/PlatformUsage").then((m) => ({
                                 Component: m.PlatformUsage,
+                                loader: m.platformUsageLoader(queryClient),
                             })),
                     },
                     {
@@ -664,6 +666,7 @@ export const router = createBrowserRouter([
                         lazy: () =>
                             import("@/pages/platform/PlatformEmails").then((m) => ({
                                 Component: m.PlatformEmails,
+                                loader: m.platformEmailsLoader(queryClient),
                             })),
                     },
                     {
@@ -723,6 +726,15 @@ export const router = createBrowserRouter([
             {
                 path: "account/suspended",
                 element: <SuspendedAccountPage />
+            },
+
+            {
+                // Outside every layout (DashboardLayout/PlatformLayout/
+                // WorkerAppLayout) — must render even while every protected
+                // loader is 503ing. See customFetch.ts's response
+                // interceptor, which hard-redirects here.
+                path: "maintenance",
+                element: <MaintenancePage />
             },
 
             {

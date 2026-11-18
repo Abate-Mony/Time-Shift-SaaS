@@ -3,23 +3,23 @@ import { Link } from "react-router";
 import { AlertCircle, AlertTriangle, Check, X as XIcon } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { MetricCard, CompactMetric } from "@/components/platform/figma/primitives";
-import { platformOverviewQuery } from "@/utils/platform-api";
+import { platformOverviewQuery, platformMetricsTrendQuery } from "@/utils/platform-api";
 import dayjs from "dayjs";
 
 export const platformOverviewLoader = (queryClient: QueryClient) => async () => {
-  await queryClient.ensureQueryData(platformOverviewQuery);
+  await Promise.all([
+    queryClient.ensureQueryData(platformOverviewQuery),
+    queryClient.ensureQueryData(platformMetricsTrendQuery(30)),
+  ]);
   return null;
 };
 
-// Illustrative only — no telemetry pipeline or billing provider exists to
-// back a real growth series or plan mix (same gap as PlatformUsage /
-// PlatformSubscriptions). Rendered with the exact Figma layout, tagged
-// "Preview" rather than presented as live, unlike the real cards above them.
-const GROWTH_DATA = [
-  { month: "Apr", companies: 1180 }, { month: "May", companies: 1201 },
-  { month: "Jun", companies: 1220 }, { month: "Jul", companies: 1245 },
-  { month: "Aug", companies: 1262 }, { month: "Sep", companies: 1284 },
-];
+// Subscription mix is still illustrative — no billing/subscription
+// integration exists in this backend (see getPlatformOverview's own
+// comment), so there's nothing real to chart here yet. Left as the
+// existing flagged placeholder rather than quietly swapping in a
+// plan-tier histogram under the same "Subscription Mix" label, which would
+// misrepresent a different, less honest metric as the real thing.
 const SUB_DIST = [
   { name: "Free", value: 412, color: "#94a3b8" },
   { name: "Starter", value: 318, color: "#60a5fa" },
@@ -33,7 +33,13 @@ function PreviewTag() {
 
 export function PlatformOverview() {
   const { data: overview } = useQuery(platformOverviewQuery);
+  const { data: trend } = useQuery(platformMetricsTrendQuery(30));
   if (!overview) return null;
+
+  const growthData = (trend ?? []).map(point => ({
+    date: dayjs(point.date).format("D MMM"),
+    companies: point.companiesTotal,
+  }));
 
   return (
     <div className="p-6 max-w-[1200px] flex flex-col gap-5">
@@ -147,23 +153,30 @@ export function PlatformOverview() {
         </div>
       </div>
 
-      {/* Growth chart */}
+      {/* Growth chart — real, fed by a daily snapshot cron. No history
+          exists before that cron's first run, so a fresh deploy shows a
+          short/empty chart rather than a fabricated longer trend. */}
       <div className="bg-white border border-[#E2E8F0] rounded-lg p-4">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-sm font-bold text-slate-800">Company Growth</h3>
-          <div className="flex items-center gap-2">
-            <span className="text-[11px] text-slate-400">Last 6 months</span>
-            <PreviewTag />
-          </div>
+          <span className="text-[11px] text-slate-400">Last 30 days</span>
         </div>
-        <ResponsiveContainer width="100%" height={160}>
-          <LineChart data={GROWTH_DATA} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
-            <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#94a3b8" }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fontSize: 11, fill: "#94a3b8" }} axisLine={false} tickLine={false} domain={["auto", "auto"]} />
-            <Tooltip contentStyle={{ fontSize: 12, border: "1px solid #E2E8F0", borderRadius: 8 }} />
-            <Line type="monotone" dataKey="companies" stroke="#1E3A5F" strokeWidth={2} dot={false} />
-          </LineChart>
-        </ResponsiveContainer>
+        {growthData.length < 2 ? (
+          <p className="text-xs text-slate-400 py-10 text-center">
+            {growthData.length === 0
+              ? "No trend data yet — the daily snapshot hasn't run. It'll appear here after the next run."
+              : `Trend data started being recorded on ${growthData[0].date}. Earlier growth was never captured and can't be shown.`}
+          </p>
+        ) : (
+          <ResponsiveContainer width="100%" height={160}>
+            <LineChart data={growthData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
+              <XAxis dataKey="date" tick={{ fontSize: 11, fill: "#94a3b8" }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 11, fill: "#94a3b8" }} axisLine={false} tickLine={false} domain={["auto", "auto"]} />
+              <Tooltip contentStyle={{ fontSize: 12, border: "1px solid #E2E8F0", borderRadius: 8 }} />
+              <Line type="monotone" dataKey="companies" stroke="#1E3A5F" strokeWidth={2} dot={false} />
+            </LineChart>
+          </ResponsiveContainer>
+        )}
       </div>
 
       {/* Activity feed — real */}

@@ -7,7 +7,10 @@ import {
   Avatar, StatusBadge, TH, TD, PlatformTable, THead, TBody, Row, EmptyRow,
   RowMenu, ConfirmModal, SearchInput, PillFilter,
 } from "@/components/platform/figma/primitives";
-import { platformCompaniesQuery, updateCompanyStatus, type CompanyStatus, type PlatformTag } from "@/utils/platform-api";
+import {
+  platformCompaniesQuery, updateCompanyStatus, bulkUpdateCompanyStatus, bulkUpdateCompanyTags,
+  type CompanyStatus, type PlatformTag,
+} from "@/utils/platform-api";
 import { HealthBadge, TagChip, TAG_LABELS } from "@/components/platform/SupportBits";
 import { usePlatformPermissions } from "@/hooks/usePlatformPermissions";
 import { useState } from "react";
@@ -27,11 +30,15 @@ export function PlatformCompanies() {
   const navigation = useNavigation();
   const isLoading = navigation.state === "loading";
   const queryClient = useQueryClient();
-  const { isSuper } = usePlatformPermissions();
 
   const { data } = useQuery(platformCompaniesQuery(searchValues));
+  const { isSuper, canSupport } = usePlatformPermissions();
   const [search, setSearch] = useState(searchValues.search ?? "");
   const [statusDialog, setStatusDialog] = useState<{ companyId: string; companyName: string; next: CompanyStatus } | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkStatusDialog, setBulkStatusDialog] = useState<CompanyStatus | null>(null);
+  const [bulkTagDialog, setBulkTagDialog] = useState(false);
+  const [bulkTags, setBulkTags] = useState<PlatformTag[]>([]);
 
   const statusMutation = useMutation({
     mutationFn: (vars: { companyId: string; status: CompanyStatus; reason: string }) =>
@@ -44,7 +51,43 @@ export function PlatformCompanies() {
     onError: () => toast.error("Failed to update company status."),
   });
 
+  const bulkResultToast = (data: { succeeded: string[]; failed: { companyId: string; error: string }[] }) => {
+    toast[data.failed.length === 0 ? "success" : "error"](
+      `${data.succeeded.length} compan${data.succeeded.length === 1 ? "y" : "ies"} updated${data.failed.length ? `, ${data.failed.length} failed` : ""}.`
+    );
+    queryClient.invalidateQueries({ queryKey: ["platform", "companies"] });
+    setSelectedIds(new Set());
+  };
+
+  const bulkStatusMutation = useMutation({
+    mutationFn: (vars: { status: CompanyStatus; reason: string }) =>
+      bulkUpdateCompanyStatus(Array.from(selectedIds), vars.status, vars.reason),
+    onSuccess: (data) => { bulkResultToast(data); setBulkStatusDialog(null); },
+    onError: () => toast.error("Failed to update companies."),
+  });
+
+  const bulkTagMutation = useMutation({
+    mutationFn: (reason: string) => bulkUpdateCompanyTags(Array.from(selectedIds), bulkTags, reason),
+    onSuccess: (data) => { bulkResultToast(data); setBulkTagDialog(false); setBulkTags([]); },
+    onError: () => toast.error("Failed to update tags."),
+  });
+
+  const pageIds = data?.data.map((c) => c.id) ?? [];
+  const allOnPageSelected = pageIds.length > 0 && pageIds.every((id) => selectedIds.has(id));
+  const toggleSelectAll = () => {
+    setSelectedIds(allOnPageSelected ? new Set() : new Set(pageIds));
+  };
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
   const setParam = (key: string, value: string | undefined) => {
+    setSelectedIds(new Set());
     const params = new URLSearchParams(searchValues);
     if (value) params.set(key, value);
     else params.delete(key);
@@ -53,6 +96,7 @@ export function PlatformCompanies() {
   };
 
   const goToPage = (page: number) => {
+    setSelectedIds(new Set());
     const params = new URLSearchParams(searchValues);
     params.set("page", String(page));
     navigate(`/platform/companies?${params.toString()}`);
@@ -118,9 +162,51 @@ export function PlatformCompanies() {
         </select>
       </div>
 
+      {selectedIds.size > 0 && (
+        <div className="flex items-center gap-3 bg-[#1E3A5F]/6 border border-[#1E3A5F]/15 rounded-lg px-4 py-2.5">
+          <span className="text-xs font-semibold text-[#1E3A5F]">{selectedIds.size} selected</span>
+          {isSuper && (
+            <>
+              <button
+                onClick={() => setBulkStatusDialog("suspended")}
+                className="h-7 px-2.5 text-xs font-semibold text-red-700 bg-white border border-red-200 rounded-md hover:bg-red-50 transition-colors"
+              >
+                Suspend
+              </button>
+              <button
+                onClick={() => setBulkStatusDialog("active")}
+                className="h-7 px-2.5 text-xs font-semibold text-slate-600 bg-white border border-[#E2E8F0] rounded-md hover:bg-slate-50 transition-colors"
+              >
+                Restore
+              </button>
+            </>
+          )}
+          {canSupport && (
+            <button
+              onClick={() => setBulkTagDialog(true)}
+              className="h-7 px-2.5 text-xs font-semibold text-slate-600 bg-white border border-[#E2E8F0] rounded-md hover:bg-slate-50 transition-colors"
+            >
+              Set tags
+            </button>
+          )}
+          <button onClick={() => setSelectedIds(new Set())} className="h-7 px-2.5 text-xs font-semibold text-slate-400 hover:text-slate-600 transition-colors ml-auto">
+            Clear
+          </button>
+        </div>
+      )}
+
       <div className={isLoading ? "opacity-60 transition-opacity" : "transition-opacity"}>
         <PlatformTable>
           <THead>
+            <TH>
+              <input
+                type="checkbox"
+                aria-label="Select all on this page"
+                checked={allOnPageSelected}
+                onChange={toggleSelectAll}
+                className="h-3.5 w-3.5 rounded border-slate-300 accent-[#1E3A5F]"
+              />
+            </TH>
             <TH>Company</TH>
             <TH>Owner</TH>
             <TH>Plan</TH>
@@ -132,7 +218,7 @@ export function PlatformCompanies() {
           </THead>
           <TBody>
             {data?.data.length === 0 && (
-              <EmptyRow colSpan={8}>
+              <EmptyRow colSpan={9}>
                 <Building2 size={20} className="text-slate-200 mx-auto mb-2" />
                 No companies match these filters.
               </EmptyRow>
@@ -142,6 +228,15 @@ export function PlatformCompanies() {
               const hasBar = !company.workerUsage.unlimited && limit > 0;
               return (
                 <Row key={company.id} onClick={() => navigate(`/platform/companies/${company.id}`)}>
+                  <TD onClick={(e) => e.stopPropagation()}>
+                    <input
+                      type="checkbox"
+                      aria-label={`Select ${company.name}`}
+                      checked={selectedIds.has(company.id)}
+                      onChange={() => toggleSelect(company.id)}
+                      className="h-3.5 w-3.5 rounded border-slate-300 accent-[#1E3A5F]"
+                    />
+                  </TD>
                   <TD>
                     <div className="flex items-center gap-2.5">
                       <Avatar name={company.name} />
@@ -241,6 +336,51 @@ export function PlatformCompanies() {
             onConfirm={(reason) => statusMutation.mutate({ companyId: statusDialog.companyId, status: statusDialog.next, reason })}
             onClose={() => setStatusDialog(null)}
           />
+        )}
+        {bulkStatusDialog && (
+          <ConfirmModal
+            title={bulkStatusDialog === "active" ? `Restore ${selectedIds.size} companies?` : `Suspend ${selectedIds.size} companies?`}
+            body={
+              bulkStatusDialog === "active"
+                ? "This will restore full access for every selected company's users."
+                : "Users from every selected company will no longer be able to access OnClockly until restored."
+            }
+            consequence={bulkStatusDialog === "suspended" ? "All active sessions will be terminated for each company. Workers will be unable to clock in or out." : undefined}
+            confirmLabel={bulkStatusDialog === "active" ? "Restore companies" : "Suspend companies"}
+            danger={bulkStatusDialog !== "active"}
+            busy={bulkStatusMutation.isPending}
+            onConfirm={(reason) => bulkStatusMutation.mutate({ status: bulkStatusDialog, reason })}
+            onClose={() => setBulkStatusDialog(null)}
+          />
+        )}
+        {bulkTagDialog && (
+          <ConfirmModal
+            title={`Set tags for ${selectedIds.size} companies?`}
+            body="This replaces each selected company's tags with exactly the set chosen below — it does not add to their existing tags."
+            confirmLabel="Set tags"
+            showReason={false}
+            busy={bulkTagMutation.isPending}
+            onConfirm={(reason) => bulkTagMutation.mutate(reason)}
+            onClose={() => { setBulkTagDialog(false); setBulkTags([]); }}
+          >
+            <div className="flex flex-wrap gap-1.5">
+              {(Object.keys(TAG_LABELS) as PlatformTag[]).map((t) => {
+                const active = bulkTags.includes(t);
+                return (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => setBulkTags((prev) => (active ? prev.filter((x) => x !== t) : [...prev, t]))}
+                    className={`h-7 px-2.5 text-xs font-semibold rounded-full border transition-colors ${
+                      active ? "bg-[#1E3A5F] text-white border-[#1E3A5F]" : "bg-white text-slate-600 border-[#E2E8F0] hover:bg-slate-50"
+                    }`}
+                  >
+                    {TAG_LABELS[t]}
+                  </button>
+                );
+              })}
+            </div>
+          </ConfirmModal>
         )}
       </AnimatePresence>
     </div>
