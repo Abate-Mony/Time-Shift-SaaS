@@ -1,409 +1,419 @@
-import AnimatedHeadLessUi from '@/components/animated-headless-ui'
-import DataTable from '@/components/JobsTable'
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
+import { useQuery, keepPreviousData, type QueryClient } from '@tanstack/react-query'
+import { Link, useLoaderData, useSearchParams, type LoaderFunctionArgs } from 'react-router'
+import { AnimatePresence } from 'framer-motion'
+import toast from 'react-hot-toast'
+import dayjs from 'dayjs'
+import { AlertTriangle, Briefcase, CalendarDays, CalendarIcon, ChevronLeft, ChevronRight, Download, Plus, Search, X } from 'lucide-react'
 import { ActiveFiltersBar } from '@/components/ui/ActiveFiltersBar'
-import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Field, FieldLabel } from '@/components/ui/field'
-import FilterButton from '@/components/ui/FilterButton'
-import { Label } from '@/components/ui/label'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { EmptyState } from '@/components/empty-state'
+import { JobRow } from '@/components/jobs/JobRow'
+import { JobsFilterPanel } from '@/components/jobs/JobsFilterPanel'
+import { JobsBulkBar } from '@/components/jobs/JobsBulkBar'
 import { useFilter } from '@/hooks/CustomLinkFilterHook'
-import { queryClient } from '@/lib/queryClient'
 import { cn } from '@/lib/utils'
 import { clientsQuery } from '@/utils/clients'
-import { jobsColumns } from '@/utils/columns'
-import customFetch from '@/utils/customFetch'
+import { sitesQuery } from '@/utils/sites'
 import { formatDate } from '@/utils/date'
-import type { CreateJobForm } from '@/utils/types'
-import { useQuery, type QueryClient } from '@tanstack/react-query'
-import { CalendarIcon, ChevronLeft, ChevronRight, Filter } from 'lucide-react'
-import { useState } from 'react'
-import toast from 'react-hot-toast'
-import { useLoaderData, useNavigate, type LoaderFunctionArgs, type Params } from 'react-router'
-import { backLinkState } from '@/hooks/useBackLink'
-import SearchComponent from '@/components/Search'
+import {
+  activePreset, companyWorkersQuery, daySummary, FILTER_PANEL_KEYS, downloadJobsExport, groupByDay, jobsQuery, presetRange,
+  type DatePreset, type JobListItem,
+} from '@/utils/jobsList'
 
+export const loader = (queryClient: QueryClient) => async ({ request }: LoaderFunctionArgs) => {
+  const params = Object.fromEntries(new URL(request.url).searchParams.entries())
+  await queryClient.ensureQueryData(jobsQuery(params))
+  return { searchValues: params }
+}
 
-const jobsQuery = (params: Params) => {
+const STATUS_TABS = [
+  { id: 'all', label: 'All' },
+  { id: 'published', label: 'Published' },
+  { id: 'draft', label: 'Draft' },
+  { id: 'completed', label: 'Completed' },
+  { id: 'cancelled', label: 'Cancelled' },
+] as const
 
-  const { search,
-    sort, page,
-    status, date,
-    client, priority, unassigned, start, end, limit } = params;
-  return (
-    {
+const DATE_PRESETS: { id: DatePreset; label: string }[] = [
+  { id: 'any', label: 'Any date' },
+  { id: 'today', label: 'Today' },
+  { id: 'week', label: 'This week' },
+  { id: 'upcoming', label: 'Upcoming' },
+  { id: 'past', label: 'Past' },
+]
 
+const SORTS = [
+  { value: 'date_asc', label: 'Date ↑' },
+  { value: 'date_desc', label: 'Date ↓' },
+  { value: 'title_asc', label: 'Name A–Z' },
+  { value: 'priority_desc', label: 'Priority' },
+  { value: 'status_asc', label: 'Status' },
+]
 
-      queryKey: [
-        'jobs',
-        {
-          search: search ?? '',
-          status: status ?? 'all',
-          sort: sort ?? 'date_asc',
-          page: page ?? 1,
-          date: date ?? '',
-          client: client ?? '',
-          priority: priority ?? '',
-          unassigned: unassigned ?? '',
-          start: start ?? '',
-          end: end ?? '',
-          limit: limit ?? '',
-        }
-      ],
-      // queryFn forwards every URL param as-is, so a new filter just needs a
-      // UI control setting it via useFilter — no change needed here beyond
-      // adding it to the key above (for correct per-filter-combo caching).
-      queryFn: async () => {
-        const { data } = await customFetch.get<any>('/jobs', {
-          params
-        });
-        return data;
-      }
+/** Search box: debounced, writes `search` and drops the page number. "/" focuses it. */
+function JobSearch({ value, onChange }: { value: string; onChange: (v: string | null) => void }) {
+  const [text, setText] = useState(value)
+  const ref = useRef<HTMLInputElement>(null)
+  useEffect(() => setText(value), [value])
+  useEffect(() => {
+    if (text.trim() === value) return
+    const t = setTimeout(() => onChange(text.trim() || null), 350)
+    return () => clearTimeout(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [text])
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const el = e.target as HTMLElement
+      if (e.key !== '/' || e.metaKey || e.ctrlKey || el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName)) return
+      e.preventDefault()
+      ref.current?.focus()
+      ref.current?.select()
     }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+  return (
+    <div className="relative w-full sm:w-80 lg:w-96">
+      <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+      <input
+        ref={ref}
+        type="search"
+        value={text}
+        onChange={e => setText(e.target.value)}
+        onKeyDown={e => { if (e.key === 'Escape') { setText(''); onChange(null); ref.current?.blur() } }}
+        placeholder="Search title, client, site…"
+        aria-label="Search jobs"
+        className={cn(
+          'w-full h-9 pl-9 pr-14 rounded-lg border bg-card text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/15 transition',
+          value ? 'border-[var(--primary)] font-medium' : 'border-[var(--border)]'
+        )}
+      />
+      {text ? (
+        <button type="button" aria-label="Clear search" onClick={() => { setText(''); onChange(null) }}
+          className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded flex items-center justify-center text-muted-foreground hover:bg-muted">
+          <X size={13} />
+        </button>
+      ) : (
+        <kbd className="hidden sm:block absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] border border-[var(--border)] rounded px-1.5 text-muted-foreground font-sans">/</kbd>
+      )}
+    </div>
   )
 }
-export const loader = (queryClient: QueryClient) => async ({ request }: LoaderFunctionArgs) => {
 
-  const params = Object.fromEntries([
-    ...new URL(request.url).searchParams.entries(),
-  ]);
-  await queryClient.ensureQueryData(jobsQuery(params))
-  return ({
-    searchValues: { ...params }
-  })
-
-}
 export function Jobs() {
-
-  const { searchValues } = useLoaderData() as {
-    searchValues: Params
-  }
-  const navigate = useNavigate()
-  const onNavigate = (path: string, state?: object) => navigate(path, { state: state ?? backLinkState('Jobs') })
-  const { jobs, totalJobs, totalPages, currentPage } = useQuery(jobsQuery(searchValues)).data as {
-    jobs: CreateJobForm[],
-    totalJobs: number,
-    totalPages: number,
-    currentPage: number
-  }
-  const tabs = [
-    { id: 'all', label: 'All Jobs', count: jobs.length },
-    { id: 'cancelled', label: 'Cancelled', },
-    { id: 'completed', label: 'Completed', },
-    { id: 'published', label: 'Published', },
-    { id: 'draft', label: 'Draft', },
-  ]
-  // console.log("jobs obj : ", jobs)
-  const [hoverIndex, setHoverIndex] = useState<number | null>(0)
-
+  const { searchValues: loaderValues } = useLoaderData() as { searchValues: Record<string, string> }
+  const [sp] = useSearchParams()
+  const params = useMemo(() => Object.fromEntries(sp.entries()) as Record<string, string>, [sp])
+  const { handleFiltersChange } = useFilter()
+  const { data } = useQuery({ ...jobsQuery(params ?? loaderValues), placeholderData: keepPreviousData })
   const [filterOpen, setFilterOpen] = useState(false)
-  const { handleFilterChange, handleFiltersChange, searchQuery } = useFilter()
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [exporting, setExporting] = useState(false)
 
-  const clientFilter = searchQuery.get('client') ?? ''
-  const priorityFilter = searchQuery.get('priority') ?? ''
-  const unassignedOnly = searchQuery.get('unassigned') === 'true'
-  const startFilter = searchQuery.get('start') ?? ''
-  const endFilter = searchQuery.get('end') ?? ''
-  // Both match the backend's own defaults (jobController.ts's getAllJobs)
-  // when nothing is set, so these controls reflect what's actually applied.
-  const sortValue = searchQuery.get('sort') ?? 'date_asc'
-  const limitValue = searchQuery.get('limit') ?? '100'
+  const jobs = data?.jobs ?? []
+  const totalJobs = data?.totalJobs ?? 0
+  const totalPages = data?.totalPages ?? 1
+  const currentPage = data?.currentPage ?? 1
+  const counts = data?.statusCounts
 
-  const activeFilterCount = [clientFilter, priorityFilter, startFilter, endFilter, unassignedOnly ? 'x' : '']
-    .filter(Boolean).length
+  const search = params.search ?? ''
+  const status = params.status ?? 'all'
+  const sort = params.sort ?? 'date_asc'
+  const limit = params.limit ?? '100'
+  const start = params.start ?? null
+  const end = params.end ?? null
+  const preset = activePreset(start, end)
+  const byDate = sort === 'date_asc' || sort === 'date_desc'
+  const attentionOn = params.attention === 'true'
+  const today = dayjs().format('YYYY-MM-DD')
 
-  // Lazy — only fetched once the filter panel is actually opened, or if a
-  // client filter is already active on load (the ActiveFiltersBar below
-  // needs the name to show something better than a raw id).
-  const { data: filterClients } = useQuery({ ...clientsQuery(), enabled: filterOpen || !!clientFilter })
-
-  // Omitting the key entirely for page 1 (rather than writing "1") keeps the
-  // URL clean for the common case and matches every other filter here, which
-  // also omits its key at its default value.
+  // Any filter change sends you back to page 1 (page 4 of a different
+  // result set is meaningless) and clears the selection.
+  const setFilters = (entries: Record<string, string | null>) => {
+    handleFiltersChange({ ...entries, page: null })
+    setSelectedIds(new Set())
+  }
   const goToPage = (p: number) => {
-    handleFilterChange({ key: 'page', value: p > 1 ? String(p) : null })
+    handleFiltersChange({ page: p > 1 ? String(p) : null })
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  // Changing how many jobs load per page changes what "page 2" even means,
-  // so the current page number is dropped rather than carried forward —
-  // otherwise a manager on page 4 of 10-per-page could land on an empty
-  // page 4 of 2 after switching to 100-per-page.
-  const handleLimitChange = (value: string) => {
-    handleFiltersChange({ limit: value === '100' ? null : value, page: null })
-  }
+  // Selection survives refetches but drops jobs no longer on the page.
+  const selected = jobs.filter(j => selectedIds.has(j._id as string))
+  const toggle = (id: string, on: boolean) =>
+    setSelectedIds(prev => { const next = new Set(prev); if (on) next.add(id); else next.delete(id); return next })
+  const allOnPageSelected = jobs.length > 0 && selected.length === jobs.length
 
-  const deleteSelectedJobs = async (selectedJobs: CreateJobForm[]) => {
+  // Names for the filter chips (cached — the panel uses the same queries).
+  const { data: clients } = useQuery({ ...clientsQuery(), enabled: !!params.client })
+  const { data: sites } = useQuery({ ...sitesQuery(params.client ? { client: params.client } : {}), enabled: !!params.site })
+  const { data: workers } = useQuery({ ...companyWorkersQuery, enabled: !!params.worker })
+
+  const exportCsv = async () => {
+    setExporting(true)
     try {
-      await Promise.all(selectedJobs.map((job) => customFetch.delete(`/jobs/${job._id}`)))
-      queryClient.invalidateQueries({ queryKey: ['jobs'] })
-      toast.success(`${selectedJobs.length} ${selectedJobs.length === 1 ? 'job' : 'jobs'} deleted successfully`)
-    } catch (e) {
-      toast.error('Failed to delete some jobs, try again later')
+      const truncatedAt = await downloadJobsExport(params)
+      if (truncatedAt) toast(`Exported the first 5,000 of ${truncatedAt.toLocaleString()} jobs — narrow the filters to get the rest.`)
+    } catch {
+      toast.error("Couldn't export the jobs. Try again.")
+    } finally {
+      setExporting(false)
     }
   }
 
+  const groups = byDate ? groupByDay(jobs) : null
+  const rangeLabel = preset === 'any' ? 'all dates'
+    : preset === 'custom'
+      ? `${start ? formatDate(start, 'D MMM YYYY') : 'the start'} – ${end ? formatDate(end, 'D MMM YYYY') : 'onwards'}`
+      : DATE_PRESETS.find(p => p.id === preset)!.label.toLowerCase()
+  const hasAnyFilter = !!search || status !== 'all' || preset !== 'any' || attentionOn ||
+    FILTER_PANEL_KEYS.some(k => params[k])
+
+  const clearEverything = () => setFilters({
+    search: null, status: null, start: null, end: null, attention: null,
+    ...Object.fromEntries(FILTER_PANEL_KEYS.map(k => [k, null])),
+  })
+
   return (
-    <div className=" animate-fade-in">
-
-
-      <div className='mr-auto max-w-md my-2'>
-        <SearchComponent 
-        placeholder='search jobs ...'
-        />
+    <div className="animate-fade-in flex flex-col gap-4 pb-24">
+      {/* Header */}
+      <div className="flex items-end gap-3 flex-wrap">
+        <div className="mr-auto">
+          <h1 className="text-xl font-bold">Jobs</h1>
+          <p className="text-sm text-muted-foreground">Every job, any date. For the week grid, use the Calendar.</p>
+        </div>
+        <Link to="/calendar" className="h-9 px-3 rounded-lg border border-[var(--border)] bg-card text-sm font-medium inline-flex items-center gap-1.5 hover:bg-muted">
+          <CalendarDays size={14} /> <span className="hidden sm:inline">Open in Calendar</span>
+        </Link>
+        <button type="button" onClick={exportCsv} disabled={exporting || totalJobs === 0}
+          className="h-9 px-3 rounded-lg border border-[var(--border)] bg-card text-sm font-medium inline-flex items-center gap-1.5 hover:bg-muted disabled:opacity-50">
+          <Download size={14} /> <span className="hidden sm:inline">{exporting ? 'Exporting…' : 'Export'}</span>
+        </button>
+        <Link to="/create-job" className="h-9 px-3.5 rounded-lg bg-[var(--primary)] text-white text-sm font-semibold inline-flex items-center gap-1.5">
+          <Plus size={15} /> New job
+        </Link>
       </div>
-      <div className="flex items-center gap-1 gap-x-0 border-b flex-wrap border-[var(--border)]">
-        {tabs.map((tab, idx) => (
-          <AnimatedHeadLessUi
-            animatedClassName='bg-black/5 p-0 rounded-sm'
-            className='flex items-center'
-            hoverIndex={hoverIndex}
-            setHoverIndex={setHoverIndex}
-            layoutId='animated-job-filter-button'
-            index={idx} >
-            <FilterButton
-              className=' mx-0 rounded-none flex justify-between'
-              name='status'
-              value={tab.id}
-              key={tab.id}
-              layoutId='job-filter-button'
-              show
-            >
-              <span className='flex items-center justify-center'>
-                {tab.label}
-                {/* <span className='ml-0.5
-             rounded-full bg-black/5 p-2 text-xs size-2.5 flex items-center justify-center'>
-                  {tab?.count ?? 0}
-                </span> */}
-              </span>
 
-            </FilterButton>
-          </AnimatedHeadLessUi>
-        ))}
-      </div>
-      {/* Filters row */}
-      <div className="flex items-center gap-3 mt-4 mb-5 relative">
-
-
-        <div className="relative">
+      {/* Status tabs + needs attention */}
+      <div className="flex items-end gap-2 border-b border-[var(--border)] overflow-x-auto">
+        {STATUS_TABS.map(t => (
           <button
+            key={t.id}
             type="button"
-            onClick={() => setFilterOpen(o => !o)}
+            onClick={() => setFilters({ status: t.id === 'all' ? null : t.id })}
             className={cn(
-              "flex items-center gap-2 h-9 px-3 border rounded-lg text-sm bg-card hover:bg-muted transition-colors",
-              activeFilterCount > 0 ? "border-[var(--primary)] text-[var(--primary)]" : "border-[var(--border)] text-muted-foreground"
+              'h-10 px-3 text-sm font-medium flex items-center gap-1.5 border-b-2 -mb-px whitespace-nowrap transition-colors',
+              status === t.id ? 'border-[var(--primary)] text-[var(--primary)] font-semibold' : 'border-transparent text-muted-foreground hover:text-foreground'
             )}
           >
-            <Filter size={13} /> Filter
-            {activeFilterCount > 0 && (
-              <span className="w-4 h-4 rounded-full bg-[var(--primary)] text-white text-[10px] font-bold flex items-center justify-center">
-                {activeFilterCount}
+            {t.label}
+            {counts && (
+              <span className={cn('text-[11px] rounded-full px-1.5 min-w-5 text-center',
+                status === t.id ? 'bg-[var(--primary)] text-white' : 'bg-muted text-muted-foreground')}>
+                {counts[t.id]}
               </span>
             )}
           </button>
-
-          {filterOpen && (
-            <div className="absolute z-20 top-full mt-2 left-0 w-72 bg-card border border-[var(--border)] rounded-xl shadow-lg p-4 flex flex-col gap-4">
-              <div className="flex flex-col gap-1.5">
-                <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Client</Label>
-                {/* The backend now expects a real Client _id here, not a
-                    name substring — filtering by free text would just 400. */}
-                <Select
-                  value={clientFilter || 'all'}
-                  onValueChange={v => handleFilterChange({ key: 'client', value: v === 'all' ? null : v })}
-                >
-                  <SelectTrigger className="h-9 w-full">
-                    <SelectValue placeholder="Any client" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Any client</SelectItem>
-                    {filterClients?.clients.map(c => (
-                      <SelectItem key={c._id} value={c._id}>{c.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Priority</Label>
-                <Select
-                  value={priorityFilter || 'all'}
-                  onValueChange={v => handleFilterChange({ key: 'priority', value: v === 'all' ? null : v })}
-                >
-                  <SelectTrigger className="h-9 w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Any priority</SelectItem>
-                    <SelectItem value="low">Low</SelectItem>
-                    <SelectItem value="medium">Medium</SelectItem>
-                    <SelectItem value="high">High</SelectItem>
-                    <SelectItem value="urgent">Urgent</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <Label className="flex items-center gap-2 cursor-pointer font-normal">
-                <Checkbox
-                  checked={unassignedOnly}
-                  onCheckedChange={checked => handleFilterChange({ key: 'unassigned', value: checked ? 'true' : null })}
-                />
-                <span className="text-sm text-foreground">No workers assigned</span>
-              </Label>
-
-              {activeFilterCount > 0 && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    handleFiltersChange({ client: null, priority: null, unassigned: null, start: null, end: null })
-                    setFilterOpen(false)
-                  }}
-                  className="text-xs text-muted-foreground hover:text-muted-foreground self-start"
-                >
-                  Clear filters
-                </button>
-              )}
-            </div>
+        ))}
+        <button
+          type="button"
+          onClick={() => setFilters({ attention: attentionOn ? null : 'true' })}
+          className={cn(
+            'ml-auto mb-1.5 h-8 px-3 rounded-full border text-xs font-semibold inline-flex items-center gap-1.5 whitespace-nowrap transition-colors',
+            attentionOn ? 'bg-amber-500 border-amber-500 text-white'
+              : (data?.attentionCount ?? 0) > 0 ? 'bg-amber-50 border-amber-300 text-amber-800 hover:bg-amber-100'
+                : 'bg-card border-[var(--border)] text-muted-foreground'
           )}
-        </div>
+          title="Upcoming jobs with open places, a broken time, or still a draft within 2 days"
+        >
+          <AlertTriangle size={12} /> Needs attention
+          <span className={cn('rounded-full px-1.5 text-[11px]', attentionOn ? 'bg-white/25' : 'bg-white/70')}>{data?.attentionCount ?? 0}</span>
+        </button>
+      </div>
 
-        <Select value={sortValue} onValueChange={v => handleFilterChange({ key: 'sort', value: v })}>
-          <SelectTrigger className="h-9 w-auto text-sm text-muted-foreground">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="date_desc">Sort: Date ↓</SelectItem>
-            <SelectItem value="date_asc">Sort: Date ↑</SelectItem>
-            <SelectItem value="title_asc">Sort: Name A–Z</SelectItem>
-            <SelectItem value="priority_desc">Sort: Priority</SelectItem>
-            <SelectItem value="status_asc">Sort: Status</SelectItem>
-          </SelectContent>
-        </Select>
-
-        <Select value={limitValue} onValueChange={handleLimitChange}>
-          <SelectTrigger className="h-9 w-auto text-sm text-muted-foreground">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="10">10 per page</SelectItem>
-            <SelectItem value="25">25 per page</SelectItem>
-            <SelectItem value="50">50 per page</SelectItem>
-            <SelectItem value="100">100 per page</SelectItem>
-            <SelectItem value="200">200 per page</SelectItem>
-          </SelectContent>
-        </Select>
-        <Field className="w-auto">
-          <FieldLabel htmlFor="date-picker-range" className="sr-only">Date range</FieldLabel>
+      {/* Search, dates, filters, sort */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <JobSearch value={search} onChange={v => setFilters({ search: v })} />
+        <div className="flex bg-card border border-[var(--border)] rounded-lg p-0.5 overflow-x-auto max-w-full">
+          {DATE_PRESETS.map(p => (
+            <button
+              key={p.id}
+              type="button"
+              onClick={() => {
+                const r = presetRange(p.id as Exclude<DatePreset, 'custom'>)
+                // Past reads newest-first; switching away from it puts the default back.
+                const nextSort = p.id === 'past' ? 'date_desc' : sort === 'date_desc' && preset === 'past' ? null : undefined
+                setFilters({ start: r.start, end: r.end, ...(nextSort !== undefined ? { sort: nextSort } : {}) })
+              }}
+              className={cn('h-8 px-2.5 rounded-md text-xs font-semibold whitespace-nowrap',
+                preset === p.id ? 'bg-[var(--primary)] text-white' : 'text-muted-foreground hover:text-foreground')}
+            >
+              {p.label}
+            </button>
+          ))}
           <Popover>
             <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                id="date-picker-range"
-                className="h-9 justify-start px-2.5 font-normal text-sm text-muted-foreground"
-              >
-                <CalendarIcon size={14} />
-                {startFilter ? (
-                  endFilter && endFilter !== startFilter ? (
-                    <>
-                      {formatDate(startFilter, "DD/MM/YYYY")} – {formatDate(endFilter, "DD/MM/YYYY")}
-                    </>
-                  ) : (
-                    formatDate(startFilter, "DD/MM/YYYY")
-                  )
-                ) : (
-                  <span>Date range</span>
-                )}
-              </Button>
+              <button type="button" className={cn('h-8 px-2.5 rounded-md text-xs font-semibold whitespace-nowrap inline-flex items-center gap-1',
+                preset === 'custom' ? 'bg-[var(--primary)] text-white' : 'text-muted-foreground hover:text-foreground')}>
+                <CalendarIcon size={12} />
+                {preset === 'custom' ? rangeLabel : 'Custom…'}
+              </button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
               <Calendar
                 className="rounded-md border w-[min(400px,calc(100vw-2rem))] sm:w-[min(800px,calc(100vw-4rem))]"
                 mode="range"
-                defaultMonth={startFilter ? new Date(startFilter) : undefined}
-                selected={startFilter ? { from: new Date(startFilter), to: new Date(endFilter || startFilter) } : undefined}
-                onSelect={(range) => handleFiltersChange({
-                  // ISO (hyphens), not the DD/MM/YYYY shown in the trigger
-                  // button above — this is the wire value the backend's
-                  // toUtcDay() parses (jobController.ts's getAllJobs), which
-                  // builds `${value}T00:00:00.000Z` and needs real ISO.
-                  start: range?.from ? formatDate(range.from, "YYYY-MM-DD") : null,
-                  end: range?.to ? formatDate(range.to, "YYYY-MM-DD") : null,
+                defaultMonth={start ? new Date(start) : undefined}
+                selected={start ? { from: new Date(start), to: new Date(end || start) } : undefined}
+                onSelect={range => setFilters({
+                  // ISO, not the display format — the backend's toUtcDay() parses it.
+                  start: range?.from ? formatDate(range.from, 'YYYY-MM-DD') : null,
+                  end: range?.to ? formatDate(range.to, 'YYYY-MM-DD') : null,
                 })}
                 numberOfMonths={2}
               />
             </PopoverContent>
           </Popover>
-        </Field>
+        </div>
+        <div className="flex items-center gap-2 ml-auto">
+          <JobsFilterPanel
+            open={filterOpen}
+            onOpenChange={setFilterOpen}
+            values={Object.fromEntries(FILTER_PANEL_KEYS.map(k => [k, params[k] ?? ''])) as any}
+            onChange={setFilters}
+          />
+          <Select value={sort} onValueChange={v => setFilters({ sort: v === 'date_asc' ? null : v })}>
+            <SelectTrigger className="h-9 w-auto text-sm"><span className="text-muted-foreground mr-1">Sort:</span><SelectValue /></SelectTrigger>
+            <SelectContent>{SORTS.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent>
+          </Select>
+          <Select value={limit} onValueChange={v => setFilters({ limit: v === '100' ? null : v })}>
+            <SelectTrigger className="h-9 w-auto text-sm hidden sm:flex"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {['10', '25', '50', '100', '200'].map(n => <SelectItem key={n} value={n}>{n} per page</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
+      {search && (
+        <div className="flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3.5 py-2.5 text-sm text-blue-900 flex-wrap">
+          <Search size={14} className="shrink-0" />
+          <span>
+            <b>{totalJobs} job{totalJobs === 1 ? '' : 's'}</b> match “{search}” across <b>{rangeLabel}</b>
+            {status !== 'all' && <> in <b>{status}</b></>}, searching title, client, site and address.
+          </span>
+          <button type="button" onClick={() => setFilters({ search: null })} className="ml-auto font-semibold text-blue-700 hover:underline">Clear search</button>
+        </div>
+      )}
+
       <ActiveFiltersBar
-        className="mb-4"
         filters={[
-          {
-            // The "All Jobs" tab writes status=all itself (see FilterButton),
-            // so that value is a real, present param but isn't actually a
-            // filter — must not show a "Status: All" chip that can never be
-            // cleared back to a state the tab bar would recognize as "All".
-            keys: 'status',
-            isActive: ([s]) => !!s && s !== 'all',
-            format: ([s]) => (s ?? '').replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
-          },
-          {
-            keys: 'client',
-            format: ([id]) => filterClients?.clients.find(c => c._id === id)?.name ?? id ?? '',
-          },
+          { keys: 'search', label: 'Search', format: ([s]) => `“${s}”` },
+          { keys: 'status', isActive: ([s]) => !!s && s !== 'all', format: ([s]) => (s ?? '').replace(/\b\w/g, c => c.toUpperCase()) },
+          { keys: 'attention', label: 'Showing', format: () => 'Needs attention' },
+          { keys: 'client', format: ([id]) => clients?.clients.find(c => c._id === id)?.name ?? 'Selected client' },
+          { keys: 'site', format: ([id]) => sites?.sites.find((s: { _id: string }) => s._id === id)?.name ?? 'Selected site' },
+          { keys: 'worker', format: ([id]) => workers?.find(w => w._id === id)?.fullname ?? 'Selected worker' },
           'priority',
-          'limit',
-          'sort',
-          {
-            keys: ['start', 'end'],
-            label: 'Date range',
-            format: ([start, end]) =>
-              start && end && end !== start
-                ? `${formatDate(start, 'D MMM')} – ${formatDate(end, 'D MMM')}`
-                : formatDate(start ?? end ?? undefined, 'D MMM YYYY'),
-          },
+          { keys: 'unfilled', label: 'Staffing', format: () => 'Has unfilled places' },
           { keys: 'unassigned', label: 'Staffing', format: () => 'No workers assigned' },
+          { keys: ['start', 'end'], label: 'Date', format: () => rangeLabel.replace(/^./, c => c.toUpperCase()) },
+          { keys: 'sourceQuote', label: 'From quote', format: () => 'This quote' },
         ]}
       />
 
-      <DataTable
-        columns={jobsColumns}
-        data={jobs}
-        onDeleteSelected={deleteSelectedJobs}
-        onRowClick={(job) => onNavigate(`/jobs/${job._id}`)}
-      />
-
-
-
-      {/* Pagination */}
-      <div className="flex items-center justify-between mt-4 text-xs text-muted-foreground">
-        <p>Showing {jobs.length} of {totalJobs} job{totalJobs === 1 ? '' : 's'}</p>
-        {totalPages > 1 && (
-          <div className="flex items-center gap-1">
-            <button
-              type="button"
-              onClick={() => goToPage(currentPage - 1)}
-              disabled={currentPage <= 1}
-              className="h-7 px-2.5 rounded-lg border border-[var(--border)] text-muted-foreground hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-card flex items-center gap-1"
-            >
-              <ChevronLeft size={12} /> Previous
-            </button>
-            <span className="px-2 font-medium text-muted-foreground">
-              Page {currentPage} of {totalPages}
-            </span>
-            <button
-              type="button"
-              onClick={() => goToPage(currentPage + 1)}
-              disabled={currentPage >= totalPages}
-              className="h-7 px-2.5 rounded-lg border border-[var(--border)] text-muted-foreground hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-card flex items-center gap-1"
-            >
-              Next <ChevronRight size={12} />
-            </button>
+      {/* List */}
+      {jobs.length === 0 ? (
+        <div className="bg-card border border-[var(--border)] rounded-xl py-10">
+          <EmptyState
+            icon={<Briefcase className="w-6 h-6" />}
+            title={hasAnyFilter ? 'No jobs match these filters' : 'No jobs yet'}
+            description={hasAnyFilter
+              ? search ? `Nothing matches “${search}” across ${rangeLabel}. Try a different word, or clear the filters.` : 'Try a wider date range or clear the filters.'
+              : 'Create your first job to start scheduling workers.'}
+            action={hasAnyFilter ? (
+              <button type="button" onClick={clearEverything} className="h-9 px-4 rounded-lg border border-[var(--border)] bg-card text-sm font-semibold hover:bg-muted">Clear all filters</button>
+            ) : (
+              <Link to="/create-job" className="h-9 px-4 rounded-lg bg-[var(--primary)] text-white text-sm font-semibold inline-flex items-center gap-1.5"><Plus size={14} /> New job</Link>
+            )}
+          />
+        </div>
+      ) : (
+        <div className="bg-card border border-[var(--border)] rounded-xl overflow-hidden" role="table" aria-label="Jobs">
+          <div className="hidden md:flex items-center gap-3 px-4 lg:px-5 py-2 border-b border-[var(--border)] text-[11px] font-semibold text-muted-foreground uppercase tracking-wider bg-muted/30">
+            <label className="flex items-center gap-2 cursor-pointer normal-case tracking-normal text-xs">
+              <input
+                type="checkbox"
+                className="w-4 h-4 accent-[var(--primary)]"
+                checked={allOnPageSelected}
+                ref={el => { if (el) el.indeterminate = selected.length > 0 && !allOnPageSelected }}
+                onChange={e => setSelectedIds(e.target.checked ? new Set(jobs.map(j => j._id as string)) : new Set())}
+              />
+              Select all on this page
+            </label>
           </div>
-        )}
-      </div>
+
+          {groups ? (
+            groups.map((g, gi) => {
+              const showMonth = gi === 0 || groups[gi - 1].month !== g.month
+              const summary = daySummary(g.jobs as JobListItem[])
+              return (
+                <Fragment key={`${g.key}-${gi}`}>
+                  {showMonth && (
+                    <div className="px-4 lg:px-5 pt-4 pb-1.5 text-[11px] font-extrabold tracking-[0.08em] uppercase text-muted-foreground/70">
+                      {g.month}
+                    </div>
+                  )}
+                  <div className="flex items-center gap-2 px-4 lg:px-5 py-2 bg-muted/40 border-y border-[var(--border)]/60 text-[13px] sticky top-0 z-[1]">
+                    <span className="font-bold">{dayjs(g.key).format('ddd D MMM')}</span>
+                    {g.key === today && <span className="bg-[var(--primary)] text-white text-[10px] font-bold px-2 py-0.5 rounded-full tracking-wide">TODAY</span>}
+                    <span className="text-muted-foreground">· {g.jobs.length} job{g.jobs.length === 1 ? '' : 's'}</span>
+                    {summary.text && (
+                      <span className={cn('ml-auto text-xs', summary.tone === 'bad' ? 'text-red-600 font-semibold' : 'text-muted-foreground')}>{summary.text}</span>
+                    )}
+                  </div>
+                  {g.jobs.map(job => (
+                    <JobRow key={job._id} job={job} search={search} today={today}
+                      selected={selectedIds.has(job._id as string)} onSelect={on => toggle(job._id as string, on)} />
+                  ))}
+                </Fragment>
+              )
+            })
+          ) : (
+            jobs.map(job => (
+              <JobRow key={job._id} job={job} search={search} today={today}
+                selected={selectedIds.has(job._id as string)} onSelect={on => toggle(job._id as string, on)} />
+            ))
+          )}
+
+          <div className="flex items-center justify-between gap-3 px-4 lg:px-5 py-3 border-t border-[var(--border)] text-xs text-muted-foreground flex-wrap">
+            <p>
+              Showing {(currentPage - 1) * Number(limit) + 1}–{(currentPage - 1) * Number(limit) + jobs.length} of {totalJobs}
+              {byDate ? ' · grouped by day' : ''}
+            </p>
+            {totalPages > 1 && (
+              <div className="flex items-center gap-1">
+                <button type="button" onClick={() => goToPage(currentPage - 1)} disabled={currentPage <= 1}
+                  className="h-8 px-2.5 rounded-lg border border-[var(--border)] bg-card hover:bg-muted disabled:opacity-40 flex items-center gap-1">
+                  <ChevronLeft size={12} /> Previous
+                </button>
+                <span className="px-2 font-medium">Page {currentPage} of {totalPages}</span>
+                <button type="button" onClick={() => goToPage(currentPage + 1)} disabled={currentPage >= totalPages}
+                  className="h-8 px-2.5 rounded-lg border border-[var(--border)] bg-card hover:bg-muted disabled:opacity-40 flex items-center gap-1">
+                  Next <ChevronRight size={12} />
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      <AnimatePresence>
+        {selected.length > 0 && <JobsBulkBar selected={selected} onClear={() => setSelectedIds(new Set())} />}
+      </AnimatePresence>
     </div>
   )
 }
