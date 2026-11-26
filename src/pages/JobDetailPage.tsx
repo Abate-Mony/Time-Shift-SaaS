@@ -1,3 +1,4 @@
+import { SaveAsTemplateDialog } from "@/components/job-templates/SaveAsTemplateDialog"
 import AssignWorkersModal from '@/components/AssignWorkersModal'
 import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -10,7 +11,7 @@ import { formatCurrency } from '@/utils/format'
 import { buildMapUrl, MAP_SERVICES, type MapService } from '@/utils/mapLinks'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import dayjs from 'dayjs'
-import {
+import { LayoutTemplate,
     AlertCircle,
     Ban, Banknote, Bot,
     Briefcase,
@@ -327,6 +328,7 @@ export function JobDetail() {
     const [showApproveModal, setShowApproveModal] = useState(false)
     const [showAssignWorkersModal, setShowAssignWorkersModal] = useState(false)
 
+    const [saveTemplateOpen, setSaveTemplateOpen] = useState(false)
     const duplicateJobMutation = useMutation({
         mutationFn: duplicateJob,
         onSuccess: () => {
@@ -1773,6 +1775,13 @@ export function JobDetail() {
                             >
                                 <Copy size={13} className="text-muted-foreground" /> {duplicateJobMutation.isPending ? "Duplicating..." : "Duplicate"}
                             </button>
+                            <button
+                                onClick={() => setSaveTemplateOpen(true)}
+                                className="w-full h-10 rounded-xl border border-[var(--border)] text-sm font-semibold text-muted-foreground hover:bg-muted flex items-center justify-center gap-2 transition-colors"
+                            >
+                                <LayoutTemplate size={13} className="text-muted-foreground" /> Save as template
+                            </button>
+                            <SaveAsTemplateDialog jobId={id!} jobTitle={job.title} open={saveTemplateOpen} onOpenChange={setSaveTemplateOpen} />
 
                         </div>
                     </Card>
