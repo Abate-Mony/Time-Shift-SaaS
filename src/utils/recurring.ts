@@ -27,6 +27,10 @@ export interface RecurringSchedule {
     autoAccept?: boolean
   }
   maxOccurrences?: number
+  /** Only on the list endpoint: who it's for and who usually does it. */
+  clientInfo?: { _id: string; name: string } | null
+  siteInfo?: { _id?: string; name: string; city?: string; postcode?: string } | null
+  workers?: { _id: string; fullname: string }[]
   occurrenceCount: number
   upcomingCount: number
   nextOccurrence?: string | null
