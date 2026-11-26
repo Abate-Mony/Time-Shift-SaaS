@@ -25,6 +25,7 @@ import {
 import { userQuery, type iUser } from "./dashboardlayout";
 import { logoutUser } from "@/utils/logout";
 import { PlatformCommandPalette } from "@/components/platform/PlatformCommandPalette";
+import { env } from "@/config/env";
 
 // Direct port of the Figma source's PlatformSidebar + PlatformTopBar
 // (PlatformDashboard.tsx) — same literal markup/classes, swapped from its
@@ -120,8 +121,8 @@ export default function PlatformLayout() {
         {/* Env badge */}
         <div className="mx-4 mb-3">
           <div className="flex items-center gap-2 bg-[#162032] border border-[#1E3A5F]/40 rounded-lg px-3 py-1.5">
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[11px] font-semibold text-slate-300">Production</span>
+            <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${env.isProd ? "bg-emerald-500" : "bg-amber-500"}`} />
+            <span className="text-[11px] font-semibold text-slate-300">{env.isProd ? "Production" : "Development"}</span>
           </div>
         </div>
 

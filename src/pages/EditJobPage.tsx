@@ -137,7 +137,7 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
             queryKey: ["job-change-requests"],
         });
         // Land back in the inbox this edit came from, if it did.
-        return redirect(raw.jobChangeRequestId ? "/job-change-requests" : "/jobs")
+        return redirect(raw.jobChangeRequestId ? "/requests" : "/jobs")
     } catch (err) {
         let errorM
 

@@ -140,7 +140,7 @@ function EmptyRecurringState({
           onClick={onCreateJob}
           className="h-9 px-5 bg-[var(--primary)] text-white text-sm font-bold rounded-xl hover:bg-primary/90 transition-colors flex items-center gap-2"
         >
-          <Plus size={13} /> Create Job
+          <Plus size={13} /> New recurring schedule
         </button>
       )}
     </div>
@@ -178,16 +178,16 @@ export function RecurringJobs() {
       {/* Page header */}
       <div className="flex items-start justify-between mb-6 flex-wrap gap-4">
         <div>
-          <h2 className="text-lg font-bold text-foreground tracking-tight">Recurring Shifts</h2>
+          <h2 className="text-lg font-bold text-foreground tracking-tight">Recurring Jobs</h2>
           <p className="text-sm text-muted-foreground mt-0.5">
             Manage repeating schedules that automatically create individual shifts.
           </p>
         </div>
         <button
-          onClick={() => onNavigate('/create-job')}
-          className="h-9 px-4 bg-[var(--primary)] text-white text-sm font-bold rounded-xl hover:bg-primary/90 transition-colors flex items-center gap-2"
+          onClick={() => onNavigate('/create-job?recurring=true')}
+          className="h-9 px-4 bg-[var(--primary)] cursor-pointer text-white text-sm font-bold rounded-xl hover:bg-primary/90 transition-colors flex items-center gap-2"
         >
-          <Plus size={13} /> Create Job
+          <Plus size={13} />  New recurring schedule
         </button>
       </div>
 
@@ -220,7 +220,7 @@ export function RecurringJobs() {
 
       {/* Content */}
       {filtered.length === 0 ? (
-        <EmptyRecurringState filter={filter} onCreateJob={() => onNavigate('/create-job')} />
+        <EmptyRecurringState filter={filter} onCreateJob={() => onNavigate('/create-job?recurring=true')} />
       ) : (
         <AnimatePresence mode="wait">
           <motion.div

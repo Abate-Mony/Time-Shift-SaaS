@@ -1,10 +1,13 @@
 import { useState } from 'react'
 import { useLocation } from 'react-router'
+import { useQuery } from '@tanstack/react-query'
 import { AnimatePresence, motion } from 'framer-motion'
 import type { iUser } from '@/layouts/dashboardlayout'
 import { cn } from '@/lib/utils'
 import { getInitials } from '@/utils/getInitials'
 import { logoutUser } from '@/utils/logout'
+import { bookingRequestsQuery } from '@/utils/bookingRequests'
+import { jobChangeRequestsQuery } from '@/utils/jobChangeRequests'
 import {
   BarChart3,
   Bell,
@@ -51,8 +54,7 @@ const navGroups: { label: string | null; items: { id: string; label: string; ico
       { id: 'jobs', label: 'Jobs', icon: Briefcase },
       { id: 'calendar', label: 'Calendar', icon: Calendar },
       { id: 'sites', label: 'Sites', icon: MapPin },
-      { id: 'booking-requests', label: 'Booking Requests', icon: CalendarCheck },
-      { id: 'job-change-requests', label: 'Change Requests', icon: CalendarCheck },
+      { id: 'requests', label: 'Requests', icon: CalendarCheck },
     ],
   },
   {
@@ -132,6 +134,15 @@ interface SidebarProps {
 export function Sidebar({ collapsed, onToggleSidebar, user }: SidebarProps) {
   const location = useLocation()
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(readExpandedGroups)
+
+  // How many client-portal requests are waiting for a reply — shown as a
+  // badge on the "Requests" nav item so it's visible without opening the
+  // page. Polled rather than pushed, same cadence as TopBar's unread-
+  // notifications badge.
+  const { data: pendingBookingRequests } = useQuery({ ...bookingRequestsQuery('pending'), refetchInterval: 60_000 })
+  const { data: pendingJobChangeRequests } = useQuery({ ...jobChangeRequestsQuery('pending'), refetchInterval: 60_000 })
+  const requestsPendingCount = (pendingBookingRequests?.length ?? 0) + (pendingJobChangeRequests?.length ?? 0)
+  const NAV_BADGES: Record<string, number> = { requests: requestsPendingCount }
 
   const isGroupExpanded = (label: string) => expandedGroups[label] ?? true
   const toggleGroup = (label: string) => {
@@ -275,6 +286,11 @@ export function Sidebar({ collapsed, onToggleSidebar, user }: SidebarProps) {
                           >
                             <item.icon size={14} className={cn('text-blue-400 inline group-[.slide-active]:text-current mr-2')} />
                             <span className="flex-1 text-left font-medium">{item.label}</span>
+                            {!!NAV_BADGES[item.id] && (
+                              <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-amber-500 text-white text-[10px] font-bold flex items-center justify-center shrink-0">
+                                {NAV_BADGES[item.id]}
+                              </span>
+                            )}
                           </CustomNavLink>
                         ))}
                       </HoverCardContent>
@@ -321,6 +337,11 @@ export function Sidebar({ collapsed, onToggleSidebar, user }: SidebarProps) {
                             <div className='w-full flex items-center space-x-1.5 h-full justify-between'>
                               <item.icon size={16} className={cn('text-blue-400 group-[.slide-active]:text-current')} />
                               <span className="flex-1 text-left font-medium">{item.label}</span>
+                              {!!NAV_BADGES[item.id] && (
+                                <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-amber-500 text-white text-[10px] font-bold flex items-center justify-center shrink-0">
+                                  {NAV_BADGES[item.id]}
+                                </span>
+                              )}
                             </div>
                           </CustomNavLink>
                         ))}

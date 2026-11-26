@@ -826,7 +826,7 @@ export function CreateJob() {
         <div className="flex items-center gap-3 mb-6 min-w-0">
           <button
             type="button"
-            onClick={() => navigate(lockedFromQuote ? `/quotes/${lockedFromQuote.quoteId}` : lockedFromBookingRequest ? "/booking-requests" : "/jobs")}
+            onClick={() => navigate(lockedFromQuote ? `/quotes/${lockedFromQuote.quoteId}` : lockedFromBookingRequest ? "/requests" : "/jobs")}
             className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors shrink-0"
           >
             <ChevronLeft size={16} />
@@ -938,7 +938,7 @@ export function CreateJob() {
                 </div>
                 <button
                   type="button"
-                  onClick={() => navigate("/booking-requests")}
+                  onClick={() => navigate("/requests")}
                   className="text-xs font-semibold text-[var(--primary)] shrink-0 hover:underline"
                 >
                   View requests
@@ -1009,7 +1009,7 @@ export function CreateJob() {
             onSaveDraft={() => doSubmit("draft")}
             draftDisabledReason={scheduleMode === "multi" ? "Drafts are for single-day jobs — publish to book several days" : undefined}
             onPublish={() => doSubmit("published")}
-            onCancel={() => navigate(lockedFromQuote ? `/quotes/${lockedFromQuote.quoteId}` : lockedFromBookingRequest ? "/booking-requests" : "/jobs")}
+            onCancel={() => navigate(lockedFromQuote ? `/quotes/${lockedFromQuote.quoteId}` : lockedFromBookingRequest ? "/requests" : "/jobs")}
           />
         </Form>
       </div>

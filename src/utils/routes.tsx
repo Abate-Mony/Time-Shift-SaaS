@@ -43,7 +43,7 @@ import PublicQuotePage from "@/pages/PublicQuotePage";
 import { MaintenancePage } from "@/pages/MaintenancePage";
 import { createBrowserRouter, Navigate } from "react-router";
 import DashboardLayout from "../layouts/dashboardlayout";
-import { Calendar, calendarLoader, ClentBillingPage, ClientDetail, clientDetailLoader, ClientDetailsaJobsPage, ClientDetailsContactsPage, ClientDetailsOverviewPage, ClientDetailsSitesPage, ClientDetailsQuotesPage, ClientDetailsInvoicesPage, ClientDetailsPortalAccessPage, BookingRequests, bookingRequestsLoader, JobChangeRequests, jobChangeRequestsLoader, Clients, clientsLoader, clockLoader, CreateClientPage, CreateInvoicePage, createInvoiceLoader, CreateJob, createjobAction, CreateQuote, createQuoteLoader, CreateSitePage, DataAssistant, Dashboard, dashboardLoader, EarningsScreen, OvertimeScreen, DownloadTimesheetScreen, EditJob, editJobAction, HelpArticlePage, HelpArticleScreen, HelpCentre, HelpCentreScreen, InvoiceDetail, invoiceDetailLoader, InvoiceForm, invoiceFormLoader, Invoices, invoicesLoader, JobDetail, Jobs, jobsLoader, Leads, leadsLoader, LeadDetail, leadDetailLoader, loginAction, openShiftsLoader, ProfileScreen, Quotes, quotesLoader, RecurringJobDetail, recurringJobDetailLoader, RecurringJobs, recurringJobsLoader, Settings, settingsLoader, signupAction, singleJobLoader, singleWorkerJobLoader, SiteDetailPage, siteDetailLoader, Sites, sitesLoader, SuspendedAccountPage, Team, teamLoader, TimeOffRequestsPage, timeOffRequestsLoader, workerLoader, WorkerProfile, workerProfileLoader, workerStatsLoader, Workers, workersLoader, CheckOutSettings, ChangePlanSettings, Notifications, TeamsCreatepage, teamsCreateLoader, WorkerDocumentsScreen, WorkerTimeOffScreen, WorkHubScreen, ContactManagerScreen, TeamDirectoryScreen, WorkLocationsScreen } from "../pages";
+import { Calendar, calendarLoader, ClentBillingPage, ClientDetail, clientDetailLoader, ClientDetailsaJobsPage, ClientDetailsContactsPage, ClientDetailsOverviewPage, ClientDetailsSitesPage, ClientDetailsQuotesPage, ClientDetailsInvoicesPage, ClientDetailsPortalAccessPage, Requests, requestsLoader, RequestDetail, requestDetailLoader, Clients, clientsLoader, clockLoader, CreateClientPage, CreateInvoicePage, createInvoiceLoader, CreateJob, createjobAction, CreateQuote, createQuoteLoader, CreateSitePage, DataAssistant, Dashboard, dashboardLoader, EarningsScreen, OvertimeScreen, DownloadTimesheetScreen, EditJob, editJobAction, HelpArticlePage, HelpArticleScreen, HelpCentre, HelpCentreScreen, InvoiceDetail, invoiceDetailLoader, InvoiceForm, invoiceFormLoader, Invoices, invoicesLoader, JobDetail, Jobs, jobsLoader, Leads, leadsLoader, LeadDetail, leadDetailLoader, loginAction, openShiftsLoader, ProfileScreen, Quotes, quotesLoader, RecurringJobDetail, recurringJobDetailLoader, RecurringJobs, recurringJobsLoader, Settings, settingsLoader, signupAction, singleJobLoader, singleWorkerJobLoader, SiteDetailPage, siteDetailLoader, Sites, sitesLoader, SuspendedAccountPage, Team, teamLoader, TimeOffRequestsPage, timeOffRequestsLoader, workerLoader, WorkerProfile, workerProfileLoader, workerStatsLoader, Workers, workersLoader, CheckOutSettings, ChangePlanSettings, Notifications, TeamsCreatepage, teamsCreateLoader, WorkerDocumentsScreen, WorkerTimeOffScreen, WorkHubScreen, ContactManagerScreen, TeamDirectoryScreen, WorkLocationsScreen } from "../pages";
 
 export const router = createBrowserRouter([
     {
@@ -200,15 +200,25 @@ export const router = createBrowserRouter([
                         loader: timeOffRequestsLoader(queryClient),
                         errorElement: <ErrorElement />,
                     }, {
-                        path: "booking-requests",
-                        element: <BookingRequests />,
-                        loader: bookingRequestsLoader(queryClient),
+                        path: "requests",
+                        element: <Requests />,
+                        loader: requestsLoader(queryClient),
                         errorElement: <ErrorElement />,
                     }, {
-                        path: "job-change-requests",
-                        element: <JobChangeRequests />,
-                        loader: jobChangeRequestsLoader(queryClient),
+                        path: "requests/:kind/:id",
+                        element: <RequestDetail />,
+                        loader: requestDetailLoader(queryClient),
                         errorElement: <ErrorElement />,
+                    }, {
+                        // Booking Requests and Change Requests used to be two
+                        // separate pages/sidebar items — merged into "requests"
+                        // above. Kept as redirects for anyone with the old URL
+                        // bookmarked.
+                        path: "booking-requests",
+                        element: <Navigate to="/requests" replace />,
+                    }, {
+                        path: "job-change-requests",
+                        element: <Navigate to="/requests" replace />,
                     }, {
                         path: "team/invite",
                         element: <TeamsCreatepage />,
