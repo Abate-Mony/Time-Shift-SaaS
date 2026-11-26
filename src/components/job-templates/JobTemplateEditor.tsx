@@ -32,10 +32,15 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   )
 }
 
+// Copy only the editable fields — the server also returns company,
+// createdBy, timestamps etc., which must not be sent back.
 const fromTemplate = (t?: JobTemplate | null): JobTemplateInput => {
-  if (!t) return emptyTemplate()
-  const { _id: _a, useCount: _b, lastUsedAt: _c, ...rest } = t
-  return { ...emptyTemplate(), ...rest, checklist: t.checklist.map(c => ({ text: c.text })) }
+  const base = emptyTemplate()
+  if (!t) return base
+  const picked = Object.fromEntries(
+    (Object.keys(base) as (keyof JobTemplateInput)[]).map(k => [k, t[k] ?? base[k]])
+  ) as JobTemplateInput
+  return { ...picked, checklist: (t.checklist ?? []).map(c => ({ text: c.text })) }
 }
 
 /** Create or edit a template. `template` null = new. */
