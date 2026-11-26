@@ -64,7 +64,8 @@ export function ActiveFiltersBar({ filters, className }: ActiveFiltersBarProps) 
   if (active.length === 0) return null
 
   const clear = (keys: string[]) => {
-    handleFiltersChange(Object.fromEntries(keys.map(k => [k, null])))
+    // Removing a filter changes the result set, so any page number is stale too.
+    handleFiltersChange({ ...Object.fromEntries(keys.map(k => [k, null])), page: null })
   }
 
   return (
