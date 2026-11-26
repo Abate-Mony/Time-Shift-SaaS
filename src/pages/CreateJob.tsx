@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useQuery } from "@tanstack/react-query"
 import { AnimatePresence, motion } from "framer-motion"
 import { isAxiosError } from "axios"
-import { AlertTriangle, CalendarCheck, ChevronLeft, FileText, Loader2 } from "lucide-react"
+import { AlertTriangle, CalendarCheck, ChevronLeft, FileText, Loader2, Sparkles } from "lucide-react"
 import toast from "react-hot-toast"
 import dayjs from "dayjs"
 import {
@@ -51,6 +51,8 @@ import {
 } from "@/components/create-job/wizardConfig"
 import { clearAutosavedDraft } from "@/components/create-job/useDraftAutosave"
 import { parseRateInput } from "@/utils/workerPay"
+import { TemplatePicker } from "@/components/job-templates/TemplatePicker"
+import { filledFieldLabels, jobTemplatesQuery, markTemplateUsed, type JobTemplate } from "@/utils/jobTemplates"
 
 // ─────────────────────────────────────────────────────────────
 // Data
@@ -89,6 +91,9 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   delete payload.generateInvoice
   delete payload.invoiceDueDate
   delete payload.invoiceLineItems
+  // Which template (if any) filled the form — counted after the job saves.
+  const fromTemplate = raw.fromTemplate
+  delete payload.fromTemplate
 
   // The attachment is a File, not JSON-serialisable — uploaded separately
   // below, after the job (and its id) exist. An untouched file input still
@@ -140,6 +145,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   try {
     const { data } = await customFetch.post("/jobs", payload)
     const jobId = data?.job?._id ?? data?.templateJob?._id ?? data?._id
+    if (fromTemplate) markTemplateUsed(fromTemplate)
 
     if (raw.status !== "draft" && raw.sourceQuote && data?.job?._id) {
       toast.success(`Job created from ${raw.sourceQuoteNumber || "quote"}`)
@@ -677,6 +683,82 @@ export function CreateJob() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sourceBookingRequest])
 
+  // ── Job template ───────────────────────────────────────────
+  // /create-job?template=<id> (from "Use template" on the Templates tab),
+  // or picked from the tiles on step 1. Fills the reusable fields only —
+  // client, site, date and workers stay for the manager to choose.
+  const templateId = searchParams.get("template")
+  const { data: allTemplates } = useQuery({ ...jobTemplatesQuery, enabled: !!templateId || currentStep === 1 })
+  const [appliedTemplate, setAppliedTemplate] = useState<JobTemplate | null>(null)
+
+  const applyTemplate = (t: JobTemplate) => {
+    const opts = { shouldValidate: false, shouldDirty: true }
+    setValue("title", t.title, opts)
+    setValue("description", t.description ?? "", opts)
+    setValue("priority", t.priority, opts)
+    if (t.startTime && t.endTime) {
+      setValue("startTime", t.startTime, opts)
+      setValue("endTime", t.endTime, opts)
+    }
+    setValue("requiredWorkers", t.requiredWorkers, opts)
+    // An accepted quote's price wins over the template's.
+    if (!lockedFromQuote) {
+      setValue("chargeType", t.chargeType, opts)
+      setValue("chargeRate", t.chargeType === "hourly" ? t.chargeRate : 0, opts)
+      setValue("chargeAmount", t.chargeType === "fixed" ? t.chargeAmount : 0, opts)
+    }
+    // 0 means "use the company default", which is already filled in.
+    if (t.payRate > 0) setValue("payRate", t.payRate, opts)
+    setValue("instructions", t.instructions ?? "", opts)
+    setValue("notes", t.notes ?? "", opts)
+    setValue("checklist" as any, t.checklist.map(c => ({ text: c.text, done: false })) as any, opts)
+    setValue("openToClaims", t.openToClaims, opts)
+    setValue("requiresApproval", t.requiresApproval, opts)
+    setValue("autoAccept", t.autoAccept, opts)
+    setAppliedTemplate(t)
+    setSearchParams(prev => { prev.set("template", t._id); return prev }, { replace: true })
+  }
+
+  const clearTemplate = () => {
+    const opts = { shouldValidate: false }
+    setValue("title", "", opts)
+    setValue("description", "", opts)
+    setValue("priority", "medium", opts)
+    if (appliedTemplate?.startTime) {
+      setValue("startTime", "", opts)
+      setValue("endTime", "", opts)
+    }
+    setValue("requiredWorkers", 1, opts)
+    if (!lockedFromQuote) {
+      setValue("chargeType", "hourly", opts)
+      setValue("chargeRate", 0, opts)
+      setValue("chargeAmount", 0, opts)
+    }
+    if (appliedTemplate?.payRate) setValue("payRate", companySettingsData?.settings?.defaultPayRate ?? 0, opts)
+    setValue("instructions", "", opts)
+    setValue("notes", "", opts)
+    setValue("checklist" as any, [] as any, opts)
+    setValue("openToClaims", false, opts)
+    setValue("requiresApproval", true, opts)
+    setValue("autoAccept", false, opts)
+    setAppliedTemplate(null)
+    setSearchParams(prev => { prev.delete("template"); return prev }, { replace: true })
+  }
+
+  // Apply a ?template= link once, when the templates have loaded.
+  const appliedTemplateParamRef = useRef(false)
+  useEffect(() => {
+    if (!templateId || appliedTemplateParamRef.current || !allTemplates) return
+    appliedTemplateParamRef.current = true
+    const t = allTemplates.find(x => x._id === templateId)
+    if (t) applyTemplate(t)
+    else {
+      toast.error("That template no longer exists.")
+      setSearchParams(prev => { prev.delete("template"); return prev }, { replace: true })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [templateId, allTemplates])
+
   // Applies the company's default pay rate exactly once, the moment it
   // first becomes available — same "apply once" guard as the quote/booking
   // prefills above. Skipped if payRate is no longer its untouched 0 default,
@@ -961,6 +1043,34 @@ export function CreateJob() {
           </div>
         )}
 
+        {currentStep === 1 && (
+          <TemplatePicker
+            activeId={appliedTemplate?._id ?? null}
+            onPick={t => {
+              if (appliedTemplate?._id === t._id) return
+              const title = getValues("title")
+              if (title && !appliedTemplate && !window.confirm(`Replace what you've typed with the “${t.name}” template?`)) return
+              applyTemplate(t)
+            }}
+          />
+        )}
+
+        {appliedTemplate && (
+          <div className="mb-6 -mt-2 bg-violet-50 border border-violet-200 rounded-xl px-4 py-3 flex items-start gap-2.5 min-w-0">
+            <Sparkles size={15} className="text-violet-600 shrink-0 mt-0.5" />
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold text-violet-950">Filled from “{appliedTemplate.name}”</p>
+              <p className="text-xs text-violet-800 mt-0.5">
+                Set: {filledFieldLabels(appliedTemplate).join(", ")}. Change anything you like; the template itself won't change.
+                {lockedFromQuote && " The price comes from the accepted quote."}
+              </p>
+            </div>
+            <button type="button" onClick={clearTemplate} className="text-xs font-semibold text-violet-700 shrink-0 hover:underline">
+              Clear template
+            </button>
+          </div>
+        )}
+
         <CreateJobStepper
           currentStep={currentStep}
           furthestStep={furthestStep}
@@ -979,6 +1089,7 @@ export function CreateJob() {
           {/* Rendered once, outside the steps, so unmounting a step can't
               silently drop values from the submitted FormData */}
           <CreateJobHiddenFields />
+          {appliedTemplate && <input type="hidden" name="fromTemplate" value={appliedTemplate._id} />}
           <JobAttachmentField />
 
           <AnimatePresence mode="wait" custom={dir}>

@@ -3,12 +3,13 @@ import { Link, useNavigate } from "react-router"
 import { useMutation } from "@tanstack/react-query"
 import toast from "react-hot-toast"
 import dayjs from "dayjs"
-import { AlertTriangle, CalendarRange, Copy, CopyPlus, MapPin, MoreHorizontal, Pencil, Repeat, Trash2, Eye } from "lucide-react"
+import { AlertTriangle, CalendarRange, Copy, CopyPlus, LayoutTemplate, MapPin, MoreHorizontal, Pencil, Repeat, Trash2, Eye } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import AssignWorkersModal from "@/components/AssignWorkersModal"
+import { SaveAsTemplateDialog } from "@/components/job-templates/SaveAsTemplateDialog"
 import { cn } from "@/lib/utils"
 import { queryClient } from "@/lib/queryClient"
 import customFetch from "@/utils/customFetch"
@@ -115,6 +116,7 @@ export function JobRow({
 }) {
   const navigate = useNavigate()
   const [assignOpen, setAssignOpen] = useState(false)
+  const [templateOpen, setTemplateOpen] = useState(false)
   const isPast = dayjs(job.date).format("YYYY-MM-DD") < today
   const upcoming = !isPast && (job.status === "draft" || job.status === "published")
   const brokenTime = job.attention?.includes("time")
@@ -232,6 +234,7 @@ export function JobRow({
           </DropdownMenuItem>
           <DropdownMenuItem disabled={duplicate.isPending} onSelect={() => duplicate.mutate(0)}><Copy size={14} /> Duplicate</DropdownMenuItem>
           <DropdownMenuItem disabled={duplicate.isPending} onSelect={() => duplicate.mutate(7)}><CopyPlus size={14} /> Copy to next week</DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => setTemplateOpen(true)}><LayoutTemplate size={14} /> Save as template</DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
             className="text-red-600 focus:text-red-600 focus:bg-red-50"
@@ -324,6 +327,7 @@ export function JobRow({
         </div>
       </div>
 
+      <SaveAsTemplateDialog jobId={job._id as string} jobTitle={job.title} open={templateOpen} onOpenChange={setTemplateOpen} />
       {assignOpen && (
         <AssignWorkersModal
           jobId={job._id as string}

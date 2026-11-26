@@ -32,6 +32,11 @@ const JobLayout = () => {
                     show layoutId="job-layout-links" className="w-fit" to={"/jobs/recurring"}>
                     Recurring Jobs
                 </CustomNavLink>
+                <CustomNavLink
+                    animateClassName='bg-black/40 p-0 rounded-sm'
+                    show layoutId="job-layout-links" className="w-fit" to={"/jobs/templates"}>
+                    Templates
+                </CustomNavLink>
             </Scrollable>
             <Separator className="h-px bg-black/5" />
             <Outlet />

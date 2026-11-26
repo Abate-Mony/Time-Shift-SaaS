@@ -38,6 +38,7 @@ import ExistingUserInvitePage from "@/pages/acceptInvites/ExistingUserInvitePage
 import InvitationStatusPage from "@/pages/acceptInvites/InvitationStatusPage";
 import InvitationSuccessPage from "@/pages/acceptInvites/InvitationSuccessPage";
 import NewUserInvitePage from "@/pages/acceptInvites/NewUserInvitePage";
+import { JobTemplatesPage, loader as jobTemplatesLoader } from "@/pages/JobTemplatesPage";
 import RecurringAssignmentPage, { loader as recurringAssignmentsLoader } from "@/pages/worker/RecurringAssignmentPage";
 import PublicQuotePage from "@/pages/PublicQuotePage";
 import { MaintenancePage } from "@/pages/MaintenancePage";
@@ -165,6 +166,10 @@ export const router = createBrowserRouter([
                                 path: "recurring",
                                 element: <RecurringJobs />,
                                 loader: recurringJobsLoader(queryClient)
+                            }, {
+                                path: "templates",
+                                element: <JobTemplatesPage />,
+                                loader: jobTemplatesLoader(queryClient)
                             }, {
                                 path: "recurring/recurring-job-detail/:id",
                                 element: <RecurringJobDetail />,
