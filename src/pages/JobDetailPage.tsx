@@ -331,9 +331,13 @@ export function JobDetail() {
     const [saveTemplateOpen, setSaveTemplateOpen] = useState(false)
     const duplicateJobMutation = useMutation({
         mutationFn: duplicateJob,
-        onSuccess: () => {
+        onSuccess: (res) => {
             queryClient.invalidateQueries({ queryKey: ["jobs"] })
-            toast.success("Job duplicated successfully")
+            toast.success("Duplicated as a draft. Set the date and check the details.")
+            // Straight to the copy's edit page — a duplicate almost always
+            // needs a new date before it's useful.
+            const newId = res?.data?.job?._id
+            if (newId) navigate(`/jobs/${newId}/edit`, { state: backLinkState(job?.title ?? "Job") })
         },
         onError: (error) => {
             console.error(error)
