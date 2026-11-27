@@ -131,9 +131,11 @@ export function JobRow({
   })
   const duplicate = useMutation({
     mutationFn: (shiftDays: number) => customFetch.post(`/jobs/duplicate-job/${job._id}`, shiftDays ? { shiftDays } : {}),
-    onSuccess: (_d, shiftDays) => {
-      toast.success(shiftDays ? "Copied to next week as a draft" : "Job duplicated as a draft")
+    onSuccess: (res, shiftDays) => {
+      toast.success(shiftDays ? "Copied to next week as a draft. Check the details and publish." : "Duplicated as a draft. Set the date and check the details.")
       queryClient.invalidateQueries({ queryKey: ["jobs"] })
+      const newId = (res as { data?: { job?: { _id?: string } } })?.data?.job?._id
+      if (newId) navigate(`/jobs/${newId}/edit`, { state: backLinkState("Jobs") })
     },
     onError: (e: any) => toast.error(e?.response?.data?.msg ?? "Couldn't copy the job."),
   })
