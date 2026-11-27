@@ -253,7 +253,14 @@ export function CreateJob() {
       return next
     })
   const [workerOpen, setWorkerOpen] = useState(false)
-  const [recurring, setRecurring] = useState<RecurringState>(defaultRecurring)
+  // ?recurring=true (e.g. a "New recurring job" link) opens straight into
+  // the repeat schedule — seeded into the initial state so it's correct on
+  // the very first render, rather than flashing "one day" and correcting
+  // itself a tick later via an effect.
+  const [recurring, setRecurring] = useState<RecurringState>(() => ({
+    ...defaultRecurring(),
+    enabled: searchParams.get("recurring") === "true",
+  }))
   // "Several days": hand-picked dates, one job per day. "repeat" is the
   // recurring schedule above (recurring.enabled), so it's derived from that.
   const [multiMode, setMultiMode] = useState(false)
