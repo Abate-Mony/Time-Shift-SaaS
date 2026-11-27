@@ -40,7 +40,6 @@ export function ScheduleStaffingStep() {
     <div className="flex flex-col gap-5 min-w-0">
       {/* When: one day / several days / repeats */}
       <WhenSection />
-
       {/* Recurrence settings — only once "Repeats" is chosen */}
       {scheduleMode === "repeat" && (
         <RecurringJobSection value={recurring} onChange={setRecurring} startDate={date} sectionIndex={1} disabled={!canRecurring} />
